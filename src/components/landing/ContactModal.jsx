@@ -54,13 +54,13 @@ export default function ContactModal({ isOpen, onClose }) {
             <div className="flex flex-col gap-1">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary font-space text-[11px] font-bold w-fit uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                <span>Alianzas de Alto Impacto</span>
+                <span>Proyectos de Software &amp; Arquitectura</span>
               </div>
               <h3 className="font-space text-2xl text-white font-bold tracking-tight">
                 Iniciar Proyecto de Software Sistemático
               </h3>
               <p className="font-jakarta text-xs text-on-surface-variant">
-                Diseñamos y escalamos soluciones técnicas para organizaciones con misión humanitaria.
+                Diseñamos y escalamos soluciones técnicas para organizaciones e instituciones con requerimientos de alta disponibilidad.
               </p>
             </div>
 
@@ -72,19 +72,19 @@ export default function ContactModal({ isOpen, onClose }) {
                   type="text" 
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ej: David Salazar"
+                  placeholder="Nombre y apellido"
                   className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded px-3 text-xs font-jakarta text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-space text-xs text-white font-medium">Correo institucional</label>
+                <label className="font-space text-xs text-white font-medium">Correo electrónico</label>
                 <input 
                   required
                   type="email" 
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="nombre@organizacion.org"
+                  placeholder="correo@organizacion.org"
                   className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded px-3 text-xs font-jakarta text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -92,13 +92,13 @@ export default function ContactModal({ isOpen, onClose }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
-                <label className="font-space text-xs text-white font-medium">Organización / Entidad</label>
+                <label className="font-space text-xs text-white font-medium">Organización o Entidad</label>
                 <input 
                   required
                   type="text" 
                   value={formData.org}
                   onChange={(e) => setFormData({ ...formData, org: e.target.value })}
-                  placeholder="Cooperativa, ONG o Fondo"
+                  placeholder="Nombre de la institución o entidad"
                   className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded px-3 text-xs font-jakarta text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -111,21 +111,21 @@ export default function ContactModal({ isOpen, onClose }) {
                   className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded px-2.5 text-xs font-jakarta text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                 >
                   <option>Inclusión Financiera y Crédito Comunitario</option>
-                  <option>Salud & Trazabilidad de Vacunas</option>
-                  <option>Recursos Críticos & AguaIoT</option>
+                  <option>Salud & Trazabilidad de Cadena de Frío</option>
+                  <option>Recursos Críticos & Telemetría IoT</option>
                   <option>Gobernanza de Datos & Auditoría</option>
-                  <option>Infraestructura Digital Crítica</option>
+                  <option>Infraestructura Digital Offline-First</option>
                 </select>
               </div>
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-space text-xs text-white font-medium">Descripción inicial del desafío</label>
+              <label className="font-space text-xs text-white font-medium">Descripción inicial del requerimiento</label>
               <textarea 
                 rows="3"
                 value={formData.details}
                 onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-                placeholder="Breve resumen de la población objetivo, limitaciones de conectividad o requerimiento..."
+                placeholder="Breve resumen del desafío técnico, limitaciones de conectividad o alcance esperado..."
                 className="w-full bg-surface-container-lowest border border-outline-variant rounded p-3 text-xs font-jakarta text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
               ></textarea>
             </div>
@@ -171,7 +171,7 @@ export default function ContactModal({ isOpen, onClose }) {
                 ¡Solicitud Registrada con Éxito!
               </h4>
               <p className="font-jakarta text-xs text-on-surface-variant max-w-sm">
-                Hemos asignado un líder de arquitectura para evaluar los requerimientos de <strong className="text-white">{formData.org || 'tu entidad'}</strong>. Nos comunicaremos a <strong className="text-primary">{formData.email}</strong> en breve.
+                Hemos recibido tu solicitud para <strong className="text-white">{formData.org || 'tu entidad'}</strong>. Nuestro equipo de arquitectura técnica se comunicará a <strong className="text-primary">{formData.email}</strong>.
               </p>
             </div>
             <button 

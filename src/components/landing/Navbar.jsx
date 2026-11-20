@@ -12,14 +12,14 @@ export default function Navbar({ onNavigatePortal, onOpenContact }) {
   };
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl border-b border-white/[0.06] transition-all">
+    <header className="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-white/[0.08] transition-all">
       <div className="h-20 w-full px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between gap-4">
         {/* Logo & Brand */}
         <div 
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
           className="flex items-center gap-3 group cursor-pointer"
         >
-          <div className="w-10 h-10 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center group-hover:border-primary/50 transition-colors">
+          <div className="w-10 h-10 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center group-hover:border-primary/50 transition-colors shadow-sm">
             <img src="/assets/images/logo.png" alt="Pathrimonio Logo" className="w-6 h-6 object-contain" />
           </div>
           <div className="flex flex-col">
@@ -44,19 +44,13 @@ export default function Navbar({ onNavigatePortal, onOpenContact }) {
             onClick={() => scrollToSection('soluciones')} 
             className="px-3.5 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all"
           >
-            Soluciones Tech
+            Arquitecturas
           </button>
           <button 
-            onClick={() => scrollToSection('auditoria')} 
+            onClick={() => scrollToSection('estandares')} 
             className="px-3.5 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all"
           >
-            Auditoría Social
-          </button>
-          <button 
-            onClick={() => scrollToSection('casos')} 
-            className="px-3.5 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all"
-          >
-            Casos Verificados
+            Estándares &amp; Auditoría
           </button>
           <button 
             onClick={() => scrollToSection('manifiesto')} 
@@ -71,10 +65,11 @@ export default function Navbar({ onNavigatePortal, onOpenContact }) {
           {/* Direct link to Portal App */}
           <button 
             onClick={onNavigatePortal}
-            className="hidden sm:inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded bg-surface-container-high border border-primary/30 hover:border-primary text-white hover:text-primary font-space text-xs font-semibold uppercase tracking-wider transition-all duration-200"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded bg-surface-container-high border border-primary/30 hover:border-primary text-white hover:text-primary font-space text-xs font-semibold uppercase tracking-wider transition-all duration-200"
           >
             <span className="material-symbols-outlined text-primary text-[18px]">view_kanban</span>
-            <span>Portal Historias</span>
+            <span className="hidden sm:inline">Portal Historias</span>
+            <span className="sm:hidden">Portal</span>
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
           </button>
 
@@ -86,15 +81,6 @@ export default function Navbar({ onNavigatePortal, onOpenContact }) {
             <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
             <span>Iniciar Proyecto</span>
           </button>
-
-          {/* Profile pill */}
-          <div className="hidden lg:flex items-center pl-1">
-            <img 
-              alt="Profile" 
-              className="w-8 h-8 rounded-full object-cover border border-outline-variant hover:border-primary transition-colors cursor-pointer" 
-              src="/assets/images/profile.png" 
-            />
-          </div>
 
           {/* Mobile hamburger menu button */}
           <button 
@@ -119,19 +105,13 @@ export default function Navbar({ onNavigatePortal, onOpenContact }) {
             onClick={() => scrollToSection('soluciones')} 
             className="text-left py-2 text-sm text-on-surface-variant hover:text-white font-medium"
           >
-            Soluciones Tech
+            Arquitecturas
           </button>
           <button 
-            onClick={() => scrollToSection('auditoria')} 
+            onClick={() => scrollToSection('estandares')} 
             className="text-left py-2 text-sm text-on-surface-variant hover:text-white font-medium"
           >
-            Auditoría Social
-          </button>
-          <button 
-            onClick={() => scrollToSection('casos')} 
-            className="text-left py-2 text-sm text-on-surface-variant hover:text-white font-medium"
-          >
-            Casos Verificados
+            Estándares &amp; Auditoría
           </button>
           <button 
             onClick={() => scrollToSection('manifiesto')} 

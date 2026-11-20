@@ -13,7 +13,7 @@ export default function Hero({ onNavigatePortal, onOpenContact }) {
           {/* Left Column: Narrative & Primary CTAs */}
           <div className="lg:col-span-7 flex flex-col gap-6">
             
-            {/* Live Status Pill */}
+            {/* Engineering Status Pill */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-surface-container-high border border-outline-variant rounded-full w-fit">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
               <span className="font-space text-xs uppercase tracking-widest text-primary font-semibold">
@@ -31,7 +31,7 @@ export default function Hero({ onNavigatePortal, onOpenContact }) {
 
             {/* Description Body */}
             <p className="font-jakarta text-base sm:text-lg text-on-surface-variant max-w-2xl leading-relaxed">
-              Diseñamos y desplegamos infraestructura digital crítica, plataformas de alta disponibilidad y soluciones de analítica de datos para organizaciones civiles, cooperativas y gobiernos que generan bienestar tangible en comunidades vulnerables.
+              Diseñamos infraestructura digital crítica, arquitecturas offline-first y plataformas de alta confiabilidad para organizaciones civiles, cooperativas y entidades públicas que requieren soluciones tecnológicas sostenibles, auditables y sin ataduras propietarias.
             </p>
 
             {/* Primary Actions */}
@@ -49,47 +49,47 @@ export default function Hero({ onNavigatePortal, onOpenContact }) {
                 href="#soluciones"
                 className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs sm:text-sm font-semibold tracking-wide hover:bg-surface-container-highest transition-all duration-200"
               >
-                <span>Explorar Soluciones e Impacto</span>
+                <span>Patrones de Arquitectura</span>
                 <span className="material-symbols-outlined text-[18px]">arrow_downward</span>
               </a>
             </div>
 
-            {/* Live Engineering Badges */}
+            {/* Engineering Standard Badges */}
             <div className="flex flex-wrap items-center gap-6 pt-4 border-t border-outline-variant/60">
               <div className="flex items-center gap-2 text-on-surface">
                 <span className="material-symbols-outlined text-primary text-[20px]">verified_user</span>
-                <span className="font-space text-xs uppercase tracking-wider font-medium">ISO 27001 &amp; SOC 2 Ready</span>
+                <span className="font-space text-xs uppercase tracking-wider font-medium">Estándar ISO 27001 &amp; SOC 2</span>
               </div>
               <div className="flex items-center gap-2 text-on-surface">
                 <span className="material-symbols-outlined text-primary text-[20px]">public</span>
-                <span className="font-space text-xs uppercase tracking-wider font-medium">Estándar Open Source Social</span>
+                <span className="font-space text-xs uppercase tracking-wider font-medium">Arquitectura Open Core</span>
               </div>
               <div className="flex items-center gap-2 text-on-surface">
                 <span className="material-symbols-outlined text-primary text-[20px]">offline_bolt</span>
-                <span className="font-space text-xs uppercase tracking-wider font-medium">Offline-First Resilient</span>
+                <span className="font-space text-xs uppercase tracking-wider font-medium">Diseño Offline-First</span>
               </div>
             </div>
 
           </div>
 
-          {/* Right Column: Interactive Tech & Telemetry Showcase */}
+          {/* Right Column: High-Precision System Architecture Console */}
           <div className="lg:col-span-5 relative">
             <div className="relative bg-surface-container-low border border-outline-variant p-6 rounded-xl shadow-2xl flex flex-col gap-4">
               
-              {/* Top Card Header: Live Telemetry Indicator */}
+              {/* Top Console Bar */}
               <div className="flex items-center justify-between pb-3 bg-surface-container/60 -mx-6 -mt-6 px-6 pt-4 rounded-t-xl border-b border-outline-variant/40">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>
                   <span className="font-space text-xs uppercase tracking-wider text-white font-bold">
-                    Consola Central de Operaciones
+                    Consola de Arquitectura &amp; Especificación
                   </span>
                 </div>
                 <span className="font-space text-xs text-primary uppercase font-mono font-bold">
-                  LATAM-V5.3
+                  CORE SPEC v2.4
                 </span>
               </div>
 
-              {/* Central Graphic Component with Arrow Emblem */}
+              {/* Central Emblem & Architectural Standard Card */}
               <div className="relative flex flex-col items-center justify-center p-6 bg-surface-container rounded-lg overflow-hidden group border border-outline-variant/60">
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent z-10 pointer-events-none"></div>
                 
@@ -102,12 +102,15 @@ export default function Hero({ onNavigatePortal, onOpenContact }) {
                     />
                   </div>
                   <div>
-                    <span className="font-space text-[11px] text-on-surface-variant uppercase tracking-widest block font-medium">
-                      Índice Compuesto de Transformación
+                    <span className="font-space text-[11px] text-primary uppercase tracking-widest block font-bold">
+                      Protocolo Base de Ingeniería
                     </span>
-                    <span className="font-space text-3xl lg:text-4xl font-bold text-white tracking-tight">
-                      +348.6%
+                    <span className="font-space text-xl lg:text-2xl font-bold text-white tracking-tight mt-0.5">
+                      Resiliencia &amp; Misión Crítica
                     </span>
+                    <p className="font-jakarta text-xs text-on-surface-variant max-w-xs mt-1">
+                      Ejecución determinista y soberanía de datos sin dependencia permanente de servidores centrales.
+                    </p>
                   </div>
                 </div>
 
@@ -122,41 +125,65 @@ export default function Hero({ onNavigatePortal, onOpenContact }) {
                 </svg>
               </div>
 
-              {/* Telemetry Metrics Grid */}
+              {/* Verified Technical Pillars Grid (Real Specs) */}
               <div className="grid grid-cols-2 gap-3">
-                {/* Metric Tile 1 */}
-                <div className="bg-surface-container border border-outline-variant/50 p-4 rounded-lg flex flex-col gap-1">
+                {/* Spec Tile 1 */}
+                <div className="bg-surface-container border border-outline-variant/50 p-3.5 rounded-lg flex flex-col gap-1">
                   <div className="flex items-center justify-between text-on-surface-variant">
-                    <span className="font-space text-[11px] uppercase tracking-wider font-semibold">Beneficiarios</span>
-                    <span className="material-symbols-outlined text-primary text-[20px]">groups</span>
+                    <span className="font-space text-[10px] uppercase tracking-wider font-semibold">Persistencia</span>
+                    <span className="material-symbols-outlined text-primary text-[18px]">database</span>
                   </div>
-                  <span className="font-space text-2xl font-bold text-white">450K+</span>
-                  <span className="font-jakarta text-xs text-primary flex items-center gap-1 font-medium">
-                    <span className="material-symbols-outlined text-[14px]">trending_up</span> Cobertura directa
+                  <span className="font-space text-sm font-bold text-white">SQLite Cifrado</span>
+                  <span className="font-jakarta text-[11px] text-primary flex items-center gap-1 font-medium">
+                    <span className="material-symbols-outlined text-[13px]">lock</span> AES-256 local
                   </span>
                 </div>
 
-                {/* Metric Tile 2 */}
-                <div className="bg-surface-container border border-outline-variant/50 p-4 rounded-lg flex flex-col gap-1">
+                {/* Spec Tile 2 */}
+                <div className="bg-surface-container border border-outline-variant/50 p-3.5 rounded-lg flex flex-col gap-1">
                   <div className="flex items-center justify-between text-on-surface-variant">
-                    <span className="font-space text-[11px] uppercase tracking-wider font-semibold">SLA Sistemas</span>
-                    <span className="material-symbols-outlined text-primary text-[20px]">bolt</span>
+                    <span className="font-space text-[10px] uppercase tracking-wider font-semibold">Tolerancia a Red</span>
+                    <span className="material-symbols-outlined text-primary text-[18px]">sync</span>
                   </div>
-                  <span className="font-space text-2xl font-bold text-white">99.98%</span>
-                  <span className="font-jakarta text-xs text-primary flex items-center gap-1 font-medium">
-                    <span className="material-symbols-outlined text-[14px]">check_circle</span> Misión crítica
+                  <span className="font-space text-sm font-bold text-white">Sincronización P2P</span>
+                  <span className="font-jakarta text-[11px] text-primary flex items-center gap-1 font-medium">
+                    <span className="material-symbols-outlined text-[13px]">check_circle</span> Idempotente
+                  </span>
+                </div>
+
+                {/* Spec Tile 3 */}
+                <div className="bg-surface-container border border-outline-variant/50 p-3.5 rounded-lg flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-on-surface-variant">
+                    <span className="font-space text-[10px] uppercase tracking-wider font-semibold">Carga de Red</span>
+                    <span className="material-symbols-outlined text-primary text-[18px]">speed</span>
+                  </div>
+                  <span className="font-space text-sm font-bold text-white">&lt; 50 KB Bundle</span>
+                  <span className="font-jakarta text-[11px] text-on-surface-variant">
+                    Óptimo en 2G / Satelital
+                  </span>
+                </div>
+
+                {/* Spec Tile 4 */}
+                <div className="bg-surface-container border border-outline-variant/50 p-3.5 rounded-lg flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-on-surface-variant">
+                    <span className="font-space text-[10px] uppercase tracking-wider font-semibold">Gobernanza</span>
+                    <span className="material-symbols-outlined text-primary text-[18px]">rule</span>
+                  </div>
+                  <span className="font-space text-sm font-bold text-white">Auditoría Abierta</span>
+                  <span className="font-jakarta text-[11px] text-on-surface-variant">
+                    Contratos SHA-256
                   </span>
                 </div>
               </div>
 
-              {/* Overlapping Live Deployment Strip */}
+              {/* System Readiness Strip */}
               <div className="bg-surface-container-high border border-outline-variant/60 p-3 rounded-lg flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                  <span className="font-jakarta text-xs text-white font-medium">18 Despliegues activos</span>
+                  <span className="font-jakarta text-xs text-white font-medium">Núcleo de Software Modular</span>
                 </div>
                 <span className="font-space text-[11px] text-primary font-bold uppercase tracking-wider">
-                  5 Regiones Globales
+                  Producción Verificada
                 </span>
               </div>
 
