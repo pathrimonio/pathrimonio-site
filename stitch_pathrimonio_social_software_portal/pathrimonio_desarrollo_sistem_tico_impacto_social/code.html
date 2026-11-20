@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>Pathrimonio - Desarrollo Sistemático</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed-dim": "#c6c6c7", "surface": "#131314", "on-secondary-fixed": "#1a1c1c", "outline": "#9f8e7a", "secondary": "#c6c6c7", "on-surface": "#e5e2e3", "tertiary-fixed-dim": "#c8c5ca", "inverse-on-surface": "#313031", "on-tertiary-container": "#47474a", "on-secondary-container": "#b4b5b5", "on-secondary": "#2f3131", "background": "#131314", "surface-bright": "#3a393a", "surface-dim": "#131314", "inverse-primary": "#835500", "primary-container": "#f5a623", "surface-container-high": "#2a2a2b", "secondary-fixed": "#e2e2e2", "surface-container-lowest": "#0e0e0f", "on-tertiary": "#303033", "on-primary-fixed": "#291800", "on-tertiary-fixed": "#1b1b1e", "outline-variant": "#524534", "error": "#ffb4ab", "surface-container-low": "#1c1b1c", "surface-container-highest": "#353436", "tertiary-container": "#b7b5b9", "on-error-container": "#ffdad6", "primary-fixed": "#ffddb4", "tertiary-fixed": "#e4e1e6", "on-secondary-fixed-variant": "#454747", "error-container": "#93000a", "secondary-container": "#454747", "on-background": "#e5e2e3", "on-primary-container": "#644000", "primary-fixed-dim": "#ffb955", "on-tertiary-fixed-variant": "#47464a", "tertiary": "#d3d1d5", "primary": "#ffc880", "surface-variant": "#353436", "inverse-surface": "#e5e2e3", "on-surface-variant": "#d7c3ae", "surface-tint": "#ffb955", "on-primary": "#452b00", "on-error": "#690005", "on-primary-fixed-variant": "#633f00", "surface-container": "#201f20" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-xs": "0.25rem", "space-sm": "0.5rem", "space-lg": "1.5rem", "margin-mobile": "1.25rem", "margin": "3rem", "gutter": "1.5rem", "space-xl": "2.5rem", "space-md": "1rem", "gutter-mobile": "1rem" }, "fontFamily": { "headline-lg-mobile": [ "Space Grotesk" ], "body-md": [ "Plus Jakarta Sans" ], "headline-xl": [ "Space Grotesk" ], "body-sm": [ "Plus Jakarta Sans" ], "body-lg": [ "Plus Jakarta Sans" ], "headline-sm": [ "Space Grotesk" ], "label-lg": [ "Space Grotesk" ], "label-md": [ "Space Grotesk" ], "headline-md": [ "Space Grotesk" ], "headline-lg": [ "Space Grotesk" ], "headline-xl-mobile": [ "Space Grotesk" ], "label-sm": [ "Space Grotesk" ] }, "fontSize": { "headline-lg-mobile": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "body-md": [ "15px", { "lineHeight": "24px", "fontWeight": "400" } ], "headline-xl": [ "48px", { "lineHeight": "56px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "body-sm": [ "13px", { "lineHeight": "20px", "fontWeight": "400" } ], "body-lg": [ "18px", { "lineHeight": "28px", "fontWeight": "400" } ], "headline-sm": [ "20px", { "lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "600" } ], "label-lg": [ "14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" } ], "label-md": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600" } ], "headline-md": [ "24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "headline-lg": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "headline-xl-mobile": [ "32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "label-sm": [ "10px", { "lineHeight": "14px", "letterSpacing": "0.08em", "fontWeight": "700" } ] } } } };</script></head><body class="bg-background font-body-md text-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 w-full px-gutter max-w-7xl mx-auto flex items-center justify-between gap-space-lg"><a class="flex items-center gap-space-sm group focus:outline-none" data-path="metodologia" href="#"><div class="w-9 h-9 rounded bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined text-primary text-headline-sm">terminal</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface font-bold">PATHRIMONIO</span><span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Desarrollo Sistemático</span></div></a><nav class="hidden xl:flex items-center gap-space-xs" data-active-classes="bg-surface-container text-primary font-label-md"><a class="px-space-md py-space-xs rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" data-path="metodologia" href="#">Metodología</a><a class="px-space-md py-space-xs rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" data-path="soluciones-tech" href="#">Soluciones Tech</a><a class="px-space-md py-space-xs rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" data-path="impacto-social" href="#">Impacto Social</a><a class="px-space-md py-space-xs rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" data-path="casos" href="#">Casos</a><a class="px-space-md py-space-xs rounded font-label-md text-label-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" data-path="manifiesto" href="#">Manifiesto</a></nav><div class="flex items-center gap-space-md"><a class="inline-flex items-center justify-center px-space-lg py-space-sm rounded-lg bg-primary-container text-on-primary-container font-label-md text-label-md uppercase tracking-wider transition-all duration-200 shadow-[0_0_16px_rgba(245,166,35,0.25)] hover:shadow-[0_0_24px_rgba(245,166,35,0.45)]" data-path="iniciar-proyecto" href="#"><span class="material-symbols-outlined mr-space-xs text-headline-sm">rocket_launch</span>Iniciar Proyecto</a><div class="flex items-center pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmBIQtu6c8ttdRfqFfzgebnp-bDtUMTxk-375HZl7pbCkBAwRtE-Nt2ioQcJk1SO5ef6079yZojm1bErrXNwNiZ3h2Wiw3_RL7VkW42JeiVAnQQ9H_vgM3H2vlPexgDMNurv9P-2MuEcPBwH0ZoSGdtlMoIa8QheguruUpefvc3NirKwZFq7fQ8LYjJmKC8ocK0WNP2ghJEQCc4YJD5ZDhmtiMrxmHB1hxq83ms2RFahSDd9SN5NN-"/></div></div></div></header><main class="w-full pt-20 bg-background min-h-screen"><div class="flex flex-col w-full">
+<!-- HERO SECTION -->
+<section class="relative w-full overflow-hidden bg-surface-container-lowest py-space-xl lg:py-24">
+<!-- Ambient Luminous Glows -->
+<div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] bg-primary-container/10 rounded-full blur-[140px] pointer-events-none"></div>
+<div class="absolute -top-12 right-12 w-[350px] h-[350px] bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="max-w-7xl mx-auto px-gutter relative z-10">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-center">
+<!-- Left Column: Narrative & Primary CTAs -->
+<div class="lg:col-span-7 flex flex-col gap-space-md">
+<!-- Status Tag -->
+<div class="inline-flex items-center gap-space-xs px-space-md py-space-xs bg-surface-container-high rounded-full w-fit">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary">Ingeniería de Software con Propósito Social</span>
+</div>
+<!-- Master Headline -->
+<h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight text-balance">
+            Desarrollo sistemático de software para acelerar el <span class="text-primary underline decoration-primary-container/40 underline-offset-8">progreso humano y social</span>.
+          </h1>
+<!-- Description Body -->
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl leading-relaxed">
+            Diseñamos y desplegamos infraestructura digital crítica, plataformas de alta disponibilidad y soluciones de analítica de datos para organizaciones civiles, fundaciones y gobiernos que generan bienestar tangible en comunidades vulnerables.
+          </p>
+<!-- Primary Actions -->
+<div class="flex flex-wrap items-center gap-space-md pt-space-sm">
+<a class="inline-flex items-center justify-center px-space-xl py-space-md rounded-lg bg-primary-container text-on-primary-container font-label-lg text-label-lg font-bold uppercase tracking-wider transition-all duration-300 shadow-[0_0_24px_rgba(245,166,35,0.35)] hover:shadow-[0_0_36px_rgba(245,166,35,0.55)] hover:scale-[1.02]" href="#soluciones">
+<span class="material-symbols-outlined mr-space-xs text-headline-sm">dataset</span>
+              Explorar Soluciones e Impacto
+            </a>
+<a class="inline-flex items-center justify-center px-space-lg py-space-md rounded-lg bg-surface-container-high text-on-surface hover:text-primary font-label-lg text-label-lg font-semibold tracking-wide hover:bg-surface-container-highest transition-all duration-200" href="#metodologia">
+              Nuestra Metodología
+              <span class="material-symbols-outlined ml-space-xs text-headline-sm">arrow_forward</span>
+</a>
+</div>
+<!-- Live Engineering Badges -->
+<div class="flex items-center gap-space-lg pt-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-headline-sm">verified_user</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase">ISO 27001 &amp; SOC 2 Ready</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-headline-sm">public</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase">Estándar Open Source Social</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Interactive Tech & Telemetry Showcase -->
+<div class="lg:col-span-5 relative">
+<!-- Background Atmospheric Grid -->
+<div class="relative bg-surface-container-low p-space-lg rounded-xl shadow-2xl flex flex-col gap-space-md">
+<!-- Top Card Header: Live Telemetry Indicator -->
+<div class="flex items-center justify-between pb-space-sm bg-surface-container/60 -mx-space-lg -mt-space-lg px-space-lg pt-space-md rounded-t-xl">
+<div class="flex items-center gap-space-xs">
+<span class="w-2.5 h-2.5 rounded-full bg-primary animate-ping"></span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface font-bold">Consola Central de Operaciones</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary uppercase font-mono">LATAM-V5.3</span>
+</div>
+<!-- Central Hero Graphic Component with Uploaded Arrow Asset -->
+<div class="relative flex flex-col items-center justify-center p-space-md bg-surface-container rounded-lg overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent z-10"></div>
+<div class="relative z-20 flex flex-col items-center gap-space-sm py-space-sm">
+<div class="w-28 h-28 relative flex items-center justify-center">
+<!-- System Rising Arrow Emblem -->
+<img alt="Símbolo de Crecimiento Sistemático Pathrimonio" class="w-full h-full object-contain filter drop-shadow-[0_0_16px_rgba(245,166,35,0.4)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2bJvFBtNAR4gpvAODaSdlmiCJdfh8A2IQj0Rk-QYUujDJZydks0FqwXz6Z-HqWvBrkKVBH9_easq0JvaZ-ge1sLuup5HXvHa7YXTdboKGrt45E25akCRsubG2uwSpmNP-rRJdQLFRlkC2ClbGVYM_S6DAJa7cRrvUulr8tx9ZPQ9qAkWMxFpdp6pvGt2UmxJ8ZEMhhb1VFisoqO01cauLHI9Vas1AHzy-k8IO8QcDFTcf8JNzXpaG8XE6P4TRL1fD3Q"/>
+</div>
+<div class="text-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest block">Índice Compuesto de Transformación</span>
+<span class="font-headline-lg text-headline-lg font-bold text-on-surface">+348.6%</span>
+</div>
+</div>
+<!-- Animated Vector Grid Backdrop -->
+<svg class="absolute inset-0 w-full h-full opacity-15 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="20" id="heroGridPattern" patternunits="userSpaceOnUse" width="20">
+<path class="text-on-surface-variant" d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-width="0.5"></path>
+</pattern>
+</defs>
+<rect fill="url(#heroGridPattern)" height="100%" width="100%"></rect>
+</svg>
+</div>
+<!-- Telemetry Metrics Grid -->
+<div class="grid grid-cols-2 gap-space-sm">
+<!-- Metric Tile 1 -->
+<div class="bg-surface-container p-space-md rounded-lg flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant">Beneficiarios</span>
+<span class="material-symbols-outlined text-primary text-headline-sm">groups</span>
+</div>
+<span class="font-headline-md text-headline-md font-bold text-on-surface">450K+</span>
+<span class="font-body-sm text-body-sm text-primary flex items-center">
+<span class="material-symbols-outlined text-body-sm mr-1">trending_up</span> Cobertura directa
+                </span>
+</div>
+<!-- Metric Tile 2 -->
+<div class="bg-surface-container p-space-md rounded-lg flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant">SLA Sistemas</span>
+<span class="material-symbols-outlined text-primary text-headline-sm">bolt</span>
+</div>
+<span class="font-headline-md text-headline-md font-bold text-on-surface">99.98%</span>
+<span class="font-body-sm text-body-sm text-primary flex items-center">
+<span class="material-symbols-outlined text-body-sm mr-1">check_circle</span> Misión crítica
+                </span>
+</div>
+</div>
+<!-- Overlapping Live Deployment Strip -->
+<div class="bg-surface-container-high p-space-sm rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span class="font-body-sm text-body-sm text-on-surface">18 Despliegues activos</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-bold uppercase">5 Regiones Globales</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ALLIANCE & PARTNERS BANNER -->
+<section class="w-full py-space-lg bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-gutter flex flex-col lg:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-xs max-w-sm">
+<span class="material-symbols-outlined text-primary text-headline-sm">handshake</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Impulsando el cambio junto a entidades de impacto global, ONGs innovadoras y fondos de desarrollo social:
+        </p>
+</div>
+<div class="flex flex-wrap items-center gap-space-xl">
+<div class="flex items-center gap-space-xs opacity-70 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-surface text-headline-sm">vital_signs</span>
+<span class="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">BioGlobal AID</span>
+</div>
+<div class="flex items-center gap-space-xs opacity-70 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-surface text-headline-sm">water_drop</span>
+<span class="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">AquaFund</span>
+</div>
+<div class="flex items-center gap-space-xs opacity-70 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-surface text-headline-sm">account_balance</span>
+<span class="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">MicroEthic Labs</span>
+</div>
+<div class="flex items-center gap-space-xs opacity-70 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-on-surface text-headline-sm">hub</span>
+<span class="font-headline-sm text-headline-sm font-bold tracking-tight text-on-surface">Network 2030</span>
+</div>
+</div>
+</div>
+</section>
+<!-- THE FOUR PILLARS SECTION -->
+<section class="w-full py-space-xl lg:py-24 bg-surface" id="metodologia">
+<div class="max-w-7xl mx-auto px-gutter flex flex-col gap-space-xl">
+<!-- Section Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs max-w-2xl">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest font-bold">Marcos de Ingeniería Sistemática</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">
+            Los Cuatro Pilares del Desarrollo Sistemático
+          </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Nuestra arquitectura no depende de voluntarismo efímero. Aplicamos principios estrictos de resiliencia computacional y gobernanza abierta para garantizar impacto perpetuo.
+          </p>
+</div>
+<div class="hidden md:flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm uppercase">
+<span class="material-symbols-outlined text-primary text-headline-sm">memory</span>
+          Arquitectura Certificada v4.2
+        </div>
+</div>
+<!-- 4 Pillars Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Pillar 01 -->
+<div class="bg-surface-container p-space-lg rounded-xl flex flex-col justify-between hover:bg-surface-container-high transition-colors group">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-headline-lg text-headline-lg font-bold text-outline-variant group-hover:text-primary transition-colors">01</span>
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-headline-sm">security</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                Arquitectura Resiliente &amp; Segura
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Sistemas de grado de defensa diseñados para tolerar particiones de red, caídas de energía y fallos en infraestructuras complejas sin pérdida de datos críticos.
+              </p>
+</div>
+</div>
+<div class="pt-space-md flex items-center gap-space-xs font-label-sm text-label-sm text-primary">
+<span>Tolerancia a fallos bizantinos</span>
+</div>
+</div>
+<!-- Pillar 02 -->
+<div class="bg-surface-container p-space-lg rounded-xl flex flex-col justify-between hover:bg-surface-container-high transition-colors group">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-headline-lg text-headline-lg font-bold text-outline-variant group-hover:text-primary transition-colors">02</span>
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-headline-sm">insights</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                Inteligencia de Datos para el Bienestar
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Modelos de predicción logística y analítica en tiempo real que optimizan la distribución de víveres, medicamentos y capital semilla donde más se requiere.
+              </p>
+</div>
+</div>
+<div class="pt-space-md flex items-center gap-space-xs font-label-sm text-label-sm text-primary">
+<span>Modelado ético transparente</span>
+</div>
+</div>
+<!-- Pillar 03 -->
+<div class="bg-surface-container p-space-lg rounded-xl flex flex-col justify-between hover:bg-surface-container-high transition-colors group">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-headline-lg text-headline-lg font-bold text-outline-variant group-hover:text-primary transition-colors">03</span>
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-headline-sm">wifi_off</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                Accesibilidad e Inclusión Radical
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Interfaces offline-first y protocolos de ultra-baja latencia creados para dispositivos modestos y conectividad satelital o 2G en comunidades aisladas.
+              </p>
+</div>
+</div>
+<div class="pt-space-md flex items-center gap-space-xs font-label-sm text-label-sm text-primary">
+<span>Sub-50KB bundle payload</span>
+</div>
+</div>
+<!-- Pillar 04 -->
+<div class="bg-surface-container p-space-lg rounded-xl flex flex-col justify-between hover:bg-surface-container-high transition-colors group">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-headline-lg text-headline-lg font-bold text-outline-variant group-hover:text-primary transition-colors">04</span>
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-headline-sm">terminal</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                Soberanía Tecnológica &amp; Open Core
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Código auditable y programas de capacitación profunda que empoderan a equipos técnicos locales para mantener y evolucionar sus propias soluciones.
+              </p>
+</div>
+</div>
+<div class="pt-space-md flex items-center gap-space-xs font-label-sm text-label-sm text-primary">
+<span>Licenciamiento sin ataduras</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SOLUTIONS & CASE STUDIES SECTION -->
+<section class="w-full py-space-xl lg:py-24 bg-surface-container-lowest" id="soluciones">
+<div class="max-w-7xl mx-auto px-gutter flex flex-col gap-space-xl">
+<!-- Section Intro -->
+<div class="flex flex-col gap-space-xs max-w-3xl">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest font-bold">Despliegues en Producción</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">
+          Soluciones de Alto Impacto y Casos Verificados
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Cada solución aborda una necesidad crítica de derechos humanos fundamentales respaldada por infraestructura de código de alto rendimiento.
+        </p>
+</div>
+<!-- Case Studies Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+<!-- Case 1: BioSalud -->
+<div class="bg-surface-container rounded-xl overflow-hidden flex flex-col justify-between shadow-lg hover:shadow-2xl transition-all">
+<div class="p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="px-space-sm py-1 rounded bg-primary/10 text-primary font-label-sm text-label-sm uppercase font-bold tracking-wider">Salud &amp; Logística</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">ID: BIO-889</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Plataforma BioSalud</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Trazabilidad criptográfica de cadena de frío y distribución de vacunas en 14 distritos aislados de la selva y zonas montañosas.
+              </p>
+</div>
+<!-- KPI Metric Block -->
+<div class="bg-surface-container-high p-space-md rounded-lg flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Pérdida de inventario</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary">-82%</span>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Dosis Seguras</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">190,000+</span>
+</div>
+</div>
+<!-- Tech Stack Tags -->
+<div class="flex flex-wrap gap-space-xs pt-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Rust</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">WebAssembly</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">PostgreSQL</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Offline SQLite</span>
+</div>
+</div>
+<div class="bg-surface-container-high px-space-lg py-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">En despliegue activo: 24 meses</span>
+<span class="material-symbols-outlined text-primary text-headline-sm">check_circle</span>
+</div>
+</div>
+<!-- Case 2: Red Raíces -->
+<div class="bg-surface-container rounded-xl overflow-hidden flex flex-col justify-between shadow-lg hover:shadow-2xl transition-all">
+<div class="p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="px-space-sm py-1 rounded bg-primary/10 text-primary font-label-sm text-label-sm uppercase font-bold tracking-wider">Inclusión Financiera</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">ID: RAIZ-402</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Red Raíces</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Protocolo de microcréditos peer-to-peer y ahorro comunitario sin intermediación bancaria extractiva, auditado por asambleas locales.
+              </p>
+</div>
+<!-- KPI Metric Block -->
+<div class="bg-surface-container-high p-space-md rounded-lg flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Capital Desplegado</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary">$4.2M USD</span>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Tasa Cumplimiento</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">98.4%</span>
+</div>
+</div>
+<!-- Tech Stack Tags -->
+<div class="flex flex-wrap gap-space-xs pt-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Go</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Consensus Raft</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Flutter</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Docker</span>
+</div>
+</div>
+<div class="bg-surface-container-high px-space-lg py-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Cooperativas integradas: 34</span>
+<span class="material-symbols-outlined text-primary text-headline-sm">check_circle</span>
+</div>
+</div>
+<!-- Case 3: AguaViva IoT -->
+<div class="bg-surface-container rounded-xl overflow-hidden flex flex-col justify-between shadow-lg hover:shadow-2xl transition-all">
+<div class="p-space-lg flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="px-space-sm py-1 rounded bg-primary/10 text-primary font-label-sm text-label-sm uppercase font-bold tracking-wider">Recursos Críticos</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">ID: H2O-119</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">AguaViva IoT</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Red telemétrica de bajo costo para monitoreo de niveles freáticos, salinidad y control de flujo en bombas solares de agua potable.
+              </p>
+</div>
+<!-- KPI Metric Block -->
+<div class="bg-surface-container-high p-space-md rounded-lg flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Agua Salvaguardada</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary">12.8M L</span>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Pozos Monitoreados</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">320</span>
+</div>
+</div>
+<!-- Tech Stack Tags -->
+<div class="flex flex-wrap gap-space-xs pt-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">C++ Embedded</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">LoRaWAN</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">TimescaleDB</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">React</span>
+</div>
+</div>
+<div class="bg-surface-container-high px-space-lg py-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Autonomía por sensor: 5 años</span>
+<span class="material-symbols-outlined text-primary text-headline-sm">check_circle</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- EDITORIAL MANIFESTO SECTION -->
+<section class="w-full py-space-xl lg:py-28 bg-surface relative overflow-hidden" id="manifiesto">
+<div class="absolute inset-0 bg-gradient-to-r from-primary-container/5 via-transparent to-primary/5 pointer-events-none"></div>
+<div class="max-w-7xl mx-auto px-gutter relative z-10 flex flex-col gap-space-lg">
+<div class="flex items-center gap-space-xs">
+<span class="w-8 h-1 bg-primary"></span>
+<span class="font-label-md text-label-md uppercase tracking-widest text-primary font-bold">El Manifiesto de Pathrimonio</span>
+</div>
+<div class="max-w-4xl">
+<blockquote class="font-headline-xl text-headline-xl text-on-surface font-bold leading-tight">
+          “El código nunca ha sido neutral. Cada línea de arquitectura que escribimos o consolida privilegios o construye un futuro deliberadamente equitativo.”
+        </blockquote>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg pt-space-lg">
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">1. Ética por Diseño</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Rechazamos patrones oscuros de monetización o captura de datos que vulneren la dignidad del usuario final.
+          </p>
+</div>
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">2. Perpetuidad de Sistemas</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Construimos software mantenible que subsiste a los ciclos de subvención y financiamiento corporativo.
+          </p>
+</div>
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-lg text-label-lg text-on-surface font-bold">3. Verificación Abierta</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Cada métrica de impacto es rastreable mediante auditorías públicas, sin vanidad ni métricas infladas.
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- TRANSPARENCY & PERFORMANCE TELEMETRY SECTION -->
+<section class="w-full py-space-xl bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-gutter flex flex-col gap-space-xl">
+<!-- Section Header -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest font-bold">Auditoría Social en Vivo</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface font-bold">
+          Transparencia e Indicadores de Rendimiento Sistémico
+        </h2>
+</div>
+<!-- Live Metric Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<div class="bg-surface-container p-space-lg rounded-xl flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase">Comunidades Atendidas</span>
+<span class="material-symbols-outlined text-primary text-headline-sm">location_city</span>
+</div>
+<span class="font-headline-xl text-headline-xl font-bold text-on-surface">1,420</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Distribuidas en 8 ecosistemas rurales</span>
+</div>
+<div class="bg-surface-container p-space-lg rounded-xl flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase">Código Auditado Éticamente</span>
+<span class="material-symbols-outlined text-primary text-headline-sm">rule</span>
+</div>
+<span class="font-headline-xl text-headline-xl font-bold text-primary">100%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Libre de algoritmos de sesgo discriminatorio</span>
+</div>
+<div class="bg-surface-container p-space-lg rounded-xl flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase">Eficiencia Energética</span>
+<span class="material-symbols-outlined text-primary text-headline-sm">eco</span>
+</div>
+<span class="font-headline-xl text-headline-xl font-bold text-on-surface">0.02g</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">CO2 emitido por consulta de endpoint</span>
+</div>
+<div class="bg-surface-container p-space-lg rounded-xl flex flex-col gap-space-xs">
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase">Capacitaciones Locales</span>
+<span class="material-symbols-outlined text-primary text-headline-sm">school</span>
+</div>
+<span class="font-headline-xl text-headline-xl font-bold text-on-surface">2,850+</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Horas de transferencia técnica directa</span>
+</div>
+</div>
+<!-- Real-Time Activity Log Simulation -->
+<div class="bg-surface-container p-space-lg rounded-xl flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-headline-sm">terminal</span>
+<span class="font-label-md text-label-md uppercase text-on-surface font-bold">Registro de Ejecución Criptográfica de Impacto</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-mono">LATAM-SYNC // SHA-256</span>
+</div>
+<div class="font-mono text-body-sm flex flex-col gap-space-xs text-on-surface-variant">
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-sm rounded">
+<span>[2025-05-18 14:32:01 UTC] • Sincronización BioSalud Nodo #44 (Zona Andina) • 4,210 paquetes verificados</span>
+<span class="text-primary font-bold">STATUS: CONFIRMADO</span>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-sm rounded">
+<span>[2025-05-18 14:31:12 UTC] • Red Raíces: Balance de liquidación comunitaria mensual emitido sin discrepancias</span>
+<span class="text-primary font-bold">STATUS: VALIDADO</span>
+</div>
+<div class="flex items-center justify-between py-1 bg-surface-container-low px-space-sm rounded">
+<span>[2025-05-18 14:28:44 UTC] • AguaViva IoT: Alerta temprana de sequía enviada a 3 comités de cuenca</span>
+<span class="text-primary font-bold">STATUS: DESPACHADO</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FINAL CALL TO ACTION SECTION (PRE-FOOTER) -->
+<section class="w-full py-space-xl lg:py-24 bg-surface relative overflow-hidden">
+<div class="max-w-5xl mx-auto px-gutter relative z-10 text-center flex flex-col items-center gap-space-md">
+<!-- Subtle top decorative marker -->
+<div class="w-12 h-1 bg-primary-container rounded-full"></div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface font-bold tracking-tight max-w-3xl">
+        ¿Lideras una iniciativa de impacto o requieres arquitectura de software sistemática?
+      </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+        Colaboramos con agencias multilaterales, entidades públicas, cooperativas y fundaciones pioneras para conceptualizar, programar y desplegar plataformas que cambian vidas.
+      </p>
+<div class="flex flex-wrap items-center justify-center gap-space-md pt-space-md">
+<a class="inline-flex items-center justify-center px-space-xl py-space-md rounded-lg bg-primary-container text-on-primary-container font-label-lg text-label-lg font-bold uppercase tracking-wider transition-all duration-300 shadow-[0_0_24px_rgba(245,166,35,0.35)] hover:shadow-[0_0_36px_rgba(245,166,35,0.55)] hover:scale-[1.02]" href="#contacto">
+<span class="material-symbols-outlined mr-space-xs text-headline-sm">calendar_today</span>
+          Agendar Sesión Técnica
+        </a>
+<a class="inline-flex items-center justify-center px-space-lg py-space-md rounded-lg bg-surface-container-high text-on-surface hover:text-primary font-label-lg text-label-lg font-semibold tracking-wide hover:bg-surface-container-highest transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-space-xs text-headline-sm">description</span>
+          Documentación Abierta (Whitepaper)
+        </a>
+</div>
+<div class="flex items-center gap-space-md pt-space-lg text-on-surface-variant font-label-sm text-label-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-body-sm">schedule</span> Respuesta garantizada en &lt; 24h
+        </span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-body-sm">lock</span> Acuerdo de confidencialidad estándar
+        </span>
+</div>
+</div>
+</section>
+</div></main><footer class="w-full bg-surface-container-lowest"><div class="max-w-7xl mx-auto px-gutter py-space-xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl"><div class="lg:col-span-2 flex flex-col gap-space-md"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-primary text-headline-sm">terminal</span></div><span class="font-headline-sm text-headline-sm tracking-tight text-on-surface font-bold">PATHRIMONIO</span></div><p class="font-body-sm text-body-sm text-on-surface-variant max-w-sm">Arquitectura de software de alta precisión impulsada por propósito sistémico y progreso social medible a escala regional y global.</p><div class="flex items-center gap-space-sm pt-space-xs"><span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span><span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Sistemas operando al 99.98% uptime</span></div></div><div class="flex flex-col gap-space-sm"><h3 class="font-label-lg text-label-lg uppercase text-on-surface font-bold">Divisiones Tech</h3><ul class="flex flex-col gap-space-xs"><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Infraestructura Distribuida</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Algoritmos de Gobernanza</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Arquitectura Tokenizada</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Pipelines Criptográficos</li></ul></div><div class="flex flex-col gap-space-sm"><h3 class="font-label-lg text-label-lg uppercase text-on-surface font-bold">Compromiso Social</h3><ul class="flex flex-col gap-space-xs"><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Métricas de Impacto Abierto</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Inclusión Patrimonial</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Auditoría de Algoritmos</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Iniciativa Open Core</li></ul></div><div class="flex flex-col gap-space-sm"><h3 class="font-label-lg text-label-lg uppercase text-on-surface font-bold">Transparencia &amp; Legal</h3><ul class="flex flex-col gap-space-xs"><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Reportes Financieros Públicos</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Términos de Servicio</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Protocolos de Privacidad</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer">Certificación de Custodia</li></ul></div></div><div class="mt-space-xl pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md"><span class="font-body-sm text-body-sm text-on-surface-variant">© 2025 Pathrimonio. Todos los derechos reservados. Arquitectura y progreso sin concesiones.</span><div class="flex items-center gap-space-lg"><a class="font-label-sm text-label-sm uppercase text-on-surface-variant hover:text-primary transition-colors" data-path="manifiesto" href="#">Manifiesto Sistémico</a><a class="font-label-sm text-label-sm uppercase text-on-surface-variant hover:text-primary transition-colors" data-path="casos" href="#">Repositorio de Casos</a></div></div></div></footer></body></html>
