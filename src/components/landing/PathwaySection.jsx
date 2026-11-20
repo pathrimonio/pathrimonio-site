@@ -43,7 +43,7 @@ export default function PathwaySection() {
               <span>Ecosistema de Software Pathrimonio</span>
             </div>
             <h2 className="font-space text-3xl lg:text-4xl text-white font-bold tracking-tight">
-              Pathway <span className="text-on-surface-variant font-normal text-2xl lg:text-3xl">(Pathwoy)</span> — App de Metas y Caminos de Progreso
+              Pathway — App de Metas y Caminos de Progreso
             </h2>
             <p className="font-jakarta text-sm sm:text-base text-on-surface-variant leading-relaxed">
               La plataforma móvil y web para descomponer grandes propósitos en rutas ejecutables, medir el avance con rigor matemático y mantener una bitácora inmutable de crecimiento personal y comunitario.
