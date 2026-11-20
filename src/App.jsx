@@ -8,6 +8,7 @@ import Hero from './components/landing/Hero';
 import Partners from './components/landing/Partners';
 import Pillars from './components/landing/Pillars';
 import CaseStudies from './components/landing/CaseStudies';
+import PathwaySection from './components/landing/PathwaySection';
 import Manifesto from './components/landing/Manifesto';
 import TelemetryAudit from './components/landing/TelemetryAudit';
 import Footer from './components/landing/Footer';
@@ -196,8 +197,9 @@ export default function App() {
             <Partners />
             <Pillars />
             <CaseStudies />
-            <Manifesto />
+            <PathwaySection />
             <TelemetryAudit />
+            <Manifesto />
 
             {/* Pre-Footer CTA */}
             <section className="w-full py-20 bg-surface border-t border-outline-variant/60">

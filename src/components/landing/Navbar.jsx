@@ -47,6 +47,13 @@ export default function Navbar({ onNavigatePortal, onOpenContact }) {
             Arquitecturas
           </button>
           <button 
+            onClick={() => scrollToSection('pathway')} 
+            className="px-3.5 py-1.5 rounded text-xs font-semibold text-primary hover:text-white hover:bg-surface-container transition-all flex items-center gap-1"
+          >
+            <span className="material-symbols-outlined text-[15px]">route</span>
+            <span>Pathway</span>
+          </button>
+          <button 
             onClick={() => scrollToSection('estandares')} 
             className="px-3.5 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all"
           >
@@ -106,6 +113,13 @@ export default function Navbar({ onNavigatePortal, onOpenContact }) {
             className="text-left py-2 text-sm text-on-surface-variant hover:text-white font-medium"
           >
             Arquitecturas
+          </button>
+          <button 
+            onClick={() => scrollToSection('pathway')} 
+            className="text-left py-2 text-sm text-primary hover:text-white font-medium flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-[16px]">route</span>
+            Pathway (App de Metas)
           </button>
           <button 
             onClick={() => scrollToSection('estandares')} 
