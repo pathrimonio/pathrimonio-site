@@ -7,7 +7,9 @@ export default function ControlsBar({
   activeModule, 
   setActiveModule,
   onNotify,
-  activeProject
+  activeProject,
+  onNavigateToActors,
+  actorsCount = 0
 }) {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
@@ -131,6 +133,18 @@ export default function ControlsBar({
                 </div>
               )}
             </div>
+
+            {/* Actores & Roles Navigation Button */}
+            {onNavigateToActors && (
+              <button 
+                onClick={onNavigateToActors}
+                className="h-8 px-3 rounded bg-surface-container-low border border-outline-variant hover:border-primary/50 text-white font-space text-xs font-medium flex items-center gap-1.5 transition-colors"
+                title="Gestionar roles y actores del negocio antes de crear historias"
+              >
+                <span className="material-symbols-outlined text-[16px] text-primary">badge</span>
+                <span>Actores & Roles {actorsCount > 0 ? `(${actorsCount})` : ''}</span>
+              </button>
+            )}
 
             {/* Submit All to Dev Team Button */}
             <button 

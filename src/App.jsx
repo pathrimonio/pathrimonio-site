@@ -3,6 +3,7 @@ import { INITIAL_STORIES } from './data/initialStories';
 import { INITIAL_INTERFACES } from './data/initialInterfaces';
 import { INITIAL_PROJECTS } from './data/initialProjects';
 import { INITIAL_DATA_MODELS } from './data/initialDataModels';
+import { INITIAL_ACTORS } from './data/initialActors';
 import { authenticateUser, saveSession, loadSession, clearSession } from './auth/authConfig';
 
 // Landing Components
@@ -34,12 +35,17 @@ import DataModelFeed from './components/portal/DataModelFeed';
 import DataModelDetailModal from './components/portal/DataModelDetailModal';
 import DERModal from './components/portal/DERModal';
 import SQLScriptModal from './components/portal/SQLScriptModal';
+import ActorsControlsBar from './components/portal/ActorsControlsBar';
+import ActorBuilder from './components/portal/ActorBuilder';
+import ActorFeed from './components/portal/ActorFeed';
+import ActorDetailModal from './components/portal/ActorDetailModal';
 import NewProjectModal from './components/portal/NewProjectModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
 const STORAGE_KEY = 'pathrimonio_stories_v3';
 const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v3';
 const DATA_MODELS_STORAGE_KEY = 'pathrimonio_data_models_v1';
+const ACTORS_STORAGE_KEY = 'pathrimonio_actors_v1';
 const PROJECTS_STORAGE_KEY = 'pathrimonio_projects_v1';
 const ACTIVE_PROJECT_KEY = 'pathrimonio_active_project_id_v1';
 
@@ -103,11 +109,24 @@ export default function App() {
     return INITIAL_DATA_MODELS;
   });
 
+  // ── Business Actors & Roles
+  const [actors, setActors] = useState(() => {
+    try {
+      const saved = localStorage.getItem(ACTORS_STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return INITIAL_ACTORS;
+  });
+
   // ── Filters & Search
   const [activeModule, setActiveModule] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [interfaceSearchQuery, setInterfaceSearchQuery] = useState('');
   const [dataModelSearchQuery, setDataModelSearchQuery] = useState('');
+  const [actorSearchQuery, setActorSearchQuery] = useState('');
+
+  // ── Preselected Role from Collaborator Link or Selection
+  const [preselectedRoleForStory, setPreselectedRoleForStory] = useState(null);
 
   // ── Detail modals
   const [selectedStory, setSelectedStory] = useState(null);
@@ -120,6 +139,9 @@ export default function App() {
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
   const [isDERModalOpen, setIsDERModalOpen] = useState(false);
   const [isSQLModalOpen, setIsSQLModalOpen] = useState(false);
+
+  const [selectedActor, setSelectedActor] = useState(null);
+  const [isActorModalOpen, setIsActorModalOpen] = useState(false);
 
   // ── Contact modal (landing)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -142,6 +164,11 @@ export default function App() {
     try { localStorage.setItem(DATA_MODELS_STORAGE_KEY, JSON.stringify(dataModels)); } catch (_) {}
   }, [dataModels]);
 
+  // Persist actors
+  useEffect(() => {
+    try { localStorage.setItem(ACTORS_STORAGE_KEY, JSON.stringify(actors)); } catch (_) {}
+  }, [actors]);
+
   // Persist projects
   useEffect(() => {
     try { localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects)); } catch (_) {}
@@ -152,14 +179,38 @@ export default function App() {
     try { localStorage.setItem(ACTIVE_PROJECT_KEY, activeProjectId); } catch (_) {}
   }, [activeProjectId]);
 
-  // Sync URL hash
+  // Sync URL hash & query parameters for deep linking
   useEffect(() => {
     const handleHash = () => {
-      setCurrentView(window.location.hash === '#portal' ? 'portal' : 'landing');
+      const hash = window.location.hash || '';
+      if (hash.startsWith('#portal')) {
+        setCurrentView('portal');
+
+        // Parse query params after #portal?
+        const qIndex = hash.indexOf('?');
+        if (qIndex !== -1) {
+          const queryString = hash.slice(qIndex + 1);
+          const params = new URLSearchParams(queryString);
+          const tab = params.get('tab');
+          const roleParam = params.get('role');
+          const projectParam = params.get('project');
+
+          if (tab) setActivePortalTab(tab);
+          if (roleParam) {
+            setPreselectedRoleForStory(decodeURIComponent(roleParam));
+          }
+          if (projectParam && projects.some(p => p.id === projectParam)) {
+            setActiveProjectId(projectParam);
+          }
+        }
+      } else {
+        setCurrentView('landing');
+      }
     };
+    handleHash();
     window.addEventListener('hashchange', handleHash);
     return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
+  }, [projects]);
 
   // Show login gate when user enters portal without a session
   useEffect(() => {
@@ -335,6 +386,14 @@ export default function App() {
         return pId === activeProjectId;
       });
 
+  // Business Actors scoped to active project
+  const projectActors = activeProjectId === 'all'
+    ? actors
+    : actors.filter(a => {
+        const pId = a.projectId || (a.id === 'ACT-04' || a.id === 'ACT-05' || a.id === 'ACT-06' ? 'portal-admin' : (a.id === 'ACT-07' || a.id === 'ACT-08' || a.id === 'ACT-09' ? 'core-hub' : 'pathway'));
+        return pId === activeProjectId;
+      });
+
   // ── Data Model Handlers
   const handleSaveTable = (newTable) => {
     setDataModels([newTable, ...dataModels]);
@@ -388,6 +447,40 @@ export default function App() {
       return [...uniqueNew, ...replaced];
     });
     notify(`¡${newTables.length} entidades de datos importadas correctamente desde el script SQL!`);
+  };
+
+  // ── Business Actor Handlers
+  const handleSaveActor = (newActor) => {
+    setActors(prev => [newActor, ...prev]);
+  };
+
+  const handleUpdateActor = (updatedActor) => {
+    setActors(prev => prev.map(a => a.id === updatedActor.id ? updatedActor : a));
+    notify(`Actor "${updatedActor.name}" actualizado.`);
+  };
+
+  const handleDuplicateActor = (actorToClone) => {
+    const cloned = {
+      ...actorToClone,
+      id: `ACT-${Date.now().toString().slice(-4)}`,
+      name: `${actorToClone.name} (Copia)`,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    setActors(prev => [cloned, ...prev]);
+    notify(`Actor duplicado como "${cloned.name}".`);
+  };
+
+  const handleDeleteActor = (actorId) => {
+    const actorToDelete = actors.find(a => a.id === actorId);
+    if (!window.confirm(`¿Eliminar el rol "${actorToDelete?.name || actorId}"?`)) return;
+    setActors(prev => prev.filter(a => a.id !== actorId));
+    notify('Actor eliminado de la matriz.');
+  };
+
+  const handleSelectActorForStory = (actor) => {
+    setPreselectedRoleForStory(actor.name);
+    setActivePortalTab('stories');
+    notify(`Rol "${actor.name}" seleccionado. Completa los detalles de la Historia de Usuario.`);
   };
 
   // ── Filtered stories for feed
@@ -512,6 +605,8 @@ export default function App() {
                     setActiveModule={setActiveModule}
                     onNotify={notify}
                     activeProject={activeProject}
+                    onNavigateToActors={() => setActivePortalTab('actors')}
+                    actorsCount={projectActors.length}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -520,6 +615,9 @@ export default function App() {
                           onSaveStory={handleSaveStory} 
                           onNotify={notify} 
                           activeProjectId={activeProjectId}
+                          projectActors={projectActors}
+                          selectedRole={preselectedRoleForStory}
+                          onNavigateToActors={() => setActivePortalTab('actors')}
                         />
                       </section>
                       <section className="lg:col-span-7 flex flex-col gap-y-4">
@@ -531,6 +629,41 @@ export default function App() {
                           onToggleCriterion={handleToggleCriterion}
                           searchQuery={searchQuery}
                           setSearchQuery={setSearchQuery}
+                        />
+                      </section>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {activePortalTab === 'actors' && (
+                <div className="flex flex-col w-full">
+                  <ActorsControlsBar
+                    actors={projectActors}
+                    stories={projectStories}
+                    activeProject={activeProject}
+                    onNotify={notify}
+                    onNavigateToStories={() => setActivePortalTab('stories')}
+                  />
+                  <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
+                        <ActorBuilder
+                          onSaveActor={handleSaveActor}
+                          onNotify={notify}
+                          activeProjectId={activeProjectId}
+                        />
+                      </section>
+                      <section className="lg:col-span-7 flex flex-col gap-y-4">
+                        <ActorFeed
+                          actors={projectActors}
+                          stories={projectStories}
+                          onEditActor={(actor) => { setSelectedActor(actor); setIsActorModalOpen(true); }}
+                          onDuplicateActor={handleDuplicateActor}
+                          onDeleteActor={handleDeleteActor}
+                          onSelectForStory={handleSelectActorForStory}
+                          searchQuery={actorSearchQuery}
+                          setSearchQuery={setActorSearchQuery}
+                          onNotify={notify}
                         />
                       </section>
                     </div>
@@ -621,6 +754,16 @@ export default function App() {
             isOpen={isDetailModalOpen}
             onClose={() => { setIsDetailModalOpen(false); setSelectedStory(null); }}
             onUpdateStory={handleUpdateStory}
+            projectActors={projectActors}
+          />
+
+          <ActorDetailModal
+            actor={selectedActor}
+            isOpen={isActorModalOpen}
+            onClose={() => { setIsActorModalOpen(false); setSelectedActor(null); }}
+            onUpdateActor={handleUpdateActor}
+            existingStories={projectStories}
+            onNotify={notify}
           />
 
           <InterfaceDetailModal

@@ -1,9 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ROLE_SUGGESTIONS } from '../../data/initialStories';
 
-export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 'pathway' }) {
+export default function StoryBuilder({ 
+  onSaveStory, 
+  onNotify, 
+  activeProjectId = 'pathway',
+  projectActors = [],
+  selectedRole = null,
+  onNavigateToActors
+}) {
   const [module, setModule] = useState('Gestión de Crédito');
-  const [role, setRole] = useState('Oficial de Crédito Comunitario');
+  const [role, setRole] = useState(selectedRole || (projectActors[0]?.name) || 'Oficial de Crédito Comunitario');
+  const [isCustomRole, setIsCustomRole] = useState(false);
+  const [customRoleInput, setCustomRoleInput] = useState('');
+
   const [action, setAction] = useState('Solicitar un microcrédito sin conexión a internet y sincronizar las actas biométricas automáticamente al recuperar cobertura celular.');
   const [benefit, setBenefit] = useState('Las comunidades remotas puedan financiar cosechas sin retrasos por latencia ni pérdidas de expedientes físicos.');
   const [priority, setPriority] = useState('Alta');
@@ -18,6 +28,38 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
     size: '1.4 MB',
     time: 'Subido hace 5 min'
   });
+
+  // Sync role if selectedRole changes from external trigger
+  useEffect(() => {
+    if (selectedRole) {
+      setRole(selectedRole);
+      setIsCustomRole(false);
+    }
+  }, [selectedRole]);
+
+  // If project changes and current role is not in the new project's actors, update gracefully
+  useEffect(() => {
+    if (projectActors.length > 0) {
+      const match = projectActors.some(a => a.name.toLowerCase() === role.toLowerCase());
+      if (!match && !isCustomRole && !selectedRole) {
+        setRole(projectActors[0].name);
+      }
+    }
+  }, [activeProjectId, projectActors]);
+
+  // Current active actor metadata
+  const currentActor = projectActors.find(a => a.name.toLowerCase() === role.toLowerCase());
+
+  const handleRoleSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === '__custom__') {
+      setIsCustomRole(true);
+      setCustomRoleInput('');
+    } else {
+      setIsCustomRole(false);
+      setRole(val);
+    }
+  };
 
   const handleToggleCriterion = (id) => {
     setCriteria(criteria.map(c => c.id === id ? { ...c, checked: !c.checked } : c));
@@ -38,8 +80,10 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
   };
 
   const handleSubmit = (status = 'Approved') => {
-    if (!role.trim() || !action.trim() || !benefit.trim()) {
-      onNotify?.('Por favor completa los tres campos de la fórmula de historia.');
+    const effectiveRole = isCustomRole ? customRoleInput.trim() : role.trim();
+
+    if (!effectiveRole || !action.trim() || !benefit.trim()) {
+      onNotify?.('Por favor completa los tres campos de la fórmula de historia (Rol, Acción y Beneficio).');
       return;
     }
 
@@ -47,7 +91,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
       id: `US-${Math.floor(100 + Math.random() * 900)}`,
       projectId: activeProjectId === 'all' ? 'pathway' : activeProjectId,
       module,
-      role: role.trim(),
+      role: effectiveRole,
       action: action.trim(),
       benefit: benefit.trim(),
       priority,
@@ -61,7 +105,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
     };
 
     onSaveStory(newStory);
-    onNotify?.(`Historia ${newStory.id} guardada exitosamente.`);
+    onNotify?.(`Historia ${newStory.id} guardada exitosamente bajo el rol "${effectiveRole}".`);
   };
 
   const handleFileDrop = (e) => {
@@ -78,7 +122,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
   };
 
   return (
-    <div className="bg-surface-container-low border border-outline-variant rounded-lg p-5 flex flex-col gap-y-4 shadow-sm">
+    <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-y-4 shadow-sm">
       
       {/* Card Header & Product Tip */}
       <div className="flex flex-col gap-y-2">
@@ -95,10 +139,10 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
           Escribe requerimientos claros y medibles sin jerga técnica.
         </p>
 
-        <div className="p-2.5 rounded bg-surface-container border border-outline-variant/60 flex items-start gap-x-2 text-on-surface-variant">
+        <div className="p-2.5 rounded-xl bg-surface-container border border-outline-variant/60 flex items-start gap-x-2 text-on-surface-variant">
           <span className="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0">lightbulb</span>
           <p className="font-jakarta text-xs text-on-surface leading-relaxed">
-            <strong className="text-white">Tip de producto:</strong> Enfócate en el beneficio del usuario final. El equipo de arquitectura deducirá el esquema de microservicios.
+            <strong className="text-white">Tip de producto:</strong> Selecciona el <strong className="text-primary">Rol del Negocio</strong> registrado para asegurar coherencia con los permisos y áreas del sistema.
           </p>
         </div>
       </div>
@@ -116,51 +160,149 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
             <select 
               value={module}
               onChange={(e) => setModule(e.target.value)}
-              className="w-full h-8 bg-surface-container-lowest border border-outline-variant rounded px-2.5 pr-8 font-jakarta text-xs text-white appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer"
+              className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 pr-8 font-jakarta text-xs text-white appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer"
             >
               <option>Gestión de Crédito</option>
               <option>Autenticación & KYC</option>
               <option>Pasarela de Pagos</option>
               <option>Reportes de Impacto</option>
+              <option>Metas & Hábitos</option>
+              <option>Gestión & Monitoreo</option>
+              <option>Ventas & Facturación</option>
+              <option>Inventario & Alertas</option>
             </select>
-            <span className="material-symbols-outlined absolute right-2.5 top-1.5 pointer-events-none text-on-surface-variant text-[18px]">
+            <span className="material-symbols-outlined absolute right-2.5 top-2 pointer-events-none text-on-surface-variant text-[18px]">
               expand_more
             </span>
           </div>
         </div>
 
-        {/* Role Section */}
-        <div className="flex flex-col gap-y-1">
+        {/* ── 1. Role Section (Combobox from Business Actors) ── */}
+        <div className="flex flex-col gap-y-1.5">
           <div className="flex items-center justify-between">
             <label className="font-space text-xs text-white flex items-center gap-x-1.5">
               <span className="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30 font-space text-[10px] text-primary font-bold">1</span>
               <span className="font-medium">As a... (Como...)</span>
             </label>
-            <span className="font-space text-[10px] text-on-surface-variant">Rol o actor</span>
+            
+            <div className="flex items-center gap-2">
+              <span className="font-space text-[10px] text-on-surface-variant">Rol o Actor</span>
+              {onNavigateToActors && (
+                <button
+                  type="button"
+                  onClick={onNavigateToActors}
+                  className="text-primary hover:underline font-space text-[10px] flex items-center gap-0.5"
+                  title="Gestionar matriz de roles y actores"
+                >
+                  <span className="material-symbols-outlined text-[12px]">add</span>
+                  <span>Nuevo Rol</span>
+                </button>
+              )}
+            </div>
           </div>
-          <input 
-            type="text"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            placeholder="Ej: Beneficiario Rural, Administrador..."
-            className="w-full h-8 bg-surface-container-lowest border border-outline-variant rounded px-2.5 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-          />
-          <div className="flex items-center gap-x-1.5 flex-wrap pt-0.5">
-            <span className="font-space text-[10px] text-on-surface-variant">Sugeridos:</span>
-            {ROLE_SUGGESTIONS.slice(0, 3).map((r, i) => (
-              <button 
-                key={i}
-                type="button"
-                onClick={() => setRole(r)}
-                className="px-2 py-0.5 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/60 text-on-surface-variant hover:text-white font-space text-[10px] transition-colors"
+
+          {/* Combobox Dropdown */}
+          {!isCustomRole ? (
+            <div className="relative">
+              <select
+                value={role}
+                onChange={handleRoleSelectChange}
+                className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 pr-8 font-jakarta text-xs text-white appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer font-medium"
               >
-                {r}
+                {/* Registered Project Actors */}
+                {projectActors.length > 0 && (
+                  <optgroup label={`Roles Registrados en Proyecto (${projectActors.length})`}>
+                    {projectActors.map((actor) => (
+                      <option key={actor.id} value={actor.name}>
+                        {actor.name} ({actor.category} — {actor.permissionLevel})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+
+                {/* Global Role Suggestions */}
+                <optgroup label="Sugerencias Adicionales">
+                  {ROLE_SUGGESTIONS.map((r, i) => (
+                    <option key={`sug-${i}`} value={r}>{r}</option>
+                  ))}
+                </optgroup>
+
+                {/* Option to type custom */}
+                <option value="__custom__">+ Escribir otro rol personalizado...</option>
+              </select>
+              <span className="material-symbols-outlined absolute right-2.5 top-2 pointer-events-none text-on-surface-variant text-[18px]">
+                unfold_more
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={customRoleInput}
+                onChange={(e) => setCustomRoleInput(e.target.value)}
+                placeholder="Escribe el nombre del rol personalizado..."
+                className="flex-1 h-9 bg-surface-container-lowest border border-outline-variant rounded-xl px-3 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setIsCustomRole(false)}
+                className="px-2.5 py-1.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white font-space text-[11px] transition-colors"
+                title="Volver a seleccionar de la lista de roles"
+              >
+                Cancelar
               </button>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {/* Smart Actor Card Preview when registered actor is selected */}
+          {currentActor && !isCustomRole && (
+            <div className="p-3 rounded-xl bg-surface-container border border-outline-variant/70 flex flex-col gap-2 mt-0.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="material-symbols-outlined text-primary text-[18px]">
+                    {currentActor.avatarIcon || 'person'}
+                  </span>
+                  <span className="font-space text-xs font-bold text-white truncate">
+                    {currentActor.name}
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold shrink-0">
+                  {currentActor.permissionLevel}
+                </span>
+              </div>
+
+              <p className="font-jakarta text-[11px] text-on-surface-variant leading-relaxed line-clamp-2">
+                {currentActor.description}
+              </p>
+
+              {/* System areas with permission */}
+              {currentActor.systemAreas?.length > 0 && (
+                <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                  <span className="font-space text-[10px] text-on-surface-variant">Permisos en:</span>
+                  {currentActor.systemAreas.map((area, idx) => (
+                    <span
+                      key={idx}
+                      className="px-1.5 py-0.5 rounded bg-surface-container-highest border border-outline-variant/60 font-mono text-[9px] text-white"
+                    >
+                      {area}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Collaborator note if assigned */}
+              {currentActor.assignedWorkerName && (
+                <div className="flex items-center gap-1 text-[10px] text-primary pt-0.5 font-space">
+                  <span className="material-symbols-outlined text-[13px]">person_check</span>
+                  <span>Asignado a: <strong>{currentActor.assignedWorkerName}</strong></span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Action Section */}
+        {/* ── 2. Action Section ── */}
         <div className="flex flex-col gap-y-1">
           <div className="flex items-center justify-between">
             <label className="font-space text-xs text-white flex items-center gap-x-1.5">
@@ -174,11 +316,11 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
             value={action}
             onChange={(e) => setAction(e.target.value)}
             placeholder="Describe la acción concreta..."
-            className="w-full bg-surface-container-lowest border border-outline-variant rounded p-2.5 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none leading-relaxed"
-          ></textarea>
+            className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl p-2.5 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none leading-relaxed"
+          />
         </div>
 
-        {/* Benefit Section */}
+        {/* ── 3. Benefit Section ── */}
         <div className="flex flex-col gap-y-1">
           <div className="flex items-center justify-between">
             <label className="font-space text-xs text-white flex items-center gap-x-1.5">
@@ -191,9 +333,9 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
             rows="2"
             value={benefit}
             onChange={(e) => setBenefit(e.target.value)}
-            placeholder="¿Cuál es el beneficio directo para el usuario o cooperativa?"
-            className="w-full bg-surface-container-lowest border border-outline-variant rounded p-2.5 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none leading-relaxed"
-          ></textarea>
+            placeholder="¿Cuál es el beneficio directo para el usuario o negocio?"
+            className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl p-2.5 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none leading-relaxed"
+          />
         </div>
 
         {/* Acceptance Criteria Checklist (DoD) */}
@@ -212,7 +354,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
             {criteria.map((c) => (
               <div 
                 key={c.id}
-                className="flex items-center justify-between gap-x-2 p-2 rounded bg-surface-container-lowest border border-outline-variant/60 group hover:border-outline transition-colors"
+                className="flex items-center justify-between gap-x-2 p-2 rounded-xl bg-surface-container-lowest border border-outline-variant/60 group hover:border-outline transition-colors"
               >
                 <label className="flex items-center gap-x-2 cursor-pointer flex-1 min-w-0">
                   <input 
@@ -245,12 +387,12 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
               onChange={(e) => setNewCriterionText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddCriterion(e)}
               placeholder="+ Escribir nuevo criterio..."
-              className="h-7 flex-1 bg-surface-container-lowest border border-outline-variant rounded px-2.5 font-jakarta text-xs text-white placeholder-on-surface-variant/60 focus:outline-none focus:border-primary"
+              className="h-8 flex-1 bg-surface-container-lowest border border-outline-variant rounded-xl px-2.5 font-jakarta text-xs text-white placeholder-on-surface-variant/60 focus:outline-none focus:border-primary"
             />
             <button 
               type="button"
               onClick={handleAddCriterion}
-              className="h-7 px-2.5 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant text-white font-space text-[11px] transition-colors flex items-center gap-x-1 shrink-0"
+              className="h-8 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-white font-space text-[11px] transition-colors flex items-center gap-x-1 shrink-0"
             >
               <span className="material-symbols-outlined text-[14px] text-primary">add</span>
               <span>Agregar</span>
@@ -263,7 +405,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
           <label className="font-space text-xs text-white font-medium">
             Nivel de Prioridad del Requerimiento
           </label>
-          <div className="grid grid-cols-4 gap-1 p-1 bg-surface-container-lowest border border-outline-variant rounded">
+          <div className="grid grid-cols-4 gap-1 p-1 bg-surface-container-lowest border border-outline-variant rounded-xl">
             {['Baja', 'Media', 'Alta', 'Bloqueante'].map((p) => {
               const isSelected = priority === p;
               let activeClass = 'bg-surface-container text-white';
@@ -278,7 +420,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
                   key={p}
                   type="button"
                   onClick={() => setPriority(p)}
-                  className={`py-1 text-center font-space text-[11px] rounded transition-all ${
+                  className={`py-1 text-center font-space text-[11px] rounded-lg transition-all ${
                     isSelected ? activeClass : 'text-on-surface-variant hover:text-white'
                   }`}
                 >
@@ -297,7 +439,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
           <label 
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleFileDrop}
-            className="p-3.5 rounded bg-surface-container-lowest border border-dashed border-outline hover:border-primary transition-colors flex flex-col items-center justify-center text-center cursor-pointer group"
+            className="p-3.5 rounded-xl bg-surface-container-lowest border border-dashed border-outline hover:border-primary transition-colors flex flex-col items-center justify-center text-center cursor-pointer group"
           >
             <input type="file" className="hidden" onChange={handleFileDrop} />
             <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform text-[22px]">
@@ -311,7 +453,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
 
           {/* Attached file chip preview */}
           {attachment && (
-            <div className="flex items-center justify-between p-2 rounded bg-surface-container-lowest border border-outline-variant">
+            <div className="flex items-center justify-between p-2 rounded-xl bg-surface-container-lowest border border-outline-variant">
               <div className="flex items-center gap-x-2 min-w-0">
                 <span className="material-symbols-outlined text-primary text-[18px]">image</span>
                 <div className="flex flex-col min-w-0">
@@ -341,7 +483,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
         <button 
           type="button"
           onClick={() => handleSubmit('Approved')}
-          className="h-9 flex-1 rounded bg-primary text-on-primary hover:bg-[#e09419] transition-all font-space text-xs font-semibold flex items-center justify-center gap-x-1.5 shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98]"
+          className="h-10 flex-1 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] transition-all font-space text-xs font-semibold flex items-center justify-center gap-x-1.5 shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98]"
         >
           <span className="material-symbols-outlined text-[18px]">add_circle</span>
           <span>Guardar Historia de Usuario</span>
@@ -349,7 +491,7 @@ export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 
         <button 
           type="button"
           onClick={() => handleSubmit('Draft')}
-          className="h-9 px-3.5 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant text-white font-space text-xs transition-colors"
+          className="h-10 px-3.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-white font-space text-xs transition-colors"
         >
           Borrador
         </button>
