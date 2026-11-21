@@ -2,7 +2,8 @@ import React from 'react';
 
 export default function Sidebar({ activeTab, onSelectTab, onReturnHome, sidebarOpen, setSidebarOpen }) {
   const navItems = [
-    { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban' },
+    { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US' },
+    { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX' },
     { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted' },
     { id: 'sprints', label: 'Sprints & Ciclos', icon: 'timelapse' },
     { id: 'docs', label: 'Documentación', icon: 'article' },
@@ -66,16 +67,27 @@ export default function Sidebar({ activeTab, onSelectTab, onReturnHome, sidebarO
                     onSelectTab(item.id);
                     if (window.innerWidth < 1024) setSidebarOpen(false);
                   }}
-                  className={`flex items-center gap-x-2.5 px-3 py-2 rounded font-space text-xs tracking-wide transition-all text-left ${
+                  className={`flex items-center justify-between px-3 py-2 rounded font-space text-xs tracking-wide transition-all text-left ${
                     isActive 
                       ? 'text-white bg-surface-container border-l-2 border-primary font-semibold shadow-sm' 
                       : 'text-on-surface-variant hover:bg-surface-container-low hover:text-white'
                   }`}
                 >
-                  <span className={`material-symbols-outlined text-[18px] ${isActive ? 'text-primary' : ''}`}>
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
+                  <div className="flex items-center gap-x-2.5 min-w-0">
+                    <span className={`material-symbols-outlined text-[18px] ${isActive ? 'text-primary' : ''}`}>
+                      {item.icon}
+                    </span>
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className={`px-1.5 py-0.2 rounded font-mono text-[9px] uppercase tracking-wider ${
+                      isActive 
+                        ? 'bg-primary/20 text-primary border border-primary/40 font-bold' 
+                        : 'bg-surface-container-high text-on-surface-variant'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}

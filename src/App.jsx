@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { INITIAL_STORIES } from './data/initialStories';
+import { INITIAL_INTERFACES } from './data/initialInterfaces';
 import { authenticateUser, saveSession, loadSession, clearSession } from './auth/authConfig';
 
 // Landing Components
@@ -21,9 +22,14 @@ import ControlsBar from './components/portal/ControlsBar';
 import StoryBuilder from './components/portal/StoryBuilder';
 import StoryFeed from './components/portal/StoryFeed';
 import StoryDetailModal from './components/portal/StoryDetailModal';
+import InterfaceControlsBar from './components/portal/InterfaceControlsBar';
+import InterfaceBuilder from './components/portal/InterfaceBuilder';
+import InterfaceFeed from './components/portal/InterfaceFeed';
+import InterfaceDetailModal from './components/portal/InterfaceDetailModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
 const STORAGE_KEY = 'pathrimonio_stories_v1';
+const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v1';
 
 export default function App() {
   // ── View state: 'landing' | 'portal'
@@ -48,13 +54,26 @@ export default function App() {
     return INITIAL_STORIES;
   });
 
-  // ── Filters
+  // ── Interfaces & UI Specs
+  const [interfaces, setInterfaces] = useState(() => {
+    try {
+      const saved = localStorage.getItem(INTERFACES_STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return INITIAL_INTERFACES;
+  });
+
+  // ── Filters & Search
   const [activeModule, setActiveModule] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
+  const [interfaceSearchQuery, setInterfaceSearchQuery] = useState('');
 
-  // ── Detail modal
+  // ── Detail modals
   const [selectedStory, setSelectedStory] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  const [selectedInterface, setSelectedInterface] = useState(null);
+  const [isInterfaceModalOpen, setIsInterfaceModalOpen] = useState(false);
 
   // ── Contact modal (landing)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -66,6 +85,11 @@ export default function App() {
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(stories)); } catch (_) {}
   }, [stories]);
+
+  // Persist interfaces
+  useEffect(() => {
+    try { localStorage.setItem(INTERFACES_STORAGE_KEY, JSON.stringify(interfaces)); } catch (_) {}
+  }, [interfaces]);
 
   // Sync URL hash
   useEffect(() => {
@@ -150,6 +174,58 @@ export default function App() {
         ...s,
         criteria: s.criteria.map((c, idx) =>
           (c.id === criterionId || idx === criterionId) ? { ...c, checked: !c.checked } : c
+        )
+      };
+    }));
+  };
+
+  // ── Interface CRUD & Handlers
+  const handleSaveInterface = (newInterface) => setInterfaces([newInterface, ...interfaces]);
+
+  const handleUpdateInterface = (updated) => {
+    setInterfaces(interfaces.map(i => i.id === updated.id ? updated : i));
+    notify(`Interfaz ${updated.id} (${updated.name}) actualizada.`);
+  };
+
+  const handleDuplicateInterface = (item) => {
+    const dup = {
+      ...item,
+      id: `INT-${Math.floor(100 + Math.random() * 900)}`,
+      name: `${item.name} (Copia)`,
+      status: 'Borrador',
+      createdAt: 'Justo ahora',
+      version: `${item.version || 'v1.0'}-copy`
+    };
+    setInterfaces([dup, ...interfaces]);
+    notify(`Interfaz duplicada → ${dup.id}`);
+  };
+
+  const handleDeleteInterface = (id) => {
+    if (!window.confirm(`¿Eliminar la interfaz ${id}?`)) return;
+    setInterfaces(interfaces.filter(i => i.id !== id));
+    notify(`Interfaz ${id} eliminada.`);
+  };
+
+  const handleQuickInterfaceStatus = (id, newStatus) => {
+    setInterfaces(interfaces.map(i => {
+      if (i.id !== id) return i;
+      return {
+        ...i,
+        status: newStatus,
+        reviewedBy: newStatus.includes('Aprobado') ? 'Cliente / PO' : i.reviewedBy,
+        approvedAt: newStatus.includes('Aprobado') ? new Date().toISOString().split('T')[0] : i.approvedAt
+      };
+    }));
+    notify(`Estado de interfaz ${id} cambiado a "${newStatus}".`);
+  };
+
+  const handleToggleVisualCriterion = (interfaceId, criterionId) => {
+    setInterfaces(interfaces.map(i => {
+      if (i.id !== interfaceId) return i;
+      return {
+        ...i,
+        visualCriteria: (i.visualCriteria || []).map(c =>
+          c.id === criterionId ? { ...c, checked: !c.checked } : c
         )
       };
     }));
@@ -292,6 +368,38 @@ export default function App() {
                   </div>
                 </div>
               )}
+              {activePortalTab === 'interfaces' && (
+                <div className="flex flex-col w-full">
+                  <InterfaceControlsBar
+                    interfaces={interfaces}
+                    stories={stories}
+                    onNotify={notify}
+                  />
+                  <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
+                        <InterfaceBuilder
+                          onSaveInterface={handleSaveInterface}
+                          onNotify={notify}
+                          existingStories={stories}
+                        />
+                      </section>
+                      <section className="lg:col-span-7 flex flex-col gap-y-4">
+                        <InterfaceFeed
+                          interfaces={interfaces}
+                          onEditInterface={(item) => { setSelectedInterface(item); setIsInterfaceModalOpen(true); }}
+                          onDuplicateInterface={handleDuplicateInterface}
+                          onDeleteInterface={handleDeleteInterface}
+                          onQuickStatusChange={handleQuickInterfaceStatus}
+                          onToggleCriterion={handleToggleVisualCriterion}
+                          searchQuery={interfaceSearchQuery}
+                          setSearchQuery={setInterfaceSearchQuery}
+                        />
+                      </section>
+                    </div>
+                  </div>
+                </div>
+              )}
               {activePortalTab === 'backlog'   && <BacklogView stories={stories} />}
               {activePortalTab === 'sprints'   && <SprintsView />}
               {activePortalTab === 'docs'      && <DocsView />}
@@ -304,6 +412,14 @@ export default function App() {
             isOpen={isDetailModalOpen}
             onClose={() => { setIsDetailModalOpen(false); setSelectedStory(null); }}
             onUpdateStory={handleUpdateStory}
+          />
+
+          <InterfaceDetailModal
+            item={selectedInterface}
+            isOpen={isInterfaceModalOpen}
+            onClose={() => { setIsInterfaceModalOpen(false); setSelectedInterface(null); }}
+            onUpdateInterface={handleUpdateInterface}
+            existingStories={stories}
           />
         </div>
       )}
