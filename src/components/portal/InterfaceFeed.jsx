@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import InterfaceCard from './InterfaceCard';
 import { 
   PLATFORM_OPTIONS, 
@@ -8,6 +8,7 @@ import {
 
 export default function InterfaceFeed({
   interfaces = [],
+  projectActors = [],
   onEditInterface,
   onDuplicateInterface,
   onDeleteInterface,
@@ -19,8 +20,17 @@ export default function InterfaceFeed({
   const [selectedPlatform, setSelectedPlatform] = useState('Todas');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [selectedModule, setSelectedModule] = useState('Todos');
+  const [selectedRole, setSelectedRole] = useState('Todos');
   const [sortBy, setSortBy] = useState('priority'); // 'priority' | 'id' | 'status'
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'compact'
+
+  // Extract all unique business role options from projectActors and existing interfaces
+  const allRoleOptions = useMemo(() => {
+    const actorNames = projectActors.map(a => a.name);
+    const interfaceRoles = interfaces.flatMap(i => Array.isArray(i.roles) ? i.roles : (i.role ? [i.role] : []));
+    const set = new Set([...actorNames, ...interfaceRoles].filter(Boolean));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [projectActors, interfaces]);
 
   // Priority weights
   const priorityWeight = {
@@ -53,9 +63,14 @@ export default function InterfaceFeed({
     // Module filter
     const matchModule = selectedModule === 'Todos' || item.module === selectedModule;
 
+    // Business Role filter
+    const itemRoles = Array.isArray(item.roles) ? item.roles : (item.role ? [item.role] : []);
+    const matchRole = selectedRole === 'Todos' || 
+      itemRoles.some(r => r.toLowerCase().trim() === selectedRole.toLowerCase().trim());
+
     // Text search
     const q = (searchQuery || '').toLowerCase().trim();
-    if (!q) return matchPlatform && matchStatus && matchModule;
+    if (!q) return matchPlatform && matchStatus && matchModule && matchRole;
 
     const f = item.fields || {};
     const matchText =
@@ -69,9 +84,10 @@ export default function InterfaceFeed({
       (f.reglas && f.reglas.toLowerCase().includes(q)) ||
       (f.detalles && f.detalles.toLowerCase().includes(q)) ||
       (item.linkedStory && item.linkedStory.toLowerCase().includes(q)) ||
-      (item.linkedStories && item.linkedStories.some(us => us.toLowerCase().includes(q)));
+      (item.linkedStories && item.linkedStories.some(us => us.toLowerCase().includes(q))) ||
+      itemRoles.some(r => r.toLowerCase().includes(q));
 
-    return matchPlatform && matchStatus && matchModule && matchText;
+    return matchPlatform && matchStatus && matchModule && matchRole && matchText;
   });
 
   // Sorting
@@ -147,9 +163,31 @@ export default function InterfaceFeed({
           </div>
         </div>
 
-        {/* Row 2: Selectors (Platform, Status, Module, Sort) */}
+        {/* Row 2: Selectors (Platform, Status, Module, Business Role, Sort) */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-outline-variant/60">
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Business Role Filter */}
+            <div className="flex items-center gap-1 text-xs text-on-surface-variant">
+              <span className="font-space text-[11px] hidden sm:inline flex items-center gap-1">
+                <span className="material-symbols-outlined text-[14px] text-primary">badge</span>
+                <span>Rol:</span>
+              </span>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className={`h-8 px-2 bg-surface-container-lowest border rounded-md text-xs font-jakarta focus:border-primary focus:outline-none max-w-[190px] truncate ${
+                  selectedRole !== 'Todos'
+                    ? 'border-primary text-primary font-bold bg-primary/10'
+                    : 'border-outline-variant text-white'
+                }`}
+              >
+                <option value="Todos">Todos los Roles ({allRoleOptions.length})</option>
+                {allRoleOptions.map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Platform Filter */}
             <div className="flex items-center gap-1 text-xs text-on-surface-variant">
               <span className="font-space text-[11px] hidden sm:inline">Plataforma:</span>
@@ -228,6 +266,29 @@ export default function InterfaceFeed({
           </div>
         </div>
 
+        {/* Active Filter Pill if Role is Selected */}
+        {selectedRole !== 'Todos' && (
+          <div className="flex items-center gap-2 pt-1 border-t border-outline-variant/40 text-xs">
+            <span className="text-on-surface-variant text-[11px] font-space flex items-center gap-1">
+              <span className="material-symbols-outlined text-primary text-[14px]">filter_alt</span>
+              <span>Filtrado por Rol de Negocio:</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/20 border border-primary/40 text-primary font-space text-xs font-semibold">
+              <span>{selectedRole}</span>
+              <button 
+                onClick={() => setSelectedRole('Todos')}
+                className="hover:text-white ml-0.5 text-primary"
+                title="Quitar filtro de rol"
+              >
+                <span className="material-symbols-outlined text-[13px]">close</span>
+              </button>
+            </span>
+            <span className="text-[11px] text-on-surface-variant font-mono">
+              ({filteredInterfaces.length} {filteredInterfaces.length === 1 ? 'interfaz coincidente' : 'interfaces coincidentes'})
+            </span>
+          </div>
+        )}
+
       </div>
 
       {/* Interface Cards Feed */}
@@ -257,13 +318,14 @@ export default function InterfaceFeed({
           <p className="font-jakarta text-xs text-on-surface-variant max-w-md">
             Intenta ajustar los criterios de búsqueda o registra una nueva pantalla utilizando el formulario de formalización a la izquierda.
           </p>
-          {(searchQuery || selectedPlatform !== 'Todas' || selectedStatus !== 'Todos' || selectedModule !== 'Todos') && (
+          {(searchQuery || selectedPlatform !== 'Todas' || selectedStatus !== 'Todos' || selectedModule !== 'Todos' || selectedRole !== 'Todos') && (
             <button
               onClick={() => {
                 setSearchQuery('');
                 setSelectedPlatform('Todas');
                 setSelectedStatus('Todos');
                 setSelectedModule('Todos');
+                setSelectedRole('Todos');
               }}
               className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold transition-colors"
             >

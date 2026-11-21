@@ -45,38 +45,64 @@ export default function InterfaceCard({
 
   const statusMeta = getStatusBadge(item.status);
   const fields = item.fields || {};
+  const roles = Array.isArray(item.roles) ? item.roles : (item.role ? [item.role] : []);
 
   return (
     <article className="group bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-200 shadow-md hover:shadow-xl">
       
       {/* ── 1. Header: Número y Título de Pantalla + Estado ── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/60 pb-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-surface-container-highest border border-primary/30 flex items-center justify-center font-space font-bold text-sm text-primary">
-              {item.number || 'UI'}
+      <div className="flex flex-col gap-3 border-b border-outline-variant/60 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="w-8 h-8 rounded-lg bg-surface-container-highest border border-primary/30 flex items-center justify-center font-space font-bold text-sm text-primary">
+                {item.number || 'UI'}
+              </span>
+              <h3 className="font-space text-lg sm:text-xl font-bold text-white group-hover:text-primary transition-colors tracking-tight">
+                {item.fullName || `${item.number}. ${item.title}`}
+              </h3>
+            </div>
+
+            <span className="font-space text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-medium">
+              {item.module}
             </span>
-            <h3 className="font-space text-lg sm:text-xl font-bold text-white group-hover:text-primary transition-colors tracking-tight">
-              {item.fullName || `${item.number}. ${item.title}`}
-            </h3>
+
+            {item.platform && (
+              <span className="font-space text-[10px] text-on-surface-variant font-mono">
+                • {item.platform}
+              </span>
+            )}
           </div>
 
-          <span className="font-space text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-medium">
-            {item.module}
-          </span>
-
-          {item.platform && (
-            <span className="font-space text-[10px] text-on-surface-variant font-mono">
-              • {item.platform}
-            </span>
-          )}
+          {/* Status Pill */}
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-space font-semibold ${statusMeta.bg}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}></span>
+            <span className="material-symbols-outlined text-[15px]">{statusMeta.icon}</span>
+            <span>{statusMeta.label}</span>
+          </div>
         </div>
 
-        {/* Status Pill */}
-        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-space font-semibold ${statusMeta.bg}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}></span>
-          <span className="material-symbols-outlined text-[15px]">{statusMeta.icon}</span>
-          <span>{statusMeta.label}</span>
+        {/* Roles del Negocio Asignados */}
+        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+          <span className="text-[11px] font-space text-on-surface-variant flex items-center gap-1 shrink-0 font-medium">
+            <span className="material-symbols-outlined text-[15px] text-primary">badge</span>
+            <span>Roles del Negocio:</span>
+          </span>
+          {roles.length > 0 ? (
+            roles.map((r, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-space bg-surface-container border border-outline-variant text-white hover:border-primary/50 transition-colors shadow-sm"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                <span>{r}</span>
+              </span>
+            ))
+          ) : (
+            <span className="text-[11px] font-jakarta italic text-on-surface-variant/60">
+              Sin roles asignados
+            </span>
+          )}
         </div>
       </div>
 
@@ -160,6 +186,27 @@ export default function InterfaceCard({
                 </td>
                 <td className="py-3 px-4 text-on-surface-variant leading-relaxed">
                   {fields.detalles || 'Sin detalles adicionales.'}
+                </td>
+              </tr>
+
+              {/* Fila: Roles del Negocio */}
+              <tr className="hover:bg-surface-container/30 transition-colors">
+                <td className="py-3 px-4 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                  Roles de Negocio
+                </td>
+                <td className="py-3 px-4 text-on-surface leading-relaxed">
+                  {roles.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {roles.map((r, idx) => (
+                        <span key={idx} className="px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant text-white font-space text-[11px] flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                          <span>{r}</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="italic text-on-surface-variant text-[11px]">Sin roles asignados</span>
+                  )}
                 </td>
               </tr>
 

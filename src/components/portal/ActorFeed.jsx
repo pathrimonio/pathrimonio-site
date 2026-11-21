@@ -8,6 +8,7 @@ import {
 export default function ActorFeed({
   actors = [],
   stories = [],
+  interfaces = [],
   onEditActor,
   onDuplicateActor,
   onDeleteActor,
@@ -47,6 +48,15 @@ export default function ActorFeed({
   const getLinkedStoriesCount = (actorName) => {
     if (!actorName) return 0;
     return stories.filter(s => (s.role || '').toLowerCase().trim() === actorName.toLowerCase().trim()).length;
+  };
+
+  // Calculate linked interfaces count helper
+  const getLinkedInterfacesCount = (actorName) => {
+    if (!actorName) return 0;
+    return interfaces.filter(item => {
+      const roles = Array.isArray(item.roles) ? item.roles : (item.role ? [item.role] : []);
+      return roles.some(r => r.toLowerCase().trim() === actorName.toLowerCase().trim());
+    }).length;
   };
 
   // Sort actors

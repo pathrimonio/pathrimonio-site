@@ -43,6 +43,11 @@ export const INITIAL_INTERFACES = [
       reglas: "Bloqueo temporal de 15 minutos tras 5 intentos fallidos consecutivos. Contraseña con longitud mínima de 8 caracteres. Cifrado de credenciales en reposo.",
       detalles: "Generación de tokens JWT con expiración de 8 horas. Soporta autenticación offline con SQLite cifrado si no hay cobertura."
     },
+    roles: [
+      "Usuario enfocado en superación",
+      "Usuario con metas complejas",
+      "Usuario constante"
+    ],
     linkedStory: "US-201",
     author: "Jhan C.",
     reviewedBy: "Cliente / PO",
@@ -66,6 +71,10 @@ export const INITIAL_INTERFACES = [
       reglas: "Se muestra exclusivamente en la primera ejecución tras la instalación de la app o al pulsar 'Repetir tutorial' desde Configuración.",
       detalles: "Animación de transición horizontal a 60fps. Solicita permisos de notificaciones locales con explicación contextual previa."
     },
+    roles: [
+      "Usuario enfocado en superación",
+      "Usuario con metas complejas"
+    ],
     linkedStory: "US-201",
     author: "Elena Morales",
     reviewedBy: "Cliente / PO",
@@ -89,6 +98,10 @@ export const INITIAL_INTERFACES = [
       reglas: "El título debe contener al menos 5 caracteres. La fecha estimada debe ser igual o posterior a la fecha actual.",
       detalles: "Validación instantánea en cliente. Al guardar, redirige de forma automática al mapa secuencial de pasos (INT-05)."
     },
+    roles: [
+      "Usuario enfocado en superación",
+      "Usuario con metas complejas"
+    ],
     linkedStory: "US-201",
     author: "Jhan C.",
     reviewedBy: "Cliente / PO",
@@ -112,6 +125,10 @@ export const INITIAL_INTERFACES = [
       reglas: "Cada paso completado suma proporcionalmente al indicador de progreso global. Un paso no puede completarse si su predecesor obligatorio no fue validado.",
       detalles: "Feedback háptico en móviles al marcar un hito como logrado. Soporta reordenamiento por arrastre (drag-and-drop)."
     },
+    roles: [
+      "Usuario con metas complejas",
+      "Usuario enfocado en superación"
+    ],
     linkedStory: "US-202",
     author: "Sofía V.",
     reviewedBy: null,
@@ -135,6 +152,9 @@ export const INITIAL_INTERFACES = [
       reglas: "Las entradas son privadas del usuario. Cada reflexión queda sellada con fecha y hora local inmutable una vez guardada.",
       detalles: "Sincronización en segundo plano con almacenamiento local prioritario (offline-first)."
     },
+    roles: [
+      "Usuario constante"
+    ],
     linkedStory: "US-203",
     author: "Elena Morales",
     reviewedBy: null,
@@ -160,6 +180,11 @@ export const INITIAL_INTERFACES = [
       reglas: "Solo administrador.",
       detalles: "Datos en tiempo real."
     },
+    roles: [
+      "Administrador General",
+      "Cajero / Operador de Ventas",
+      "Supervisor de Almacén"
+    ],
     linkedStory: "US-301",
     author: "Carlos D.",
     reviewedBy: "Cliente / PO",
@@ -185,6 +210,11 @@ export const INITIAL_INTERFACES = [
       reglas: "Monto máximo por oficial: $5,000 USD sin conexión a internet.",
       detalles: "Firma digital sellada con hash SHA-256 almacenada en base de datos local SQLite cifrada."
     },
+    roles: [
+      "Oficial de Crédito Comunitario",
+      "Beneficiario Rural",
+      "Auditor de Impacto"
+    ],
     linkedStory: "US-101",
     author: "Sofía V.",
     reviewedBy: "Auditor Legal",

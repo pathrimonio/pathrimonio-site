@@ -33,6 +33,33 @@ COMMENT ON COLUMN tb_pedidos_clientes.numero_orden IS 'Código correlativo de or
 COMMENT ON COLUMN tb_pedidos_clientes.monto_total IS 'Importe total con impuestos incluidos';
 `;
 
+const SAMPLE_LOGISTICS_SQL = `-- ══════════════════════════════════════════════════════════
+-- Ejemplo de Logística y Transporte (nucleo.tb_servicio & tb_item_carga)
+-- Relación 1:N entre Servicio Maestro e Ítems de Carga
+-- ══════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS nucleo.tb_servicio (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    codigo_servicio VARCHAR(50) NOT NULL UNIQUE,
+    cliente_solicitante VARCHAR(255) NOT NULL,
+    tipo_servicio VARCHAR(50) NOT NULL DEFAULT 'Carga Terrestre',
+    estado_servicio VARCHAR(30) NOT NULL DEFAULT 'programado',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tb_item_carga (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    servicio_id UUID NOT NULL REFERENCES nucleo.tb_servicio(id) ON DELETE CASCADE,
+    descripcion_item VARCHAR(255) NOT NULL,
+    peso_kg DECIMAL(10,2) NOT NULL DEFAULT 1.00,
+    volumen_m3 DECIMAL(10,2) NOT NULL DEFAULT 0.10,
+    es_peligrosa BOOLEAN NOT NULL DEFAULT false
+);
+
+COMMENT ON COLUMN nucleo.tb_servicio.codigo_servicio IS 'Identificador correlativo del despacho o servicio logístico';
+COMMENT ON COLUMN tb_item_carga.servicio_id IS 'Llave foránea que asocia el ítem de carga con el servicio maestro';
+`;
+
 export default function SQLScriptModal({
   isOpen,
   onClose,
@@ -240,12 +267,28 @@ export default function SQLScriptModal({
 
                   <button
                     type="button"
-                    onClick={() => setSqlText(SAMPLE_SQL_SCRIPT)}
+                    onClick={() => {
+                      setSqlText(SAMPLE_LOGISTICS_SQL);
+                      onNotify?.('Plantilla Logística (nucleo.tb_servicio & tb_item_carga) cargada.');
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-xs font-space text-cyan-300 hover:text-white transition-colors"
+                    title="Insertar ejemplo logístico con relación nucleo.tb_servicio y tb_item_carga"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">local_shipping</span>
+                    <span>nucleo.tb_servicio & tb_item_carga</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSqlText(SAMPLE_SQL_SCRIPT);
+                      onNotify?.('Plantilla E-Commerce (tb_pedidos & tb_detalles) cargada.');
+                    }}
                     className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high text-xs font-space text-on-surface-variant hover:text-white transition-colors"
-                    title="Insertar plantilla de ejemplo"
+                    title="Insertar plantilla de ejemplo e-commerce"
                   >
                     <span className="material-symbols-outlined text-[14px]">auto_fix_high</span>
-                    <span>Ejemplo</span>
+                    <span>Ejemplo Pedidos</span>
                   </button>
 
                   <button

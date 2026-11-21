@@ -44,7 +44,7 @@ import { BacklogView, SprintsView, DocsView, SettingsView } from './components/p
 
 const STORAGE_KEY = 'pathrimonio_stories_v3';
 const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v3';
-const DATA_MODELS_STORAGE_KEY = 'pathrimonio_data_models_v1';
+const DATA_MODELS_STORAGE_KEY = 'pathrimonio_data_models_v2';
 const ACTORS_STORAGE_KEY = 'pathrimonio_actors_v1';
 const PROJECTS_STORAGE_KEY = 'pathrimonio_projects_v1';
 const ACTIVE_PROJECT_KEY = 'pathrimonio_active_project_id_v1';
@@ -95,7 +95,19 @@ export default function App() {
   const [interfaces, setInterfaces] = useState(() => {
     try {
       const saved = localStorage.getItem(INTERFACES_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map(item => {
+          if (!item.roles || !Array.isArray(item.roles) || item.roles.length === 0) {
+            const initialMatch = INITIAL_INTERFACES.find(i => i.id === item.id);
+            return {
+              ...item,
+              roles: initialMatch?.roles || (item.role ? [item.role] : [])
+            };
+          }
+          return item;
+        });
+      }
     } catch (_) {}
     return INITIAL_INTERFACES;
   });
@@ -657,6 +669,7 @@ export default function App() {
                         <ActorFeed
                           actors={projectActors}
                           stories={projectStories}
+                          interfaces={projectInterfaces}
                           onEditActor={(actor) => { setSelectedActor(actor); setIsActorModalOpen(true); }}
                           onDuplicateActor={handleDuplicateActor}
                           onDeleteActor={handleDeleteActor}
@@ -675,6 +688,7 @@ export default function App() {
                   <InterfaceControlsBar
                     interfaces={projectInterfaces}
                     stories={projectStories}
+                    projectActors={projectActors}
                     onNotify={notify}
                     activeProject={activeProject}
                   />
@@ -686,11 +700,13 @@ export default function App() {
                           onNotify={notify}
                           existingStories={projectStories}
                           activeProjectId={activeProjectId}
+                          projectActors={projectActors}
                         />
                       </section>
                       <section className="lg:col-span-7 flex flex-col gap-y-4">
                         <InterfaceFeed
                           interfaces={projectInterfaces}
+                          projectActors={projectActors}
                           onEditInterface={(item) => { setSelectedInterface(item); setIsInterfaceModalOpen(true); }}
                           onDuplicateInterface={handleDuplicateInterface}
                           onDeleteInterface={handleDeleteInterface}
@@ -772,6 +788,7 @@ export default function App() {
             onClose={() => { setIsInterfaceModalOpen(false); setSelectedInterface(null); }}
             onUpdateInterface={handleUpdateInterface}
             existingStories={projectStories}
+            projectActors={projectActors}
           />
 
           <DataModelDetailModal

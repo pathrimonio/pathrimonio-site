@@ -4,6 +4,7 @@ import confetti from 'canvas-confetti';
 export default function InterfaceControlsBar({ 
   interfaces = [],
   stories = [],
+  projectActors = [],
   onNotify,
   activeProject
 }) {
@@ -14,6 +15,11 @@ export default function InterfaceControlsBar({
   // Interfaces with linked stories coverage
   const coveredWithStories = interfaces.filter(i => i.linkedStories && i.linkedStories.length > 0).length;
   const coverageRate = totalInterfaces > 0 ? Math.round((coveredWithStories / totalInterfaces) * 100) : 0;
+
+  // Distinct roles covered across these interfaces
+  const distinctRolesInInterfaces = new Set(
+    interfaces.flatMap(i => Array.isArray(i.roles) ? i.roles : (i.role ? [i.role] : []))
+  );
 
   // Export JSON specification bundle
   const handleExportSpecsJSON = () => {
@@ -83,6 +89,16 @@ export default function InterfaceControlsBar({
               <span className="material-symbols-outlined text-primary text-[15px]">hub</span>
               <span className="text-on-surface-variant">Trazabilidad con US:</span>
               <span className="font-mono text-primary font-bold">{coverageRate}%</span>
+            </div>
+
+            {/* Metric: Roles Cubiertos */}
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container border border-outline-variant text-xs font-space">
+              <span className="material-symbols-outlined text-primary text-[15px]">badge</span>
+              <span className="text-on-surface-variant">Roles Cubiertos:</span>
+              <span className="font-mono text-primary font-bold">{distinctRolesInInterfaces.size}</span>
+              {projectActors.length > 0 && (
+                <span className="font-mono text-[10px] text-on-surface-variant">/{projectActors.length}</span>
+              )}
             </div>
 
             {/* Export specs button */}

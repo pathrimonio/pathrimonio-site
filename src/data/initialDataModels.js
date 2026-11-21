@@ -358,6 +358,17 @@ export const INITIAL_DATA_MODELS = [
         foreignKey: null,
         defaultValue: "0",
         description: "Cantidad de micro-hábitos completados durante el día."
+      },
+      {
+        id: "c7_meta",
+        name: "meta_id",
+        type: "UUID",
+        isPrimary: false,
+        isNullable: true,
+        isUnique: false,
+        foreignKey: "tb_metas(id)",
+        defaultValue: null,
+        description: "Llave foránea opcional que asocia la reflexión con su meta principal en Pathway."
       }
     ]
   },
@@ -599,6 +610,17 @@ export const INITIAL_DATA_MODELS = [
         foreignKey: null,
         defaultValue: "false",
         description: "Calculado: true si stock_actual <= stock_minimo."
+      },
+      {
+        id: "c9_trans",
+        name: "ultima_transaccion_id",
+        type: "UUID",
+        isPrimary: false,
+        isNullable: true,
+        isUnique: false,
+        foreignKey: "tb_ventas_transacciones(id)",
+        defaultValue: null,
+        description: "Llave foránea a la última transacción de venta que modificó el inventario disponible."
       }
     ]
   },

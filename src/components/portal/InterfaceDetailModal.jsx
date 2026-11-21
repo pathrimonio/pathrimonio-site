@@ -7,22 +7,55 @@ export default function InterfaceDetailModal({
   isOpen,
   onClose,
   onUpdateInterface,
-  existingStories = []
+  existingStories = [],
+  projectActors = []
 }) {
   const [formData, setFormData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [newRoleInput, setNewRoleInput] = useState('');
+  const [showAddRoleInput, setShowAddRoleInput] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (item) {
-      setFormData(JSON.parse(JSON.stringify(item)));
+      const parsed = JSON.parse(JSON.stringify(item));
+      if (!parsed.roles || !Array.isArray(parsed.roles)) {
+        parsed.roles = parsed.role ? [parsed.role] : [];
+      }
+      setFormData(parsed);
       setIsEditing(false);
+      setShowAddRoleInput(false);
+      setNewRoleInput('');
     }
   }, [item]);
 
   if (!isOpen || !formData) return null;
 
   const fields = formData.fields || {};
+  const currentRoles = Array.isArray(formData.roles) ? formData.roles : (formData.role ? [formData.role] : []);
+
+  const handleToggleRole = (roleName) => {
+    const updated = currentRoles.includes(roleName)
+      ? currentRoles.filter(r => r !== roleName)
+      : [...currentRoles, roleName];
+    setFormData({
+      ...formData,
+      roles: updated
+    });
+  };
+
+  const handleAddCustomRole = () => {
+    const trimmed = newRoleInput.trim();
+    if (!trimmed) return;
+    if (!currentRoles.includes(trimmed)) {
+      setFormData({
+        ...formData,
+        roles: [...currentRoles, trimmed]
+      });
+    }
+    setNewRoleInput('');
+    setShowAddRoleInput(false);
+  };
 
   const handleFieldChange = (fieldName, value) => {
     setFormData({
@@ -250,6 +283,120 @@ export default function InterfaceDetailModal({
                         />
                       ) : (
                         <p>{fields.detalles}</p>
+                      )}
+                    </td>
+                  </tr>
+
+                  {/* Fila: Roles del Negocio Asignados */}
+                  <tr>
+                    <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                      Roles del Negocio
+                    </td>
+                    <td className="py-3.5 px-5 text-on-surface leading-relaxed">
+                      {isEditing ? (
+                        <div className="flex flex-col gap-3">
+                          <p className="text-[11px] text-on-surface-variant font-jakarta">
+                            Selecciona los roles de usuario que interactúan con esta pantalla:
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {projectActors.map((actor) => {
+                              const isSelected = currentRoles.includes(actor.name);
+                              return (
+                                <button
+                                  type="button"
+                                  key={actor.id || actor.name}
+                                  onClick={() => handleToggleRole(actor.name)}
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space transition-all cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-primary/20 border border-primary text-white font-bold shadow-sm'
+                                      : 'bg-surface-container border border-outline-variant text-on-surface-variant hover:text-white'
+                                  }`}
+                                >
+                                  <span className={`material-symbols-outlined text-[14px] ${isSelected ? 'text-primary' : 'text-on-surface-variant'}`}>
+                                    {isSelected ? 'check_circle' : (actor.avatarIcon || 'person')}
+                                  </span>
+                                  <span>{actor.name}</span>
+                                </button>
+                              );
+                            })}
+
+                            {/* Custom roles */}
+                            {currentRoles.filter(r => !projectActors.some(a => a.name === r)).map((customRole) => (
+                              <span
+                                key={customRole}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space bg-primary/20 border border-primary text-white font-bold shadow-sm"
+                              >
+                                <span className="material-symbols-outlined text-primary text-[14px]">check_circle</span>
+                                <span>{customRole}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleRole(customRole)}
+                                  className="hover:text-red-400 ml-0.5 text-on-surface-variant"
+                                  title="Remover rol"
+                                >
+                                  <span className="material-symbols-outlined text-[13px]">close</span>
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* Add custom role in edit mode */}
+                          {showAddRoleInput ? (
+                            <div className="flex items-center gap-2 pt-1">
+                              <input
+                                type="text"
+                                value={newRoleInput}
+                                onChange={(e) => setNewRoleInput(e.target.value)}
+                                placeholder="Nombre del rol del negocio..."
+                                className="h-8 px-2.5 bg-surface-container border border-outline-variant rounded-lg text-xs font-jakarta text-white flex-1 focus:border-primary focus:outline-none"
+                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomRole(); } }}
+                              />
+                              <button
+                                type="button"
+                                onClick={handleAddCustomRole}
+                                className="px-3 h-8 rounded-lg bg-primary text-on-primary font-space text-xs font-bold"
+                              >
+                                Añadir
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowAddRoleInput(false)}
+                                className="px-2 h-8 rounded-lg text-on-surface-variant hover:text-white text-xs font-space"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          ) : (
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => setShowAddRoleInput(true)}
+                                className="inline-flex items-center gap-1 text-[11px] font-space text-primary hover:underline cursor-pointer"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">add</span>
+                                <span>+ Asignar otro rol del negocio</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {currentRoles.length > 0 ? (
+                            currentRoles.map((roleName, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-space bg-surface-container-high border border-outline-variant text-white shadow-sm"
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                <span className="font-semibold">{roleName}</span>
+                              </span>
+                            ))
+                          ) : (
+                            <span className="italic text-on-surface-variant text-[11px]">
+                              Sin roles asignados
+                            </span>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
