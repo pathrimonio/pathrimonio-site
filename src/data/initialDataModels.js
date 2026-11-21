@@ -823,3 +823,102 @@ ${cols.join(',\n')}
 ${commentSql}
 `;
 }
+
+// Helper to generate full project SQL script
+export function generateFullProjectSQL(tables = [], projectName = "Pathrimonio") {
+  const header = `-- ══════════════════════════════════════════════════════════
+-- PATHRIMONIO — SCRIPT DDL DE BASE DE DATOS
+-- PROYECTO: ${projectName}
+-- FECHA: ${new Date().toISOString()}
+-- TABLAS INCLUIDAS: ${tables.length}
+-- ══════════════════════════════════════════════════════════\n\n`;
+
+  const body = tables.map(t => generateTableDDL(t)).join('\n-- --------------------------------------------------------\n\n');
+  return header + body;
+}
+
+// Helper to generate PlantUML (.puml) Entity-Relationship diagram
+export function generatePlantUML(tables = [], projectName = "Pathrimonio") {
+  const cleanProjectName = (projectName || "Pathrimonio").replace(/[^a-zA-Z0-9_]/g, "_");
+  
+  const entities = tables.map(table => {
+    const lines = [];
+    lines.push(`entity "${table.tableName}" as ${table.tableName} {`);
+    
+    // Primary keys first
+    const pks = (table.attributes || []).filter(a => a.isPrimary);
+    const nonPks = (table.attributes || []).filter(a => !a.isPrimary);
+    
+    pks.forEach(pk => {
+      lines.push(`  * **${pk.name}** : ${pk.type} <<PK>>`);
+    });
+    
+    if (nonPks.length > 0 && pks.length > 0) {
+      lines.push(`  --`);
+    }
+    
+    nonPks.forEach(attr => {
+      const requiredMark = attr.isNullable ? "  " : "  *";
+      let fkTag = "";
+      if (attr.foreignKey) fkTag = " <<FK>>";
+      lines.push(`${requiredMark} ${attr.name} : ${attr.type}${fkTag}`);
+    });
+    
+    lines.push(`}`);
+    return lines.join('\n');
+  }).join('\n\n');
+
+  // Discover relationships from foreignKeys
+  const relations = [];
+  const externalEntities = new Set();
+  const tableNames = new Set(tables.map(t => t.tableName));
+
+  tables.forEach(table => {
+    (table.attributes || []).forEach(attr => {
+      if (attr.foreignKey) {
+        // e.g. "tb_metas(id)" or "auth.users(id)"
+        const match = attr.foreignKey.match(/^([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)?)/);
+        if (match) {
+          const target = match[1];
+          const cleanTarget = target.replace(/\./g, "_");
+          if (!tableNames.has(target)) {
+            externalEntities.add(cleanTarget);
+          }
+          relations.push(`${cleanTarget} ||--o{ ${table.tableName} : "${attr.name}"`);
+        }
+      }
+    });
+  });
+
+  const externalEntitiesBlock = Array.from(externalEntities).map(ext => 
+    `entity "${ext}" as ${ext} <<(E,#334155) External>> {\n  * **id** : UUID\n}`
+  ).join('\n\n');
+
+  return `@startuml DER_${cleanProjectName}
+!theme plain
+skinparam linetype ortho
+skinparam roundcorner 6
+skinparam shadowing false
+skinparam classFontSize 11
+skinparam classFontName "Space Grotesk", monospace
+
+' Configuración Visual de Entidades y Llaves
+skinparam entity {
+  BackgroundColor #0f172a
+  BorderColor #38bdf8
+  FontColor #f8fafc
+  HeaderBackgroundColor #1e293b
+}
+skinparam arrowColor #10b981
+skinparam arrowFontColor #94a3b8
+skinparam arrowFontSize 10
+
+title Diagrama Entidad-Relación (DER) — ${projectName}
+
+${externalEntitiesBlock ? "' Entidades Externas Referenciadas\n" + externalEntitiesBlock + "\n\n" : ""}' Entidades del Software
+${entities}
+
+${relations.length > 0 ? "' Relaciones y Cardinalidad\n" + relations.join('\n') : "' Sin relaciones foráneas registradas"}
+
+@enduml`;
+}

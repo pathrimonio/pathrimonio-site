@@ -32,6 +32,7 @@ import DataModelControlsBar from './components/portal/DataModelControlsBar';
 import DataModelBuilder from './components/portal/DataModelBuilder';
 import DataModelFeed from './components/portal/DataModelFeed';
 import DataModelDetailModal from './components/portal/DataModelDetailModal';
+import DERModal from './components/portal/DERModal';
 import NewProjectModal from './components/portal/NewProjectModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
@@ -116,6 +117,7 @@ export default function App() {
 
   const [selectedTable, setSelectedTable] = useState(null);
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
+  const [isDERModalOpen, setIsDERModalOpen] = useState(false);
 
   // ── Contact modal (landing)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -561,6 +563,7 @@ export default function App() {
                     interfaces={projectInterfaces}
                     onNotify={notify}
                     activeProject={activeProject}
+                    onOpenDERModal={() => setIsDERModalOpen(true)}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -617,6 +620,14 @@ export default function App() {
             onUpdateTable={handleUpdateTable}
             existingStories={projectStories}
             existingInterfaces={projectInterfaces}
+          />
+
+          <DERModal
+            isOpen={isDERModalOpen}
+            onClose={() => setIsDERModalOpen(false)}
+            tables={projectDataModels}
+            projectName={activeProject?.name}
+            onNotify={notify}
           />
 
           <NewProjectModal

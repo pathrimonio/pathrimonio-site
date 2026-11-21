@@ -1,13 +1,14 @@
 import React from 'react';
 import confetti from 'canvas-confetti';
-import { generateTableDDL } from '../../data/initialDataModels';
+import { generateTableDDL, generatePlantUML, generateFullProjectSQL } from '../../data/initialDataModels';
 
 export default function DataModelControlsBar({
   tables = [],
   stories = [],
   interfaces = [],
   onNotify,
-  activeProject
+  activeProject,
+  onOpenDERModal
 }) {
   const totalTables = tables.length;
   const approvedTables = tables.filter(t => t.status === 'Aprobado por Arquitectura' || t.status === 'Aprobado').length;
@@ -19,32 +20,43 @@ export default function DataModelControlsBar({
   // Distinct storage engines
   const uniqueEngines = [...new Set(tables.map(t => t.storageTarget).filter(Boolean))].length;
 
-  // Export full SQL DDL script
+  // Export full SQL DDL script (.sql)
   const handleExportFullSQL = () => {
     try {
-      const header = `-- ══════════════════════════════════════════════════════════
--- PATHRIMONIO — SCRIPT DDL DE BASE DE DATOS
--- PROYECTO: ${activeProject?.name || 'Sistema de Software'}
--- FECHA: ${new Date().toISOString()}
--- TABLAS INCLUIDAS: ${tables.length}
--- ══════════════════════════════════════════════════════════\n\n`;
-
-      const body = tables.map(t => generateTableDDL(t)).join('\n\n-- --------------------------------------------------------\n\n');
-      const fullSql = header + body;
-
+      const fullSql = generateFullProjectSQL(tables, activeProject?.name || 'Sistema de Software');
       const blob = new Blob([fullSql], { type: 'text/sql;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `schema_${(activeProject?.id || 'pathrimonio')}_${new Date().toISOString().split('T')[0]}.sql`);
+      link.setAttribute('download', `ddl_${(activeProject?.id || 'pathrimonio')}_${new Date().toISOString().split('T')[0]}.sql`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
 
-      onNotify?.(`Script SQL DDL exportado con éxito (${tables.length} tablas).`);
+      onNotify?.(`Script SQL DDL (.sql) exportado con éxito (${tables.length} tablas).`);
     } catch (_) {
       onNotify?.('Error al generar el archivo SQL.');
+    }
+  };
+
+  // Export PlantUML (.puml)
+  const handleExportPUML = () => {
+    try {
+      const puml = generatePlantUML(tables, activeProject?.name || 'Pathrimonio');
+      const blob = new Blob([puml], { type: 'text/plain;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `der_${(activeProject?.id || 'pathrimonio')}_${new Date().toISOString().split('T')[0]}.puml`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      onNotify?.(`Diagrama PlantUML (.puml) exportado con éxito.`);
+    } catch (_) {
+      onNotify?.('Error al generar el archivo .puml.');
     }
   };
 
@@ -123,14 +135,34 @@ export default function DataModelControlsBar({
         {/* Action Tools Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-outline-variant/60">
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Export full SQL DDL */}
+            {/* Primary Action: Ver DER */}
+            <button
+              onClick={onOpenDERModal}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-surface font-space font-bold text-xs transition-colors shadow-md"
+              title="Abrir vista interactiva del Diagrama Entidad-Relación (DER)"
+            >
+              <span className="material-symbols-outlined text-[17px]">account_tree</span>
+              <span>Ver DER (Diagrama Entidad-Relación)</span>
+            </button>
+
+            {/* Export .sql */}
             <button
               onClick={handleExportFullSQL}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-xs font-space text-white transition-colors"
-              title="Descargar script SQL DDL con todas las tablas"
+              title="Descargar script DDL completo en archivo .sql"
             >
-              <span className="material-symbols-outlined text-primary text-[16px]">file_download</span>
-              <span>Exportar Script SQL DDL</span>
+              <span className="material-symbols-outlined text-emerald-400 text-[16px]">file_download</span>
+              <span>Exportar .sql</span>
+            </button>
+
+            {/* Export .puml */}
+            <button
+              onClick={handleExportPUML}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-xs font-space text-white transition-colors"
+              title="Descargar especificación completa en archivo PlantUML (.puml)"
+            >
+              <span className="material-symbols-outlined text-cyan-400 text-[16px]">download</span>
+              <span>Exportar .puml</span>
             </button>
 
             {/* Export Data Dictionary JSON */}
@@ -139,18 +171,18 @@ export default function DataModelControlsBar({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-xs font-space text-white transition-colors"
               title="Descargar diccionario completo en JSON"
             >
-              <span className="material-symbols-outlined text-cyan-400 text-[16px]">data_object</span>
-              <span>Exportar Diccionario JSON</span>
+              <span className="material-symbols-outlined text-on-surface-variant text-[16px]">data_object</span>
+              <span>JSON</span>
             </button>
 
             {/* Validate schema integrity */}
             <button
               onClick={handleCelebrateSchema}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-xs font-space text-white transition-colors"
-              title="Validar y celebrar consistencia relacional"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-xs font-space text-on-surface-variant hover:text-white transition-colors"
+              title="Validar consistencia relacional"
             >
               <span className="material-symbols-outlined text-emerald-400 text-[16px]">verified</span>
-              <span>Validar Arquitectura</span>
+              <span>Validar</span>
             </button>
           </div>
 
