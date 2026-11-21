@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { authenticateUser, DEMO_USERS } from '../../auth/authConfig';
+import { DEMO_USERS, mapSupabaseUser } from '../../auth/authConfig';
+import { supabase } from '../../lib/supabase';
 
 export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -9,7 +10,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const [loading, setLoading] = useState(false);
   const [showHint, setShowHint] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -18,17 +19,29 @@ export default function LoginPage({ onLoginSuccess }) {
       return;
     }
 
+    if (!supabase) {
+      setError('Supabase no está configurado. Revisá VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.');
+      return;
+    }
+
     setLoading(true);
-    // Simulate a small network delay for realistic feel
-    setTimeout(() => {
-      const user = authenticateUser(email, password);
-      setLoading(false);
-      if (user) {
-        onLoginSuccess(user);
-      } else {
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password
+      });
+
+      if (authError) {
         setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
+        return;
       }
-    }, 700);
+
+      onLoginSuccess(mapSupabaseUser(data.user));
+    } catch (err) {
+      setError(err?.message || 'No se pudo iniciar sesión. Revisá tu conexión.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleQuickLogin = (user) => {

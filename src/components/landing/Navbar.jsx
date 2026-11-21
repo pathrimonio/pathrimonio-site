@@ -35,6 +35,14 @@ export default function Navbar({ onOpenContact, onOpenPortal }) {
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-1">
           <button 
+            onClick={() => scrollToSection('cotizador')} 
+            className="px-3 py-1.5 rounded text-xs font-semibold text-primary hover:text-white hover:bg-surface-container transition-all flex items-center gap-1.5 border border-primary/20 bg-primary/5"
+          >
+            <span className="material-symbols-outlined text-[16px]">calculate</span>
+            <span>Cotizador</span>
+            <span className="text-[10px] bg-primary text-on-primary px-1.5 py-0.2 rounded font-mono font-bold">$1/día</span>
+          </button>
+          <button 
             onClick={() => scrollToSection('pathway')} 
             className="px-3.5 py-1.5 rounded text-xs font-semibold text-primary hover:text-white hover:bg-surface-container transition-all flex items-center gap-1.5"
           >
@@ -95,6 +103,16 @@ export default function Navbar({ onOpenContact, onOpenPortal }) {
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-surface-container-lowest border-b border-outline-variant px-6 py-4 flex flex-col gap-3">
+          <button 
+            onClick={() => scrollToSection('cotizador')} 
+            className="text-left py-2 text-sm text-primary font-semibold flex items-center justify-between"
+          >
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">calculate</span>
+              <span>Cotizador Interactivo</span>
+            </div>
+            <span className="text-[10px] bg-primary text-on-primary px-1.5 py-0.5 rounded font-mono font-bold">$1/día</span>
+          </button>
           <button 
             onClick={() => scrollToSection('pathway')} 
             className="text-left py-2 text-sm text-primary font-semibold flex items-center gap-2"

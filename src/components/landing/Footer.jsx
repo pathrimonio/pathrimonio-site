@@ -82,6 +82,12 @@ export default function Footer({ onOpenContact }) {
             </h3>
             <ul className="flex flex-col gap-2 font-jakarta text-xs text-on-surface-variant">
               <li>
+                <a href="#cotizador" className="hover:text-primary transition-colors text-left flex items-center gap-1.5 text-primary font-medium">
+                  <span className="material-symbols-outlined text-[15px] text-primary">calculate</span>
+                  Cotizador ($1/día)
+                </a>
+              </li>
+              <li>
                 <button onClick={onOpenContact} className="hover:text-primary transition-colors text-left flex items-center gap-1.5 text-white font-medium">
                   <span className="material-symbols-outlined text-[15px] text-primary">chat</span>
                   Iniciar un Proyecto
@@ -107,7 +113,8 @@ export default function Footer({ onOpenContact }) {
         <div className="mt-12 pt-8 border-t border-outline-variant/50 flex flex-col md:flex-row items-center justify-between gap-4 font-jakarta text-xs text-on-surface-variant">
           <span>© 2026 Pathrimonio. Todos los derechos reservados. Desarrollo de software con propósito real.</span>
           <div className="flex items-center gap-6 font-space text-[11px] uppercase tracking-wider">
-            <a href="#pathway" className="hover:text-primary transition-colors text-primary font-bold">App Pathway</a>
+            <a href="#cotizador" className="hover:text-primary transition-colors text-primary font-bold">Cotizador ($1/día)</a>
+            <a href="#pathway" className="hover:text-primary transition-colors">App Pathway</a>
             <a href="#servicios" className="hover:text-primary transition-colors">Servicios</a>
             <a href="#futuro" className="hover:text-primary transition-colors">Visión</a>
           </div>

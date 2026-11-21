@@ -82,3 +82,22 @@ export function clearSession() {
     sessionStorage.removeItem(AUTH_STORAGE_KEY);
   } catch (e) {}
 }
+
+// Convierte el usuario de Supabase Auth al shape que consume el portal.
+// Los metadatos se crean junto con el usuario (name, role, avatar, color, permissions).
+export function mapSupabaseUser(user) {
+  if (!user) return null;
+  const meta = user.user_metadata || {};
+  const demo = DEMO_USERS.find(
+    (candidate) => candidate.email.toLowerCase() === String(user.email || '').toLowerCase()
+  );
+  return {
+    id: user.id,
+    email: user.email,
+    name: meta.name || demo?.name || user.email,
+    role: meta.role || demo?.role || 'Usuario',
+    avatar: meta.avatar || demo?.avatar || String(user.email || '?').slice(0, 2).toUpperCase(),
+    color: meta.color || demo?.color || 'bg-primary',
+    permissions: meta.permissions || demo?.permissions || ['read']
+  };
+}

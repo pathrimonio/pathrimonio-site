@@ -5,13 +5,32 @@ import { INITIAL_PROJECTS } from './data/initialProjects';
 import { INITIAL_DATA_MODELS } from './data/initialDataModels';
 import { INITIAL_ACTORS } from './data/initialActors';
 import { INITIAL_FILES } from './data/initialFiles';
-import { authenticateUser, saveSession, loadSession, clearSession } from './auth/authConfig';
+import { mapSupabaseUser } from './auth/authConfig';
+import { supabase, isSupabaseConfigured } from './lib/supabase';
+import {
+  fetchWorkspace,
+  saveStory,
+  deleteStory,
+  saveInterface,
+  deleteInterface,
+  saveDataModel,
+  deleteDataModel,
+  saveActor,
+  deleteActor,
+  saveFile,
+  deleteFile,
+  saveProject,
+  addInterfaceModule,
+  renameInterfaceModule,
+  deleteInterfaceModule
+} from './lib/supabaseData';
 
 // Landing Components
 import Navbar from './components/landing/Navbar';
 import Hero from './components/landing/Hero';
 import ServicesSection from './components/landing/ServicesSection';
 import Pillars from './components/landing/Pillars';
+import InteractiveEstimator from './components/landing/InteractiveEstimator';
 import PathwaySection from './components/landing/PathwaySection';
 import FutureProducts from './components/landing/FutureProducts';
 import Manifesto from './components/landing/Manifesto';
@@ -56,14 +75,30 @@ const FILES_STORAGE_KEY = 'pathrimonio_files_v1';
 const PROJECTS_STORAGE_KEY = 'pathrimonio_projects_v1';
 const ACTIVE_PROJECT_KEY = 'pathrimonio_active_project_id_v1';
 
+function PortalLoader({ message }) {
+  return (
+    <div className="min-h-screen bg-surface-container-lowest flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <svg className="animate-spin w-8 h-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <p className="font-space text-xs uppercase tracking-widest text-on-surface-variant">{message}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   // ── View state: 'landing' | 'portal'
   const [currentView, setCurrentView] = useState(() =>
     window.location.hash === '#portal' ? 'portal' : 'landing'
   );
 
-  // ── Auth state
-  const [currentUser, setCurrentUser] = useState(() => loadSession());
+  // ── Auth state (Supabase Auth)
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authReady, setAuthReady] = useState(!isSupabaseConfigured);
+  const [workspaceReady, setWorkspaceReady] = useState(!isSupabaseConfigured);
   const [showLogin, setShowLogin] = useState(false);
 
   // ── Portal nav
@@ -243,6 +278,37 @@ export default function App() {
     try { localStorage.setItem(ACTIVE_PROJECT_KEY, activeProjectId); } catch (_) {}
   }, [activeProjectId]);
 
+  // ── Supabase Auth: restore session & listen for changes
+  useEffect(() => {
+    if (!supabase) {
+      setAuthReady(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setCurrentUser(data.session ? mapSupabaseUser(data.session.user) : null);
+        setAuthReady(true);
+      })
+      .catch((error) => {
+        console.error('[Supabase] getSession', error);
+        if (!cancelled) setAuthReady(true);
+      });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session ? mapSupabaseUser(session.user) : null);
+      setAuthReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
+
   // Sync URL hash & query parameters for deep linking
   useEffect(() => {
     const handleHash = () => {
@@ -278,16 +344,59 @@ export default function App() {
 
   // Show login gate when user enters portal without a session
   useEffect(() => {
-    if (currentView === 'portal' && !currentUser) {
+    if (currentView === 'portal' && authReady && !currentUser) {
       setShowLogin(true);
     } else {
       setShowLogin(false);
     }
-  }, [currentView, currentUser]);
+  }, [currentView, currentUser, authReady]);
 
   const notify = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(prev => prev === msg ? null : prev), 4000);
+  };
+
+  // ── Supabase: hydrate workspace once on mount (anon read)
+  useEffect(() => {
+    if (!supabase) {
+      setWorkspaceReady(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    fetchWorkspace()
+      .then((data) => {
+        if (cancelled) return;
+        setProjects(data.projects);
+        setStories(data.stories);
+        setInterfaces(data.interfaces);
+        setDataModels(data.dataModels);
+        setActors(data.actors);
+        setFiles(data.files);
+        if (data.interfaceModules.length > 0) {
+          setInterfaceModules(data.interfaceModules.map((module) => module.name));
+        }
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error('[Supabase] fetchWorkspace', error);
+        notify(`No se pudo cargar el workspace desde Supabase: ${error.message}`);
+      })
+      .finally(() => {
+        if (!cancelled) setWorkspaceReady(true);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // ── Supabase: fire-and-forget persistence with user feedback
+  const persist = (operation, label) => {
+    if (!supabase) return;
+    Promise.resolve(operation).catch((error) => {
+      console.error(`[Supabase] ${label}`, error);
+      notify(`Error al guardar en Supabase (${label}): ${error.message}`);
+    });
   };
 
   const navigateToPortal = () => {
@@ -304,24 +413,33 @@ export default function App() {
 
   // ── Auth handlers
   const handleLoginSuccess = (user) => {
-    saveSession(user);
     setCurrentUser(user);
     setShowLogin(false);
     notify(`¡Bienvenido al Portal, ${user.name}!`);
   };
 
-  const handleLogout = () => {
-    clearSession();
+  const handleLogout = async () => {
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.error('[Supabase] signOut', error);
+      }
+    }
     setCurrentUser(null);
     navigateToHome();
     notify('Sesión cerrada correctamente. Hasta pronto.');
   };
 
   // ── Story CRUD
-  const handleSaveStory = (newStory) => setStories([newStory, ...stories]);
+  const handleSaveStory = (newStory) => {
+    setStories(prev => [newStory, ...prev]);
+    persist(saveStory(newStory), 'historia');
+  };
 
   const handleUpdateStory = (updated) => {
-    setStories(stories.map(s => s.id === updated.id ? updated : s));
+    setStories(prev => prev.map(s => s.id === updated.id ? updated : s));
+    persist(saveStory(updated), 'historia');
     notify(`Historia ${updated.id} actualizada.`);
   };
 
@@ -333,33 +451,51 @@ export default function App() {
       createdAt: 'Justo ahora',
       status: 'Draft'
     };
-    setStories([dup, ...stories]);
+    setStories(prev => [dup, ...prev]);
+    persist(saveStory(dup), 'historia');
     notify(`Historia duplicada → ${dup.id}`);
   };
 
   const handleDeleteStory = (id) => {
     if (!window.confirm(`¿Eliminar la historia ${id}?`)) return;
-    setStories(stories.filter(s => s.id !== id));
+    setStories(prev => prev.filter(s => s.id !== id));
+    persist(deleteStory(id), 'historia');
     notify(`Historia ${id} eliminada.`);
   };
 
   const handleToggleCriterion = (storyId, criterionId) => {
-    setStories(stories.map(s => {
-      if (s.id !== storyId) return s;
-      return {
-        ...s,
-        criteria: s.criteria.map((c, idx) =>
-          (c.id === criterionId || idx === criterionId) ? { ...c, checked: !c.checked } : c
-        )
-      };
-    }));
+    const story = stories.find(s => s.id === storyId);
+    if (!story) return;
+    const updated = {
+      ...story,
+      criteria: story.criteria.map((c, idx) =>
+        (c.id === criterionId || idx === criterionId) ? { ...c, checked: !c.checked } : c
+      )
+    };
+    setStories(prev => prev.map(s => s.id === storyId ? updated : s));
+    persist(saveStory(updated), 'criterio');
   };
 
   // ── Interface CRUD & Handlers
-  const handleSaveInterface = (newInterface) => setInterfaces([newInterface, ...interfaces]);
+  const resolveActorId = (roleName, projectId) => {
+    const match = actors.find(
+      (actor) => actor.name === roleName && (!actor.projectId || actor.projectId === projectId)
+    );
+    return match?.id || null;
+  };
+
+  const validDataModelIds = new Set(dataModels.map((model) => model.id));
+  const validStoryIds = new Set(stories.map((story) => story.id));
+  const validInterfaceIds = new Set(interfaces.map((item) => item.id));
+
+  const handleSaveInterface = (newInterface) => {
+    setInterfaces(prev => [newInterface, ...prev]);
+    persist(saveInterface(newInterface, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
+  };
 
   const handleUpdateInterface = (updated) => {
-    setInterfaces(interfaces.map(i => i.id === updated.id ? updated : i));
+    setInterfaces(prev => prev.map(i => i.id === updated.id ? updated : i));
+    persist(saveInterface(updated, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
     notify(`Interfaz ${updated.id} (${updated.fullName || updated.title || updated.id}) actualizada.`);
   };
 
@@ -373,31 +509,34 @@ export default function App() {
       createdAt: 'Justo ahora',
       version: `${item.version || 'v1.0'}-copy`
     };
-    setInterfaces([dup, ...interfaces]);
+    setInterfaces(prev => [dup, ...prev]);
+    persist(saveInterface(dup, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
     notify(`Interfaz duplicada → ${dup.id}`);
   };
 
   const handleDeleteInterface = (id) => {
     if (!window.confirm(`¿Eliminar la interfaz ${id}?`)) return;
-    setInterfaces(interfaces.filter(i => i.id !== id));
+    setInterfaces(prev => prev.filter(i => i.id !== id));
+    persist(deleteInterface(id), 'interfaz');
     notify(`Interfaz ${id} eliminada.`);
   };
 
   const handleQuickInterfaceStatus = (id, newStatus) => {
-    setInterfaces(interfaces.map(i => {
-      if (i.id !== id) return i;
-      return {
-        ...i,
-        status: newStatus,
-        reviewedBy: newStatus.includes('Aprobado') ? 'Cliente / PO' : i.reviewedBy,
-        approvedAt: newStatus.includes('Aprobado') ? new Date().toISOString().split('T')[0] : i.approvedAt
-      };
-    }));
+    const item = interfaces.find(i => i.id === id);
+    if (!item) return;
+    const updated = {
+      ...item,
+      status: newStatus,
+      reviewedBy: newStatus.includes('Aprobado') ? 'Cliente / PO' : item.reviewedBy,
+      approvedAt: newStatus.includes('Aprobado') ? new Date().toISOString().split('T')[0] : item.approvedAt
+    };
+    setInterfaces(prev => prev.map(i => i.id === id ? updated : i));
+    persist(saveInterface(updated, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
     notify(`Estado de interfaz ${id} cambiado a "${newStatus}".`);
   };
 
   const handleToggleVisualCriterion = (interfaceId, criterionId) => {
-    setInterfaces(interfaces.map(i => {
+    setInterfaces(prev => prev.map(i => {
       if (i.id !== interfaceId) return i;
       return {
         ...i,
@@ -417,6 +556,7 @@ export default function App() {
       return false;
     }
     setInterfaceModules(prev => [...prev, clean]);
+    persist(addInterfaceModule(clean), 'módulo');
     notify(`Módulo "${clean}" agregado a la base de datos.`);
     return true;
   };
@@ -431,6 +571,7 @@ export default function App() {
     setInterfaceModules(prev => prev.map(m => m === oldName ? clean : m));
     setInterfaces(prev => prev.map(i => i.module === oldName ? { ...i, module: clean } : i));
     setSelectedInterface(prev => (prev && prev.module === oldName ? { ...prev, module: clean } : prev));
+    persist(renameInterfaceModule(oldName, clean), 'módulo');
     notify(`Módulo "${oldName}" renombrado a "${clean}".`);
     return true;
   };
@@ -439,6 +580,7 @@ export default function App() {
     const affected = interfaces.filter(i => i.module === name).length;
     setInterfaceModules(prev => prev.filter(m => m !== name));
     setInterfaces(prev => prev.map(i => i.module === name ? { ...i, module: 'Sin módulo' } : i));
+    persist(deleteInterfaceModule(name), 'módulo');
     notify(
       `Módulo "${name}" eliminado de la base de datos` +
       (affected > 0 ? ` — ${affected} interfaz(es) quedaron sin módulo.` : '.')
@@ -449,6 +591,7 @@ export default function App() {
   const handleCreateProject = (newProject) => {
     setProjects(prev => [...prev, newProject]);
     setActiveProjectId(newProject.id);
+    persist(saveProject(newProject), 'proyecto');
     notify(`Software "${newProject.name}" creado y activado.`);
   };
 
@@ -505,12 +648,14 @@ export default function App() {
 
   // ── Data Model Handlers
   const handleSaveTable = (newTable) => {
-    setDataModels([newTable, ...dataModels]);
+    setDataModels(prev => [newTable, ...prev]);
+    persist(saveDataModel(newTable, validStoryIds, validInterfaceIds), 'entidad');
     notify(`Entidad "${newTable.tableName}" registrada.`);
   };
 
   const handleUpdateTable = (updated) => {
-    setDataModels(dataModels.map(t => t.id === updated.id ? updated : t));
+    setDataModels(prev => prev.map(t => t.id === updated.id ? updated : t));
+    persist(saveDataModel(updated, validStoryIds, validInterfaceIds), 'entidad');
     notify(`Entidad "${updated.tableName}" actualizada.`);
   };
 
@@ -523,48 +668,62 @@ export default function App() {
       status: 'Borrador',
       version: 'v1.0'
     };
-    setDataModels([clone, ...dataModels]);
+    setDataModels(prev => [clone, ...prev]);
+    persist(saveDataModel(clone, validStoryIds, validInterfaceIds), 'entidad');
     notify(`Entidad "${table.tableName}" duplicada como "${clone.tableName}".`);
   };
 
   const handleDeleteTable = (id) => {
-    setDataModels(dataModels.filter(t => t.id !== id));
+    setDataModels(prev => prev.filter(t => t.id !== id));
+    persist(deleteDataModel(id), 'entidad');
     notify(`Entidad ${id} eliminada.`);
   };
 
   const handleQuickTableStatus = (table, newStatus) => {
-    setDataModels(dataModels.map(t => {
-      if (t.id !== table.id) return t;
-      return {
-        ...t,
-        status: newStatus,
-        approvedAt: newStatus.includes('Aprobado') ? new Date().toISOString().split('T')[0] : t.approvedAt
-      };
-    }));
+    const current = dataModels.find(t => t.id === table.id);
+    if (!current) return;
+    const updated = {
+      ...current,
+      status: newStatus,
+      approvedAt: newStatus.includes('Aprobado') ? new Date().toISOString().split('T')[0] : current.approvedAt
+    };
+    setDataModels(prev => prev.map(t => t.id === table.id ? updated : t));
+    persist(saveDataModel(updated, validStoryIds, validInterfaceIds), 'entidad');
     notify(`Estado de "${table.tableName}" cambiado a "${newStatus}".`);
   };
 
   const handleImportTables = (newTables = []) => {
     if (!newTables || newTables.length === 0) return;
-    setDataModels(prev => {
-      const existingNames = new Set(prev.map(t => t.tableName.toLowerCase()));
-      const uniqueNew = newTables.filter(t => !existingNames.has(t.tableName.toLowerCase()));
-      const replaced = prev.map(t => {
-        const match = newTables.find(n => n.tableName.toLowerCase() === t.tableName.toLowerCase());
-        return match ? { ...match, id: t.id } : t;
-      });
-      return [...uniqueNew, ...replaced];
+    const projectId = activeProjectId === 'all' ? 'pathway' : activeProjectId;
+    const incoming = newTables.map((table) => ({
+      ...table,
+      projectId: table.projectId || projectId
+    }));
+    const projectModels = dataModels.filter(t => (t.projectId || projectId) === projectId);
+    const existingNames = new Set(projectModels.map(t => t.tableName.toLowerCase()));
+    const uniqueNew = incoming.filter(t => !existingNames.has(t.tableName.toLowerCase()));
+    const replaced = dataModels.map(t => {
+      if ((t.projectId || projectId) !== projectId) return t;
+      const match = incoming.find(n => n.tableName.toLowerCase() === t.tableName.toLowerCase());
+      return match ? { ...match, id: t.id } : t;
     });
-    notify(`¡${newTables.length} entidades de datos importadas correctamente desde el script SQL!`);
+    setDataModels([...uniqueNew, ...replaced]);
+    uniqueNew.forEach(t => persist(saveDataModel(t, validStoryIds, validInterfaceIds), 'entidad'));
+    replaced.forEach((t, index) => {
+      if (t !== dataModels[index]) persist(saveDataModel(t, validStoryIds, validInterfaceIds), 'entidad');
+    });
+    notify(`¡${incoming.length} entidades de datos importadas correctamente desde el script SQL!`);
   };
 
   // ── Business Actor Handlers
   const handleSaveActor = (newActor) => {
     setActors(prev => [newActor, ...prev]);
+    persist(saveActor(newActor), 'actor');
   };
 
   const handleUpdateActor = (updatedActor) => {
     setActors(prev => prev.map(a => a.id === updatedActor.id ? updatedActor : a));
+    persist(saveActor(updatedActor), 'actor');
     notify(`Actor "${updatedActor.name}" actualizado.`);
   };
 
@@ -576,6 +735,7 @@ export default function App() {
       createdAt: new Date().toISOString().split('T')[0]
     };
     setActors(prev => [cloned, ...prev]);
+    persist(saveActor(cloned), 'actor');
     notify(`Actor duplicado como "${cloned.name}".`);
   };
 
@@ -583,6 +743,7 @@ export default function App() {
     const actorToDelete = actors.find(a => a.id === actorId);
     if (!window.confirm(`¿Eliminar el rol "${actorToDelete?.name || actorId}"?`)) return;
     setActors(prev => prev.filter(a => a.id !== actorId));
+    persist(deleteActor(actorId), 'actor');
     notify('Actor eliminado de la matriz.');
   };
 
@@ -595,10 +756,12 @@ export default function App() {
   // ── Project File Handlers
   const handleSaveFile = (newFile) => {
     setFiles(prev => [newFile, ...prev]);
+    persist(saveFile(newFile), 'archivo');
   };
 
   const handleUpdateFile = (updated) => {
     setFiles(prev => prev.map(f => f.id === updated.id ? updated : f));
+    persist(saveFile(updated), 'archivo');
     notify(`Archivo "${updated.name}" actualizado.`);
   };
 
@@ -606,6 +769,7 @@ export default function App() {
     const fileToDelete = files.find(f => f.id === fileId);
     if (!window.confirm(`¿Eliminar el archivo "${fileToDelete?.name || fileId}" del repositorio?`)) return;
     setFiles(prev => prev.filter(f => f.id !== fileId));
+    persist(deleteFile(fileId), 'archivo');
     notify('Archivo eliminado del repositorio.');
   };
 
@@ -619,6 +783,7 @@ export default function App() {
       uploadedAt: new Date().toISOString().split('T')[0]
     };
     setFiles(prev => [cloned, ...prev]);
+    persist(saveFile(cloned), 'archivo');
     notify(`Archivo duplicado como "${cloned.name}".`);
   };
 
@@ -662,6 +827,7 @@ export default function App() {
             <Hero onOpenContact={() => setIsContactModalOpen(true)} />
             <ServicesSection />
             <Pillars />
+            <InteractiveEstimator onOpenContact={() => setIsContactModalOpen(true)} />
             <PathwaySection />
             <FutureProducts onOpenContact={() => setIsContactModalOpen(true)} />
             <Manifesto />
@@ -677,9 +843,16 @@ export default function App() {
                   En Pathrimonio combinamos diseño centrado en el usuario, ingeniería de alto rendimiento y metodologías ágiles para construir aplicaciones móviles y plataformas web que marcan la diferencia.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+                  <a
+                    href="#cotizador"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider shadow-[0_0_24px_rgba(245,166,35,0.35)] hover:shadow-[0_0_36px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">calculate</span>
+                    Cotizar mi Software ($1/día)
+                  </a>
                   <button
                     onClick={() => setIsContactModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider shadow-[0_0_24px_rgba(245,166,35,0.35)] hover:shadow-[0_0_36px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide hover:bg-surface-container-highest transition-all"
                   >
                     <span className="material-symbols-outlined text-[18px]">chat</span>
                     Iniciar Conversación
@@ -704,14 +877,22 @@ export default function App() {
       {/* ══════════════════════════════════════════
           VIEW: PORTAL — LOGIN GATE
       ══════════════════════════════════════════ */}
-      {currentView === 'portal' && showLogin && (
+      {currentView === 'portal' && !authReady && (
+        <PortalLoader message="Verificando sesión..." />
+      )}
+
+      {currentView === 'portal' && authReady && showLogin && (
         <LoginPage onLoginSuccess={handleLoginSuccess} />
+      )}
+
+      {currentView === 'portal' && authReady && !showLogin && currentUser && !workspaceReady && (
+        <PortalLoader message="Cargando workspace desde Supabase..." />
       )}
 
       {/* ══════════════════════════════════════════
           VIEW: PORTAL — AUTHENTICATED APP
       ══════════════════════════════════════════ */}
-      {currentView === 'portal' && !showLogin && currentUser && (
+      {currentView === 'portal' && authReady && !showLogin && currentUser && workspaceReady && (
         <div className="flex min-h-screen bg-surface">
           <Sidebar
             activeTab={activePortalTab}
