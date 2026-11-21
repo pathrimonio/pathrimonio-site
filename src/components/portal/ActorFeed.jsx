@@ -205,6 +205,7 @@ export default function ActorFeed({
               onDelete={onDeleteActor}
               onSelectForStory={onSelectForStory}
               linkedStoriesCount={getLinkedStoriesCount(actor.name)}
+              linkedInterfacesCount={getLinkedInterfacesCount(actor.name)}
               onNotify={onNotify}
             />
           ))}

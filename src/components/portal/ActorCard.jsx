@@ -7,6 +7,7 @@ export default function ActorCard({
   onDelete,
   onSelectForStory,
   linkedStoriesCount = 0,
+  linkedInterfacesCount = 0,
   onNotify
 }) {
   const [copiedLink, setCopiedLink] = useState(false);
@@ -93,7 +94,11 @@ export default function ActorCard({
               </span>
               <span className="text-on-surface-variant/40">•</span>
               <span className="font-mono text-[11px] text-primary">
-                {linkedStoriesCount} {linkedStoriesCount === 1 ? 'Historia' : 'Historias'} vinculadas
+                {linkedStoriesCount} {linkedStoriesCount === 1 ? 'Historia' : 'Historias'}
+              </span>
+              <span className="text-on-surface-variant/40">•</span>
+              <span className="font-mono text-[11px] text-emerald-400">
+                {linkedInterfacesCount} {linkedInterfacesCount === 1 ? 'Interfaz' : 'Interfaces'}
               </span>
             </div>
           </div>
