@@ -8,7 +8,8 @@ export default function DataModelControlsBar({
   interfaces = [],
   onNotify,
   activeProject,
-  onOpenDERModal
+  onOpenDERModal,
+  onOpenSQLModal
 }) {
   const totalTables = tables.length;
   const approvedTables = tables.filter(t => t.status === 'Aprobado por Arquitectura' || t.status === 'Aprobado').length;
@@ -143,6 +144,16 @@ export default function DataModelControlsBar({
             >
               <span className="material-symbols-outlined text-[17px]">account_tree</span>
               <span>Ver DER (Diagrama Entidad-Relación)</span>
+            </button>
+
+            {/* Action: Ingresar Script .sql */}
+            <button
+              onClick={onOpenSQLModal}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-primary/50 text-primary hover:text-white font-space font-bold text-xs transition-colors shadow-sm"
+              title="Ingresar o cargar sentencias CREATE TABLE en script .sql"
+            >
+              <span className="material-symbols-outlined text-[17px]">terminal</span>
+              <span>Ingresar Script .sql</span>
             </button>
 
             {/* Export .sql */}

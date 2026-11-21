@@ -11,7 +11,8 @@ export default function DataModelBuilder({
   onNotify,
   existingStories = [],
   existingInterfaces = [],
-  activeProjectId = 'pathway'
+  activeProjectId = 'pathway',
+  onOpenSQLModal
 }) {
   const [tableName, setTableName] = useState('');
   const [name, setName] = useState('');
@@ -192,9 +193,15 @@ export default function DataModelBuilder({
           </div>
         </div>
 
-        <span className="font-space text-[11px] uppercase tracking-wider px-2 py-0.5 rounded bg-surface-container-highest border border-outline-variant text-primary font-mono">
-          SQL DDL
-        </span>
+        <button
+          type="button"
+          onClick={onOpenSQLModal}
+          className="flex items-center gap-1 font-space text-[11px] uppercase tracking-wider px-2.5 py-1 rounded-lg bg-surface-container-highest hover:bg-surface-container border border-primary/40 hover:border-primary text-primary transition-colors cursor-pointer"
+          title="Ingresar o cargar sentencias CREATE TABLE en script .sql"
+        >
+          <span className="material-symbols-outlined text-[14px]">terminal</span>
+          <span>Pegar .sql</span>
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">

@@ -922,3 +922,216 @@ ${relations.length > 0 ? "' Relaciones y Cardinalidad\n" + relations.join('\n') 
 
 @enduml`;
 }
+
+// ══════════════════════════════════════════════════════════
+// Parser de Scripts DDL SQL para importar tablas y atributos
+// ══════════════════════════════════════════════════════════
+export function parseSQLScript(
+  sqlString,
+  defaultProjectId = 'pathway',
+  defaultModule = 'Gestión & Monitoreo',
+  defaultStorage = 'PostgreSQL (Supabase Cloud)'
+) {
+  if (!sqlString || typeof sqlString !== 'string') return [];
+
+  // 1. Extraer comentarios COMMENT ON COLUMN
+  const columnComments = {};
+  const commentRegex = /COMMENT\s+ON\s+COLUMN\s+(?:[a-zA-Z0-9_"]+\.)?([a-zA-Z0-9_"]+)\.([a-zA-Z0-9_"]+)\s+IS\s+'((?:[^']|'')*)'/gi;
+  let commentMatch;
+  while ((commentMatch = commentRegex.exec(sqlString)) !== null) {
+    const table = commentMatch[1].replace(/["`\[\]]/g, '').toLowerCase();
+    const col = commentMatch[2].replace(/["`\[\]]/g, '').toLowerCase();
+    const text = commentMatch[3].replace(/''/g, "'");
+    if (!columnComments[table]) columnComments[table] = {};
+    columnComments[table][col] = text;
+  }
+
+  // 2. Extraer comentarios COMMENT ON TABLE
+  const tableComments = {};
+  const tableCommentRegex = /COMMENT\s+ON\s+TABLE\s+(?:[a-zA-Z0-9_"]+\.)?([a-zA-Z0-9_"]+)\s+IS\s+'((?:[^']|'')*)'/gi;
+  let tCommentMatch;
+  while ((tCommentMatch = tableCommentRegex.exec(sqlString)) !== null) {
+    const table = tCommentMatch[1].replace(/["`\[\]]/g, '').toLowerCase();
+    const text = tCommentMatch[2].replace(/''/g, "'");
+    tableComments[table] = text;
+  }
+
+  // 3. Limpiar comentarios de bloque /* ... */ y de línea -- ...
+  const cleanSql = sqlString
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/--.*$/gm, '');
+
+  // 4. Buscar sentencias CREATE TABLE
+  const createTableRegex = /CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+(?:[a-zA-Z0-9_"]+\.)?([a-zA-Z0-9_"`\[\]]+)\s*\(([\s\S]*?)\)(?:\s*;|\s*$)/gi;
+  const parsedTables = [];
+  let tableMatch;
+
+  while ((tableMatch = createTableRegex.exec(cleanSql)) !== null) {
+    const rawTableName = tableMatch[1].replace(/["`\[\]]/g, '').trim().toLowerCase();
+    const body = tableMatch[2].trim();
+
+    // Generar título descriptivo a partir del nombre físico
+    let cleanTitle = rawTableName.replace(/^tb_/i, '').replace(/_/g, ' ');
+    cleanTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1);
+
+    // Dividir líneas respetando paréntesis anidados (ej. DECIMAL(12,2))
+    const lines = [];
+    let currentLine = '';
+    let parenDepth = 0;
+    let inQuotes = false;
+    let quoteChar = '';
+
+    for (let i = 0; i < body.length; i++) {
+      const char = body[i];
+      if ((char === "'" || char === '"') && body[i - 1] !== '\\') {
+        if (!inQuotes) {
+          inQuotes = true;
+          quoteChar = char;
+        } else if (char === quoteChar) {
+          inQuotes = false;
+        }
+      }
+
+      if (!inQuotes) {
+        if (char === '(') parenDepth++;
+        else if (char === ')') parenDepth--;
+        else if (char === ',' && parenDepth === 0) {
+          if (currentLine.trim()) lines.push(currentLine.trim());
+          currentLine = '';
+          continue;
+        }
+      }
+      currentLine += char;
+    }
+    if (currentLine.trim()) lines.push(currentLine.trim());
+
+    // Separar columnas de restricciones a nivel de tabla (PRIMARY KEY, FOREIGN KEY, etc.)
+    const tableLevelPKs = new Set();
+    const tableLevelFKs = {};
+    const columnLines = [];
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      const upper = trimmed.toUpperCase();
+
+      // PRIMARY KEY a nivel de tabla
+      const pkMatch = trimmed.match(/^(?:CONSTRAINT\s+[a-zA-Z0-9_]+\s+)?PRIMARY\s+KEY\s*\(([^)]+)\)/i);
+      if (pkMatch) {
+        pkMatch[1].split(',').forEach(col => {
+          tableLevelPKs.add(col.replace(/["`\[\]]/g, '').trim().toLowerCase());
+        });
+        return;
+      }
+
+      // FOREIGN KEY a nivel de tabla
+      const fkMatch = trimmed.match(/^(?:CONSTRAINT\s+[a-zA-Z0-9_]+\s+)?FOREIGN\s+KEY\s*\(([^)]+)\)\s+REFERENCES\s+([^(]+)\(([^)]+)\)/i);
+      if (fkMatch) {
+        const col = fkMatch[1].replace(/["`\[\]]/g, '').trim().toLowerCase();
+        const targetTable = fkMatch[2].replace(/["`\[\]]/g, '').trim();
+        const targetCol = fkMatch[3].replace(/["`\[\]]/g, '').trim();
+        tableLevelFKs[col] = `${targetTable}(${targetCol})`;
+        return;
+      }
+
+      if (upper.startsWith('CONSTRAINT') || upper.startsWith('CHECK') || upper.startsWith('UNIQUE (')) {
+        return;
+      }
+
+      columnLines.push(trimmed);
+    });
+
+    // Parsear cada columna
+    const attributes = [];
+    columnLines.forEach((colLine, idx) => {
+      const tokens = colLine.split(/\s+/);
+      if (tokens.length < 2) return;
+
+      const colName = tokens[0].replace(/["`\[\]]/g, '').trim().toLowerCase();
+      let remaining = colLine.slice(tokens[0].length).trim();
+
+      // Detectar tipo de dato
+      let dataType = 'VARCHAR(255)';
+      if (/^TIMESTAMP\s+WITH\s+TIME\s+ZONE/i.test(remaining)) {
+        dataType = 'TIMESTAMP WITH TIME ZONE';
+        remaining = remaining.replace(/^TIMESTAMP\s+WITH\s+TIME\s+ZONE/i, '').trim();
+      } else if (/^DOUBLE\s+PRECISION/i.test(remaining)) {
+        dataType = 'DOUBLE PRECISION';
+        remaining = remaining.replace(/^DOUBLE\s+PRECISION/i, '').trim();
+      } else {
+        const typeWithParenMatch = remaining.match(/^([a-zA-Z0-9_]+(?:\s*\([^)]+\))?)/i);
+        if (typeWithParenMatch) {
+          dataType = typeWithParenMatch[1].toUpperCase();
+          remaining = remaining.slice(typeWithParenMatch[0].length).trim();
+        } else {
+          dataType = tokens[1].toUpperCase();
+          remaining = remaining.slice(tokens[1].length).trim();
+        }
+      }
+
+      const upperRest = remaining.toUpperCase();
+      const isPrimary = upperRest.includes('PRIMARY KEY') || tableLevelPKs.has(colName);
+      const isNullable = !isPrimary && !upperRest.includes('NOT NULL');
+      const isUnique = upperRest.includes('UNIQUE') && !isPrimary;
+
+      // Extraer DEFAULT
+      let defaultValue = '';
+      const defaultMatch = remaining.match(/DEFAULT\s+([^,;()]+(?:\([^)]*\))?|'[^']*')/i);
+      if (defaultMatch) {
+        defaultValue = defaultMatch[1].trim();
+      } else if (/SERIAL/i.test(dataType)) {
+        defaultValue = 'nextval(...)';
+      }
+
+      // Extraer REFERENCES inline
+      let foreignKey = tableLevelFKs[colName] || '';
+      if (!foreignKey) {
+        const refMatch = remaining.match(/REFERENCES\s+([^(,;\s]+)\s*\(([^)]+)\)/i);
+        if (refMatch) {
+          foreignKey = `${refMatch[1].replace(/["`\[\]]/g, '').trim()}(${refMatch[2].replace(/["`\[\]]/g, '').trim()})`;
+        }
+      }
+
+      const description = (columnComments[rawTableName] && columnComments[rawTableName][colName]) 
+        || (isPrimary ? 'Identificador único inmutable' : foreignKey ? `Referencia foránea a ${foreignKey}` : '');
+
+      attributes.push({
+        id: `c_${idx + 1}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        name: colName,
+        type: dataType,
+        isPrimary,
+        isNullable,
+        isUnique,
+        foreignKey: foreignKey || null,
+        defaultValue: defaultValue || null,
+        description
+      });
+    });
+
+    if (attributes.length > 0) {
+      parsedTables.push({
+        id: `TBL-${Date.now().toString().slice(-4)}${parsedTables.length}`,
+        projectId: defaultProjectId === 'all' ? 'pathway' : defaultProjectId,
+        tableName: rawTableName,
+        name: cleanTitle,
+        module: defaultModule,
+        storageTarget: defaultStorage,
+        storageLocation: defaultStorage.includes('SQLite') 
+          ? 'Sandbox Local Móvil (SQLCipher AES-256) + Sincronización Cloud' 
+          : 'PostgreSQL Gestionado en Servidor Cloud',
+        syncStrategy: defaultStorage.includes('SQLite')
+          ? 'Offline-First con resolución de conflictos por timestamp'
+          : 'Transacciones relacionales ACID',
+        status: 'Aprobado por Arquitectura',
+        description: tableComments[rawTableName] || `Entidad de datos para gestión de ${cleanTitle}`,
+        linkedStory: null,
+        linkedInterface: null,
+        author: 'Importador SQL',
+        approvedAt: new Date().toISOString().split('T')[0],
+        version: 'v1.0',
+        attributes
+      });
+    }
+  }
+
+  return parsedTables;
+}

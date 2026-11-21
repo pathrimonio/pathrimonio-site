@@ -33,6 +33,7 @@ import DataModelBuilder from './components/portal/DataModelBuilder';
 import DataModelFeed from './components/portal/DataModelFeed';
 import DataModelDetailModal from './components/portal/DataModelDetailModal';
 import DERModal from './components/portal/DERModal';
+import SQLScriptModal from './components/portal/SQLScriptModal';
 import NewProjectModal from './components/portal/NewProjectModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
@@ -118,6 +119,7 @@ export default function App() {
   const [selectedTable, setSelectedTable] = useState(null);
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
   const [isDERModalOpen, setIsDERModalOpen] = useState(false);
+  const [isSQLModalOpen, setIsSQLModalOpen] = useState(false);
 
   // ── Contact modal (landing)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -374,6 +376,20 @@ export default function App() {
     notify(`Estado de "${table.tableName}" cambiado a "${newStatus}".`);
   };
 
+  const handleImportTables = (newTables = []) => {
+    if (!newTables || newTables.length === 0) return;
+    setDataModels(prev => {
+      const existingNames = new Set(prev.map(t => t.tableName.toLowerCase()));
+      const uniqueNew = newTables.filter(t => !existingNames.has(t.tableName.toLowerCase()));
+      const replaced = prev.map(t => {
+        const match = newTables.find(n => n.tableName.toLowerCase() === t.tableName.toLowerCase());
+        return match ? { ...match, id: t.id } : t;
+      });
+      return [...uniqueNew, ...replaced];
+    });
+    notify(`¡${newTables.length} entidades de datos importadas correctamente desde el script SQL!`);
+  };
+
   // ── Filtered stories for feed
   const filteredStories = projectStories.filter(story => {
     const matchMod = activeModule === 'Todos' || story.module === activeModule;
@@ -564,6 +580,7 @@ export default function App() {
                     onNotify={notify}
                     activeProject={activeProject}
                     onOpenDERModal={() => setIsDERModalOpen(true)}
+                    onOpenSQLModal={() => setIsSQLModalOpen(true)}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -574,6 +591,7 @@ export default function App() {
                           existingStories={projectStories}
                           existingInterfaces={projectInterfaces}
                           activeProjectId={activeProjectId}
+                          onOpenSQLModal={() => setIsSQLModalOpen(true)}
                         />
                       </section>
                       <section className="lg:col-span-7 flex flex-col gap-y-4">
@@ -627,6 +645,14 @@ export default function App() {
             onClose={() => setIsDERModalOpen(false)}
             tables={projectDataModels}
             projectName={activeProject?.name}
+            onNotify={notify}
+          />
+
+          <SQLScriptModal
+            isOpen={isSQLModalOpen}
+            onClose={() => setIsSQLModalOpen(false)}
+            onImportTables={handleImportTables}
+            activeProject={activeProject}
             onNotify={notify}
           />
 
