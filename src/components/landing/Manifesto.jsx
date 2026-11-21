@@ -4,18 +4,18 @@ export default function Manifesto() {
   const principles = [
     {
       num: "1.",
-      title: "Ética por Diseño",
-      desc: "Rechazamos patrones oscuros de monetización o captura de datos que vulneren la dignidad del usuario final."
+      title: "Utilidad Real",
+      desc: "Creamos herramientas que resuelven necesidades cotidianas concretas, eliminando la complejidad innecesaria."
     },
     {
       num: "2.",
-      title: "Perpetuidad de Sistemas",
-      desc: "Construimos software mantenible que subsiste a los ciclos de subvención y financiamiento corporativo."
+      title: "Transparencia y Respeto",
+      desc: "Cuidamos la privacidad del usuario y su tiempo; construimos productos honestos sin letra chica ni patrones confusos."
     },
     {
       num: "3.",
-      title: "Verificación Abierta",
-      desc: "Cada métrica de impacto es rastreable mediante auditorías públicas, sin vanidad ni métricas infladas."
+      title: "Pasión por el Detalle",
+      desc: "Cuidamos cada interacción visual y cada línea de código para que la experiencia sea rápida, confiable y agradable."
     }
   ];
 
@@ -27,13 +27,13 @@ export default function Manifesto() {
         <div className="flex items-center gap-3">
           <span className="w-8 h-1 bg-primary rounded-full"></span>
           <span className="font-space text-xs sm:text-sm uppercase tracking-widest text-primary font-bold">
-            El Manifiesto de Pathrimonio
+            Nuestra Filosofía
           </span>
         </div>
 
         <div className="max-w-5xl">
           <blockquote className="font-space text-2xl sm:text-3xl lg:text-4xl text-white font-bold leading-tight">
-            “El código nunca ha sido neutral. Cada línea de arquitectura que escribimos o consolida privilegios o construye un futuro deliberadamente equitativo.”
+            “El mejor software es el que no se interpone en tu camino, sino el que te impulsa a dar el siguiente paso con confianza.”
           </blockquote>
         </div>
 

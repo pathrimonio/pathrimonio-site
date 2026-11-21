@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Footer({ onNavigatePortal, onOpenContact }) {
+export default function Footer({ onOpenContact }) {
   const PATHWAY_WEB = "https://pathrimonio-pathway.vercel.app/";
   const PATHWAY_PLAYSTORE = "https://play.google.com/store/apps/details?id=com.pathrimonio.pathway.app";
 
@@ -20,46 +20,33 @@ export default function Footer({ onNavigatePortal, onOpenContact }) {
             </div>
 
             <p className="font-jakarta text-xs sm:text-sm text-on-surface-variant max-w-sm leading-relaxed">
-              Arquitectura de software sistemática y de alta precisión impulsada por propósito humano y soberanía tecnológica sin concesiones.
+              Compañía de desarrollo de software enfocada en crear productos intuitivos, aplicaciones móviles y soluciones digitales de alto impacto.
             </p>
 
             <div className="flex items-center gap-2 pt-1">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
               <span className="font-space text-xs uppercase tracking-wider text-on-surface-variant font-medium">
-                Diseñado para tolerancia a fallas y resiliencia offline
+                Producto MVP: Pathway (En espera de aprobación en Play Store)
               </span>
             </div>
           </div>
 
           <div className="flex flex-col gap-3">
             <h3 className="font-space text-xs uppercase text-white font-bold tracking-wider">
-              Patrones Tech
+              Nuestros Servicios
             </h3>
             <ul className="flex flex-col gap-2 font-jakarta text-xs text-on-surface-variant">
-              <li className="hover:text-primary transition-colors cursor-pointer">Infraestructura Offline-First</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Protocolos de Consenso Raft</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Criptografía Ed25519 &amp; AES</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Telemetría de Redes LoRaWAN</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Bases Embebidas SQLite</li>
+              <li>Desarrollo de Apps Móviles</li>
+              <li>Plataformas Web Modernas</li>
+              <li>Diseño de Producto &amp; UX/UI</li>
+              <li>Soluciones Offline-First</li>
+              <li>Desarrollo de Software a Medida</li>
             </ul>
           </div>
 
           <div className="flex flex-col gap-3">
             <h3 className="font-space text-xs uppercase text-white font-bold tracking-wider">
-              Compromiso Ético
-            </h3>
-            <ul className="flex flex-col gap-2 font-jakarta text-xs text-on-surface-variant">
-              <li className="hover:text-primary transition-colors cursor-pointer">Gobernanza Open Core</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Inclusión Digital Radical</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Auditoría Algorítmica Pública</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Cero Rastreadores Invasivos</li>
-              <li className="hover:text-primary transition-colors cursor-pointer">Perpetuidad de Sistemas</li>
-            </ul>
-          </div>
-
-          <div className="flex flex-col gap-3">
-            <h3 className="font-space text-xs uppercase text-white font-bold tracking-wider">
-              Ecosistema &amp; Apps
+              Producto MVP: Pathway
             </h3>
             <ul className="flex flex-col gap-2 font-jakarta text-xs text-on-surface-variant">
               <li>
@@ -70,7 +57,7 @@ export default function Footer({ onNavigatePortal, onOpenContact }) {
                   className="hover:text-primary transition-colors text-left flex items-center gap-1.5 text-white font-medium"
                 >
                   <span className="material-symbols-outlined text-[15px] text-primary">language</span>
-                  Pathway Web App
+                  Probar Pathway Web
                 </a>
               </li>
               <li>
@@ -81,20 +68,36 @@ export default function Footer({ onNavigatePortal, onOpenContact }) {
                   className="hover:text-primary transition-colors text-left flex items-center gap-1.5"
                 >
                   <span className="material-symbols-outlined text-[15px] text-primary">shop</span>
-                  Pathway en Google Play
+                  Ficha en Google Play
+                </a>
+              </li>
+              <li>Seguimiento de Metas &amp; Hitos</li>
+              <li>Bitácora Personal de Hábitos</li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <h3 className="font-space text-xs uppercase text-white font-bold tracking-wider">
+              Contacto &amp; Alianzas
+            </h3>
+            <ul className="flex flex-col gap-2 font-jakarta text-xs text-on-surface-variant">
+              <li>
+                <button onClick={onOpenContact} className="hover:text-primary transition-colors text-left flex items-center gap-1.5 text-white font-medium">
+                  <span className="material-symbols-outlined text-[15px] text-primary">chat</span>
+                  Iniciar un Proyecto
+                </button>
+              </li>
+              <li>
+                <a href="#futuro" className="hover:text-primary transition-colors text-left flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[15px] text-primary">rocket_launch</span>
+                  Próximos Productos
                 </a>
               </li>
               <li>
-                <button onClick={onNavigatePortal} className="hover:text-primary transition-colors text-left flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[15px] text-primary">view_kanban</span>
-                  Portal de Historias (Core Hub)
-                </button>
-              </li>
-              <li>
-                <button onClick={onOpenContact} className="hover:text-primary transition-colors text-left flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-[15px] text-primary">calendar_today</span>
-                  Iniciar Proyecto
-                </button>
+                <a href="#metodologia" className="hover:text-primary transition-colors text-left flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[15px] text-primary">psychology</span>
+                  Cómo Trabajamos
+                </a>
               </li>
             </ul>
           </div>
@@ -102,11 +105,11 @@ export default function Footer({ onNavigatePortal, onOpenContact }) {
         </div>
 
         <div className="mt-12 pt-8 border-t border-outline-variant/50 flex flex-col md:flex-row items-center justify-between gap-4 font-jakarta text-xs text-on-surface-variant">
-          <span>© 2026 Pathrimonio. Todos los derechos reservados. Arquitectura y progreso sin concesiones.</span>
+          <span>© 2026 Pathrimonio. Todos los derechos reservados. Desarrollo de software con propósito real.</span>
           <div className="flex items-center gap-6 font-space text-[11px] uppercase tracking-wider">
             <a href="#pathway" className="hover:text-primary transition-colors text-primary font-bold">App Pathway</a>
-            <a href="#soluciones" className="hover:text-primary transition-colors">Patrones de Software</a>
-            <a href="#estandares" className="hover:text-primary transition-colors">Auditoría SHA-256</a>
+            <a href="#servicios" className="hover:text-primary transition-colors">Servicios</a>
+            <a href="#futuro" className="hover:text-primary transition-colors">Visión</a>
           </div>
         </div>
       </div>

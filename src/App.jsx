@@ -5,12 +5,11 @@ import { authenticateUser, saveSession, loadSession, clearSession } from './auth
 // Landing Components
 import Navbar from './components/landing/Navbar';
 import Hero from './components/landing/Hero';
-import Partners from './components/landing/Partners';
+import ServicesSection from './components/landing/ServicesSection';
 import Pillars from './components/landing/Pillars';
-import CaseStudies from './components/landing/CaseStudies';
 import PathwaySection from './components/landing/PathwaySection';
+import FutureProducts from './components/landing/FutureProducts';
 import Manifesto from './components/landing/Manifesto';
-import TelemetryAudit from './components/landing/TelemetryAudit';
 import Footer from './components/landing/Footer';
 import ContactModal from './components/landing/ContactModal';
 
@@ -190,15 +189,14 @@ export default function App() {
       ══════════════════════════════════════════ */}
       {currentView === 'landing' && (
         <div className="flex flex-col w-full">
-          <Navbar onNavigatePortal={navigateToPortal} onOpenContact={() => setIsContactModalOpen(true)} />
+          <Navbar onOpenContact={() => setIsContactModalOpen(true)} />
 
           <main className="w-full">
-            <Hero onNavigatePortal={navigateToPortal} onOpenContact={() => setIsContactModalOpen(true)} />
-            <Partners />
+            <Hero onOpenContact={() => setIsContactModalOpen(true)} />
+            <ServicesSection />
             <Pillars />
-            <CaseStudies />
             <PathwaySection />
-            <TelemetryAudit />
+            <FutureProducts onOpenContact={() => setIsContactModalOpen(true)} />
             <Manifesto />
 
             {/* Pre-Footer CTA */}
@@ -206,32 +204,32 @@ export default function App() {
               <div className="max-w-5xl mx-auto px-6 text-center flex flex-col items-center gap-6">
                 <div className="w-12 h-1 bg-primary rounded-full"></div>
                 <h2 className="font-space text-3xl sm:text-4xl text-white font-bold tracking-tight max-w-3xl">
-                  ¿Lideras una iniciativa de impacto o requieres arquitectura de software sistemática?
+                  ¿Listo para hacer realidad tu próxima idea o proyecto de software?
                 </h2>
                 <p className="font-jakarta text-sm sm:text-base text-on-surface-variant max-w-2xl leading-relaxed">
-                  Colaboramos con agencias multilaterales, entidades públicas, cooperativas y fundaciones pioneras para conceptualizar, programar y desplegar plataformas que cambian vidas.
+                  En Pathrimonio combinamos diseño centrado en el usuario, ingeniería de alto rendimiento y metodologías ágiles para construir aplicaciones móviles y plataformas web que marcan la diferencia.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
                   <button
                     onClick={() => setIsContactModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider shadow-glow-amber hover:shadow-glow-amber-lg transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider shadow-[0_0_24px_rgba(245,166,35,0.35)] hover:shadow-[0_0_36px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
-                    <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-                    Agendar Sesión Técnica
+                    <span className="material-symbols-outlined text-[18px]">chat</span>
+                    Iniciar Conversación
                   </button>
-                  <button
-                    onClick={navigateToPortal}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide hover:bg-surface-container-highest transition-all"
+                  <a
+                    href="#pathway"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide hover:bg-surface-container-highest transition-all"
                   >
-                    <span className="material-symbols-outlined text-[18px]">view_kanban</span>
-                    Explorar Portal de Requerimientos
-                  </button>
+                    <span className="material-symbols-outlined text-[18px]">route</span>
+                    Conocer Pathway (App MVP)
+                  </a>
                 </div>
               </div>
             </section>
           </main>
 
-          <Footer onNavigatePortal={navigateToPortal} onOpenContact={() => setIsContactModalOpen(true)} />
+          <Footer onOpenContact={() => setIsContactModalOpen(true)} />
           <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
         </div>
       )}

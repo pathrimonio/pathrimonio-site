@@ -4,31 +4,31 @@ export default function Pillars() {
   const pillars = [
     {
       num: "01",
-      title: "Arquitectura Resiliente & Segura",
-      icon: "security",
-      desc: "Sistemas de grado de defensa diseñados para tolerar particiones de red, caídas de energía y fallos en infraestructuras complejas sin pérdida de datos críticos.",
-      tag: "Tolerancia a fallos bizantinos"
+      title: "Claridad y Foco en el Usuario",
+      icon: "person_check",
+      desc: "Evitamos la complejidad innecesaria. Cada pantalla, botón y flujo está pensado para que cualquier persona lo entienda y disfrute usarlo desde el primer día.",
+      tag: "Experiencia Intuitiva"
     },
     {
       num: "02",
-      title: "Inteligencia de Datos para el Bienestar",
-      icon: "insights",
-      desc: "Modelos de predicción logística y analítica en tiempo real que optimizan la distribución de víveres, medicamentos y capital semilla donde más se requiere.",
-      tag: "Modelado ético transparente"
+      title: "Desarrollo Ágil y Entregas Reales",
+      icon: "rocket_launch",
+      desc: "Construimos prototipos y MVPs funcionales en plazos claros, permitiendo validar productos reales con usuarios reales antes de sobredimensionar.",
+      tag: "Validación Rápida"
     },
     {
       num: "03",
-      title: "Accesibilidad e Inclusión Radical",
-      icon: "wifi_off",
-      desc: "Interfaces offline-first y protocolos de ultra-baja latencia creados para dispositivos modestos y conectividad satelital o 2G en comunidades aisladas.",
-      tag: "Sub-50KB bundle payload"
+      title: "Rendimiento y Estabilidad",
+      icon: "bolt",
+      desc: "Aplicamos las mejores prácticas de programación moderna para asegurar que tu aplicación cargue al instante y funcione de manera fluida y confiable.",
+      tag: "Cero Fricción"
     },
     {
       num: "04",
-      title: "Soberanía Tecnológica & Open Core",
-      icon: "terminal",
-      desc: "Código auditable y programas de capacitación profunda que empoderan a equipos técnicos locales para mantener y evolucionar sus propias soluciones.",
-      tag: "Licenciamiento sin ataduras"
+      title: "Acompañamiento y Evolución",
+      icon: "trending_up",
+      desc: "El lanzamiento es solo el comienzo. Te acompañamos en la recopilación de retroalimentación y en la evolución continua de tus productos digitales.",
+      tag: "Crecimiento Continuo"
     }
   ];
 
@@ -39,18 +39,18 @@ export default function Pillars() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex flex-col gap-2 max-w-2xl">
             <span className="font-space text-xs text-primary uppercase tracking-widest font-bold">
-              Marcos de Ingeniería Sistemática
+              Nuestra Forma de Trabajar
             </span>
             <h2 className="font-space text-3xl lg:text-4xl text-white font-bold tracking-tight">
-              Los Cuatro Pilares del Desarrollo Sistemático
+              Software Construido con Disciplina y Sentido Práctico
             </h2>
             <p className="font-jakarta text-sm sm:text-base text-on-surface-variant leading-relaxed">
-              Nuestra arquitectura no depende de voluntarismo efímero. Aplicamos principios estrictos de resiliencia computacional y gobernanza abierta para garantizar impacto perpetuo.
+              Trabajamos con procesos claros y transparentes, enfocados en entregar valor real para tu negocio y una experiencia impecable para tus usuarios.
             </p>
           </div>
           <div className="hidden md:flex items-center gap-2 text-on-surface-variant font-space text-xs uppercase bg-surface-container-high px-3.5 py-1.5 rounded border border-outline-variant">
-            <span className="material-symbols-outlined text-primary text-[18px]">memory</span>
-            <span>Arquitectura Certificada v4.2</span>
+            <span className="material-symbols-outlined text-primary text-[18px]">workspace_premium</span>
+            <span>Calidad Garantizada</span>
           </div>
         </div>
 
