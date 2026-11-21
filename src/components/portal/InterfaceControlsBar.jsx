@@ -60,7 +60,7 @@ export default function InterfaceControlsBar({
                 </span>
               </div>
               <p className="font-jakarta text-xs text-on-surface-variant mt-0.5">
-                Definición formal de pantallas, comportamientos y criterios de aceptación visual validados antes de programar
+                Fichas de pantalla: Imagen de la interfaz y cuadro formal de especificación con Objetivo, Contenido, Reglas y Detalles
               </p>
             </div>
           </div>

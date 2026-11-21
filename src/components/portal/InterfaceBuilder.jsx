@@ -1,225 +1,313 @@
-import React, { useState } from 'react';
-import { 
-  INTERFACE_MODULE_OPTIONS, 
-  PLATFORM_OPTIONS, 
-  INTERFACE_TYPE_OPTIONS 
-} from '../../data/initialInterfaces';
+import React, { useState, useRef } from 'react';
+import { INTERFACE_MODULE_OPTIONS, INTERFACE_STATUS_OPTIONS } from '../../data/initialInterfaces';
 
-export default function InterfaceBuilder({ 
-  onSaveInterface, 
-  onNotify, 
-  existingStories = [] 
+export default function InterfaceBuilder({
+  onSaveInterface,
+  onNotify,
+  existingStories = []
 }) {
-  const [module, setModule] = useState('Metas & Hábitos (Pathway)');
-  const [name, setName] = useState('');
-  const [platform, setPlatform] = useState('Ambas Plataformas');
-  const [interfaceType, setInterfaceType] = useState('Pantalla Principal');
-  const [priority, setPriority] = useState('Alta');
-  const [version, setVersion] = useState('v1.0');
-  
-  const [description, setDescription] = useState('');
-  const [userGoal, setUserGoal] = useState('');
-  
-  // Entry points (chips)
-  const [entryPoints, setEntryPoints] = useState(['Navegación principal', 'Acceso directo']);
-  const [newEntryPoint, setNewEntryPoint] = useState('');
+  const [number, setNumber] = useState('4');
+  const [title, setTitle] = useState('Dashboard');
+  const [module, setModule] = useState('Gestión & Monitoreo');
+  const [platform, setPlatform] = useState('Web & Mobile');
+  const [status, setStatus] = useState('Aprobado por Cliente');
+  const [linkedStory, setLinkedStory] = useState('US-104');
 
-  // Wireframe
-  const [wireframeRef, setWireframeRef] = useState('');
+  // Fields table
+  const [objetivo, setObjetivo] = useState('Monitorear ventas, ingresos, egresos y alertas en tiempo real.');
+  const [contenido, setContenido] = useState('Ventas, ingresos, egresos, alertas de inventario y accesos rápidos.');
+  const [reglas, setReglas] = useState('Solo administrador.');
+  const [detalles, setDetalles] = useState('Datos en tiempo real.');
 
-  // UI Annotations list (element + behavior)
-  const [annotations, setAnnotations] = useState([
-    { id: '1', element: 'Botón de Acción Principal', behavior: 'Valida los campos obligatorios y transiciona al siguiente paso' }
-  ]);
-  const [newElement, setNewElement] = useState('');
-  const [newBehavior, setNewBehavior] = useState('');
+  // Image handling
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const fileInputRef = useRef(null);
 
-  // Visual acceptance criteria
-  const [criteria, setCriteria] = useState([
-    { id: '1', text: 'Respeta la paleta oscura oficial con acentos ámbar #F5A623', checked: true },
-    { id: '2', text: 'Diseño responsive y operable con una sola mano en móvil', checked: true }
-  ]);
-  const [newCriterionText, setNewCriterionText] = useState('');
-
-  // Linked user stories
-  const [selectedStories, setSelectedStories] = useState(['US-101']);
-
-  // Handle entry point add/remove
-  const handleAddEntryPoint = (e) => {
-    e?.preventDefault();
-    if (!newEntryPoint.trim()) return;
-    if (!entryPoints.includes(newEntryPoint.trim())) {
-      setEntryPoints([...entryPoints, newEntryPoint.trim()]);
-    }
-    setNewEntryPoint('');
-  };
-
-  const handleRemoveEntryPoint = (point) => {
-    setEntryPoints(entryPoints.filter(p => p !== point));
-  };
-
-  // Handle UI Annotations add/remove
-  const handleAddAnnotation = (e) => {
-    e?.preventDefault();
-    if (!newElement.trim() || !newBehavior.trim()) {
-      onNotify?.('Completa el elemento y comportamiento para la anotación.');
-      return;
-    }
-    setAnnotations([
-      ...annotations,
-      {
-        id: Date.now().toString(),
-        element: newElement.trim(),
-        behavior: newBehavior.trim()
+  // File to base64 reader
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        onNotify?.('La imagen supera el límite de 5MB.');
+        return;
       }
-    ]);
-    setNewElement('');
-    setNewBehavior('');
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImagePreview(event.target.result);
+        onNotify?.('Imagen de interfaz cargada correctamente.');
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  const handleRemoveAnnotation = (id) => {
-    setAnnotations(annotations.filter(a => a.id !== id));
+  const handleUrlApply = () => {
+    if (imageUrlInput.trim()) {
+      setImagePreview(imageUrlInput.trim());
+      onNotify?.('Enlace de imagen de interfaz aplicado.');
+    }
   };
 
-  // Handle criteria add/remove/toggle
-  const handleAddCriterion = (e) => {
+  const handleSubmit = (e) => {
     e?.preventDefault();
-    if (!newCriterionText.trim()) return;
-    setCriteria([
-      ...criteria,
-      { id: Date.now().toString(), text: newCriterionText.trim(), checked: true }
-    ]);
-    setNewCriterionText('');
-  };
-
-  const handleToggleCriterion = (id) => {
-    setCriteria(criteria.map(c => c.id === id ? { ...c, checked: !c.checked } : c));
-  };
-
-  const handleRemoveCriterion = (id) => {
-    setCriteria(criteria.filter(c => c.id !== id));
-  };
-
-  // Toggle story link
-  const handleToggleStoryLink = (storyId) => {
-    if (selectedStories.includes(storyId)) {
-      setSelectedStories(selectedStories.filter(id => id !== storyId));
-    } else {
-      setSelectedStories([...selectedStories, storyId]);
-    }
-  };
-
-  // Form submit
-  const handleSubmit = (status = 'En Revisión') => {
-    if (!name.trim()) {
-      onNotify?.('Por favor indica el nombre de la pantalla o interfaz.');
+    if (!title.trim()) {
+      onNotify?.('Por favor ingresa el título de la interfaz.');
       return;
     }
-    if (!description.trim()) {
-      onNotify?.('Por favor redacta la descripción funcional de la interfaz.');
+    if (!objetivo.trim()) {
+      onNotify?.('Por favor completa el campo Objetivo de la interfaz.');
       return;
     }
 
-    const newId = `INT-${Math.floor(100 + Math.random() * 900)}`;
+    const numClean = number.trim() || '1';
+    const titleClean = title.trim();
+    const fullName = `${numClean}. ${titleClean}`;
+
+    const newId = `INT-${Math.floor(10 + Math.random() * 90)}`;
 
     const newInterface = {
       id: newId,
+      number: numClean,
+      title: titleClean,
+      fullName,
       module,
-      name: name.trim(),
       platform,
-      interfaceType,
-      priority,
-      status, // 'Borrador' | 'En Revisión' | 'Aprobado por Cliente'
-      version: version.trim() || 'v1.0',
-      description: description.trim(),
-      userGoal: userGoal.trim(),
-      entryPoints: [...entryPoints],
-      wireframeRef: wireframeRef.trim() || `wireframe_${newId.toLowerCase()}_spec.png`,
-      annotations: [...annotations],
-      visualCriteria: [...criteria],
-      linkedStories: [...selectedStories],
+      status,
+      image: imagePreview,
+      imagePlaceholder: titleClean.toLowerCase().includes('dash') ? 'dashboard' :
+                        titleClean.toLowerCase().includes('login') ? 'login' :
+                        titleClean.toLowerCase().includes('meta') ? 'goal_create' :
+                        titleClean.toLowerCase().includes('paso') ? 'steps_roadmap' :
+                        titleClean.toLowerCase().includes('onboard') ? 'onboarding' : 'dashboard',
+      fields: {
+        objetivo: objetivo.trim(),
+        contenido: contenido.trim(),
+        reglas: reglas.trim(),
+        detalles: detalles.trim()
+      },
+      linkedStory,
       author: 'Usuario Activo',
-      createdAt: 'Justo ahora',
-      reviewedBy: status === 'Aprobado por Cliente' ? 'Cliente / PO' : null,
-      approvedAt: status === 'Aprobado por Cliente' ? new Date().toISOString().split('T')[0] : null
+      reviewedBy: status.includes('Aprobado') ? 'Cliente / PO' : null,
+      approvedAt: status.includes('Aprobado') ? new Date().toISOString().split('T')[0] : null,
+      version: 'v1.0'
     };
 
     onSaveInterface?.(newInterface);
-    onNotify?.(`¡Interfaz ${newId} (${name}) formalizada y registrada exitosamente!`);
+    onNotify?.(`¡Ficha de interfaz "${fullName}" registrada exitosamente!`);
 
-    // Reset some fields for next entry
-    setName('');
-    setDescription('');
-    setUserGoal('');
-    setWireframeRef('');
+    // Reset some fields
+    setTitle('');
+    setNumber(prev => (parseInt(prev, 10) + 1).toString());
+    setObjetivo('');
+    setContenido('');
+    setReglas('');
+    setDetalles('');
+    setImagePreview(null);
+    setImageUrlInput('');
   };
 
   return (
-    <div className="bg-surface-container-low border border-outline-variant rounded-xl p-5 flex flex-col gap-5 shadow-lg">
+    <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-5 shadow-lg">
       
       {/* Header */}
       <div className="flex items-center justify-between border-b border-outline-variant/60 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
-            <span className="material-symbols-outlined text-[18px]">design_services</span>
+          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space">
+            <span className="material-symbols-outlined text-[18px]">table_chart</span>
           </div>
           <div>
             <h2 className="font-space text-sm font-bold text-white flex items-center gap-2">
-              <span>Formalizador de Interfaces</span>
-              <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 text-[10px] font-mono">
+              <span>Nueva Ficha de Interfaz</span>
+              <span className="px-1.5 py-0.2 rounded bg-primary/20 text-primary border border-primary/30 text-[10px] font-mono">
                 UI SPEC
               </span>
             </h2>
             <p className="font-jakarta text-[11px] text-on-surface-variant">
-              Define y valida contratos de pantalla con el cliente antes del desarrollo
+              Imagen de la interfaz + cuadro formal de especificación
             </p>
           </div>
         </div>
 
         <button
+          type="button"
           onClick={() => {
-            setName('');
-            setDescription('');
-            setUserGoal('');
-            setWireframeRef('');
+            setTitle('');
+            setObjetivo('');
+            setContenido('');
+            setReglas('');
+            setDetalles('');
+            setImagePreview(null);
           }}
-          className="text-on-surface-variant hover:text-white p-1 rounded text-xs transition-colors"
+          className="text-on-surface-variant hover:text-white p-1 rounded transition-colors"
           title="Limpiar formulario"
         >
           <span className="material-symbols-outlined text-[16px]">restart_alt</span>
         </button>
       </div>
 
-      {/* Block 1: Identificación & Metadatos */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-1.5 text-xs font-space text-primary font-semibold uppercase tracking-wider">
-          <span className="material-symbols-outlined text-[16px]">info</span>
-          <span>1. Identificación de Pantalla</span>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        
+        {/* 1. Título y Número */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div className="sm:col-span-3 flex flex-col gap-1">
+            <label className="text-xs font-space text-white">Número</label>
+            <input
+              type="text"
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              placeholder="ej. 4"
+              className="h-9 px-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-space font-bold text-primary focus:border-primary focus:outline-none"
+            />
+          </div>
+          <div className="sm:col-span-9 flex flex-col gap-1">
+            <label className="text-xs font-space text-white flex items-center justify-between">
+              <span>Nombre de la Interfaz *</span>
+              <span className="text-[10px] text-on-surface-variant">Ej: Dashboard</span>
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="ej. Dashboard"
+              className="h-9 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
+            />
+          </div>
         </div>
 
-        {/* Nombre de Pantalla */}
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-space text-white flex items-center justify-between">
-            <span>Nombre de la Pantalla / Flujo UI *</span>
-            <span className="text-[10px] text-on-surface-variant font-mono">Ej: Dashboard de Metas</span>
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="ej. Pantalla de Selección de Pasos Semanales"
-            className="h-9 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none transition-colors"
-          />
+        {/* 2. Sección de Imagen de la Interfaz */}
+        <div className="flex flex-col gap-2 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60">
+          <span className="text-xs font-space text-white font-semibold flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px] text-primary">add_photo_alternate</span>
+            <span>Imagen o Wireframe de la Pantalla:</span>
+          </span>
+
+          {imagePreview ? (
+            <div className="relative rounded-lg overflow-hidden border border-outline-variant p-2 bg-surface-container flex items-center justify-center max-h-48">
+              <img src={imagePreview} alt="Preview" className="max-h-44 object-contain rounded" />
+              <button
+                type="button"
+                onClick={() => setImagePreview(null)}
+                className="absolute top-2 right-2 p-1 rounded-full bg-red-500/80 hover:bg-red-500 text-white transition-colors"
+                title="Quitar imagen"
+              >
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-outline-variant hover:border-primary rounded-lg p-3 text-center cursor-pointer transition-colors bg-surface-container/40"
+              >
+                <span className="material-symbols-outlined text-primary text-[24px]">cloud_upload</span>
+                <p className="text-[11px] text-white font-space mt-1">Haz clic para subir imagen o wireframe (PNG, JPG)</p>
+                <span className="text-[10px] text-on-surface-variant">O déjalo vacío para usar el mockup interactivo generado</span>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {/* URL fallback */}
+              <div className="flex items-center gap-1.5 pt-1">
+                <input
+                  type="text"
+                  value={imageUrlInput}
+                  onChange={(e) => setImageUrlInput(e.target.value)}
+                  placeholder="O pega URL de imagen (Figma / Web)..."
+                  className="h-8 px-2.5 bg-surface-container border border-outline-variant rounded text-[11px] font-mono text-white flex-1 focus:border-primary focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleUrlApply}
+                  className="px-2.5 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space"
+                >
+                  Cargar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Módulo */}
+        {/* 3. Cuadro con sus Detalles (Exact format: Campo | Detalle) */}
+        <div className="flex flex-col gap-2.5">
+          <span className="text-xs font-space text-primary font-bold uppercase tracking-wider flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px]">list_alt</span>
+            <span>Cuadro con sus Detalles:</span>
+          </span>
+
+          {/* Campo: Objetivo */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-space text-white">Módulo del Sistema</label>
+            <label className="text-xs font-space text-white flex items-center justify-between">
+              <span className="font-semibold text-primary">Objetivo *</span>
+              <span className="text-[10px] text-on-surface-variant font-mono">¿Qué busca lograr?</span>
+            </label>
+            <textarea
+              rows={2}
+              value={objetivo}
+              onChange={(e) => setObjetivo(e.target.value)}
+              placeholder="ej. Monitorear ventas, ingresos, egresos y alertas en tiempo real."
+              className="p-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          {/* Campo: Contenido */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-space text-white flex items-center justify-between">
+              <span className="font-semibold text-primary">Contenido *</span>
+              <span className="text-[10px] text-on-surface-variant font-mono">¿Qué elementos incluye?</span>
+            </label>
+            <textarea
+              rows={2}
+              value={contenido}
+              onChange={(e) => setContenido(e.target.value)}
+              placeholder="ej. Ventas, ingresos, egresos, alertas de inventario y accesos rápidos."
+              className="p-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          {/* Campo: Reglas */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-space text-white flex items-center justify-between">
+              <span className="font-semibold text-primary">Reglas</span>
+              <span className="text-[10px] text-on-surface-variant font-mono">¿Qué restricciones aplican?</span>
+            </label>
+            <textarea
+              rows={2}
+              value={reglas}
+              onChange={(e) => setReglas(e.target.value)}
+              placeholder="ej. Solo administrador."
+              className="p-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none"
+            />
+          </div>
+
+          {/* Campo: Detalles */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-space text-white flex items-center justify-between">
+              <span className="font-semibold text-primary">Detalles</span>
+              <span className="text-[10px] text-on-surface-variant font-mono">Aspectos técnicos / comportamiento</span>
+            </label>
+            <textarea
+              rows={2}
+              value={detalles}
+              onChange={(e) => setDetalles(e.target.value)}
+              placeholder="ej. Datos en tiempo real."
+              className="p-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none"
+            />
+          </div>
+        </div>
+
+        {/* 4. Metadatos complementarios */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-outline-variant/60">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-space text-white">Módulo</label>
             <select
               value={module}
               onChange={(e) => setModule(e.target.value)}
-              className="h-9 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
+              className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
             >
               {INTERFACE_MODULE_OPTIONS.filter(m => m !== 'Todos').map(mod => (
                 <option key={mod} value={mod}>{mod}</option>
@@ -227,327 +315,46 @@ export default function InterfaceBuilder({
             </select>
           </div>
 
-          {/* Plataforma */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-space text-white">Plataforma Objetivo</label>
+            <label className="text-xs font-space text-white">Estado Inicial</label>
             <select
-              value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
-              className="h-9 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
             >
-              {PLATFORM_OPTIONS.filter(p => p !== 'Todas').map(plat => (
-                <option key={plat} value={plat}>{plat}</option>
-              ))}
+              <option value="Aprobado por Cliente">Aprobado por Cliente</option>
+              <option value="En Revisión">En Revisión</option>
+              <option value="Borrador">Borrador</option>
             </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Tipo de Interfaz */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-space text-white">Tipo de Interfaz</label>
-            <select
-              value={interfaceType}
-              onChange={(e) => setInterfaceType(e.target.value)}
-              className="h-9 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
-            >
-              {INTERFACE_TYPE_OPTIONS.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Prioridad */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-space text-white">Prioridad</label>
-            <select
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-              className="h-9 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
-            >
-              <option value="Baja">Baja</option>
-              <option value="Media">Media</option>
-              <option value="Alta">Alta</option>
-              <option value="Bloqueante">Bloqueante</option>
-            </select>
-          </div>
-
-          {/* Versión */}
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-space text-white">Versión Spec</label>
-            <input
-              type="text"
-              value={version}
-              onChange={(e) => setVersion(e.target.value)}
-              placeholder="v1.0"
-              className="h-9 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-mono text-white focus:border-primary focus:outline-none"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Block 2: Contenido Funcional y Objetivo */}
-      <div className="flex flex-col gap-3 pt-2 border-t border-outline-variant/60">
-        <div className="flex items-center gap-1.5 text-xs font-space text-primary font-semibold uppercase tracking-wider">
-          <span className="material-symbols-outlined text-[16px]">description</span>
-          <span>2. Especificación Funcional</span>
-        </div>
-
-        {/* Descripción Funcional */}
+        {/* Historia vinculada */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-space text-white">
-            Comportamiento Funcional de la Pantalla *
-          </label>
-          <textarea
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Describe qué muestra la pantalla, qué interacciones permite y cómo responde a las acciones del usuario..."
-            className="p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none transition-colors"
-          />
-        </div>
-
-        {/* Objetivo del Usuario */}
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-space text-white">
-            Objetivo de Usuario (User Goal)
-          </label>
-          <input
-            type="text"
-            value={userGoal}
-            onChange={(e) => setUserGoal(e.target.value)}
-            placeholder="ej. Crear un nuevo hábito diario en menos de 15 segundos"
-            className="h-9 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none"
-          />
-        </div>
-
-        {/* Puntos de Entrada (Chips) */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-space text-white">Puntos de Entrada / Navegación</label>
-          <div className="flex flex-wrap gap-1.5 mb-1">
-            {entryPoints.map(ep => (
-              <span key={ep} className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant text-[11px] text-white">
-                <span>{ep}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveEntryPoint(ep)}
-                  className="text-on-surface-variant hover:text-red-400"
-                >
-                  <span className="material-symbols-outlined text-[13px]">close</span>
-                </button>
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-1.5">
-            <input
-              type="text"
-              value={newEntryPoint}
-              onChange={(e) => setNewEntryPoint(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAddEntryPoint(e); }}
-              placeholder="Añadir punto de acceso (ej. Push Notification)"
-              className="h-8 px-2.5 bg-surface-container-lowest border border-outline-variant rounded text-xs text-white placeholder-on-surface-variant/60 flex-1 focus:border-primary focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleAddEntryPoint}
-              className="px-2.5 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space"
-            >
-              Añadir
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Block 3: Wireframe y Anotaciones UI */}
-      <div className="flex flex-col gap-3 pt-2 border-t border-outline-variant/60">
-        <div className="flex items-center gap-1.5 text-xs font-space text-primary font-semibold uppercase tracking-wider">
-          <span className="material-symbols-outlined text-[16px]">draw</span>
-          <span>3. Wireframe &amp; Anotaciones de Interfaz</span>
-        </div>
-
-        {/* Referencia Wireframe */}
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-space text-white">
-            Referencia de Wireframe o Mockup (Archivo / Link)
-          </label>
-          <input
-            type="text"
-            value={wireframeRef}
-            onChange={(e) => setWireframeRef(e.target.value)}
-            placeholder="ej. pathway_step_view_v3.png o https://figma.com/..."
-            className="h-9 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-mono text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none"
-          />
-        </div>
-
-        {/* Anotaciones UI Dinámicas */}
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-space text-white flex items-center justify-between">
-            <span>Anotaciones de Comportamiento UI</span>
-            <span className="text-[10px] text-on-surface-variant">Elemento → Reacción</span>
-          </label>
-
-          <div className="flex flex-col gap-1.5">
-            {annotations.map(ann => (
-              <div key={ann.id} className="p-2 rounded bg-surface-container border border-outline-variant/60 flex items-start justify-between gap-2 text-xs">
-                <div className="flex flex-col">
-                  <span className="font-space text-primary font-semibold text-[11px]">{ann.element}</span>
-                  <span className="text-white/80 font-jakarta text-[11px]">{ann.behavior}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveAnnotation(ann.id)}
-                  className="text-on-surface-variant hover:text-red-400 p-1"
-                >
-                  <span className="material-symbols-outlined text-[14px]">close</span>
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-12 gap-1.5 pt-1">
-            <input
-              type="text"
-              value={newElement}
-              onChange={(e) => setNewElement(e.target.value)}
-              placeholder="Elemento (ej. Botón Guardar)"
-              className="sm:col-span-5 h-8 px-2.5 bg-surface-container-lowest border border-outline-variant rounded text-xs text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none"
-            />
-            <input
-              type="text"
-              value={newBehavior}
-              onChange={(e) => setNewBehavior(e.target.value)}
-              placeholder="Comportamiento (ej. Muestra modal)"
-              className="sm:col-span-5 h-8 px-2.5 bg-surface-container-lowest border border-outline-variant rounded text-xs text-white placeholder-on-surface-variant/60 focus:border-primary focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleAddAnnotation}
-              className="sm:col-span-2 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space flex items-center justify-center"
-              title="Añadir anotación"
-            >
-              <span className="material-symbols-outlined text-[16px]">add</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Block 4: Criterios de Aceptación Visual */}
-      <div className="flex flex-col gap-2.5 pt-2 border-t border-outline-variant/60">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-space text-primary font-semibold uppercase tracking-wider">
-            <span className="material-symbols-outlined text-[16px]">checklist</span>
-            <span>4. Criterios de Aceptación Visual</span>
-          </div>
-          <span className="text-[10px] text-on-surface-variant font-mono">
-            {criteria.filter(c => c.checked).length}/{criteria.length} validados
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          {criteria.map(crit => (
-            <div key={crit.id} className="flex items-center justify-between gap-2 p-1.5 rounded bg-surface-container/60 border border-outline-variant/40">
-              <label className="flex items-center gap-2 text-xs text-on-surface cursor-pointer select-none flex-1">
-                <input
-                  type="checkbox"
-                  checked={crit.checked}
-                  onChange={() => handleToggleCriterion(crit.id)}
-                  className="rounded border-outline-variant text-primary focus:ring-0 bg-surface-container"
-                />
-                <span className={crit.checked ? 'text-white/90' : 'text-on-surface-variant line-through'}>
-                  {crit.text}
-                </span>
-              </label>
-              <button
-                type="button"
-                onClick={() => handleRemoveCriterion(crit.id)}
-                className="text-on-surface-variant hover:text-red-400 p-0.5"
-              >
-                <span className="material-symbols-outlined text-[14px]">close</span>
-              </button>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex gap-1.5">
-          <input
-            type="text"
-            value={newCriterionText}
-            onChange={(e) => setNewCriterionText(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleAddCriterion(e); }}
-            placeholder="Añadir criterio visual (ej. Soporta tema oscuro y alto contraste)"
-            className="h-8 px-2.5 bg-surface-container-lowest border border-outline-variant rounded text-xs text-white placeholder-on-surface-variant/60 flex-1 focus:border-primary focus:outline-none"
-          />
-          <button
-            type="button"
-            onClick={handleAddCriterion}
-            className="px-2.5 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space"
+          <label className="text-xs font-space text-white">Historia de Usuario Vinculada</label>
+          <select
+            value={linkedStory}
+            onChange={(e) => setLinkedStory(e.target.value)}
+            className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-mono text-white focus:border-primary focus:outline-none"
           >
-            Añadir
-          </button>
+            {existingStories.map(story => (
+              <option key={story.id} value={story.id}>
+                {story.id} — {story.module} ({story.role})
+              </option>
+            ))}
+          </select>
         </div>
-      </div>
 
-      {/* Block 5: Trazabilidad con Historias de Usuario */}
-      <div className="flex flex-col gap-2.5 pt-2 border-t border-outline-variant/60">
-        <div className="flex items-center gap-1.5 text-xs font-space text-primary font-semibold uppercase tracking-wider">
-          <span className="material-symbols-outlined text-[16px]">hub</span>
-          <span>5. Trazabilidad con Historias de Usuario</span>
-        </div>
-        <p className="font-jakarta text-[11px] text-on-surface-variant">
-          Vincula esta interfaz con las historias de requerimientos funcionales que materializa:
-        </p>
-
-        <div className="flex flex-wrap gap-1.5">
-          {existingStories && existingStories.length > 0 ? (
-            existingStories.map(story => {
-              const isSelected = selectedStories.includes(story.id);
-              return (
-                <button
-                  key={story.id}
-                  type="button"
-                  onClick={() => handleToggleStoryLink(story.id)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono text-xs transition-all ${
-                    isSelected 
-                      ? 'bg-primary text-on-primary border-primary font-bold shadow-sm' 
-                      : 'bg-surface-container border-outline-variant text-on-surface-variant hover:text-white hover:border-primary/50'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[14px]">
-                    {isSelected ? 'check' : 'add'}
-                  </span>
-                  <span>{story.id}</span>
-                  <span className="text-[10px] font-sans font-normal opacity-80 max-w-[120px] truncate">
-                    ({story.module})
-                  </span>
-                </button>
-              );
-            })
-          ) : (
-            <span className="text-xs text-on-surface-variant italic">No hay historias disponibles para vincular.</span>
-          )}
-        </div>
-      </div>
-
-      {/* Action Submit Buttons */}
-      <div className="flex flex-wrap items-center justify-end gap-2.5 pt-3 border-t border-outline-variant/60">
+        {/* Submit CTA */}
         <button
-          type="button"
-          onClick={() => handleSubmit('Borrador')}
-          className="px-4 py-2 rounded-lg bg-surface-container-high border border-outline-variant hover:border-primary text-white hover:text-primary font-space text-xs font-semibold transition-all"
+          type="submit"
+          className="w-full mt-2 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.01] active:scale-[0.98]"
         >
-          Guardar Borrador
+          <span className="material-symbols-outlined text-[17px]">save</span>
+          <span>Registrar Ficha de Pantalla</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => handleSubmit('En Revisión')}
-          className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <span className="material-symbols-outlined text-[16px]">send</span>
-          <span>Enviar a Revisión Cliente</span>
-        </button>
-      </div>
-
+      </form>
     </div>
   );
 }

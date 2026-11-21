@@ -57,16 +57,19 @@ export default function InterfaceFeed({
     const q = (searchQuery || '').toLowerCase().trim();
     if (!q) return matchPlatform && matchStatus && matchModule;
 
+    const f = item.fields || {};
     const matchText =
       item.id.toLowerCase().includes(q) ||
-      item.name.toLowerCase().includes(q) ||
-      item.module.toLowerCase().includes(q) ||
-      (item.description && item.description.toLowerCase().includes(q)) ||
-      (item.userGoal && item.userGoal.toLowerCase().includes(q)) ||
-      (item.wireframeRef && item.wireframeRef.toLowerCase().includes(q)) ||
-      (item.linkedStories && item.linkedStories.some(us => us.toLowerCase().includes(q))) ||
-      (item.annotations && item.annotations.some(a => a.element.toLowerCase().includes(q) || a.behavior.toLowerCase().includes(q))) ||
-      (item.visualCriteria && item.visualCriteria.some(c => c.text.toLowerCase().includes(q)));
+      (item.title && item.title.toLowerCase().includes(q)) ||
+      (item.fullName && item.fullName.toLowerCase().includes(q)) ||
+      (item.name && item.name.toLowerCase().includes(q)) ||
+      (item.module && item.module.toLowerCase().includes(q)) ||
+      (f.objetivo && f.objetivo.toLowerCase().includes(q)) ||
+      (f.contenido && f.contenido.toLowerCase().includes(q)) ||
+      (f.reglas && f.reglas.toLowerCase().includes(q)) ||
+      (f.detalles && f.detalles.toLowerCase().includes(q)) ||
+      (item.linkedStory && item.linkedStory.toLowerCase().includes(q)) ||
+      (item.linkedStories && item.linkedStories.some(us => us.toLowerCase().includes(q)));
 
     return matchPlatform && matchStatus && matchModule && matchText;
   });
@@ -104,7 +107,7 @@ export default function InterfaceFeed({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por ID, pantalla, wireframe, criterio o US vinculada..."
+              placeholder="Buscar por nombre (ej. 4. Dashboard), objetivo, reglas..."
               className="bg-transparent text-xs font-jakarta text-white placeholder-on-surface-variant/70 focus:outline-none w-full"
             />
             {searchQuery && (

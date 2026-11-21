@@ -29,7 +29,7 @@ import InterfaceDetailModal from './components/portal/InterfaceDetailModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
 const STORAGE_KEY = 'pathrimonio_stories_v1';
-const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v1';
+const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v2';
 
 export default function App() {
   // ── View state: 'landing' | 'portal'
@@ -190,8 +190,9 @@ export default function App() {
   const handleDuplicateInterface = (item) => {
     const dup = {
       ...item,
-      id: `INT-${Math.floor(100 + Math.random() * 900)}`,
-      name: `${item.name} (Copia)`,
+      id: `INT-${Math.floor(10 + Math.random() * 90)}`,
+      fullName: `${item.fullName || item.title} (Copia)`,
+      title: `${item.title || item.fullName} (Copia)`,
       status: 'Borrador',
       createdAt: 'Justo ahora',
       version: `${item.version || 'v1.0'}-copy`

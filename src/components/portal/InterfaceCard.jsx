@@ -1,15 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
+import InterfaceMockupPreview from './InterfaceMockupPreview';
 
 export default function InterfaceCard({
   item,
   onEdit,
   onDuplicate,
   onDelete,
-  onQuickStatusChange,
-  onToggleCriterion
+  onQuickStatusChange
 }) {
-  const [showCriteria, setShowCriteria] = useState(false);
-
   // Status badge styling helper
   const getStatusBadge = (status) => {
     switch (status) {
@@ -26,7 +24,7 @@ export default function InterfaceCard({
           bg: 'bg-sky-500/10 border-sky-500/30 text-sky-400',
           dot: 'bg-sky-400 animate-pulse',
           icon: 'hourglass_top',
-          label: 'En Revisión de Diseño'
+          label: 'En Revisión'
         };
       case 'Rechazado':
         return {
@@ -35,227 +33,173 @@ export default function InterfaceCard({
           icon: 'cancel',
           label: 'Requiere Ajustes'
         };
-      case 'Deprecado':
-        return {
-          bg: 'bg-zinc-800 border-zinc-700 text-zinc-400',
-          dot: 'bg-zinc-500',
-          icon: 'archive',
-          label: 'Deprecado'
-        };
       default:
         return {
           bg: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
           dot: 'bg-amber-400',
           icon: 'edit_note',
-          label: 'Borrador Técnico'
+          label: 'Borrador'
         };
     }
   };
 
-  // Priority badge styling helper
-  const getPriorityBadge = (priority) => {
-    switch (priority) {
-      case 'Bloqueante':
-        return 'text-red-400 border-red-500/30 bg-red-500/10';
-      case 'Alta':
-        return 'text-primary border-primary/30 bg-primary/10';
-      case 'Media':
-        return 'text-sky-400 border-sky-500/30 bg-sky-500/10';
-      default:
-        return 'text-on-surface-variant border-outline-variant bg-surface-container';
-    }
-  };
-
   const statusMeta = getStatusBadge(item.status);
-  const priorityClass = getPriorityBadge(item.priority);
-
-  // Acceptance criteria completion
-  const criteriaList = item.visualCriteria || [];
-  const checkedCount = criteriaList.filter(c => c.checked).length;
-  const totalCriteria = criteriaList.length;
-  const progressPercent = totalCriteria > 0 ? Math.round((checkedCount / totalCriteria) * 100) : 0;
+  const fields = item.fields || {};
 
   return (
-    <article className="group bg-surface-container-low border border-outline-variant rounded-xl p-5 flex flex-col gap-4 hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-lg">
+    <article className="group bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-200 shadow-md hover:shadow-xl">
       
-      {/* Top Header: ID, Platform, Priority & Status */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-outline-variant/60 pb-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-space font-mono text-sm font-bold text-primary px-2.5 py-0.5 rounded bg-surface-container-highest border border-primary/30">
-            {item.id}
+      {/* ── 1. Header: Número y Título de Pantalla + Estado ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant/60 pb-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 rounded-lg bg-surface-container-highest border border-primary/30 flex items-center justify-center font-space font-bold text-sm text-primary">
+              {item.number || 'UI'}
+            </span>
+            <h3 className="font-space text-lg sm:text-xl font-bold text-white group-hover:text-primary transition-colors tracking-tight">
+              {item.fullName || `${item.number}. ${item.title}`}
+            </h3>
+          </div>
+
+          <span className="font-space text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-medium">
+            {item.module}
           </span>
-          <span className="font-space text-[11px] uppercase tracking-wider px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-on-surface-variant font-medium">
-            {item.platform}
-          </span>
-          <span className="font-space text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-container-high border border-outline-variant/60 text-white/80 font-mono">
-            {item.interfaceType}
-          </span>
-          <span className={`font-space text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border font-semibold ${priorityClass}`}>
-            {item.priority}
-          </span>
+
+          {item.platform && (
+            <span className="font-space text-[10px] text-on-surface-variant font-mono">
+              • {item.platform}
+            </span>
+          )}
         </div>
 
         {/* Status Pill */}
-        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-space font-medium ${statusMeta.bg}`}>
+        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-space font-semibold ${statusMeta.bg}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}></span>
-          <span className="material-symbols-outlined text-[14px]">{statusMeta.icon}</span>
+          <span className="material-symbols-outlined text-[15px]">{statusMeta.icon}</span>
           <span>{statusMeta.label}</span>
         </div>
       </div>
 
-      {/* Screen Title & Module */}
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="font-space text-base sm:text-lg font-bold text-white group-hover:text-primary transition-colors">
-            {item.name}
-          </h3>
-          <span className="font-mono text-[11px] text-on-surface-variant bg-surface-container-high px-2 py-0.5 rounded shrink-0">
-            {item.version || 'v1.0'}
+      {/* ── 2. SECCIÓN VISUAL: Imagen / Wireframe de la Interfaz ── */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex items-center justify-between text-xs text-on-surface-variant font-space px-1">
+          <span className="flex items-center gap-1.5 font-semibold text-white/90">
+            <span className="material-symbols-outlined text-[16px] text-primary">image</span>
+            <span>Vista de Interfaz</span>
+          </span>
+          <span className="text-[11px] font-mono text-on-surface-variant">
+            {item.image ? 'Captura / Mockup cargado' : 'Wireframe referencial UI'}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-          <span className="material-symbols-outlined text-[15px] text-primary">category</span>
-          <span className="font-medium text-white/90">{item.module}</span>
-          <span>•</span>
-          <span>Autor: {item.author}</span>
-        </div>
+
+        <InterfaceMockupPreview
+          image={item.image}
+          placeholderType={item.imagePlaceholder || 'dashboard'}
+          title={item.fullName}
+          onImageClick={() => onEdit?.(item)}
+        />
       </div>
 
-      {/* Description & User Goal */}
-      <div className="bg-surface-container/60 border border-outline-variant/50 rounded-lg p-3.5 flex flex-col gap-2.5 text-xs font-jakarta">
-        <div>
-          <span className="font-space text-[11px] uppercase tracking-wider text-primary font-bold block mb-0.5">
-            Comportamiento Funcional:
-          </span>
-          <p className="text-white/90 leading-relaxed">
-            {item.description}
-          </p>
-        </div>
+      {/* ── 3. CUADRO CON SUS DETALLES (Campo | Detalle) ── */}
+      <div className="flex flex-col gap-2">
+        <span className="text-xs font-space text-white/90 font-semibold px-1 flex items-center gap-1.5">
+          <span className="material-symbols-outlined text-[16px] text-primary">table_chart</span>
+          <span>Cuadro de Especificación Técnica:</span>
+        </span>
 
-        {item.userGoal && (
-          <div className="pt-2 border-t border-outline-variant/40 flex items-start gap-2">
-            <span className="material-symbols-outlined text-primary text-[16px] shrink-0 mt-0.5">target</span>
-            <div>
-              <span className="font-space text-[10px] uppercase tracking-wider text-on-surface-variant font-semibold">
-                Objetivo de Usuario:
-              </span>
-              <p className="text-on-surface-variant leading-relaxed">
-                {item.userGoal}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+        <div className="overflow-hidden border border-outline-variant/80 rounded-xl bg-surface-container-lowest shadow-sm">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-surface-container-high/80 text-on-surface border-b border-outline-variant/70 font-space text-[11px] uppercase tracking-wider">
+              <tr>
+                <th className="py-2.5 px-4 font-bold text-primary w-28 sm:w-36 border-r border-outline-variant/60">
+                  Campo
+                </th>
+                <th className="py-2.5 px-4 font-bold text-white">
+                  Detalle
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/40 font-jakarta text-xs">
+              
+              {/* Fila: Objetivo */}
+              <tr className="hover:bg-surface-container/30 transition-colors">
+                <td className="py-3 px-4 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                  Objetivo
+                </td>
+                <td className="py-3 px-4 text-on-surface font-medium leading-relaxed">
+                  {fields.objetivo || 'Sin objetivo especificado.'}
+                </td>
+              </tr>
 
-      {/* Wireframe reference & Linked User Stories */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-        {/* Wireframe ref */}
-        <div className="flex items-center gap-2 p-2 rounded bg-surface-container border border-outline-variant/60">
-          <span className="material-symbols-outlined text-primary text-[18px]">design_services</span>
-          <div className="flex flex-col min-w-0">
-            <span className="text-[10px] font-space text-on-surface-variant uppercase tracking-wider">
-              Artefacto / Wireframe
-            </span>
-            <span className="text-white font-mono text-[11px] truncate" title={item.wireframeRef}>
-              {item.wireframeRef || 'Sin wireframe adjunto'}
-            </span>
-          </div>
-        </div>
+              {/* Fila: Contenido */}
+              <tr className="hover:bg-surface-container/30 transition-colors">
+                <td className="py-3 px-4 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                  Contenido
+                </td>
+                <td className="py-3 px-4 text-on-surface leading-relaxed">
+                  {fields.contenido || 'Sin contenido especificado.'}
+                </td>
+              </tr>
 
-        {/* Linked User Stories */}
-        <div className="flex items-center gap-2 p-2 rounded bg-surface-container border border-outline-variant/60">
-          <span className="material-symbols-outlined text-primary text-[18px]">link</span>
-          <div className="flex flex-col min-w-0">
-            <span className="text-[10px] font-space text-on-surface-variant uppercase tracking-wider">
-              Historias Vinculadas
-            </span>
-            <div className="flex items-center gap-1 flex-wrap pt-0.5">
-              {item.linkedStories && item.linkedStories.length > 0 ? (
-                item.linkedStories.map(usId => (
-                  <span key={usId} className="px-1.5 py-0.2 rounded bg-primary/10 border border-primary/30 text-primary font-mono text-[10px] font-bold">
-                    {usId}
+              {/* Fila: Reglas */}
+              <tr className="hover:bg-surface-container/30 transition-colors">
+                <td className="py-3 px-4 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                  Reglas
+                </td>
+                <td className="py-3 px-4 text-on-surface leading-relaxed">
+                  <span className="px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant text-white font-mono text-[11px]">
+                    {fields.reglas || 'Sin reglas especificadas.'}
                   </span>
-                ))
-              ) : (
-                <span className="text-on-surface-variant text-[11px] italic">Sin historias asociadas</span>
-              )}
-            </div>
-          </div>
+                </td>
+              </tr>
+
+              {/* Fila: Detalles */}
+              <tr className="hover:bg-surface-container/30 transition-colors">
+                <td className="py-3 px-4 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                  Detalles
+                </td>
+                <td className="py-3 px-4 text-on-surface-variant leading-relaxed">
+                  {fields.detalles || 'Sin detalles adicionales.'}
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Visual Acceptance Criteria Progress */}
-      {totalCriteria > 0 && (
-        <div className="flex flex-col gap-1.5 pt-1">
-          <div className="flex items-center justify-between text-xs font-space">
-            <button
-              onClick={() => setShowCriteria(!showCriteria)}
-              className="flex items-center gap-1.5 text-on-surface-variant hover:text-white transition-colors text-left"
-            >
-              <span className="material-symbols-outlined text-[16px] text-primary">
-                {showCriteria ? 'expand_less' : 'expand_more'}
-              </span>
-              <span className="font-semibold text-white">
-                Criterios de Aceptación Visual ({checkedCount}/{totalCriteria})
-              </span>
-            </button>
-            <span className="font-mono text-primary font-bold text-[11px]">
-              {progressPercent}% validado
-            </span>
-          </div>
-
-          {/* Progress bar */}
-          <div className="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
-            <div 
-              className={`h-full transition-all duration-300 rounded-full ${
-                progressPercent === 100 ? 'bg-emerald-400' : 'bg-primary'
-              }`}
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-
-          {/* Expandable criteria list */}
-          {showCriteria && (
-            <div className="mt-2 flex flex-col gap-1.5 pl-2 border-l-2 border-primary/30">
-              {criteriaList.map((crit, idx) => (
-                <label 
-                  key={crit.id || idx}
-                  className="flex items-start gap-2 text-xs text-on-surface-variant hover:text-white cursor-pointer select-none"
-                >
-                  <input
-                    type="checkbox"
-                    checked={crit.checked}
-                    onChange={() => onToggleCriterion?.(item.id, crit.id)}
-                    className="mt-0.5 rounded border-outline-variant text-primary focus:ring-0 bg-surface-container"
-                  />
-                  <span className={crit.checked ? 'line-through text-on-surface-variant/70' : 'text-white/90'}>
-                    {crit.text}
-                  </span>
-                </label>
-              ))}
+      {/* ── 4. Footer: Trazabilidad y Acciones ── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-outline-variant/60">
+        {/* Trazabilidad y metadatos */}
+        <div className="flex items-center gap-2 flex-wrap text-xs">
+          {item.linkedStory && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container border border-outline-variant font-mono text-[11px]">
+              <span className="text-on-surface-variant">Historia:</span>
+              <span className="text-primary font-bold">{item.linkedStory}</span>
             </div>
           )}
+          <span className="text-on-surface-variant font-space text-[11px]">
+            {item.version || 'v1.0'} • {item.author || 'Equipo'}
+          </span>
         </div>
-      )}
 
-      {/* Card Actions Footer */}
-      <div className="flex items-center justify-between gap-2 pt-3 border-t border-outline-variant/60">
-        <div className="flex items-center gap-1">
-          {/* Quick status change for client/PO */}
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Quick status change for client */}
           {item.status !== 'Aprobado por Cliente' ? (
             <button
               onClick={() => onQuickStatusChange?.(item.id, 'Aprobado por Cliente')}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-space text-xs font-semibold transition-colors"
-              title="Aprobar formalmente esta interfaz"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 font-space text-xs font-semibold transition-colors"
+              title="Aprobar formalmente con el cliente"
             >
-              <span className="material-symbols-outlined text-[15px]">check_circle</span>
-              <span>Aprobar UI</span>
+              <span className="material-symbols-outlined text-[15px]">verified</span>
+              <span>Aprobar</span>
             </button>
           ) : (
             <button
               onClick={() => onQuickStatusChange?.(item.id, 'En Revisión')}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded bg-sky-500/10 border border-sky-500/30 hover:bg-sky-500/20 text-sky-400 font-space text-xs font-semibold transition-colors"
-              title="Solicitar nueva revisión"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-sky-500/10 border border-sky-500/30 hover:bg-sky-500/20 text-sky-400 font-space text-xs font-semibold transition-colors"
+              title="Solicitar revisión técnica"
             >
               <span className="material-symbols-outlined text-[15px]">sync</span>
               <span>Reabrir</span>
@@ -264,29 +208,29 @@ export default function InterfaceCard({
 
           <button
             onClick={() => onDuplicate?.(item)}
-            className="p-1.5 rounded text-on-surface-variant hover:text-white hover:bg-surface-container transition-colors"
-            title="Duplicar Interfaz para otra variante/pantalla"
+            className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-surface-container transition-colors"
+            title="Duplicar ficha de interfaz"
           >
-            <span className="material-symbols-outlined text-[16px]">content_copy</span>
+            <span className="material-symbols-outlined text-[17px]">content_copy</span>
           </button>
 
           <button
             onClick={() => onDelete?.(item.id)}
-            className="p-1.5 rounded text-on-surface-variant hover:text-red-400 hover:bg-surface-container transition-colors"
-            title="Eliminar registro"
+            className="p-1.5 rounded-lg text-on-surface-variant hover:text-red-400 hover:bg-surface-container transition-colors"
+            title="Eliminar interfaz"
           >
-            <span className="material-symbols-outlined text-[16px]">delete</span>
+            <span className="material-symbols-outlined text-[17px]">delete</span>
+          </button>
+
+          {/* Edit / Formalize button */}
+          <button
+            onClick={() => onEdit?.(item)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-surface-container-high border border-outline-variant hover:border-primary text-white hover:text-primary font-space text-xs font-semibold transition-all shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[15px]">edit_note</span>
+            <span>Editar Ficha</span>
           </button>
         </div>
-
-        {/* Open Detailed Spec Modal */}
-        <button
-          onClick={() => onEdit?.(item)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-surface-container-high border border-outline-variant hover:border-primary text-white hover:text-primary font-space text-xs font-semibold transition-all shadow-sm"
-        >
-          <span>Formalizar / Detalle</span>
-          <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
-        </button>
       </div>
 
     </article>
