@@ -140,14 +140,18 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         return parsed.map(item => {
-          if (!item.roles || !Array.isArray(item.roles) || item.roles.length === 0) {
-            const initialMatch = INITIAL_INTERFACES.find(i => i.id === item.id);
-            return {
-              ...item,
-              roles: initialMatch?.roles || (item.role ? [item.role] : [])
-            };
-          }
-          return item;
+          const initialMatch = INITIAL_INTERFACES.find(i => i.id === item.id);
+          const roles = (!item.roles || !Array.isArray(item.roles) || item.roles.length === 0)
+            ? (initialMatch?.roles || (item.role ? [item.role] : []))
+            : item.roles;
+          const dataUsage = (!item.dataUsage || !Array.isArray(item.dataUsage) || item.dataUsage.length === 0)
+            ? (initialMatch?.dataUsage || [])
+            : item.dataUsage;
+          return {
+            ...item,
+            roles,
+            dataUsage
+          };
         });
       }
     } catch (_) {}

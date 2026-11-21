@@ -48,6 +48,10 @@ export const INITIAL_INTERFACES = [
       "Usuario con metas complejas",
       "Usuario constante"
     ],
+    dataUsage: [
+      { key: "TBL-01:c1", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "id", type: "UUID", isPrimary: true },
+      { key: "TBL-01:c2", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "user_id", type: "UUID", isPrimary: false }
+    ],
     linkedStory: "US-201",
     author: "Jhan C.",
     reviewedBy: "Cliente / PO",
@@ -74,6 +78,12 @@ export const INITIAL_INTERFACES = [
     roles: [
       "Usuario enfocado en superación",
       "Usuario con metas complejas"
+    ],
+    dataUsage: [
+      { key: "TBL-01:c3", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "titulo", type: "VARCHAR(255)", isPrimary: false },
+      { key: "TBL-01:c5", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "categoria", type: "VARCHAR(50)", isPrimary: false },
+      { key: "TBL-01:c6", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "fecha_objetivo", type: "DATE", isPrimary: false },
+      { key: "TBL-01:c7", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "color_hex", type: "VARCHAR(10)", isPrimary: false }
     ],
     linkedStory: "US-201",
     author: "Elena Morales",
@@ -102,6 +112,12 @@ export const INITIAL_INTERFACES = [
       "Usuario enfocado en superación",
       "Usuario con metas complejas"
     ],
+    dataUsage: [
+      { key: "TBL-01:c3", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "titulo", type: "VARCHAR(255)", isPrimary: false },
+      { key: "TBL-01:c5", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "categoria", type: "VARCHAR(50)", isPrimary: false },
+      { key: "TBL-01:c6", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "fecha_objetivo", type: "DATE", isPrimary: false },
+      { key: "TBL-01:c7", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "color_hex", type: "VARCHAR(10)", isPrimary: false }
+    ],
     linkedStory: "US-201",
     author: "Jhan C.",
     reviewedBy: "Cliente / PO",
@@ -129,6 +145,12 @@ export const INITIAL_INTERFACES = [
       "Usuario con metas complejas",
       "Usuario enfocado en superación"
     ],
+    dataUsage: [
+      { key: "TBL-02:c3", tableId: "TBL-02", tableName: "tb_pasos_hitos", tableLabel: "Pasos e Hitos Secuenciales", schema: "main", attribute: "orden", type: "INTEGER", isPrimary: false },
+      { key: "TBL-02:c4", tableId: "TBL-02", tableName: "tb_pasos_hitos", tableLabel: "Pasos e Hitos Secuenciales", schema: "main", attribute: "titulo_paso", type: "VARCHAR(200)", isPrimary: false },
+      { key: "TBL-02:c7", tableId: "TBL-02", tableName: "tb_pasos_hitos", tableLabel: "Pasos e Hitos Secuenciales", schema: "main", attribute: "es_completado", type: "BOOLEAN", isPrimary: false },
+      { key: "TBL-01:c8", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "progreso_pct", type: "DECIMAL(5,2)", isPrimary: false }
+    ],
     linkedStory: "US-202",
     author: "Sofía V.",
     reviewedBy: null,
@@ -154,6 +176,11 @@ export const INITIAL_INTERFACES = [
     },
     roles: [
       "Usuario constante"
+    ],
+    dataUsage: [
+      { key: "TBL-03:c4", tableId: "TBL-03", tableName: "tb_bitacora_reflexiones", tableLabel: "Bitácora y Hábitos Diarios", schema: "main", attribute: "reflexion_texto", type: "TEXT", isPrimary: false },
+      { key: "TBL-03:c5", tableId: "TBL-03", tableName: "tb_bitacora_reflexiones", tableLabel: "Bitácora y Hábitos Diarios", schema: "main", attribute: "estado_animo", type: "VARCHAR(30)", isPrimary: false },
+      { key: "TBL-03:c6", tableId: "TBL-03", tableName: "tb_bitacora_reflexiones", tableLabel: "Bitácora y Hábitos Diarios", schema: "main", attribute: "habitos_cumplidos", type: "JSONB", isPrimary: false }
     ],
     linkedStory: "US-203",
     author: "Elena Morales",
@@ -185,6 +212,12 @@ export const INITIAL_INTERFACES = [
       "Cajero / Operador de Ventas",
       "Supervisor de Almacén"
     ],
+    dataUsage: [
+      { key: "TBL-04:c4", tableId: "TBL-04", tableName: "tb_comprobantes_venta", tableLabel: "Comprobantes de Venta y Facturación", schema: "public", attribute: "monto_total", type: "DECIMAL(10,2)", isPrimary: false },
+      { key: "TBL-04:c5", tableId: "TBL-04", tableName: "tb_comprobantes_venta", tableLabel: "Comprobantes de Venta y Facturación", schema: "public", attribute: "metodo_pago", type: "VARCHAR(50)", isPrimary: false },
+      { key: "TBL-05:c4", tableId: "TBL-05", tableName: "tb_inventario_stock", tableLabel: "Inventario y Almacén", schema: "public", attribute: "stock_actual", type: "INTEGER", isPrimary: false },
+      { key: "TBL-05:c5", tableId: "TBL-05", tableName: "tb_inventario_stock", tableLabel: "Inventario y Almacén", schema: "public", attribute: "stock_minimo_alerta", type: "INTEGER", isPrimary: false }
+    ],
     linkedStory: "US-301",
     author: "Carlos D.",
     reviewedBy: "Cliente / PO",
@@ -214,6 +247,11 @@ export const INITIAL_INTERFACES = [
       "Oficial de Crédito Comunitario",
       "Beneficiario Rural",
       "Auditor de Impacto"
+    ],
+    dataUsage: [
+      { key: "TBL-06:c4", tableId: "TBL-06", tableName: "tb_creditos_rurales", tableLabel: "Créditos Comunitarios y Solicitudes", schema: "public", attribute: "monto_aprobado", type: "DECIMAL(12,2)", isPrimary: false },
+      { key: "TBL-07:c3", tableId: "TBL-07", tableName: "tb_firmas_biometricas_offline", tableLabel: "Firmas Biométricas y KYC", schema: "main", attribute: "huella_hash_sha256", type: "VARCHAR(64)", isPrimary: false },
+      { key: "TBL-07:c4", tableId: "TBL-07", tableName: "tb_firmas_biometricas_offline", tableLabel: "Firmas Biométricas y KYC", schema: "main", attribute: "firmado_en", type: "TIMESTAMP WITH TIME ZONE", isPrimary: false }
     ],
     linkedStory: "US-101",
     author: "Sofía V.",

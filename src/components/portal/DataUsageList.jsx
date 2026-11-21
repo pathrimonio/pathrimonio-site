@@ -8,7 +8,7 @@ export default function DataUsageList({ items = [], onRemove }) {
   if (!items.length) return null;
 
   return (
-    <div className="overflow-hidden border border-outline-variant/80 rounded-xl bg-surface-container-lowest shadow-sm">
+    <div className="overflow-x-auto border border-outline-variant/80 rounded-xl bg-surface-container-lowest shadow-sm">
       <table className="w-full text-left text-[11px] border-collapse">
         <thead className="bg-surface-container-high/80 text-on-surface border-b border-outline-variant/70 font-space uppercase tracking-wider">
           <tr>

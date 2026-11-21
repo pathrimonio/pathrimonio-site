@@ -77,6 +77,12 @@ export const CURRENT_METHODS = [
     name: 'Múltiples Apps Desconectadas',
     icon: 'device_hub',
     desc: 'Uso de varias herramientas que no se comunican entre sí generando duplicidad'
+  },
+  {
+    id: 'otro_metodo',
+    name: 'Otro Método / Personalizado',
+    icon: 'more_horiz',
+    desc: 'Otro sistema, desarrollo propio, Access o método mixto particular de tu negocio'
   }
 ];
 
@@ -110,6 +116,12 @@ export const PAIN_POINTS = [
     name: 'Falta de visibilidad y métricas',
     icon: 'analytics',
     desc: 'Decisiones a ciegas sin conocer la rentabilidad real de cada operación'
+  },
+  {
+    id: 'otro_cuello_de_botella',
+    name: 'Otro cuello de botella o dolor específico',
+    icon: 'more_horiz',
+    desc: 'Un desafío operativo particular o cuello de botella no listado en las opciones anteriores'
   }
 ];
 
@@ -404,12 +416,22 @@ export function formatWhatsAppMessage(payload) {
   
   const industryObj = INDUSTRIES.find(i => i.id === business_discovery.industry);
   const commitmentObj = COMMITMENT_MODES.find(c => c.id === pricing_summary.commitment_plan);
+  const methodObj = CURRENT_METHODS.find(m => m.id === business_discovery.current_method);
+  const painObj = PAIN_POINTS.find(p => p.id === business_discovery.main_pain_point);
+  const methodText = business_discovery.current_method === 'otro_metodo' && business_discovery.custom_method_detail
+    ? `Otro: ${business_discovery.custom_method_detail}`
+    : (methodObj ? methodObj.name : business_discovery.current_method);
+  const painText = business_discovery.main_pain_point === 'otro_cuello_de_botella' && business_discovery.custom_pain_detail
+    ? `Otro: ${business_discovery.custom_pain_detail}`
+    : (painObj ? painObj.name : business_discovery.main_pain_point);
   
   let msg = `*SOLICITUD DE COTIZACIÓN PATHRIMONIO*\n`;
   msg += `*ID:* ${quote_id}\n`;
   msg += `*Empresa:* ${business_discovery.company_name || 'No especificada'}\n`;
   msg += `*Contacto:* ${lead_contact.name} (${lead_contact.whatsapp})\n`;
-  msg += `*Rubro:* ${industryObj ? industryObj.name : business_discovery.industry}\n\n`;
+  msg += `*Rubro:* ${industryObj ? industryObj.name : business_discovery.industry}\n`;
+  msg += `*Gestión actual:* ${methodText}\n`;
+  msg += `*Cuello de botella:* ${painText}\n\n`;
   
   msg += `*CONFIGURACIÓN DEL SISTEMA:*\n`;
   msg += `• *Roles Operativos (${configuration.total_admin_users} usuarios):*\n`;

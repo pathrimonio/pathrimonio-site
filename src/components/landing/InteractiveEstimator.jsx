@@ -36,7 +36,9 @@ export default function InteractiveEstimator({ onOpenContact }) {
         company_name: '',
         industry: 'logistica_transporte',
         current_method: 'excel_y_whatsapp',
-        main_pain_point: 'desorden_en_despachos_y_caja'
+        custom_method_detail: '',
+        main_pain_point: 'desorden_en_despachos_y_caja',
+        custom_pain_detail: ''
       },
       configuration: {
         admin_roles: [
@@ -234,7 +236,9 @@ export default function InteractiveEstimator({ onOpenContact }) {
           company_name: '',
           industry: 'logistica_transporte',
           current_method: 'excel_y_whatsapp',
-          main_pain_point: 'desorden_en_despachos_y_caja'
+          custom_method_detail: '',
+          main_pain_point: 'desorden_en_despachos_y_caja',
+          custom_pain_detail: ''
         },
         configuration: {
           admin_roles: [
@@ -283,7 +287,9 @@ export default function InteractiveEstimator({ onOpenContact }) {
         company_name: quoteState.business_discovery.company_name || 'Sin nombre especificado',
         industry: quoteState.business_discovery.industry,
         current_method: quoteState.business_discovery.current_method,
-        main_pain_point: quoteState.business_discovery.main_pain_point
+        custom_method_detail: quoteState.business_discovery.custom_method_detail || '',
+        main_pain_point: quoteState.business_discovery.main_pain_point,
+        custom_pain_detail: quoteState.business_discovery.custom_pain_detail || ''
       },
       configuration: {
         admin_roles: quoteState.configuration.admin_roles,
@@ -584,6 +590,23 @@ export default function InteractiveEstimator({ onOpenContact }) {
                       );
                     })}
                   </div>
+
+                  {/* Campo de texto específico si elige Otro Método */}
+                  {quoteState.business_discovery.current_method === 'otro_metodo' && (
+                    <div className="flex flex-col gap-1.5 mt-1 p-3.5 rounded-lg bg-surface-container-high border border-primary/30 animate-fadeIn">
+                      <label className="font-space text-[11px] uppercase tracking-wider text-primary font-semibold flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                        <span>Especifica qué herramienta o método usas actualmente:</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Sistema a medida en Access, Google Sheets con formularios, etc."
+                        value={quoteState.business_discovery.custom_method_detail || ''}
+                        onChange={(e) => handleUpdateDiscovery('custom_method_detail', e.target.value)}
+                        className="w-full bg-surface-container-highest border border-outline-variant focus:border-primary px-3 py-2 rounded text-white font-jakarta text-xs outline-none transition-colors"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Cuello de botella principal */}
@@ -622,6 +645,23 @@ export default function InteractiveEstimator({ onOpenContact }) {
                       );
                     })}
                   </div>
+
+                  {/* Campo de texto específico si elige Otro Cuello de Botella */}
+                  {quoteState.business_discovery.main_pain_point === 'otro_cuello_de_botella' && (
+                    <div className="flex flex-col gap-1.5 mt-1 p-3.5 rounded-lg bg-surface-container-high border border-primary/30 animate-fadeIn">
+                      <label className="font-space text-[11px] uppercase tracking-wider text-primary font-semibold flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                        <span>Especifica tu cuello de botella o problema operativo principal:</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Conciliar los pagos de POS con las guías de transporte..."
+                        value={quoteState.business_discovery.custom_pain_detail || ''}
+                        onChange={(e) => handleUpdateDiscovery('custom_pain_detail', e.target.value)}
+                        className="w-full bg-surface-container-highest border border-outline-variant focus:border-primary px-3 py-2 rounded text-white font-jakarta text-xs outline-none transition-colors"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Botón avanzar paso 1 */}
