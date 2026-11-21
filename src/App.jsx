@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { INITIAL_STORIES } from './data/initialStories';
 import { INITIAL_INTERFACES } from './data/initialInterfaces';
 import { INITIAL_PROJECTS } from './data/initialProjects';
+import { INITIAL_DATA_MODELS } from './data/initialDataModels';
 import { authenticateUser, saveSession, loadSession, clearSession } from './auth/authConfig';
 
 // Landing Components
@@ -27,11 +28,16 @@ import InterfaceControlsBar from './components/portal/InterfaceControlsBar';
 import InterfaceBuilder from './components/portal/InterfaceBuilder';
 import InterfaceFeed from './components/portal/InterfaceFeed';
 import InterfaceDetailModal from './components/portal/InterfaceDetailModal';
+import DataModelControlsBar from './components/portal/DataModelControlsBar';
+import DataModelBuilder from './components/portal/DataModelBuilder';
+import DataModelFeed from './components/portal/DataModelFeed';
+import DataModelDetailModal from './components/portal/DataModelDetailModal';
 import NewProjectModal from './components/portal/NewProjectModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
 const STORAGE_KEY = 'pathrimonio_stories_v3';
 const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v3';
+const DATA_MODELS_STORAGE_KEY = 'pathrimonio_data_models_v1';
 const PROJECTS_STORAGE_KEY = 'pathrimonio_projects_v1';
 const ACTIVE_PROJECT_KEY = 'pathrimonio_active_project_id_v1';
 
@@ -86,10 +92,20 @@ export default function App() {
     return INITIAL_INTERFACES;
   });
 
+  // ── Data Models & Tables
+  const [dataModels, setDataModels] = useState(() => {
+    try {
+      const saved = localStorage.getItem(DATA_MODELS_STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return INITIAL_DATA_MODELS;
+  });
+
   // ── Filters & Search
   const [activeModule, setActiveModule] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [interfaceSearchQuery, setInterfaceSearchQuery] = useState('');
+  const [dataModelSearchQuery, setDataModelSearchQuery] = useState('');
 
   // ── Detail modals
   const [selectedStory, setSelectedStory] = useState(null);
@@ -97,6 +113,9 @@ export default function App() {
 
   const [selectedInterface, setSelectedInterface] = useState(null);
   const [isInterfaceModalOpen, setIsInterfaceModalOpen] = useState(false);
+
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [isTableModalOpen, setIsTableModalOpen] = useState(false);
 
   // ── Contact modal (landing)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -113,6 +132,11 @@ export default function App() {
   useEffect(() => {
     try { localStorage.setItem(INTERFACES_STORAGE_KEY, JSON.stringify(interfaces)); } catch (_) {}
   }, [interfaces]);
+
+  // Persist data models
+  useEffect(() => {
+    try { localStorage.setItem(DATA_MODELS_STORAGE_KEY, JSON.stringify(dataModels)); } catch (_) {}
+  }, [dataModels]);
 
   // Persist projects
   useEffect(() => {
@@ -299,6 +323,55 @@ export default function App() {
         return pId === activeProjectId;
       });
 
+  // Data Models scoped to active project
+  const projectDataModels = activeProjectId === 'all'
+    ? dataModels
+    : dataModels.filter(t => {
+        const pId = t.projectId || (t.id === 'TBL-04' || t.id === 'TBL-05' ? 'portal-admin' : (t.id === 'TBL-06' || t.id === 'TBL-07' ? 'core-hub' : 'pathway'));
+        return pId === activeProjectId;
+      });
+
+  // ── Data Model Handlers
+  const handleSaveTable = (newTable) => {
+    setDataModels([newTable, ...dataModels]);
+    notify(`Entidad "${newTable.tableName}" registrada.`);
+  };
+
+  const handleUpdateTable = (updated) => {
+    setDataModels(dataModels.map(t => t.id === updated.id ? updated : t));
+    notify(`Entidad "${updated.tableName}" actualizada.`);
+  };
+
+  const handleDuplicateTable = (table) => {
+    const clone = {
+      ...table,
+      id: `TBL-${Date.now().toString().slice(-4)}`,
+      tableName: `${table.tableName}_copia`,
+      name: `${table.name} (Copia)`,
+      status: 'Borrador',
+      version: 'v1.0'
+    };
+    setDataModels([clone, ...dataModels]);
+    notify(`Entidad "${table.tableName}" duplicada como "${clone.tableName}".`);
+  };
+
+  const handleDeleteTable = (id) => {
+    setDataModels(dataModels.filter(t => t.id !== id));
+    notify(`Entidad ${id} eliminada.`);
+  };
+
+  const handleQuickTableStatus = (table, newStatus) => {
+    setDataModels(dataModels.map(t => {
+      if (t.id !== table.id) return t;
+      return {
+        ...t,
+        status: newStatus,
+        approvedAt: newStatus.includes('Aprobado') ? new Date().toISOString().split('T')[0] : t.approvedAt
+      };
+    }));
+    notify(`Estado de "${table.tableName}" cambiado a "${newStatus}".`);
+  };
+
   // ── Filtered stories for feed
   const filteredStories = projectStories.filter(story => {
     const matchMod = activeModule === 'Todos' || story.module === activeModule;
@@ -480,6 +553,41 @@ export default function App() {
                   </div>
                 </div>
               )}
+              {activePortalTab === 'dataModel' && (
+                <div className="flex flex-col w-full">
+                  <DataModelControlsBar
+                    tables={projectDataModels}
+                    stories={projectStories}
+                    interfaces={projectInterfaces}
+                    onNotify={notify}
+                    activeProject={activeProject}
+                  />
+                  <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
+                        <DataModelBuilder
+                          onSaveTable={handleSaveTable}
+                          onNotify={notify}
+                          existingStories={projectStories}
+                          existingInterfaces={projectInterfaces}
+                          activeProjectId={activeProjectId}
+                        />
+                      </section>
+                      <section className="lg:col-span-7 flex flex-col gap-y-4">
+                        <DataModelFeed
+                          tables={projectDataModels}
+                          onEditTable={(table) => { setSelectedTable(table); setIsTableModalOpen(true); }}
+                          onDuplicateTable={handleDuplicateTable}
+                          onDeleteTable={handleDeleteTable}
+                          onQuickStatusChange={handleQuickTableStatus}
+                          searchQuery={dataModelSearchQuery}
+                          setSearchQuery={setDataModelSearchQuery}
+                        />
+                      </section>
+                    </div>
+                  </div>
+                </div>
+              )}
               {activePortalTab === 'backlog'   && <BacklogView stories={projectStories} />}
               {activePortalTab === 'sprints'   && <SprintsView />}
               {activePortalTab === 'docs'      && <DocsView />}
@@ -500,6 +608,15 @@ export default function App() {
             onClose={() => { setIsInterfaceModalOpen(false); setSelectedInterface(null); }}
             onUpdateInterface={handleUpdateInterface}
             existingStories={projectStories}
+          />
+
+          <DataModelDetailModal
+            table={selectedTable}
+            isOpen={isTableModalOpen}
+            onClose={() => { setIsTableModalOpen(false); setSelectedTable(null); }}
+            onUpdateTable={handleUpdateTable}
+            existingStories={projectStories}
+            existingInterfaces={projectInterfaces}
           />
 
           <NewProjectModal

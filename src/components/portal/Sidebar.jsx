@@ -15,6 +15,7 @@ export default function Sidebar({
   const navItems = [
     { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US' },
     { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX' },
+    { id: 'dataModel', label: 'Modelado de Datos', icon: 'database', badge: 'DB' },
     { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted' },
     { id: 'sprints', label: 'Sprints & Ciclos', icon: 'timelapse' },
     { id: 'docs', label: 'Documentación', icon: 'article' },
