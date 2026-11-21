@@ -1,6 +1,17 @@
 import React from 'react';
+import ProjectSelector from './ProjectSelector';
 
-export default function Sidebar({ activeTab, onSelectTab, onReturnHome, sidebarOpen, setSidebarOpen }) {
+export default function Sidebar({ 
+  activeTab, 
+  onSelectTab, 
+  onReturnHome, 
+  sidebarOpen, 
+  setSidebarOpen,
+  projects = [],
+  activeProjectId,
+  onSelectProject,
+  onOpenNewProjectModal
+}) {
   const navItems = [
     { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US' },
     { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX' },
@@ -48,12 +59,14 @@ export default function Sidebar({ activeTab, onSelectTab, onReturnHome, sidebarO
             </button>
           </div>
 
-          {/* Workspace Pill */}
-          <div className="flex items-center justify-between px-2.5 py-1.5 rounded bg-surface-container-low border border-outline-variant/60 text-on-surface-variant font-space text-[11px] uppercase tracking-wider">
-            <span className="truncate">Workspace Core</span>
-            <span className="px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-space text-[10px] font-semibold border border-primary/20 shrink-0">
-              Free Tier
-            </span>
+          {/* Project Switcher Selector */}
+          <div className="pt-0.5 pb-1">
+            <ProjectSelector
+              projects={projects}
+              activeProjectId={activeProjectId}
+              onSelectProject={onSelectProject}
+              onOpenNewProjectModal={onOpenNewProjectModal}
+            />
           </div>
 
           {/* Navigation Items */}

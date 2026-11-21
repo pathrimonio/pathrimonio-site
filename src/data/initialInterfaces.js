@@ -20,12 +20,15 @@ export const INTERFACE_MODULE_OPTIONS = [
   "Autenticación & Acceso",
   "Pasos & Hitos",
   "Bitácora de Progreso",
-  "Transacciones & Finanzas"
+  "Gestión de Crédito",
+  "Reportes de Impacto"
 ];
 
 export const INITIAL_INTERFACES = [
+  // ── Proyecto: Pathway (App MVP) ──
   {
     id: "INT-01",
+    projectId: "pathway",
     number: "1",
     title: "Login & Autenticación",
     fullName: "1. Login & Autenticación",
@@ -40,7 +43,7 @@ export const INITIAL_INTERFACES = [
       reglas: "Bloqueo temporal de 15 minutos tras 5 intentos fallidos consecutivos. Contraseña con longitud mínima de 8 caracteres. Cifrado de credenciales en reposo.",
       detalles: "Generación de tokens JWT con expiración de 8 horas. Soporta autenticación offline con SQLite cifrado si no hay cobertura."
     },
-    linkedStory: "US-102",
+    linkedStory: "US-201",
     author: "Jhan C.",
     reviewedBy: "Cliente / PO",
     approvedAt: "2026-11-18",
@@ -48,6 +51,7 @@ export const INITIAL_INTERFACES = [
   },
   {
     id: "INT-02",
+    projectId: "pathway",
     number: "2",
     title: "Onboarding & Bienvenida",
     fullName: "2. Onboarding & Bienvenida",
@@ -62,7 +66,7 @@ export const INITIAL_INTERFACES = [
       reglas: "Se muestra exclusivamente en la primera ejecución tras la instalación de la app o al pulsar 'Repetir tutorial' desde Configuración.",
       detalles: "Animación de transición horizontal a 60fps. Solicita permisos de notificaciones locales con explicación contextual previa."
     },
-    linkedStory: "US-102",
+    linkedStory: "US-201",
     author: "Elena Morales",
     reviewedBy: "Cliente / PO",
     approvedAt: "2026-11-19",
@@ -70,6 +74,7 @@ export const INITIAL_INTERFACES = [
   },
   {
     id: "INT-03",
+    projectId: "pathway",
     number: "3",
     title: "Registro de Gran Meta (Pathway)",
     fullName: "3. Registro de Gran Meta (Pathway)",
@@ -84,36 +89,15 @@ export const INITIAL_INTERFACES = [
       reglas: "El título debe contener al menos 5 caracteres. La fecha estimada debe ser igual o posterior a la fecha actual.",
       detalles: "Validación instantánea en cliente. Al guardar, redirige de forma automática al mapa secuencial de pasos (INT-05)."
     },
-    linkedStory: "US-101",
+    linkedStory: "US-201",
     author: "Jhan C.",
     reviewedBy: "Cliente / PO",
     approvedAt: "2026-11-20",
     version: "v1.0"
   },
   {
-    id: "INT-04",
-    number: "4",
-    title: "Dashboard",
-    fullName: "4. Dashboard",
-    module: "Gestión & Monitoreo",
-    status: "Aprobado por Cliente",
-    platform: "Web & Mobile",
-    image: null,
-    imagePlaceholder: "dashboard",
-    fields: {
-      objetivo: "Monitorear ventas, ingresos, egresos y alertas en tiempo real.",
-      contenido: "Ventas, ingresos, egresos, alertas de inventario y accesos rápidos.",
-      reglas: "Solo administrador.",
-      detalles: "Datos en tiempo real."
-    },
-    linkedStory: "US-104",
-    author: "Carlos D.",
-    reviewedBy: "Cliente / PO",
-    approvedAt: "2026-11-20",
-    version: "v2.0"
-  },
-  {
     id: "INT-05",
+    projectId: "pathway",
     number: "5",
     title: "Mapa Secuencial de Pasos e Hitos",
     fullName: "5. Mapa Secuencial de Pasos e Hitos",
@@ -128,7 +112,7 @@ export const INITIAL_INTERFACES = [
       reglas: "Cada paso completado suma proporcionalmente al indicador de progreso global. Un paso no puede completarse si su predecesor obligatorio no fue validado.",
       detalles: "Feedback háptico en móviles al marcar un hito como logrado. Soporta reordenamiento por arrastre (drag-and-drop)."
     },
-    linkedStory: "US-101",
+    linkedStory: "US-202",
     author: "Sofía V.",
     reviewedBy: null,
     approvedAt: null,
@@ -136,6 +120,7 @@ export const INITIAL_INTERFACES = [
   },
   {
     id: "INT-06",
+    projectId: "pathway",
     number: "6",
     title: "Bitácora Diaria & Registro de Hábitos",
     fullName: "6. Bitácora Diaria & Registro de Hábitos",
@@ -150,10 +135,60 @@ export const INITIAL_INTERFACES = [
       reglas: "Las entradas son privadas del usuario. Cada reflexión queda sellada con fecha y hora local inmutable una vez guardada.",
       detalles: "Sincronización en segundo plano con almacenamiento local prioritario (offline-first)."
     },
-    linkedStory: "US-104",
+    linkedStory: "US-203",
     author: "Elena Morales",
     reviewedBy: null,
     approvedAt: null,
     version: "v0.9"
+  },
+
+  // ── Proyecto: Sistema de Gestión & Ventas (portal-admin) ──
+  {
+    id: "INT-04",
+    projectId: "portal-admin",
+    number: "4",
+    title: "Dashboard",
+    fullName: "4. Dashboard",
+    module: "Gestión & Monitoreo",
+    status: "Aprobado por Cliente",
+    platform: "Web & Mobile",
+    image: null,
+    imagePlaceholder: "dashboard",
+    fields: {
+      objetivo: "Monitorear ventas, ingresos, egresos y alertas en tiempo real.",
+      contenido: "Ventas, ingresos, egresos, alertas de inventario y accesos rápidos.",
+      reglas: "Solo administrador.",
+      detalles: "Datos en tiempo real."
+    },
+    linkedStory: "US-301",
+    author: "Carlos D.",
+    reviewedBy: "Cliente / PO",
+    approvedAt: "2026-11-20",
+    version: "v2.0"
+  },
+
+  // ── Proyecto: Core Banking & Impact Hub (core-hub) ──
+  {
+    id: "INT-07",
+    projectId: "core-hub",
+    number: "7",
+    title: "Desembolso & Validación Biométrica",
+    fullName: "7. Desembolso & Validación Biométrica",
+    module: "Gestión de Crédito",
+    status: "Aprobado por Cliente",
+    platform: "Web / Desktop",
+    image: null,
+    imagePlaceholder: "dashboard",
+    fields: {
+      objetivo: "Verificar identidad del beneficiario mediante huella dactilar y autorizar desembolso en zonas desconectadas.",
+      contenido: "Datos del crédito, resumen de cuotas, canvas de firma digital y confirmación con token TOTP.",
+      reglas: "Monto máximo por oficial: $5,000 USD sin conexión a internet.",
+      detalles: "Firma digital sellada con hash SHA-256 almacenada en base de datos local SQLite cifrada."
+    },
+    linkedStory: "US-101",
+    author: "Sofía V.",
+    reviewedBy: "Auditor Legal",
+    approvedAt: "2026-11-15",
+    version: "v2.4"
   }
 ];

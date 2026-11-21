@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ROLE_SUGGESTIONS } from '../../data/initialStories';
 
-export default function StoryBuilder({ onSaveStory, onNotify }) {
+export default function StoryBuilder({ onSaveStory, onNotify, activeProjectId = 'pathway' }) {
   const [module, setModule] = useState('Gestión de Crédito');
   const [role, setRole] = useState('Oficial de Crédito Comunitario');
   const [action, setAction] = useState('Solicitar un microcrédito sin conexión a internet y sincronizar las actas biométricas automáticamente al recuperar cobertura celular.');
@@ -45,6 +45,7 @@ export default function StoryBuilder({ onSaveStory, onNotify }) {
 
     const newStory = {
       id: `US-${Math.floor(100 + Math.random() * 900)}`,
+      projectId: activeProjectId === 'all' ? 'pathway' : activeProjectId,
       module,
       role: role.trim(),
       action: action.trim(),

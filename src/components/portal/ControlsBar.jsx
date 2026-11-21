@@ -6,7 +6,8 @@ export default function ControlsBar({
   stories, 
   activeModule, 
   setActiveModule,
-  onNotify
+  onNotify,
+  activeProject
 }) {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
@@ -58,19 +59,21 @@ export default function ControlsBar({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-x-3.5 min-w-0">
             <div className="w-10 h-10 rounded bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space shrink-0">
-              <span className="material-symbols-outlined text-[22px] fill">folder_special</span>
+              <span className="material-symbols-outlined text-[22px] fill">
+                {activeProject?.icon || 'folder_special'}
+              </span>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-x-2.5 flex-wrap">
                 <h1 className="font-space text-base sm:text-lg text-white font-semibold tracking-tight truncate">
-                  Pathrimonio — Core Banking &amp; Impact Hub v2.4
+                  {activeProject ? `${activeProject.name}` : 'Pathrimonio — Software Hub'}
                 </h1>
                 <span className="px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-primary font-space text-[11px] font-medium tracking-wide">
-                  Sprint 14 Planning
+                  {activeProject?.status || 'Sprint Planning'}
                 </span>
               </div>
-              <p className="font-jakarta text-xs text-on-surface-variant mt-0.5">
-                Portal de levantamiento asistido de requerimientos con el equipo de producto
+              <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate max-w-xl">
+                {activeProject?.subtitle || activeProject?.description || 'Portal de requerimientos y desarrollo de software'}
               </p>
             </div>
           </div>

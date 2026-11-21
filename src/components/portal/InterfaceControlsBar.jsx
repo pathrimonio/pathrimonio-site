@@ -4,7 +4,8 @@ import confetti from 'canvas-confetti';
 export default function InterfaceControlsBar({ 
   interfaces = [],
   stories = [],
-  onNotify
+  onNotify,
+  activeProject
 }) {
   const totalInterfaces = interfaces.length;
   const approvedInterfaces = interfaces.filter(i => i.status === 'Aprobado por Cliente' || i.status === 'Aprobado').length;
@@ -48,15 +49,17 @@ export default function InterfaceControlsBar({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-x-3.5 min-w-0">
             <div className="w-10 h-10 rounded bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space shrink-0 shadow-sm">
-              <span className="material-symbols-outlined text-[22px]">devices</span>
+              <span className="material-symbols-outlined text-[22px]">
+                {activeProject?.icon || 'devices'}
+              </span>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-x-2.5 flex-wrap">
                 <h1 className="font-space text-base sm:text-lg text-white font-semibold tracking-tight truncate">
-                  Formalización de Interfaces de Software &amp; Comunicación Cliente
+                  {activeProject ? `${activeProject.name} — Interfaces UI` : 'Formalización de Interfaces de Software'}
                 </h1>
                 <span className="px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-primary font-space text-[11px] font-medium tracking-wide">
-                  UI/UX Specs &amp; Contratos Visuales
+                  {activeProject?.category || 'UI/UX Specs'}
                 </span>
               </div>
               <p className="font-jakarta text-xs text-on-surface-variant mt-0.5">

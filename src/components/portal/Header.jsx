@@ -1,12 +1,19 @@
 import React from 'react';
 import UserMenu from './UserMenu';
 
-export default function Header({ onToggleSidebar, searchQuery, setSearchQuery, user, onLogout }) {
+export default function Header({ 
+  onToggleSidebar, 
+  searchQuery, 
+  setSearchQuery, 
+  user, 
+  onLogout,
+  activeProject
+}) {
   return (
     <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md z-30 border-b border-outline-variant px-4 sm:px-6 flex items-center justify-between gap-4">
       
       {/* Left: Hamburger & Breadcrumb */}
-      <div className="flex items-center gap-x-3">
+      <div className="flex items-center gap-x-3 min-w-0">
         <button 
           onClick={onToggleSidebar}
           className="lg:hidden p-1.5 rounded text-on-surface-variant hover:text-white hover:bg-surface-container"
@@ -17,14 +24,19 @@ export default function Header({ onToggleSidebar, searchQuery, setSearchQuery, u
         <div className="flex items-center gap-x-2 text-on-surface-variant font-jakarta text-xs truncate">
           <span className="text-white font-space font-semibold hidden sm:inline">Pathrimonio</span>
           <span className="text-outline-variant font-mono hidden sm:inline">/</span>
-          <span className="text-on-surface truncate">Portal de Historias</span>
+          <span className="text-primary font-space font-semibold truncate flex items-center gap-1">
+            <span className="material-symbols-outlined text-[15px]">{activeProject?.icon || 'apps'}</span>
+            <span>{activeProject?.name || 'Portal Core'}</span>
+          </span>
         </div>
 
         <div className="hidden md:block h-4 w-px bg-outline-variant"></div>
 
         <div className="hidden md:flex items-center gap-x-1.5 px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-on-surface font-space text-[11px]">
           <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-          <span className="font-medium text-white">Sprint 14 Activo</span>
+          <span className="font-medium text-white truncate max-w-[160px]">
+            {activeProject?.status || 'Sprint Activo'}
+          </span>
         </div>
       </div>
 

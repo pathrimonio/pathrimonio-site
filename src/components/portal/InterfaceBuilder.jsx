@@ -4,7 +4,8 @@ import { INTERFACE_MODULE_OPTIONS, INTERFACE_STATUS_OPTIONS } from '../../data/i
 export default function InterfaceBuilder({
   onSaveInterface,
   onNotify,
-  existingStories = []
+  existingStories = [],
+  activeProjectId = 'pathway'
 }) {
   const [number, setNumber] = useState('4');
   const [title, setTitle] = useState('Dashboard');
@@ -67,6 +68,7 @@ export default function InterfaceBuilder({
 
     const newInterface = {
       id: newId,
+      projectId: activeProjectId === 'all' ? 'pathway' : activeProjectId,
       number: numClean,
       title: titleClean,
       fullName,

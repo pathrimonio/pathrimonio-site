@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { INITIAL_STORIES } from './data/initialStories';
 import { INITIAL_INTERFACES } from './data/initialInterfaces';
+import { INITIAL_PROJECTS } from './data/initialProjects';
 import { authenticateUser, saveSession, loadSession, clearSession } from './auth/authConfig';
 
 // Landing Components
@@ -26,10 +27,13 @@ import InterfaceControlsBar from './components/portal/InterfaceControlsBar';
 import InterfaceBuilder from './components/portal/InterfaceBuilder';
 import InterfaceFeed from './components/portal/InterfaceFeed';
 import InterfaceDetailModal from './components/portal/InterfaceDetailModal';
+import NewProjectModal from './components/portal/NewProjectModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
 const STORAGE_KEY = 'pathrimonio_stories_v1';
 const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v2';
+const PROJECTS_STORAGE_KEY = 'pathrimonio_projects_v1';
+const ACTIVE_PROJECT_KEY = 'pathrimonio_active_project_id_v1';
 
 export default function App() {
   // ── View state: 'landing' | 'portal'
@@ -44,6 +48,25 @@ export default function App() {
   // ── Portal nav
   const [activePortalTab, setActivePortalTab] = useState('stories');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ── Projects (Multi-software)
+  const [projects, setProjects] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PROJECTS_STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return INITIAL_PROJECTS;
+  });
+
+  const [activeProjectId, setActiveProjectId] = useState(() => {
+    try {
+      const saved = localStorage.getItem(ACTIVE_PROJECT_KEY);
+      if (saved) return saved;
+    } catch (_) {}
+    return 'pathway';
+  });
+
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
 
   // ── Stories
   const [stories, setStories] = useState(() => {
@@ -90,6 +113,16 @@ export default function App() {
   useEffect(() => {
     try { localStorage.setItem(INTERFACES_STORAGE_KEY, JSON.stringify(interfaces)); } catch (_) {}
   }, [interfaces]);
+
+  // Persist projects
+  useEffect(() => {
+    try { localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projects)); } catch (_) {}
+  }, [projects]);
+
+  // Persist active project ID
+  useEffect(() => {
+    try { localStorage.setItem(ACTIVE_PROJECT_KEY, activeProjectId); } catch (_) {}
+  }, [activeProjectId]);
 
   // Sync URL hash
   useEffect(() => {
@@ -232,8 +265,36 @@ export default function App() {
     }));
   };
 
+  // ── Project Handlers & Scoping
+  const handleCreateProject = (newProject) => {
+    setProjects(prev => [...prev, newProject]);
+    setActiveProjectId(newProject.id);
+    notify(`Software "${newProject.name}" creado y activado.`);
+  };
+
+  const activeProject = activeProjectId === 'all'
+    ? {
+        id: 'all',
+        name: 'Todos los Proyectos',
+        subtitle: 'Vista Consolidada de Todo el Software',
+        status: 'Consolidado',
+        icon: 'folder_copy',
+        category: 'Visión Global'
+      }
+    : (projects.find(p => p.id === activeProjectId) || projects[0]);
+
+  // Stories scoped to active project
+  const projectStories = activeProjectId === 'all'
+    ? stories
+    : stories.filter(s => s.projectId === activeProjectId || (!s.projectId && activeProjectId === 'core-hub'));
+
+  // Interfaces scoped to active project
+  const projectInterfaces = activeProjectId === 'all'
+    ? interfaces
+    : interfaces.filter(i => i.projectId === activeProjectId || (!i.projectId && activeProjectId === 'pathway'));
+
   // ── Filtered stories for feed
-  const filteredStories = stories.filter(story => {
+  const filteredStories = projectStories.filter(story => {
     const matchMod = activeModule === 'Todos' || story.module === activeModule;
     const q = searchQuery.toLowerCase().trim();
     if (!q) return matchMod;
@@ -329,6 +390,10 @@ export default function App() {
             onReturnHome={navigateToHome}
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
+            projects={projects}
+            activeProjectId={activeProjectId}
+            onSelectProject={setActiveProjectId}
+            onOpenNewProjectModal={() => setIsNewProjectModalOpen(true)}
           />
 
           <div className="lg:pl-64 flex flex-col flex-1 min-w-0">
@@ -338,21 +403,27 @@ export default function App() {
               setSearchQuery={setSearchQuery}
               user={currentUser}
               onLogout={handleLogout}
+              activeProject={activeProject}
             />
 
             <main className="w-full pt-14 flex-1">
               {activePortalTab === 'stories' && (
                 <div className="flex flex-col w-full">
                   <ControlsBar
-                    stories={stories}
+                    stories={projectStories}
                     activeModule={activeModule}
                     setActiveModule={setActiveModule}
                     onNotify={notify}
+                    activeProject={activeProject}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                       <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
-                        <StoryBuilder onSaveStory={handleSaveStory} onNotify={notify} />
+                        <StoryBuilder 
+                          onSaveStory={handleSaveStory} 
+                          onNotify={notify} 
+                          activeProjectId={activeProjectId}
+                        />
                       </section>
                       <section className="lg:col-span-7 flex flex-col gap-y-4">
                         <StoryFeed
@@ -372,9 +443,10 @@ export default function App() {
               {activePortalTab === 'interfaces' && (
                 <div className="flex flex-col w-full">
                   <InterfaceControlsBar
-                    interfaces={interfaces}
-                    stories={stories}
+                    interfaces={projectInterfaces}
+                    stories={projectStories}
                     onNotify={notify}
+                    activeProject={activeProject}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -382,12 +454,13 @@ export default function App() {
                         <InterfaceBuilder
                           onSaveInterface={handleSaveInterface}
                           onNotify={notify}
-                          existingStories={stories}
+                          existingStories={projectStories}
+                          activeProjectId={activeProjectId}
                         />
                       </section>
                       <section className="lg:col-span-7 flex flex-col gap-y-4">
                         <InterfaceFeed
-                          interfaces={interfaces}
+                          interfaces={projectInterfaces}
                           onEditInterface={(item) => { setSelectedInterface(item); setIsInterfaceModalOpen(true); }}
                           onDuplicateInterface={handleDuplicateInterface}
                           onDeleteInterface={handleDeleteInterface}
@@ -401,7 +474,7 @@ export default function App() {
                   </div>
                 </div>
               )}
-              {activePortalTab === 'backlog'   && <BacklogView stories={stories} />}
+              {activePortalTab === 'backlog'   && <BacklogView stories={projectStories} />}
               {activePortalTab === 'sprints'   && <SprintsView />}
               {activePortalTab === 'docs'      && <DocsView />}
               {activePortalTab === 'settings'  && <SettingsView />}
@@ -420,7 +493,14 @@ export default function App() {
             isOpen={isInterfaceModalOpen}
             onClose={() => { setIsInterfaceModalOpen(false); setSelectedInterface(null); }}
             onUpdateInterface={handleUpdateInterface}
-            existingStories={stories}
+            existingStories={projectStories}
+          />
+
+          <NewProjectModal
+            isOpen={isNewProjectModalOpen}
+            onClose={() => setIsNewProjectModalOpen(false)}
+            onCreateProject={handleCreateProject}
+            onNotify={notify}
           />
         </div>
       )}
