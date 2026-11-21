@@ -4,20 +4,28 @@ export default function InterfaceMockupPreview({
   image, 
   placeholderType, 
   title, 
-  onImageClick 
+  onImageClick,
+  aspectRatio = 'desktop'
 }) {
+  const isPhone = aspectRatio === 'phone';
+  const isTablet = aspectRatio === 'tablet';
+
   // If an uploaded image or image URL is available
   if (image) {
     return (
       <div 
         onClick={onImageClick}
-        className="relative group/img cursor-pointer rounded-xl overflow-hidden border border-outline-variant/80 bg-surface-container-lowest flex items-center justify-center p-2 min-h-[200px] max-h-[360px]"
+        className={`relative group/img cursor-pointer rounded-xl overflow-hidden border border-outline-variant/80 bg-surface-container-lowest flex items-center justify-center p-2 min-h-[200px] ${
+          isPhone ? 'max-w-[300px] mx-auto max-h-[560px]' : isTablet ? 'max-w-[460px] mx-auto max-h-[420px]' : 'max-h-[360px]'
+        }`}
         title="Clic para ampliar imagen"
       >
         <img 
           src={image} 
           alt={title} 
-          className="max-h-[340px] w-auto max-w-full object-contain rounded-lg transition-transform duration-300 group-hover/img:scale-[1.01]" 
+          className={`w-auto max-w-full object-contain rounded-lg transition-transform duration-300 group-hover/img:scale-[1.01] ${
+            isPhone ? 'max-h-[540px]' : isTablet ? 'max-h-[400px]' : 'max-h-[340px]'
+          }`}
         />
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
           <span className="px-3 py-1.5 rounded-lg bg-surface-container-high/90 text-white font-space text-xs font-semibold flex items-center gap-1.5 shadow-lg">
@@ -33,7 +41,9 @@ export default function InterfaceMockupPreview({
   return (
     <div 
       onClick={onImageClick}
-      className="relative group/mockup cursor-pointer rounded-xl overflow-hidden border border-outline-variant/80 bg-[#121316] p-4 flex flex-col gap-3 min-h-[220px] transition-all hover:border-primary/50 shadow-inner"
+      className={`relative group/mockup cursor-pointer rounded-xl overflow-hidden border border-outline-variant/80 bg-[#121316] p-4 flex flex-col gap-3 min-h-[220px] transition-all hover:border-primary/50 shadow-inner ${
+        isPhone ? 'max-w-[340px] mx-auto' : isTablet ? 'max-w-[520px] mx-auto' : ''
+      }`}
       title="Clic para ver o cambiar imagen de la interfaz"
     >
       {/* Device / Browser Window Header */}
@@ -57,7 +67,7 @@ export default function InterfaceMockupPreview({
       {placeholderType === 'dashboard' && (
         <div className="flex flex-col gap-3 pt-1">
           {/* Top Metric Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className={`grid grid-cols-2 gap-2 ${isPhone ? '' : 'sm:grid-cols-4'}`}>
             <div className="p-2.5 rounded-lg bg-surface-container border border-outline-variant/40 flex flex-col gap-0.5">
               <span className="text-[10px] text-on-surface-variant font-space uppercase">Ventas Hoy</span>
               <span className="text-sm font-bold font-mono text-emerald-400">$12,450</span>
@@ -81,7 +91,7 @@ export default function InterfaceMockupPreview({
           </div>
 
           {/* Quick Actions & Live Chart Mockup */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className={`grid grid-cols-1 gap-2 ${isPhone ? '' : 'sm:grid-cols-3'}`}>
             <div className="sm:col-span-2 p-3 rounded-lg bg-surface-container border border-outline-variant/40 flex flex-col gap-2">
               <div className="flex items-center justify-between text-[11px] font-space text-white">
                 <span className="font-semibold flex items-center gap-1.5">

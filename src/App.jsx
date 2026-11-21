@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { INITIAL_STORIES } from './data/initialStories';
-import { INITIAL_INTERFACES } from './data/initialInterfaces';
+import { INITIAL_INTERFACES, INTERFACE_MODULE_OPTIONS } from './data/initialInterfaces';
 import { INITIAL_PROJECTS } from './data/initialProjects';
 import { INITIAL_DATA_MODELS } from './data/initialDataModels';
 import { INITIAL_ACTORS } from './data/initialActors';
+import { INITIAL_FILES } from './data/initialFiles';
 import { authenticateUser, saveSession, loadSession, clearSession } from './auth/authConfig';
 
 // Landing Components
@@ -39,13 +40,19 @@ import ActorsControlsBar from './components/portal/ActorsControlsBar';
 import ActorBuilder from './components/portal/ActorBuilder';
 import ActorFeed from './components/portal/ActorFeed';
 import ActorDetailModal from './components/portal/ActorDetailModal';
+import FilesControlsBar from './components/portal/FilesControlsBar';
+import FileUploader from './components/portal/FileUploader';
+import FileFeed from './components/portal/FileFeed';
+import FileDetailModal from './components/portal/FileDetailModal';
 import NewProjectModal from './components/portal/NewProjectModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
 const STORAGE_KEY = 'pathrimonio_stories_v3';
 const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v3';
+const INTERFACE_MODULES_STORAGE_KEY = 'pathrimonio_interface_modules_v1';
 const DATA_MODELS_STORAGE_KEY = 'pathrimonio_data_models_v2';
 const ACTORS_STORAGE_KEY = 'pathrimonio_actors_v1';
+const FILES_STORAGE_KEY = 'pathrimonio_files_v1';
 const PROJECTS_STORAGE_KEY = 'pathrimonio_projects_v1';
 const ACTIVE_PROJECT_KEY = 'pathrimonio_active_project_id_v1';
 
@@ -112,6 +119,28 @@ export default function App() {
     return INITIAL_INTERFACES;
   });
 
+  // ── Interface module catalog (editable, persisted)
+  const [interfaceModules, setInterfaceModules] = useState(() => {
+    const defaults = new Set(INTERFACE_MODULE_OPTIONS.filter(m => m !== 'Todos'));
+    INITIAL_INTERFACES.forEach(item => { if (item.module) defaults.add(item.module); });
+
+    try {
+      const saved = localStorage.getItem(INTERFACE_MODULES_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const catalog = new Set(parsed.filter(m => m && m !== 'Sin módulo'));
+          interfaces.forEach(item => {
+            if (item.module && item.module !== 'Sin módulo') catalog.add(item.module);
+          });
+          return Array.from(catalog);
+        }
+      }
+    } catch (_) {}
+
+    return Array.from(defaults);
+  });
+
   // ── Data Models & Tables
   const [dataModels, setDataModels] = useState(() => {
     try {
@@ -130,12 +159,22 @@ export default function App() {
     return INITIAL_ACTORS;
   });
 
+  // ── Project Files & Deliverables
+  const [files, setFiles] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FILES_STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return INITIAL_FILES;
+  });
+
   // ── Filters & Search
   const [activeModule, setActiveModule] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
   const [interfaceSearchQuery, setInterfaceSearchQuery] = useState('');
   const [dataModelSearchQuery, setDataModelSearchQuery] = useState('');
   const [actorSearchQuery, setActorSearchQuery] = useState('');
+  const [fileSearchQuery, setFileSearchQuery] = useState('');
 
   // ── Preselected Role from Collaborator Link or Selection
   const [preselectedRoleForStory, setPreselectedRoleForStory] = useState(null);
@@ -155,6 +194,9 @@ export default function App() {
   const [selectedActor, setSelectedActor] = useState(null);
   const [isActorModalOpen, setIsActorModalOpen] = useState(false);
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isFileModalOpen, setIsFileModalOpen] = useState(false);
+
   // ── Contact modal (landing)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
@@ -171,6 +213,11 @@ export default function App() {
     try { localStorage.setItem(INTERFACES_STORAGE_KEY, JSON.stringify(interfaces)); } catch (_) {}
   }, [interfaces]);
 
+  // Persist interface module catalog
+  useEffect(() => {
+    try { localStorage.setItem(INTERFACE_MODULES_STORAGE_KEY, JSON.stringify(interfaceModules)); } catch (_) {}
+  }, [interfaceModules]);
+
   // Persist data models
   useEffect(() => {
     try { localStorage.setItem(DATA_MODELS_STORAGE_KEY, JSON.stringify(dataModels)); } catch (_) {}
@@ -180,6 +227,11 @@ export default function App() {
   useEffect(() => {
     try { localStorage.setItem(ACTORS_STORAGE_KEY, JSON.stringify(actors)); } catch (_) {}
   }, [actors]);
+
+  // Persist project files
+  useEffect(() => {
+    try { localStorage.setItem(FILES_STORAGE_KEY, JSON.stringify(files)); } catch (_) {}
+  }, [files]);
 
   // Persist projects
   useEffect(() => {
@@ -308,7 +360,7 @@ export default function App() {
 
   const handleUpdateInterface = (updated) => {
     setInterfaces(interfaces.map(i => i.id === updated.id ? updated : i));
-    notify(`Interfaz ${updated.id} (${updated.name}) actualizada.`);
+    notify(`Interfaz ${updated.id} (${updated.fullName || updated.title || updated.id}) actualizada.`);
   };
 
   const handleDuplicateInterface = (item) => {
@@ -354,6 +406,43 @@ export default function App() {
         )
       };
     }));
+  };
+
+  // ── Interface module catalog CRUD
+  const handleAddInterfaceModule = (name) => {
+    const clean = (name || '').trim();
+    if (!clean) return false;
+    if (interfaceModules.some(m => m.toLowerCase() === clean.toLowerCase())) {
+      notify(`El módulo "${clean}" ya existe.`);
+      return false;
+    }
+    setInterfaceModules(prev => [...prev, clean]);
+    notify(`Módulo "${clean}" agregado a la base de datos.`);
+    return true;
+  };
+
+  const handleRenameInterfaceModule = (oldName, newName) => {
+    const clean = (newName || '').trim();
+    if (!clean || clean === oldName) return false;
+    if (interfaceModules.some(m => m.toLowerCase() === clean.toLowerCase() && m !== oldName)) {
+      notify(`Ya existe un módulo llamado "${clean}".`);
+      return false;
+    }
+    setInterfaceModules(prev => prev.map(m => m === oldName ? clean : m));
+    setInterfaces(prev => prev.map(i => i.module === oldName ? { ...i, module: clean } : i));
+    setSelectedInterface(prev => (prev && prev.module === oldName ? { ...prev, module: clean } : prev));
+    notify(`Módulo "${oldName}" renombrado a "${clean}".`);
+    return true;
+  };
+
+  const handleDeleteInterfaceModule = (name) => {
+    const affected = interfaces.filter(i => i.module === name).length;
+    setInterfaceModules(prev => prev.filter(m => m !== name));
+    setInterfaces(prev => prev.map(i => i.module === name ? { ...i, module: 'Sin módulo' } : i));
+    notify(
+      `Módulo "${name}" eliminado de la base de datos` +
+      (affected > 0 ? ` — ${affected} interfaz(es) quedaron sin módulo.` : '.')
+    );
   };
 
   // ── Project Handlers & Scoping
@@ -403,6 +492,14 @@ export default function App() {
     ? actors
     : actors.filter(a => {
         const pId = a.projectId || (a.id === 'ACT-04' || a.id === 'ACT-05' || a.id === 'ACT-06' ? 'portal-admin' : (a.id === 'ACT-07' || a.id === 'ACT-08' || a.id === 'ACT-09' ? 'core-hub' : 'pathway'));
+        return pId === activeProjectId;
+      });
+
+  // Files & Deliverables scoped to active project
+  const projectFiles = activeProjectId === 'all'
+    ? files
+    : files.filter(f => {
+        const pId = f.projectId || (f.id === 'FILE-05' || f.id === 'FILE-06' || f.id === 'FILE-07' || f.id === 'FILE-08' ? 'portal-admin' : (f.id === 'FILE-09' || f.id === 'FILE-10' ? 'core-hub' : 'pathway'));
         return pId === activeProjectId;
       });
 
@@ -495,6 +592,36 @@ export default function App() {
     notify(`Rol "${actor.name}" seleccionado. Completa los detalles de la Historia de Usuario.`);
   };
 
+  // ── Project File Handlers
+  const handleSaveFile = (newFile) => {
+    setFiles(prev => [newFile, ...prev]);
+  };
+
+  const handleUpdateFile = (updated) => {
+    setFiles(prev => prev.map(f => f.id === updated.id ? updated : f));
+    notify(`Archivo "${updated.name}" actualizado.`);
+  };
+
+  const handleDeleteFile = (fileId) => {
+    const fileToDelete = files.find(f => f.id === fileId);
+    if (!window.confirm(`¿Eliminar el archivo "${fileToDelete?.name || fileId}" del repositorio?`)) return;
+    setFiles(prev => prev.filter(f => f.id !== fileId));
+    notify('Archivo eliminado del repositorio.');
+  };
+
+  const handleDuplicateFile = (fileToClone) => {
+    const ext = (fileToClone.name.split('.').pop() || 'bin');
+    const base = fileToClone.name.replace(new RegExp(`\\.${ext}$`, 'i'), '');
+    const cloned = {
+      ...fileToClone,
+      id: `FILE-${Date.now().toString().slice(-4)}`,
+      name: `${base}_copia.${ext}`,
+      uploadedAt: new Date().toISOString().split('T')[0]
+    };
+    setFiles(prev => [cloned, ...prev]);
+    notify(`Archivo duplicado como "${cloned.name}".`);
+  };
+
   // ── Filtered stories for feed
   const filteredStories = projectStories.filter(story => {
     const matchMod = activeModule === 'Todos' || story.module === activeModule;
@@ -529,7 +656,7 @@ export default function App() {
       ══════════════════════════════════════════ */}
       {currentView === 'landing' && (
         <div className="flex flex-col w-full">
-          <Navbar onOpenContact={() => setIsContactModalOpen(true)} />
+          <Navbar onOpenContact={() => setIsContactModalOpen(true)} onOpenPortal={navigateToPortal} />
 
           <main className="w-full">
             <Hero onOpenContact={() => setIsContactModalOpen(true)} />
@@ -701,12 +828,19 @@ export default function App() {
                           existingStories={projectStories}
                           activeProjectId={activeProjectId}
                           projectActors={projectActors}
+                          modules={interfaceModules}
+                          onAddModule={handleAddInterfaceModule}
+                          onRenameModule={handleRenameInterfaceModule}
+                          onDeleteModule={handleDeleteInterfaceModule}
+                          existingInterfaces={interfaces}
+                          dataModels={projectDataModels}
                         />
                       </section>
                       <section className="lg:col-span-7 flex flex-col gap-y-4">
                         <InterfaceFeed
                           interfaces={projectInterfaces}
                           projectActors={projectActors}
+                          modules={interfaceModules}
                           onEditInterface={(item) => { setSelectedInterface(item); setIsInterfaceModalOpen(true); }}
                           onDuplicateInterface={handleDuplicateInterface}
                           onDeleteInterface={handleDeleteInterface}
@@ -758,6 +892,38 @@ export default function App() {
                   </div>
                 </div>
               )}
+              {activePortalTab === 'files' && (
+                <div className="flex flex-col w-full">
+                  <FilesControlsBar
+                    files={projectFiles}
+                    activeProject={activeProject}
+                    onNotify={notify}
+                  />
+                  <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
+                        <FileUploader
+                          onSaveFile={handleSaveFile}
+                          onNotify={notify}
+                          activeProjectId={activeProjectId}
+                        />
+                      </section>
+                      <section className="lg:col-span-7 flex flex-col gap-y-4">
+                        <FileFeed
+                          files={projectFiles}
+                          onPreviewFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
+                          onEditFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
+                          onDeleteFile={handleDeleteFile}
+                          onDuplicateFile={handleDuplicateFile}
+                          searchQuery={fileSearchQuery}
+                          setSearchQuery={setFileSearchQuery}
+                          onNotify={notify}
+                        />
+                      </section>
+                    </div>
+                  </div>
+                </div>
+              )}
               {activePortalTab === 'backlog'   && <BacklogView stories={projectStories} />}
               {activePortalTab === 'sprints'   && <SprintsView />}
               {activePortalTab === 'docs'      && <DocsView />}
@@ -789,6 +955,7 @@ export default function App() {
             onUpdateInterface={handleUpdateInterface}
             existingStories={projectStories}
             projectActors={projectActors}
+            dataModels={projectDataModels}
           />
 
           <DataModelDetailModal
@@ -820,6 +987,14 @@ export default function App() {
             isOpen={isNewProjectModalOpen}
             onClose={() => setIsNewProjectModalOpen(false)}
             onCreateProject={handleCreateProject}
+            onNotify={notify}
+          />
+
+          <FileDetailModal
+            file={selectedFile}
+            isOpen={isFileModalOpen}
+            onClose={() => { setIsFileModalOpen(false); setSelectedFile(null); }}
+            onUpdateFile={handleUpdateFile}
             onNotify={notify}
           />
         </div>

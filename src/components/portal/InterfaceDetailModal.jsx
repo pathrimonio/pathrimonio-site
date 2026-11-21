@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import InterfaceMockupPreview from './InterfaceMockupPreview';
-import { INTERFACE_MODULE_OPTIONS } from '../../data/initialInterfaces';
+import DataUsagePicker from './DataUsagePicker';
+import DataUsageList from './DataUsageList';
+import { getEffectiveAspect } from '../../utils/aspectRatio';
+import { useImageAspect } from '../../utils/useImageAspect';
 
 export default function InterfaceDetailModal({
   item,
@@ -8,7 +11,8 @@ export default function InterfaceDetailModal({
   onClose,
   onUpdateInterface,
   existingStories = [],
-  projectActors = []
+  projectActors = [],
+  dataModels = []
 }) {
   const [formData, setFormData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -29,10 +33,14 @@ export default function InterfaceDetailModal({
     }
   }, [item]);
 
+  const detectedRatio = useImageAspect(formData?.image, formData?.imageAspect);
+
   if (!isOpen || !formData) return null;
 
   const fields = formData.fields || {};
   const currentRoles = Array.isArray(formData.roles) ? formData.roles : (formData.role ? [formData.role] : []);
+  const effectiveAspect = getEffectiveAspect(formData, detectedRatio);
+  const isPhoneLayout = effectiveAspect === 'phone';
 
   const handleToggleRole = (roleName) => {
     const updated = currentRoles.includes(roleName)
@@ -148,9 +156,13 @@ export default function InterfaceDetailModal({
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-6">
           
+          <div className={isPhoneLayout
+            ? 'grid grid-cols-1 md:grid-cols-[280px_minmax(0,1fr)] gap-6 items-start'
+            : 'flex flex-col gap-6'}>
+
           {/* 1. SECCIÓN DE IMAGEN / MOCKUP */}
           <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between text-xs text-on-surface-variant font-space">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-on-surface-variant font-space">
               <span className="flex items-center gap-1.5 font-semibold text-white">
                 <span className="material-symbols-outlined text-[16px] text-primary">image</span>
                 <span>Visualización de la Interfaz</span>
@@ -179,6 +191,7 @@ export default function InterfaceDetailModal({
               image={formData.image}
               placeholderType={formData.imagePlaceholder || 'dashboard'}
               title={formData.fullName}
+              aspectRatio={effectiveAspect}
               onImageClick={() => fileInputRef.current?.click()}
             />
           </div>
@@ -404,6 +417,45 @@ export default function InterfaceDetailModal({
                 </tbody>
               </table>
             </div>
+
+            {/* Datos utilizados por la interfaz */}
+            <div className="flex flex-col gap-2 pt-1">
+              <h4 className="text-xs font-space text-white font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[16px]">database</span>
+                <span>Datos Utilizados en esta Interfaz:</span>
+              </h4>
+              {isEditing ? (
+                <>
+                  <DataUsagePicker
+                    tables={dataModels}
+                    selected={formData.dataUsage || []}
+                    onChange={(next) => setFormData({ ...formData, dataUsage: next })}
+                  />
+                  {(formData.dataUsage || []).length > 0 ? (
+                    <DataUsageList
+                      items={formData.dataUsage}
+                      onRemove={(key) => setFormData({
+                        ...formData,
+                        dataUsage: (formData.dataUsage || []).filter(ref => ref.key !== key)
+                      })}
+                    />
+                  ) : (
+                    <span className="text-[10px] font-jakarta italic text-on-surface-variant">
+                      Aún no agregaste datos a esta interfaz.
+                    </span>
+                  )}
+                </>
+              ) : (
+                (formData.dataUsage || []).length > 0 ? (
+                  <DataUsageList items={formData.dataUsage} />
+                ) : (
+                  <span className="text-[10px] font-jakarta italic text-on-surface-variant">
+                    Sin datos asociados.
+                  </span>
+                )
+              )}
+            </div>
+          </div>
           </div>
 
           {/* 3. Panel de Aprobación Formal y Cliente */}

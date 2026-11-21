@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function Navbar({ onOpenContact }) {
+export default function Navbar({ onOpenContact, onOpenPortal }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollToSection = (id) => {
@@ -65,11 +65,12 @@ export default function Navbar({ onOpenContact }) {
         {/* Action CTAs */}
         <div className="flex items-center gap-3">
           <button 
-            onClick={() => scrollToSection('pathway')}
+            onClick={onOpenPortal}
+            title="Ir al Portal"
             className="hidden sm:inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded bg-surface-container-high border border-outline-variant hover:border-primary text-white hover:text-primary font-space text-xs font-semibold tracking-wide transition-all duration-200"
           >
-            <span className="material-symbols-outlined text-[16px] text-primary">smartphone</span>
-            <span>Ver App</span>
+            <span className="material-symbols-outlined text-[16px] text-primary">login</span>
+            <span>Ir al Portal</span>
           </button>
 
           {/* Contacto / Iniciar Proyecto */}
@@ -120,6 +121,13 @@ export default function Navbar({ onOpenContact }) {
             Visión &amp; Próximos Productos
           </button>
           <div className="pt-2 border-t border-outline-variant flex flex-col gap-2">
+            <button 
+              onClick={() => { setMobileMenuOpen(false); onOpenPortal?.(); }}
+              className="w-full py-2.5 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px] text-primary">login</span>
+              Ir al Portal
+            </button>
             <button 
               onClick={() => { setMobileMenuOpen(false); onOpenContact(); }}
               className="w-full py-2.5 rounded bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"

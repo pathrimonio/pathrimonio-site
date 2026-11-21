@@ -17,6 +17,7 @@ export default function Sidebar({
     { id: 'actors', label: 'Actores & Roles', icon: 'badge', badge: 'ROL' },
     { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX' },
     { id: 'dataModel', label: 'Modelado de Datos', icon: 'database', badge: 'DB' },
+    { id: 'files', label: 'Archivos del Proyecto', icon: 'folder_open', badge: 'FILES' },
     { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted' },
     { id: 'sprints', label: 'Sprints & Ciclos', icon: 'timelapse' },
     { id: 'docs', label: 'Documentación', icon: 'article' },

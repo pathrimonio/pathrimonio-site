@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import InterfaceCard from './InterfaceCard';
 import { 
   PLATFORM_OPTIONS, 
@@ -9,6 +9,7 @@ import {
 export default function InterfaceFeed({
   interfaces = [],
   projectActors = [],
+  modules = INTERFACE_MODULE_OPTIONS.filter(m => m !== 'Todos'),
   onEditInterface,
   onDuplicateInterface,
   onDeleteInterface,
@@ -23,6 +24,13 @@ export default function InterfaceFeed({
   const [selectedRole, setSelectedRole] = useState('Todos');
   const [sortBy, setSortBy] = useState('priority'); // 'priority' | 'id' | 'status'
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'compact'
+
+  // If the active module filter is deleted from the catalog, fall back to "Todos".
+  useEffect(() => {
+    if (selectedModule !== 'Todos' && !modules.includes(selectedModule)) {
+      setSelectedModule('Todos');
+    }
+  }, [modules, selectedModule]);
 
   // Extract all unique business role options from projectActors and existing interfaces
   const allRoleOptions = useMemo(() => {
@@ -224,7 +232,7 @@ export default function InterfaceFeed({
                 onChange={(e) => setSelectedModule(e.target.value)}
                 className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-md text-xs font-jakarta text-white focus:border-primary focus:outline-none max-w-[160px] truncate"
               >
-                {INTERFACE_MODULE_OPTIONS.map(mod => (
+                {['Todos', ...modules].map(mod => (
                   <option key={mod} value={mod}>{mod}</option>
                 ))}
               </select>

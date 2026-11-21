@@ -1,5 +1,8 @@
 import React from 'react';
 import InterfaceMockupPreview from './InterfaceMockupPreview';
+import DataUsageList from './DataUsageList';
+import { getEffectiveAspect } from '../../utils/aspectRatio';
+import { useImageAspect } from '../../utils/useImageAspect';
 
 export default function InterfaceCard({
   item,
@@ -46,6 +49,9 @@ export default function InterfaceCard({
   const statusMeta = getStatusBadge(item.status);
   const fields = item.fields || {};
   const roles = Array.isArray(item.roles) ? item.roles : (item.role ? [item.role] : []);
+  const detectedRatio = useImageAspect(item.image, item.imageAspect);
+  const effectiveAspect = getEffectiveAspect(item, detectedRatio);
+  const isPhoneLayout = effectiveAspect === 'phone';
 
   return (
     <article className="group bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-200 shadow-md hover:shadow-xl">
@@ -106,9 +112,13 @@ export default function InterfaceCard({
         </div>
       </div>
 
+      <div className={isPhoneLayout
+        ? 'grid grid-cols-1 md:grid-cols-[minmax(220px,300px)_minmax(0,1fr)] gap-5 items-start'
+        : 'flex flex-col gap-5'}>
+
       {/* ── 2. SECCIÓN VISUAL: Imagen / Wireframe de la Interfaz ── */}
       <div className="flex flex-col gap-1.5">
-        <div className="flex items-center justify-between text-xs text-on-surface-variant font-space px-1">
+        <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-on-surface-variant font-space px-1">
           <span className="flex items-center gap-1.5 font-semibold text-white/90">
             <span className="material-symbols-outlined text-[16px] text-primary">image</span>
             <span>Vista de Interfaz</span>
@@ -122,6 +132,7 @@ export default function InterfaceCard({
           image={item.image}
           placeholderType={item.imagePlaceholder || 'dashboard'}
           title={item.fullName}
+          aspectRatio={effectiveAspect}
           onImageClick={() => onEdit?.(item)}
         />
       </div>
@@ -213,6 +224,17 @@ export default function InterfaceCard({
             </tbody>
           </table>
         </div>
+
+        {Array.isArray(item.dataUsage) && item.dataUsage.length > 0 && (
+          <div className="flex flex-col gap-1.5 pt-1">
+            <span className="text-[11px] font-space text-white/90 font-semibold px-1 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[15px] text-primary">database</span>
+              <span>Datos Utilizados ({item.dataUsage.length}):</span>
+            </span>
+            <DataUsageList items={item.dataUsage} />
+          </div>
+        )}
+      </div>
       </div>
 
       {/* ── 4. Footer: Trazabilidad y Acciones ── */}

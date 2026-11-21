@@ -1,19 +1,30 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { INTERFACE_MODULE_OPTIONS, INTERFACE_STATUS_OPTIONS } from '../../data/initialInterfaces';
+import ModuleSelect from './ModuleSelect';
+import DataUsagePicker from './DataUsagePicker';
+import DataUsageList from './DataUsageList';
+import { ASPECT_RATIO_LABELS, classifyAspect } from '../../utils/aspectRatio';
 
 export default function InterfaceBuilder({
   onSaveInterface,
   onNotify,
   existingStories = [],
   activeProjectId = 'pathway',
-  projectActors = []
+  projectActors = [],
+  modules = [],
+  onAddModule,
+  onRenameModule,
+  onDeleteModule,
+  existingInterfaces = [],
+  dataModels = []
 }) {
   const [number, setNumber] = useState('4');
   const [title, setTitle] = useState('Dashboard');
-  const [module, setModule] = useState('Gestión & Monitoreo');
+  const [module, setModule] = useState(() => modules[0] || 'Sin módulo');
   const [platform, setPlatform] = useState('Web & Mobile');
   const [status, setStatus] = useState('Aprobado por Cliente');
   const [linkedStory, setLinkedStory] = useState('US-104');
+  const [imageAspect, setImageAspect] = useState(null);
+  const [dataUsage, setDataUsage] = useState([]);
 
   // Business roles assigned to this interface
   const [selectedRoles, setSelectedRoles] = useState(() => {
@@ -36,6 +47,13 @@ export default function InterfaceBuilder({
       }
     }
   }, [activeProjectId, projectActors]);
+
+  // Keep the selected module valid when the catalog changes (rename/delete).
+  useEffect(() => {
+    if (modules.length > 0 && !modules.includes(module)) {
+      setModule(modules[0]);
+    }
+  }, [modules]);
 
   const handleToggleRole = (roleName) => {
     setSelectedRoles(prev => {
@@ -88,6 +106,7 @@ export default function InterfaceBuilder({
   const handleUrlApply = () => {
     if (imageUrlInput.trim()) {
       setImagePreview(imageUrlInput.trim());
+      setImageAspect(null);
       onNotify?.('Enlace de imagen de interfaz aplicado.');
     }
   };
@@ -106,6 +125,10 @@ export default function InterfaceBuilder({
       onNotify?.('Por favor asigna al menos un rol del negocio a la interfaz.');
       return;
     }
+    if (!module) {
+      onNotify?.('Por favor selecciona o crea un módulo para la interfaz.');
+      return;
+    }
 
     const numClean = number.trim() || '1';
     const titleClean = title.trim();
@@ -122,6 +145,8 @@ export default function InterfaceBuilder({
       module,
       platform,
       status,
+      imageAspect,
+      dataUsage,
       roles: [...selectedRoles],
       image: imagePreview,
       imagePlaceholder: titleClean.toLowerCase().includes('dash') ? 'dashboard' :
@@ -154,6 +179,8 @@ export default function InterfaceBuilder({
     setDetalles('');
     setImagePreview(null);
     setImageUrlInput('');
+    setImageAspect(null);
+    setDataUsage([]);
     if (projectActors.length > 0) {
       setSelectedRoles([projectActors[0].name]);
     }
@@ -190,6 +217,8 @@ export default function InterfaceBuilder({
             setReglas('');
             setDetalles('');
             setImagePreview(null);
+            setImageAspect(null);
+            setDataUsage([]);
           }}
           className="text-on-surface-variant hover:text-white p-1 rounded transition-colors"
           title="Limpiar formulario"
@@ -334,8 +363,18 @@ export default function InterfaceBuilder({
           </span>
 
           {imagePreview ? (
-            <div className="relative rounded-lg overflow-hidden border border-outline-variant p-2 bg-surface-container flex items-center justify-center max-h-48">
-              <img src={imagePreview} alt="Preview" className="max-h-44 object-contain rounded" />
+            <div className={`relative rounded-lg overflow-hidden border border-outline-variant p-2 bg-surface-container flex items-center justify-center max-h-48 ${classifyAspect(imageAspect) === 'phone' ? 'max-w-[240px] mx-auto' : ''}`}>
+              <img
+                src={imagePreview}
+                alt="Preview"
+                onLoad={(event) => {
+                  const el = event.currentTarget;
+                  if (el.naturalWidth && el.naturalHeight) {
+                    setImageAspect(el.naturalWidth / el.naturalHeight);
+                  }
+                }}
+                className="max-h-44 object-contain rounded"
+              />
               <button
                 type="button"
                 onClick={() => setImagePreview(null)}
@@ -381,6 +420,15 @@ export default function InterfaceBuilder({
                 </button>
               </div>
             </div>
+          )}
+
+          {imageAspect && (
+            <span className="text-[10px] font-jakarta text-on-surface-variant">
+              Relación detectada automáticamente:{' '}
+              <span className="text-primary font-semibold">
+                {ASPECT_RATIO_LABELS[classifyAspect(imageAspect)] || '—'}
+              </span>
+            </span>
           )}
         </div>
 
@@ -452,19 +500,46 @@ export default function InterfaceBuilder({
           </div>
         </div>
 
-        {/* 4. Metadatos complementarios */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-outline-variant/60">
+        {/* 4. Datos utilizados por la interfaz */}
+        <div className="flex flex-col gap-2 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60">
+          <span className="text-xs font-space text-white font-semibold flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px] text-primary">database</span>
+            <span>Datos Utilizados en esta Interfaz</span>
+          </span>
+          <p className="font-jakarta text-[11px] text-on-surface-variant">
+            Busca campos del Modelado de Datos. Cada sugerencia incluye la tabla y el esquema al que pertenece.
+          </p>
+          <DataUsagePicker
+            tables={dataModels}
+            selected={dataUsage}
+            onChange={setDataUsage}
+            onNotify={onNotify}
+          />
+          {dataUsage.length > 0 ? (
+            <DataUsageList
+              items={dataUsage}
+              onRemove={(key) => setDataUsage(prev => prev.filter(ref => ref.key !== key))}
+            />
+          ) : (
+            <span className="text-[10px] font-jakarta italic text-on-surface-variant">
+              Aún no agregaste datos a esta interfaz.
+            </span>
+          )}
+        </div>
+
+        {/* 5. Metadatos complementarios */}
+        <div className="flex flex-col gap-3 pt-2 border-t border-outline-variant/60">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-space text-white">Módulo</label>
-            <select
+            <ModuleSelect
               value={module}
-              onChange={(e) => setModule(e.target.value)}
-              className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
-            >
-              {INTERFACE_MODULE_OPTIONS.filter(m => m !== 'Todos').map(mod => (
-                <option key={mod} value={mod}>{mod}</option>
-              ))}
-            </select>
+              modules={modules}
+              onChange={setModule}
+              onAdd={onAddModule}
+              onRename={onRenameModule}
+              onDelete={onDeleteModule}
+              interfaces={existingInterfaces}
+            />
           </div>
 
           <div className="flex flex-col gap-1">
