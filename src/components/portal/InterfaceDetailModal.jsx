@@ -196,234 +196,245 @@ export default function InterfaceDetailModal({
             />
           </div>
 
-          {/* 2. CUADRO CON SUS DETALLES (Exact prompt format) */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-space text-white font-bold flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[18px]">table_chart</span>
-                <span>Cuadro de Detalles de la Interfaz:</span>
-              </h3>
-              <span className="text-[11px] text-on-surface-variant font-mono">
-                {formData.fullName}
-              </span>
-            </div>
+          {/* 2. CUADRO DE DETALLES Y DATOS UTILIZADOS */}
+          <div className={isPhoneLayout ? "flex flex-col gap-5" : "grid grid-cols-1 md:grid-cols-2 gap-5 items-start"}>
+            {/* Cuadro de Detalles */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-space text-white font-bold flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-[18px]">table_chart</span>
+                  <span>Cuadro de Detalles de la Interfaz:</span>
+                </h3>
+                <span className="text-[11px] text-on-surface-variant font-mono">
+                  {formData.fullName}
+                </span>
+              </div>
 
-            <div className="overflow-hidden border border-outline-variant/80 rounded-xl bg-surface-container-lowest shadow-md">
-              <table className="w-full text-left text-xs border-collapse">
-                <thead className="bg-surface-container-high/80 text-on-surface border-b border-outline-variant/70 font-space text-[11px] uppercase tracking-wider">
-                  <tr>
-                    <th className="py-3 px-5 font-bold text-primary w-32 sm:w-44 border-r border-outline-variant/60">
-                      Campo
-                    </th>
-                    <th className="py-3 px-5 font-bold text-white">
-                      Detalle
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/40 font-jakarta text-xs">
-                  
-                  {/* Fila: Objetivo */}
-                  <tr>
-                    <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
-                      Objetivo
-                    </td>
-                    <td className="py-3.5 px-5 text-on-surface leading-relaxed">
-                      {isEditing ? (
-                        <textarea
-                          rows={2}
-                          value={fields.objetivo || ''}
-                          onChange={(e) => handleFieldChange('objetivo', e.target.value)}
-                          className="w-full p-2 bg-surface-container border border-outline-variant rounded text-xs text-white focus:border-primary focus:outline-none"
-                        />
-                      ) : (
-                        <p className="font-medium text-white/90">{fields.objetivo}</p>
-                      )}
-                    </td>
-                  </tr>
+              <div className="overflow-hidden border border-outline-variant/80 rounded-xl bg-surface-container-lowest shadow-md">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-surface-container-high/80 text-on-surface border-b border-outline-variant/70 font-space text-[11px] uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3 px-5 font-bold text-primary w-32 sm:w-44 border-r border-outline-variant/60">
+                        Campo
+                      </th>
+                      <th className="py-3 px-5 font-bold text-white">
+                        Detalle
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/40 font-jakarta text-xs">
+                    
+                    {/* Fila: Objetivo */}
+                    <tr>
+                      <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                        Objetivo
+                      </td>
+                      <td className="py-3.5 px-5 text-on-surface leading-relaxed">
+                        {isEditing ? (
+                          <textarea
+                            rows={2}
+                            value={fields.objetivo || ''}
+                            onChange={(e) => handleFieldChange('objetivo', e.target.value)}
+                            className="w-full p-2 bg-surface-container border border-outline-variant rounded text-xs text-white focus:border-primary focus:outline-none"
+                          />
+                        ) : (
+                          <p className="font-medium text-white/90">{fields.objetivo}</p>
+                        )}
+                      </td>
+                    </tr>
 
-                  {/* Fila: Contenido */}
-                  <tr>
-                    <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
-                      Contenido
-                    </td>
-                    <td className="py-3.5 px-5 text-on-surface leading-relaxed">
-                      {isEditing ? (
-                        <textarea
-                          rows={2}
-                          value={fields.contenido || ''}
-                          onChange={(e) => handleFieldChange('contenido', e.target.value)}
-                          className="w-full p-2 bg-surface-container border border-outline-variant rounded text-xs text-white focus:border-primary focus:outline-none"
-                        />
-                      ) : (
-                        <p>{fields.contenido}</p>
-                      )}
-                    </td>
-                  </tr>
+                    {/* Fila: Contenido */}
+                    <tr>
+                      <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                        Contenido
+                      </td>
+                      <td className="py-3.5 px-5 text-on-surface leading-relaxed">
+                        {isEditing ? (
+                          <textarea
+                            rows={2}
+                            value={fields.contenido || ''}
+                            onChange={(e) => handleFieldChange('contenido', e.target.value)}
+                            className="w-full p-2 bg-surface-container border border-outline-variant rounded text-xs text-white focus:border-primary focus:outline-none"
+                          />
+                        ) : (
+                          <p>{fields.contenido}</p>
+                        )}
+                      </td>
+                    </tr>
 
-                  {/* Fila: Reglas */}
-                  <tr>
-                    <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
-                      Reglas
-                    </td>
-                    <td className="py-3.5 px-5 text-on-surface leading-relaxed">
-                      {isEditing ? (
-                        <textarea
-                          rows={2}
-                          value={fields.reglas || ''}
-                          onChange={(e) => handleFieldChange('reglas', e.target.value)}
-                          className="w-full p-2 bg-surface-container border border-outline-variant rounded text-xs text-white focus:border-primary focus:outline-none"
-                        />
-                      ) : (
-                        <span className="px-2.5 py-1 rounded bg-surface-container-high border border-outline-variant text-white font-mono text-[11px] inline-block">
-                          {fields.reglas}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
+                    {/* Fila: Reglas */}
+                    <tr>
+                      <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                        Reglas
+                      </td>
+                      <td className="py-3.5 px-5 text-on-surface leading-relaxed">
+                        {isEditing ? (
+                          <textarea
+                            rows={2}
+                            value={fields.reglas || ''}
+                            onChange={(e) => handleFieldChange('reglas', e.target.value)}
+                            className="w-full p-2 bg-surface-container border border-outline-variant rounded text-xs text-white focus:border-primary focus:outline-none"
+                          />
+                        ) : (
+                          <span className="px-2.5 py-1 rounded bg-surface-container-high border border-outline-variant text-white font-mono text-[11px] inline-block">
+                            {fields.reglas}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
 
-                  {/* Fila: Detalles */}
-                  <tr>
-                    <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
-                      Detalles
-                    </td>
-                    <td className="py-3.5 px-5 text-on-surface-variant leading-relaxed">
-                      {isEditing ? (
-                        <textarea
-                          rows={2}
-                          value={fields.detalles || ''}
-                          onChange={(e) => handleFieldChange('detalles', e.target.value)}
-                          className="w-full p-2 bg-surface-container border border-outline-variant rounded text-xs text-white focus:border-primary focus:outline-none"
-                        />
-                      ) : (
-                        <p>{fields.detalles}</p>
-                      )}
-                    </td>
-                  </tr>
+                    {/* Fila: Detalles */}
+                    <tr>
+                      <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                        Detalles
+                      </td>
+                      <td className="py-3.5 px-5 text-on-surface-variant leading-relaxed">
+                        {isEditing ? (
+                          <textarea
+                            rows={2}
+                            value={fields.detalles || ''}
+                            onChange={(e) => handleFieldChange('detalles', e.target.value)}
+                            className="w-full p-2 bg-surface-container border border-outline-variant rounded text-xs text-white focus:border-primary focus:outline-none"
+                          />
+                        ) : (
+                          <p>{fields.detalles}</p>
+                        )}
+                      </td>
+                    </tr>
 
-                  {/* Fila: Roles del Negocio Asignados */}
-                  <tr>
-                    <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
-                      Roles del Negocio
-                    </td>
-                    <td className="py-3.5 px-5 text-on-surface leading-relaxed">
-                      {isEditing ? (
-                        <div className="flex flex-col gap-3">
-                          <p className="text-[11px] text-on-surface-variant font-jakarta">
-                            Selecciona los roles de usuario que interactúan con esta pantalla:
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {projectActors.map((actor) => {
-                              const isSelected = currentRoles.includes(actor.name);
-                              return (
+                    {/* Fila: Roles del Negocio Asignados */}
+                    <tr>
+                      <td className="py-3.5 px-5 font-space font-semibold text-white bg-surface-container/20 border-r border-outline-variant/40 align-top">
+                        Roles del Negocio
+                      </td>
+                      <td className="py-3.5 px-5 text-on-surface leading-relaxed">
+                        {isEditing ? (
+                          <div className="flex flex-col gap-3">
+                            <p className="text-[11px] text-on-surface-variant font-jakarta">
+                              Selecciona los roles de usuario que interactúan con esta pantalla:
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {projectActors.map((actor) => {
+                                const isSelected = currentRoles.includes(actor.name);
+                                return (
+                                  <button
+                                    type="button"
+                                    key={actor.id || actor.name}
+                                    onClick={() => handleToggleRole(actor.name)}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space transition-all cursor-pointer ${
+                                      isSelected
+                                        ? 'bg-primary/20 border border-primary text-white font-bold shadow-sm'
+                                        : 'bg-surface-container border border-outline-variant text-on-surface-variant hover:text-white'
+                                    }`}
+                                  >
+                                    <span className={`material-symbols-outlined text-[14px] ${isSelected ? 'text-primary' : 'text-on-surface-variant'}`}>
+                                      {isSelected ? 'check_circle' : (actor.avatarIcon || 'person')}
+                                    </span>
+                                    <span>{actor.name}</span>
+                                  </button>
+                                );
+                              })}
+
+                              {/* Custom roles */}
+                              {currentRoles.filter(r => !projectActors.some(a => a.name === r)).map((customRole) => (
+                                <span
+                                  key={customRole}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space bg-primary/20 border border-primary text-white font-bold shadow-sm"
+                                >
+                                  <span className="material-symbols-outlined text-primary text-[14px]">check_circle</span>
+                                  <span>{customRole}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleRole(customRole)}
+                                    className="hover:text-red-400 ml-0.5 text-on-surface-variant"
+                                    title="Remover rol"
+                                  >
+                                    <span className="material-symbols-outlined text-[13px]">close</span>
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+
+                            {/* Add custom role in edit mode */}
+                            {showAddRoleInput ? (
+                              <div className="flex items-center gap-2 pt-1">
+                                <input
+                                  type="text"
+                                  value={newRoleInput}
+                                  onChange={(e) => setNewRoleInput(e.target.value)}
+                                  placeholder="Nombre del rol del negocio..."
+                                  className="h-8 px-2.5 bg-surface-container border border-outline-variant rounded-lg text-xs font-jakarta text-white flex-1 focus:border-primary focus:outline-none"
+                                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomRole(); } }}
+                                />
                                 <button
                                   type="button"
-                                  key={actor.id || actor.name}
-                                  onClick={() => handleToggleRole(actor.name)}
-                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space transition-all cursor-pointer ${
-                                    isSelected
-                                      ? 'bg-primary/20 border border-primary text-white font-bold shadow-sm'
-                                      : 'bg-surface-container border border-outline-variant text-on-surface-variant hover:text-white'
-                                  }`}
+                                  onClick={handleAddCustomRole}
+                                  className="px-3 h-8 rounded-lg bg-primary text-on-primary font-space text-xs font-bold"
                                 >
-                                  <span className={`material-symbols-outlined text-[14px] ${isSelected ? 'text-primary' : 'text-on-surface-variant'}`}>
-                                    {isSelected ? 'check_circle' : (actor.avatarIcon || 'person')}
-                                  </span>
-                                  <span>{actor.name}</span>
+                                  Añadir
                                 </button>
-                              );
-                            })}
-
-                            {/* Custom roles */}
-                            {currentRoles.filter(r => !projectActors.some(a => a.name === r)).map((customRole) => (
-                              <span
-                                key={customRole}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space bg-primary/20 border border-primary text-white font-bold shadow-sm"
-                              >
-                                <span className="material-symbols-outlined text-primary text-[14px]">check_circle</span>
-                                <span>{customRole}</span>
                                 <button
                                   type="button"
-                                  onClick={() => handleToggleRole(customRole)}
-                                  className="hover:text-red-400 ml-0.5 text-on-surface-variant"
-                                  title="Remover rol"
+                                  onClick={() => setShowAddRoleInput(false)}
+                                  className="px-2 h-8 rounded-lg text-on-surface-variant hover:text-white text-xs font-space"
                                 >
-                                  <span className="material-symbols-outlined text-[13px]">close</span>
+                                  Cancelar
                                 </button>
-                              </span>
-                            ))}
+                              </div>
+                            ) : (
+                              <div>
+                                <button
+                                  type="button"
+                                  onClick={() => setShowAddRoleInput(true)}
+                                  className="inline-flex items-center gap-1 text-[11px] font-space text-primary hover:underline cursor-pointer"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">add</span>
+                                  <span>+ Asignar otro rol del negocio</span>
+                                </button>
+                              </div>
+                            )}
                           </div>
-
-                          {/* Add custom role in edit mode */}
-                          {showAddRoleInput ? (
-                            <div className="flex items-center gap-2 pt-1">
-                              <input
-                                type="text"
-                                value={newRoleInput}
-                                onChange={(e) => setNewRoleInput(e.target.value)}
-                                placeholder="Nombre del rol del negocio..."
-                                className="h-8 px-2.5 bg-surface-container border border-outline-variant rounded-lg text-xs font-jakarta text-white flex-1 focus:border-primary focus:outline-none"
-                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCustomRole(); } }}
-                              />
-                              <button
-                                type="button"
-                                onClick={handleAddCustomRole}
-                                className="px-3 h-8 rounded-lg bg-primary text-on-primary font-space text-xs font-bold"
-                              >
-                                Añadir
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setShowAddRoleInput(false)}
-                                className="px-2 h-8 rounded-lg text-on-surface-variant hover:text-white text-xs font-space"
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          ) : (
-                            <div>
-                              <button
-                                type="button"
-                                onClick={() => setShowAddRoleInput(true)}
-                                className="inline-flex items-center gap-1 text-[11px] font-space text-primary hover:underline cursor-pointer"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">add</span>
-                                <span>+ Asignar otro rol del negocio</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-1.5">
-                          {currentRoles.length > 0 ? (
-                            currentRoles.map((roleName, idx) => (
-                              <span
-                                key={idx}
-                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-space bg-surface-container-high border border-outline-variant text-white shadow-sm"
-                              >
-                                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                                <span className="font-semibold">{roleName}</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            {currentRoles.length > 0 ? (
+                              currentRoles.map((roleName, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-space bg-surface-container-high border border-outline-variant text-white shadow-sm"
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                  <span className="font-semibold">{roleName}</span>
+                                </span>
+                              ))
+                            ) : (
+                              <span className="italic text-on-surface-variant text-[11px]">
+                                Sin roles asignados
                               </span>
-                            ))
-                          ) : (
-                            <span className="italic text-on-surface-variant text-[11px]">
-                              Sin roles asignados
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
 
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Datos utilizados por la interfaz */}
-            <div className="flex flex-col gap-2 pt-1">
-              <h4 className="text-xs font-space text-white font-bold flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-[16px]">database</span>
-                <span>Datos Utilizados en esta Interfaz:</span>
-              </h4>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-space text-white font-bold flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-[18px]">database</span>
+                  <span>Datos Utilizados en esta Interfaz:</span>
+                </h4>
+                {Array.isArray(formData.dataUsage) && formData.dataUsage.length > 0 && (
+                  <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/30 font-semibold">
+                    {formData.dataUsage.length} {formData.dataUsage.length === 1 ? 'campo' : 'campos'}
+                  </span>
+                )}
+              </div>
+
               {isEditing ? (
                 <>
                   <DataUsagePicker
@@ -449,9 +460,12 @@ export default function InterfaceDetailModal({
                 (formData.dataUsage || []).length > 0 ? (
                   <DataUsageList items={formData.dataUsage} />
                 ) : (
-                  <span className="text-[10px] font-jakarta italic text-on-surface-variant">
-                    Sin datos asociados.
-                  </span>
+                  <div className="overflow-hidden border border-outline-variant/80 rounded-xl bg-surface-container-lowest p-4 text-center flex flex-col items-center justify-center gap-1 shadow-sm min-h-[120px]">
+                    <span className="material-symbols-outlined text-on-surface-variant/40 text-[24px]">database</span>
+                    <span className="text-xs font-jakarta italic text-on-surface-variant/70">
+                      Sin datos asociados a esta interfaz.
+                    </span>
+                  </div>
                 )
               )}
             </div>
