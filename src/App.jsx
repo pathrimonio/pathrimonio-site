@@ -30,8 +30,8 @@ import InterfaceDetailModal from './components/portal/InterfaceDetailModal';
 import NewProjectModal from './components/portal/NewProjectModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
-const STORAGE_KEY = 'pathrimonio_stories_v1';
-const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v2';
+const STORAGE_KEY = 'pathrimonio_stories_v3';
+const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v3';
 const PROJECTS_STORAGE_KEY = 'pathrimonio_projects_v1';
 const ACTIVE_PROJECT_KEY = 'pathrimonio_active_project_id_v1';
 
@@ -286,12 +286,18 @@ export default function App() {
   // Stories scoped to active project
   const projectStories = activeProjectId === 'all'
     ? stories
-    : stories.filter(s => s.projectId === activeProjectId || (!s.projectId && activeProjectId === 'core-hub'));
+    : stories.filter(s => {
+        const pId = s.projectId || (s.id === 'US-301' ? 'portal-admin' : (s.id.startsWith('US-1') ? 'core-hub' : 'pathway'));
+        return pId === activeProjectId;
+      });
 
   // Interfaces scoped to active project
   const projectInterfaces = activeProjectId === 'all'
     ? interfaces
-    : interfaces.filter(i => i.projectId === activeProjectId || (!i.projectId && activeProjectId === 'pathway'));
+    : interfaces.filter(i => {
+        const pId = i.projectId || (i.id === 'INT-04' ? 'portal-admin' : i.id === 'INT-07' ? 'core-hub' : 'pathway');
+        return pId === activeProjectId;
+      });
 
   // ── Filtered stories for feed
   const filteredStories = projectStories.filter(story => {
