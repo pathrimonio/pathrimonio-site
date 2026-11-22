@@ -308,8 +308,23 @@ export async function deleteInterface(id) {
 export async function saveDataModel(model, validStoryIds, validInterfaceIds) {
   const db = requireSupabase();
 
+  // Reuse existing ID if the table already exists in this project to prevent unique constraint conflicts
+  let targetId = model.id;
+  try {
+    const { data: existing } = await db
+      .from('data_models')
+      .select('id')
+      .eq('project_id', model.projectId)
+      .eq('table_name', model.tableName)
+      .maybeSingle();
+
+    if (existing?.id) {
+      targetId = existing.id;
+    }
+  } catch (_) {}
+
   check(await db.from('data_models').upsert({
-    id: model.id,
+    id: targetId,
     project_id: model.projectId,
     table_name: model.tableName,
     name: model.name,
@@ -328,13 +343,13 @@ export async function saveDataModel(model, validStoryIds, validInterfaceIds) {
     author: orNull(model.author),
     approved_at: dateOnly(model.approvedAt),
     version: orNull(model.version)
-  }, { onConflict: 'id' }));
+  }, { onConflict: 'project_id, table_name' }));
 
-  check(await db.from('data_model_attributes').delete().eq('data_model_id', model.id));
+  check(await db.from('data_model_attributes').delete().eq('data_model_id', targetId));
 
   const attributes = (model.attributes || []).map((attribute, index) => ({
-    data_model_id: model.id,
-    id: String(attribute.id),
+    data_model_id: targetId,
+    id: String(attribute.id || `attr-${index + 1}`),
     name: attribute.name,
     data_type: attribute.type || 'TEXT',
     is_primary: Boolean(attribute.isPrimary),
