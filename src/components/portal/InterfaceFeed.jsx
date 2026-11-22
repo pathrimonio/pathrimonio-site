@@ -16,7 +16,8 @@ export default function InterfaceFeed({
   onQuickStatusChange,
   onToggleCriterion,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
+  builderRoles = []
 }) {
   const [selectedPlatform, setSelectedPlatform] = useState('Todas');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
@@ -32,13 +33,20 @@ export default function InterfaceFeed({
     }
   }, [modules, selectedModule]);
 
-  // Extract all unique business role options from projectActors and existing interfaces
+  // Extract all unique business role options from projectActors, existing interfaces, and builder roles
   const allRoleOptions = useMemo(() => {
     const actorNames = projectActors.map(a => a.name);
     const interfaceRoles = interfaces.flatMap(i => Array.isArray(i.roles) ? i.roles : (i.role ? [i.role] : []));
-    const set = new Set([...actorNames, ...interfaceRoles].filter(Boolean));
+    const set = new Set([...actorNames, ...interfaceRoles, ...(builderRoles || [])].filter(Boolean));
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [projectActors, interfaces]);
+  }, [projectActors, interfaces, builderRoles]);
+
+  // If the active role filter is no longer available, fall back to "Todos".
+  useEffect(() => {
+    if (selectedRole !== 'Todos' && !allRoleOptions.includes(selectedRole)) {
+      setSelectedRole('Todos');
+    }
+  }, [allRoleOptions, selectedRole]);
 
   // Priority weights
   const priorityWeight = {

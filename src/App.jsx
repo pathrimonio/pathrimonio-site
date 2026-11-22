@@ -218,6 +218,13 @@ export default function App() {
   // ── Preselected Role from Collaborator Link or Selection
   const [preselectedRoleForStory, setPreselectedRoleForStory] = useState(null);
 
+  // ── Builder Roles for immediate feed filter synchronization
+  const [builderRoles, setBuilderRoles] = useState([]);
+
+  useEffect(() => {
+    setBuilderRoles([]);
+  }, [activeProjectId]);
+
   // ── Detail modals
   const [selectedStory, setSelectedStory] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -757,6 +764,38 @@ export default function App() {
     notify(`Rol "${actor.name}" seleccionado. Completa los detalles de la Historia de Usuario.`);
   };
 
+  const handleAddRoleFromInterface = (roleName) => {
+    const trimmed = roleName?.trim();
+    if (!trimmed) return;
+    const pId = activeProjectId === 'all' ? 'pathway' : activeProjectId;
+    setBuilderRoles(prev => prev.includes(trimmed) ? prev : [...prev, trimmed]);
+    setActors(prev => {
+      const exists = prev.some(a =>
+        (a.projectId === pId || (pId === 'pathway' && !a.projectId)) &&
+        a.name.toLowerCase() === trimmed.toLowerCase()
+      );
+      if (exists) return prev;
+      const newActor = {
+        id: `ACT-${Date.now().toString().slice(-4)}${Math.floor(10 + Math.random() * 90)}`,
+        projectId: pId,
+        name: trimmed,
+        category: 'Operaciones & Negocio',
+        avatarIcon: 'badge',
+        color: 'primary',
+        description: 'Rol del negocio registrado desde especificación de interfaces.',
+        permissionLevel: 'Operativo / Escritura',
+        systemAreas: [],
+        assignedWorker: '',
+        assignedWorkerName: '',
+        isPrimaryRole: false,
+        status: 'Activo',
+        createdAt: new Date().toISOString().split('T')[0]
+      };
+      persist(saveActor(newActor), 'actor');
+      return [newActor, ...prev];
+    });
+  };
+
   // ── Project File Handlers
   const handleSaveFile = (newFile) => {
     setFiles(prev => [newFile, ...prev]);
@@ -1019,6 +1058,8 @@ export default function App() {
                           onDeleteModule={handleDeleteInterfaceModule}
                           existingInterfaces={interfaces}
                           dataModels={projectDataModels}
+                          onAddRole={handleAddRoleFromInterface}
+                          onRolesChange={setBuilderRoles}
                         />
                       </section>
                       <section className="lg:col-span-7 flex flex-col gap-y-4">
@@ -1033,6 +1074,7 @@ export default function App() {
                           onToggleCriterion={handleToggleVisualCriterion}
                           searchQuery={interfaceSearchQuery}
                           setSearchQuery={setInterfaceSearchQuery}
+                          builderRoles={builderRoles}
                         />
                       </section>
                     </div>
@@ -1141,6 +1183,7 @@ export default function App() {
             existingStories={projectStories}
             projectActors={projectActors}
             dataModels={projectDataModels}
+            onAddRole={handleAddRoleFromInterface}
           />
 
           <DataModelDetailModal

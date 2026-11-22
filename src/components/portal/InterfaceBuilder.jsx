@@ -294,45 +294,39 @@ export default function InterfaceBuilder({
 
           {/* Role Chips Toggle Group */}
           <div className="flex flex-wrap gap-1.5 pt-1">
-            {projectActors.map((actor) => {
-              const isSelected = selectedRoles.includes(actor.name);
-              return (
-                <button
-                  type="button"
-                  key={actor.id || actor.name}
-                  onClick={() => handleToggleRole(actor.name)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-primary/20 border border-primary text-white font-bold shadow-sm'
-                      : 'bg-surface-container border border-outline-variant text-on-surface-variant hover:text-white hover:border-outline-variant/80'
-                  }`}
-                  title={`${actor.category} — ${actor.description || ''}`}
-                >
-                  <span className={`material-symbols-outlined text-[14px] ${isSelected ? 'text-primary' : 'text-on-surface-variant'}`}>
-                    {isSelected ? 'check_circle' : (actor.avatarIcon || 'person')}
-                  </span>
-                  <span>{actor.name}</span>
-                </button>
-              );
-            })}
-
-            {/* Any selected custom roles that are not in projectActors */}
-            {selectedRoles.filter(r => !projectActors.some(a => a.name === r)).map((customRole) => (
+            {/* Roles Asignados a esta Interfaz */}
+            {selectedRoles.map((roleName) => (
               <span
-                key={customRole}
+                key={roleName}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space bg-primary/20 border border-primary text-white font-bold shadow-sm"
               >
                 <span className="material-symbols-outlined text-primary text-[14px]">check_circle</span>
-                <span>{customRole}</span>
+                <span>{roleName}</span>
                 <button
                   type="button"
-                  onClick={() => handleToggleRole(customRole)}
-                  className="hover:text-red-400 ml-0.5 text-on-surface-variant"
+                  onClick={() => handleToggleRole(roleName)}
+                  className="hover:text-red-400 ml-0.5 text-on-surface-variant transition-colors"
                   title="Remover rol"
                 >
                   <span className="material-symbols-outlined text-[13px]">close</span>
                 </button>
               </span>
+            ))}
+
+            {/* Roles disponibles en el proyecto no asignados aún */}
+            {projectActors.filter(a => !selectedRoles.includes(a.name)).map((actor) => (
+              <button
+                type="button"
+                key={actor.id || actor.name}
+                onClick={() => handleToggleRole(actor.name)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space bg-surface-container border border-outline-variant text-on-surface-variant hover:text-white hover:border-outline-variant/80 transition-all cursor-pointer"
+                title={`${actor.category} — ${actor.description || ''}`}
+              >
+                <span className="material-symbols-outlined text-[14px] text-on-surface-variant">
+                  {actor.avatarIcon || 'person'}
+                </span>
+                <span>{actor.name}</span>
+              </button>
             ))}
           </div>
 

@@ -12,7 +12,8 @@ export default function InterfaceDetailModal({
   onUpdateInterface,
   existingStories = [],
   projectActors = [],
-  dataModels = []
+  dataModels = [],
+  onAddRole
 }) {
   const [formData, setFormData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -61,6 +62,7 @@ export default function InterfaceDetailModal({
         roles: [...currentRoles, trimmed]
       });
     }
+    onAddRole?.(trimmed);
     setNewRoleInput('');
     setShowAddRoleInput(false);
   };
@@ -335,44 +337,39 @@ export default function InterfaceDetailModal({
                               Selecciona los roles de usuario que interactúan con esta pantalla:
                             </p>
                             <div className="flex flex-wrap gap-1.5">
-                              {projectActors.map((actor) => {
-                                const isSelected = currentRoles.includes(actor.name);
-                                return (
-                                  <button
-                                    type="button"
-                                    key={actor.id || actor.name}
-                                    onClick={() => handleToggleRole(actor.name)}
-                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space transition-all cursor-pointer ${
-                                      isSelected
-                                        ? 'bg-primary/20 border border-primary text-white font-bold shadow-sm'
-                                        : 'bg-surface-container border border-outline-variant text-on-surface-variant hover:text-white'
-                                    }`}
-                                  >
-                                    <span className={`material-symbols-outlined text-[14px] ${isSelected ? 'text-primary' : 'text-on-surface-variant'}`}>
-                                      {isSelected ? 'check_circle' : (actor.avatarIcon || 'person')}
-                                    </span>
-                                    <span>{actor.name}</span>
-                                  </button>
-                                );
-                              })}
-
-                              {/* Custom roles */}
-                              {currentRoles.filter(r => !projectActors.some(a => a.name === r)).map((customRole) => (
+                              {/* Roles Asignados a esta pantalla */}
+                              {currentRoles.map((roleName) => (
                                 <span
-                                  key={customRole}
+                                  key={roleName}
                                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space bg-primary/20 border border-primary text-white font-bold shadow-sm"
                                 >
                                   <span className="material-symbols-outlined text-primary text-[14px]">check_circle</span>
-                                  <span>{customRole}</span>
+                                  <span>{roleName}</span>
                                   <button
                                     type="button"
-                                    onClick={() => handleToggleRole(customRole)}
-                                    className="hover:text-red-400 ml-0.5 text-on-surface-variant"
+                                    onClick={() => handleToggleRole(roleName)}
+                                    className="hover:text-red-400 ml-0.5 text-on-surface-variant transition-colors"
                                     title="Remover rol"
                                   >
                                     <span className="material-symbols-outlined text-[13px]">close</span>
                                   </button>
                                 </span>
+                              ))}
+
+                              {/* Roles disponibles en el proyecto no asignados */}
+                              {projectActors.filter(a => !currentRoles.includes(a.name)).map((actor) => (
+                                <button
+                                  type="button"
+                                  key={actor.id || actor.name}
+                                  onClick={() => handleToggleRole(actor.name)}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-space bg-surface-container border border-outline-variant text-on-surface-variant hover:text-white transition-all cursor-pointer"
+                                  title={`${actor.category} — ${actor.description || ''}`}
+                                >
+                                  <span className="material-symbols-outlined text-[14px] text-on-surface-variant">
+                                    {actor.avatarIcon || 'person'}
+                                  </span>
+                                  <span>{actor.name}</span>
+                                </button>
                               ))}
                             </div>
 
