@@ -1,3 +1,5 @@
+import { SMATAD_INTERFACES } from './smatadInterfaces.js';
+
 export const PLATFORM_OPTIONS = [
   "Todas",
   "Web & Mobile",
@@ -15,6 +17,10 @@ export const INTERFACE_STATUS_OPTIONS = [
 
 export const INTERFACE_MODULE_OPTIONS = [
   "Todos",
+  "Operación & Tránsito en Ruta",
+  "Documentación & Validación OCR",
+  "Recursos, Coordinación & Capacidad",
+  "Control Operativo, Tiempos & Agentes",
   "Gestión & Monitoreo",
   "Metas & Hábitos (Pathway)",
   "Autenticación & Acceso",
@@ -399,5 +405,8 @@ export const INITIAL_INTERFACES = [
     reviewedBy: "Auditor Legal",
     approvedAt: "2026-11-15",
     version: "v2.4"
-  }
+  },
+
+  // ── Proyecto: SMATAD — Transporte & Asignación Dinámica (smatad) ──
+  ...SMATAD_INTERFACES
 ];

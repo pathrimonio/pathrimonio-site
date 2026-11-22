@@ -365,7 +365,7 @@ export default function InterfaceBuilder({
         
         {/* 1. Módulo, Número, Nombre e Historia vinculada */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-          <div className="sm:col-span-4 flex flex-col gap-1">
+          <div className="sm:col-span-3 flex flex-col gap-1">
             <label className="text-xs font-space text-white">Módulo</label>
             <ModuleSelect
               value={module}
@@ -377,10 +377,13 @@ export default function InterfaceBuilder({
               interfaces={existingInterfaces}
             />
           </div>
-          <div className="sm:col-span-2 flex flex-col gap-1">
-            <label className="text-xs font-space text-white flex items-center justify-between">
-              <span>Número</span>
-              <span className="text-[9px] font-mono text-primary/80">AUTO</span>
+          <div className="sm:col-span-1 flex flex-col gap-1">
+            <label
+              className="text-[10px] font-space text-white flex items-center justify-between gap-1"
+              title="Número automático"
+            >
+              <span className="truncate">N°</span>
+              <span className="hidden md:inline text-[8px] font-mono text-primary/80">AUTO</span>
             </label>
             <input
               type="text"
@@ -389,13 +392,13 @@ export default function InterfaceBuilder({
               tabIndex={-1}
               aria-readonly="true"
               title="Se asigna automáticamente según el último número del proyecto"
-              className="w-full h-9 px-2.5 bg-surface-container-lowest/60 border border-outline-variant rounded-lg text-xs font-space font-bold text-primary cursor-default focus:outline-none"
+              className="w-full h-9 px-1.5 bg-surface-container-lowest/60 border border-outline-variant rounded-lg text-xs font-space font-bold text-primary text-center cursor-default focus:outline-none"
             />
           </div>
-          <div className="sm:col-span-6 flex flex-col gap-1">
+          <div className="sm:col-span-4 flex flex-col gap-1">
             <label className="text-xs font-space text-white flex items-center justify-between">
               <span>Nombre de la Interfaz *</span>
-              <span className="text-[10px] text-on-surface-variant">Ej: Dashboard</span>
+              <span className="hidden md:inline text-[10px] text-on-surface-variant">Ej: Dashboard</span>
             </label>
             <input
               type="text"
@@ -405,7 +408,7 @@ export default function InterfaceBuilder({
               className="w-full h-9 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
             />
           </div>
-          <div className="sm:col-span-6 sm:col-start-7 flex flex-col gap-1">
+          <div className="sm:col-span-4 flex flex-col gap-1">
             <label className="text-xs font-space text-white">Historia de Usuario Vinculada</label>
             <select
               value={linkedStory}

@@ -32,7 +32,11 @@ export const SYSTEM_AREA_OPTIONS = [
   "Autenticación & KYC",
   "Pasarela de Pagos",
   "Reportes de Impacto",
-  "Configuración & Permisos"
+  "Configuración & Permisos",
+  "Operación & Tránsito en Ruta",
+  "Documentación & Validación OCR",
+  "Recursos, Coordinación & Capacidad",
+  "Control Operativo, Tiempos & Agentes"
 ];
 
 export const INITIAL_ACTORS = [
@@ -217,6 +221,128 @@ export const INITIAL_ACTORS = [
     assignedWorkerName: "Comité de Auditoría de Impacto",
     status: "Activo",
     createdAt: "2026-11-16",
+    isPrimaryRole: false
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // PROYECTO: SMATAD — id: "smatad"
+  // ══════════════════════════════════════════════════════════
+  {
+    id: "ACT-SMATAD-01",
+    projectId: "smatad",
+    name: "Conductor / Transportista",
+    category: "Personal de Campo / Brigadas",
+    avatarIcon: "local_shipping",
+    color: "sky",
+    description: "Piloto profesional certificado encargado de la conducción del tracto-camión, cotejo de guías, lectura OCR de GRE y confirmación de rampa en ruta.",
+    permissionLevel: "Operativo / Escritura",
+    systemAreas: [
+      "Operación & Tránsito en Ruta",
+      "Documentación & Validación OCR",
+      "Recursos, Coordinación & Capacidad"
+    ],
+    assignedWorker: "carlos.mendoza@transporte.pe",
+    assignedWorkerName: "Carlos Mendoza (Conductor A-IIIc)",
+    status: "Activo",
+    createdAt: "2026-09-05",
+    isPrimaryRole: true
+  },
+  {
+    id: "ACT-SMATAD-02",
+    projectId: "smatad",
+    name: "Operador de Tráfico",
+    category: "Operaciones & Ventas",
+    avatarIcon: "alt_route",
+    color: "amber",
+    description: "Responsable del centro de control logístico, monitoreo satelital en vivo, creación de servicios y resolución de contingencias de ruta (GEC).",
+    permissionLevel: "Operativo / Escritura",
+    systemAreas: [
+      "Operación & Tránsito en Ruta",
+      "Control Operativo, Tiempos & Agentes",
+      "Recursos, Coordinación & Capacidad"
+    ],
+    assignedWorker: "trafico@smatad.pe",
+    assignedWorkerName: "Mesa de Tráfico & Monitoreo",
+    status: "Activo",
+    createdAt: "2026-09-05",
+    isPrimaryRole: false
+  },
+  {
+    id: "ACT-SMATAD-03",
+    projectId: "smatad",
+    name: "Supervisor de Rampa",
+    category: "Operaciones & Ventas",
+    avatarIcon: "warehouse",
+    color: "emerald",
+    description: "Encargado de la supervisión de garita, balanza, acople en rampa, inspección de precintos de seguridad y control estricto de SLA (< 60 min).",
+    permissionLevel: "Operativo / Escritura",
+    systemAreas: [
+      "Recursos, Coordinación & Capacidad",
+      "Control Operativo, Tiempos & Agentes",
+      "Documentación & Validación OCR"
+    ],
+    assignedWorker: "rampa.callao@smatad.pe",
+    assignedWorkerName: "Jefe de Rampa Terminal Callao",
+    status: "Activo",
+    createdAt: "2026-09-05",
+    isPrimaryRole: false
+  },
+  {
+    id: "ACT-SMATAD-04",
+    projectId: "smatad",
+    name: "Gestor de Flota",
+    category: "Administración & Gerencia",
+    avatarIcon: "directions_car",
+    color: "purple",
+    description: "Administra la disponibilidad de unidades motrices, remolques, calendarios de mantenimiento, revisiones técnicas y programación TPA.",
+    permissionLevel: "Aprobador / PO",
+    systemAreas: [
+      "Control Operativo, Tiempos & Agentes",
+      "Recursos, Coordinación & Capacidad",
+      "Operación & Tránsito en Ruta"
+    ],
+    assignedWorker: "flota@smatad.pe",
+    assignedWorkerName: "Gerencia de Flota Pesada",
+    status: "Activo",
+    createdAt: "2026-09-05",
+    isPrimaryRole: false
+  },
+  {
+    id: "ACT-SMATAD-05",
+    projectId: "smatad",
+    name: "Administrador del Sistema",
+    category: "Administración & Gerencia",
+    avatarIcon: "admin_panel_settings",
+    color: "primary",
+    description: "Control global de la plataforma, parametrización de reglas de agentes autónomos, auditoría inmutable de bitácoras y gestión de accesos.",
+    permissionLevel: "Acceso Total (Admin)",
+    systemAreas: [
+      "Control Operativo, Tiempos & Agentes",
+      "Configuración & Permisos",
+      "Operación & Tránsito en Ruta"
+    ],
+    assignedWorker: "admin@smatad.pe",
+    assignedWorkerName: "Administrador General SMATAD",
+    status: "Activo",
+    createdAt: "2026-09-05",
+    isPrimaryRole: false
+  },
+  {
+    id: "ACT-SMATAD-06",
+    projectId: "smatad",
+    name: "Estibador Certificado",
+    category: "Personal de Campo / Brigadas",
+    avatarIcon: "groups",
+    color: "cyan",
+    description: "Personal auxiliar capacitado con certificación en EPP y manejo de carga pesada asignado a cuadrillas en rampa para carga y descarga ágil.",
+    permissionLevel: "Usuario Móvil / B2C",
+    systemAreas: [
+      "Recursos, Coordinación & Capacidad"
+    ],
+    assignedWorker: "estiba.cuadrilla@smatad.pe",
+    assignedWorkerName: "Coordinador de Cuadrillas de Estiba",
+    status: "Activo",
+    createdAt: "2026-09-05",
     isPrimaryRole: false
   }
 ];

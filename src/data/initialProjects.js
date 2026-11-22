@@ -40,6 +40,26 @@ export const INITIAL_PROJECTS = [
     client: "Empresa Aliada",
     version: "v0.8.2",
     modules: ["Gestión & Monitoreo", "Inventario & Alertas", "Finanzas & Reportes", "Configuración"]
+  },
+  {
+    id: "smatad",
+    name: "SMATAD — Transporte & Asignación Dinámica",
+    shortName: "SMATAD",
+    subtitle: "Sistema Móvil y Administrativo de Transporte y Asignación Dinámica",
+    description: "Gestión integral de transporte de carga pesada, trazabilidad satelital en tiempo real, digitalización de guías GRE mediante OCR y orquestación inteligente de recursos con agentes autónomos.",
+    category: "App Móvil Nativa",
+    icon: "local_shipping",
+    color: "blue",
+    status: "Sprint 3 Activo",
+    client: "SMATAD Logística S.A.C.",
+    version: "v1.2.0",
+    modules: [
+      "Operación & Tránsito en Ruta",
+      "Documentación & Validación OCR",
+      "Recursos, Coordinación & Capacidad",
+      "Control Operativo, Tiempos & Agentes",
+      "Autenticación & Acceso"
+    ]
   }
 ];
 
@@ -52,6 +72,7 @@ export const PROJECT_CATEGORIES = [
 ];
 
 export const PROJECT_ICONS = [
+  "local_shipping",
   "route",
   "dashboard",
   "account_balance",
