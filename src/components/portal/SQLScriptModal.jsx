@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   STORAGE_TARGET_OPTIONS, 
   DATA_MODULE_OPTIONS, 
@@ -67,16 +67,29 @@ export default function SQLScriptModal({
   activeProject,
   onNotify
 }) {
+  const availableModules = (activeProject?.modules && activeProject.modules.length > 0)
+    ? activeProject.modules
+    : DATA_MODULE_OPTIONS.filter(m => m !== 'Todos');
+
+  const defaultModule = availableModules[0] || 'General / Modelo Central';
+
   const [sqlText, setSqlText] = useState(SAMPLE_SQL_SCRIPT);
   const [targetStorage, setTargetStorage] = useState(
     activeProject?.id === 'pathway' 
       ? 'SQLite Cifrado (Offline-First Móvil)' 
       : 'PostgreSQL (Supabase Cloud)'
   );
-  const [targetModule, setTargetModule] = useState('Gestión & Monitoreo');
+  const [targetModule, setTargetModule] = useState(defaultModule);
   const [parsedPreview, setParsedPreview] = useState(null);
   const [activeTab, setActiveTab] = useState('editor'); // 'editor' | 'preview'
   const fileInputRef = useRef(null);
+
+  // Sync module default if active project changes
+  useEffect(() => {
+    if (availableModules.length > 0 && !availableModules.includes(targetModule)) {
+      setTargetModule(availableModules[0]);
+    }
+  }, [activeProject]);
 
   if (!isOpen) return null;
 
@@ -122,15 +135,22 @@ export default function SQLScriptModal({
     }
   };
 
-  // Confirm import into state
+  // Confirm import into state (Direct single-click import supported from either editor or preview)
   const handleConfirmImport = () => {
-    if (!parsedPreview || parsedPreview.length === 0) {
-      handleParse();
+    const tablesToImport = parseSQLScript(
+      sqlText,
+      activeProject?.id || 'pathway',
+      targetModule,
+      targetStorage
+    );
+
+    if (!tablesToImport || tablesToImport.length === 0) {
+      onNotify?.('No se detectaron sentencias CREATE TABLE válidas en el script SQL.');
       return;
     }
 
-    onImportTables?.(parsedPreview);
-    onNotify?.(`¡${parsedPreview.length} entidades de datos importadas correctamente al proyecto "${activeProject?.name}"!`);
+    onImportTables?.(tablesToImport);
+    onNotify?.(`¡${tablesToImport.length} entidades de datos importadas correctamente al proyecto "${activeProject?.name || 'Software Activo'}"!`);
     onClose();
   };
 
@@ -228,7 +248,7 @@ export default function SQLScriptModal({
                 onChange={(e) => setTargetModule(e.target.value)}
                 className="bg-transparent text-white focus:outline-none cursor-pointer max-w-[140px] truncate"
               >
-                {DATA_MODULE_OPTIONS.filter(m => m !== 'Todos').map(mod => (
+                {availableModules.map(mod => (
                   <option key={mod} value={mod} className="bg-surface-container-highest text-white">{mod}</option>
                 ))}
               </select>

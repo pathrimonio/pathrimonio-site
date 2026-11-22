@@ -18,7 +18,16 @@ export default function DataModelFeed({
   const [selectedStorage, setSelectedStorage] = useState('Todos');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [selectedModule, setSelectedModule] = useState('Todos');
-  const [sortBy, setSortBy] = useState('name'); // 'name' | 'attributes' | 'status'
+  const [sortBy, setSortBy] = useState('recent'); // 'recent' | 'name' | 'attributes' | 'status'
+
+  const handleClearAllFilters = () => {
+    setSelectedStorage('Todos');
+    setSelectedStatus('Todos');
+    setSelectedModule('Todos');
+    setSearchQuery?.('');
+  };
+
+  const newlyImportedCount = tables.filter(t => t.isNewlyImported || t.author === 'Importador SQL').length;
 
   // Filtering
   const filteredTables = tables.filter(table => {
@@ -52,6 +61,9 @@ export default function DataModelFeed({
 
   // Sorting
   const sortedTables = [...filteredTables].sort((a, b) => {
+    if (sortBy === 'recent') {
+      return (b.isNewlyImported ? 1 : 0) - (a.isNewlyImported ? 1 : 0);
+    }
     if (sortBy === 'name') {
       return a.tableName.localeCompare(b.tableName);
     }
@@ -154,6 +166,7 @@ export default function DataModelFeed({
               onChange={(e) => setSortBy(e.target.value)}
               className="bg-surface-container-highest text-white px-2.5 py-1.5 rounded-xl border border-outline-variant font-medium focus:outline-none cursor-pointer"
             >
+              <option value="recent" className="bg-surface-container-highest text-white">Más Recientes / Importadas</option>
               <option value="name" className="bg-surface-container-highest text-white">Nombre de Tabla</option>
               <option value="attributes" className="bg-surface-container-highest text-white">Nº de Atributos</option>
               <option value="status" className="bg-surface-container-highest text-white">Estado de Arquitectura</option>
@@ -168,6 +181,16 @@ export default function DataModelFeed({
         <span className="text-on-surface-variant">
           Mostrando <strong className="text-white">{sortedTables.length}</strong> de {tables.length} entidades de datos
         </span>
+        {(selectedStorage !== 'Todos' || selectedStatus !== 'Todos' || selectedModule !== 'Todos' || searchQuery) && (
+          <button
+            type="button"
+            onClick={handleClearAllFilters}
+            className="text-[11px] text-primary hover:underline flex items-center gap-1 font-semibold"
+          >
+            <span className="material-symbols-outlined text-[13px]">filter_alt_off</span>
+            <span>Limpiar filtros</span>
+          </button>
+        )}
       </div>
 
       {/* ── Tables List ── */}
@@ -194,8 +217,20 @@ export default function DataModelFeed({
             No se encontraron tablas con los filtros seleccionados
           </h3>
           <p className="font-jakarta text-xs text-on-surface-variant max-w-md">
-            Prueba ajustando los filtros de motor, módulo o el término de búsqueda, o diseña una nueva tabla usando el panel de la izquierda.
+            {tables.length > 0
+              ? `Hay ${tables.length} entidades en este proyecto, pero los filtros activos (motor, módulo o búsqueda) las están ocultando.`
+              : 'No hay entidades de datos registradas en este proyecto todavía.'}
           </p>
+          {tables.length > 0 && (
+            <button
+              type="button"
+              onClick={handleClearAllFilters}
+              className="mt-2 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-surface font-space font-bold text-xs transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[16px]">filter_alt_off</span>
+              <span>Mostrar Todas las Entidades ({tables.length})</span>
+            </button>
+          )}
         </div>
       )}
 

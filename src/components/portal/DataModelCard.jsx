@@ -116,6 +116,12 @@ export default function DataModelCard({
               <span className="font-space text-base sm:text-lg font-bold text-white tracking-tight truncate">
                 {table.name}
               </span>
+              {(table.isNewlyImported || table.author === 'Importador SQL') && (
+                <span className="inline-flex items-center gap-1 font-mono text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold shadow-sm">
+                  <span className="material-symbols-outlined text-[13px]">terminal</span>
+                  <span>Importada por Script SQL</span>
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="font-space text-[11px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-medium">

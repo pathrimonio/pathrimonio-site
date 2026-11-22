@@ -958,7 +958,7 @@ export function parseSQLScript(
 
   // 1. Extraer comentarios COMMENT ON COLUMN
   const columnComments = {};
-  const commentRegex = /COMMENT\s+ON\s+COLUMN\s+(?:[a-zA-Z0-9_"]+\.)?([a-zA-Z0-9_"]+)\.([a-zA-Z0-9_"]+)\s+IS\s+'((?:[^']|'')*)'/gi;
+  const commentRegex = /COMMENT\s+ON\s+COLUMN\s+(?:[a-zA-Z0-9_"`\[\]]+\.)?([a-zA-Z0-9_"`\[\]]+)\.([a-zA-Z0-9_"`\[\]]+)\s+IS\s+'((?:[^']|'')*)'/gi;
   let commentMatch;
   while ((commentMatch = commentRegex.exec(sqlString)) !== null) {
     const table = commentMatch[1].replace(/["`\[\]]/g, '').toLowerCase();
@@ -970,7 +970,7 @@ export function parseSQLScript(
 
   // 2. Extraer comentarios COMMENT ON TABLE
   const tableComments = {};
-  const tableCommentRegex = /COMMENT\s+ON\s+TABLE\s+(?:[a-zA-Z0-9_"]+\.)?([a-zA-Z0-9_"]+)\s+IS\s+'((?:[^']|'')*)'/gi;
+  const tableCommentRegex = /COMMENT\s+ON\s+TABLE\s+(?:[a-zA-Z0-9_"`\[\]]+\.)?([a-zA-Z0-9_"`\[\]]+)\s+IS\s+'((?:[^']|'')*)'/gi;
   let tCommentMatch;
   while ((tCommentMatch = tableCommentRegex.exec(sqlString)) !== null) {
     const table = tCommentMatch[1].replace(/["`\[\]]/g, '').toLowerCase();
@@ -983,8 +983,8 @@ export function parseSQLScript(
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/--.*$/gm, '');
 
-  // 4. Buscar sentencias CREATE TABLE
-  const createTableRegex = /CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+(?:[a-zA-Z0-9_"]+\.)?([a-zA-Z0-9_"`\[\]]+)\s*\(([\s\S]*?)\)(?:\s*;|\s*$)/gi;
+  // 4. Buscar sentencias CREATE TABLE (soporta esquemas [dbo]., "public"., nucleo., etc. y opciones finales)
+  const createTableRegex = /CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+(?:[a-zA-Z0-9_"`\[\]]+\.)?([a-zA-Z0-9_"`\[\]]+)\s*\(([\s\S]*?)\)(?:[^;]*?)(?:;|\n\s*(?:CREATE|ALTER|DROP|COMMENT|INSERT)|$)/gi;
   const parsedTables = [];
   let tableMatch;
 
@@ -1131,7 +1131,7 @@ export function parseSQLScript(
 
     if (attributes.length > 0) {
       parsedTables.push({
-        id: `TBL-${Date.now().toString().slice(-4)}${parsedTables.length}`,
+        id: `TBL-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}-${parsedTables.length + 1}`,
         projectId: defaultProjectId === 'all' ? 'pathway' : defaultProjectId,
         tableName: rawTableName,
         name: cleanTitle,
@@ -1148,6 +1148,7 @@ export function parseSQLScript(
         linkedStory: null,
         linkedInterface: null,
         author: 'Importador SQL',
+        isNewlyImported: true,
         approvedAt: new Date().toISOString().split('T')[0],
         version: 'v1.0',
         attributes

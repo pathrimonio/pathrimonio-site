@@ -705,25 +705,72 @@ export default function App() {
 
   const handleImportTables = (newTables = []) => {
     if (!newTables || newTables.length === 0) return;
-    const projectId = activeProjectId === 'all' ? 'pathway' : activeProjectId;
-    const incoming = newTables.map((table) => ({
+    const targetProjectId = (activeProjectId && activeProjectId !== 'all') ? activeProjectId : 'pathway';
+
+    // Clear search query so new tables are immediately visible
+    setDataModelSearchQuery('');
+
+    const timestamp = Date.now();
+    const incoming = newTables.map((table, idx) => ({
       ...table,
-      projectId: table.projectId || projectId
+      id: table.id && !table.id.startsWith('TBL-temp') ? table.id : `TBL-${timestamp}-${Math.floor(Math.random() * 9000 + 1000)}-${idx + 1}`,
+      projectId: targetProjectId,
+      author: 'Importador SQL',
+      isNewlyImported: true,
+      updatedAt: new Date().toISOString()
     }));
-    const projectModels = dataModels.filter(t => (t.projectId || projectId) === projectId);
-    const existingNames = new Set(projectModels.map(t => t.tableName.toLowerCase()));
-    const uniqueNew = incoming.filter(t => !existingNames.has(t.tableName.toLowerCase()));
-    const replaced = dataModels.map(t => {
-      if ((t.projectId || projectId) !== projectId) return t;
-      const match = incoming.find(n => n.tableName.toLowerCase() === t.tableName.toLowerCase());
-      return match ? { ...match, id: t.id } : t;
+
+    setDataModels(prev => {
+      const prevList = Array.isArray(prev) ? prev : [];
+
+      // Tables belonging to other projects
+      const otherProjectTables = prevList.filter(t => {
+        const pId = t.projectId || (t.id === 'TBL-04' || t.id === 'TBL-05' ? 'portal-admin' : (t.id === 'TBL-06' || t.id === 'TBL-07' ? 'core-hub' : 'pathway'));
+        return pId !== targetProjectId;
+      });
+
+      // Tables belonging to target project
+      const currentProjectTables = prevList.filter(t => {
+        const pId = t.projectId || (t.id === 'TBL-04' || t.id === 'TBL-05' ? 'portal-admin' : (t.id === 'TBL-06' || t.id === 'TBL-07' ? 'core-hub' : 'pathway'));
+        return pId === targetProjectId;
+      });
+
+      const incomingByLowerName = new Map(incoming.map(t => [t.tableName.toLowerCase(), t]));
+
+      // Update matching tables, keeping ID
+      const updatedCurrent = currentProjectTables.map(existing => {
+        const match = incomingByLowerName.get(existing.tableName.toLowerCase());
+        if (match) {
+          incomingByLowerName.delete(existing.tableName.toLowerCase());
+          return {
+            ...existing,
+            ...match,
+            id: existing.id,
+            projectId: targetProjectId
+          };
+        }
+        return existing;
+      });
+
+      // Brand new tables
+      const brandNewTables = Array.from(incomingByLowerName.values());
+
+      // Prepend brand new tables at the very top of the list so they are immediately visible on screen!
+      const finalProjectTables = [...brandNewTables, ...updatedCurrent];
+      const merged = [...finalProjectTables, ...otherProjectTables];
+
+      try {
+        localStorage.setItem(DATA_MODELS_STORAGE_KEY, JSON.stringify(merged));
+      } catch (_) {}
+
+      finalProjectTables.forEach(t => {
+        persist(saveDataModel(t, validStoryIds, validInterfaceIds), 'entidad');
+      });
+
+      return merged;
     });
-    setDataModels([...uniqueNew, ...replaced]);
-    uniqueNew.forEach(t => persist(saveDataModel(t, validStoryIds, validInterfaceIds), 'entidad'));
-    replaced.forEach((t, index) => {
-      if (t !== dataModels[index]) persist(saveDataModel(t, validStoryIds, validInterfaceIds), 'entidad');
-    });
-    notify(`¡${incoming.length} entidades de datos importadas correctamente desde el script SQL!`);
+
+    notify(`¡${incoming.length} entidades de datos incorporadas correctamente al catálogo de "${activeProject?.name || 'Software Activo'}"!`);
   };
 
   // ── Business Actor Handlers
