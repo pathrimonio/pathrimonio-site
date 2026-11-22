@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   STORAGE_TARGET_OPTIONS, 
   DATA_TYPE_OPTIONS, 
@@ -7,6 +7,8 @@ import {
 } from '../../data/initialDataModels';
 
 export default function DataModelBuilder({
+  isOpen = false,
+  onClose,
   onSaveTable,
   onNotify,
   existingStories = [],
@@ -14,6 +16,15 @@ export default function DataModelBuilder({
   activeProjectId = 'pathway',
   onOpenSQLModal
 }) {
+  // Handle ESC key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
   const [tableName, setTableName] = useState('');
   const [name, setName] = useState('');
   const [module, setModule] = useState(
@@ -167,6 +178,7 @@ export default function DataModelBuilder({
 
     onSaveTable(newTable);
     onNotify?.(`¡Entidad "${cleanTableName}" registrada con éxito en el catálogo de datos!`);
+    onClose?.();
 
     // Reset some fields
     setTableName('');
@@ -174,37 +186,69 @@ export default function DataModelBuilder({
     setDescription('');
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-6 shadow-xl flex flex-col gap-6">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-outline-variant/60 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space font-bold text-sm">
-            <span className="material-symbols-outlined text-[18px]">add_chart</span>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm animate-fadeIn"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+    >
+      <div className="relative w-full max-w-4xl bg-surface-container border border-outline-variant rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+        
+        {/* Sticky Header */}
+        <div className="bg-surface-container-low shrink-0 border-b border-outline-variant/60 p-4 sm:p-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space font-bold text-sm">
+              <span className="material-symbols-outlined text-[20px]">add_chart</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-space text-sm sm:text-base text-white font-bold tracking-tight">
+                  Diseñar Nueva Tabla
+                </h2>
+                <span className="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold uppercase tracking-wider">
+                  Data Model
+                </span>
+              </div>
+              <p className="font-jakarta text-[11px] text-on-surface-variant">
+                Formaliza el esquema relacional, atributos, llaves y destino de persistencia
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-space text-lg font-bold text-white tracking-tight">
-              Diseñar Nueva Tabla
-            </h2>
-            <p className="font-jakarta text-xs text-on-surface-variant">
-              Formaliza el esquema relacional, atributos y destino de persistencia
-            </p>
+
+          <div className="flex items-center gap-2">
+            {onOpenSQLModal && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose?.();
+                  onOpenSQLModal();
+                }}
+                className="flex items-center gap-1 font-space text-[11px] uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-surface-container-highest hover:bg-surface-container border border-primary/40 hover:border-primary text-primary transition-colors cursor-pointer"
+                title="Ingresar o cargar sentencias CREATE TABLE en script .sql"
+              >
+                <span className="material-symbols-outlined text-[15px]">terminal</span>
+                <span>Pegar .sql</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-white hover:bg-surface-container-highest transition-colors"
+              title="Cerrar modal (Esc)"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpenSQLModal}
-          className="flex items-center gap-1 font-space text-[11px] uppercase tracking-wider px-2.5 py-1 rounded-lg bg-surface-container-highest hover:bg-surface-container border border-primary/40 hover:border-primary text-primary transition-colors cursor-pointer"
-          title="Ingresar o cargar sentencias CREATE TABLE en script .sql"
-        >
-          <span className="material-symbols-outlined text-[14px]">terminal</span>
-          <span>Pegar .sql</span>
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {/* Modal Form with Scrollable Body */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col gap-5">
         
         {/* Table Name & Descriptive Name */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -496,18 +540,28 @@ export default function DataModelBuilder({
           </div>
         </div>
 
-        {/* Submit button */}
-        <div className="pt-2">
-          <button
-            type="submit"
-            className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-surface font-space font-bold text-sm tracking-wide transition-colors flex items-center justify-center gap-2 shadow-lg"
-          >
-            <span className="material-symbols-outlined text-[18px]">save</span>
-            <span>Guardar y Registrar Entidad de Datos</span>
-          </button>
-        </div>
+          </div>
 
-      </form>
+          {/* Sticky Footer */}
+          <div className="bg-surface-container-low shrink-0 border-t border-outline-variant/60 p-4 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-white font-space text-xs transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-surface font-space font-bold text-xs tracking-wide transition-colors flex items-center gap-2 shadow-lg"
+            >
+              <span className="material-symbols-outlined text-[18px]">save</span>
+              <span>Guardar y Registrar Entidad</span>
+            </button>
+          </div>
+        </form>
+
+      </div>
     </div>
   );
 }

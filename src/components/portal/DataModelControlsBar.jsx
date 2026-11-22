@@ -9,7 +9,8 @@ export default function DataModelControlsBar({
   onNotify,
   activeProject,
   onOpenDERModal,
-  onOpenSQLModal
+  onOpenSQLModal,
+  onOpenCreateModal
 }) {
   const totalTables = tables.length;
   const approvedTables = tables.filter(t => t.status === 'Aprobado por Arquitectura' || t.status === 'Aprobado').length;
@@ -136,6 +137,18 @@ export default function DataModelControlsBar({
         {/* Action Tools Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-outline-variant/60">
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Nueva Tabla Modal Trigger */}
+            {onOpenCreateModal && (
+              <button
+                onClick={onOpenCreateModal}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary-hover text-surface font-space font-bold text-xs transition-all shadow-md"
+                title="Diseñar y registrar una nueva tabla o entidad"
+              >
+                <span className="material-symbols-outlined text-[17px]">add_circle</span>
+                <span>Nueva Tabla</span>
+              </button>
+            )}
+
             {/* Primary Action: Ver DER */}
             <button
               onClick={onOpenDERModal}

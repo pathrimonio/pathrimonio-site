@@ -9,7 +9,8 @@ export default function ControlsBar({
   onNotify,
   activeProject,
   onNavigateToActors,
-  actorsCount = 0
+  actorsCount = 0,
+  onOpenCreateModal
 }) {
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
 
@@ -143,6 +144,17 @@ export default function ControlsBar({
               >
                 <span className="material-symbols-outlined text-[16px] text-primary">badge</span>
                 <span>Actores & Roles {actorsCount > 0 ? `(${actorsCount})` : ''}</span>
+              </button>
+            )}
+
+            {/* Crear Historia Modal Trigger */}
+            {onOpenCreateModal && (
+              <button 
+                onClick={onOpenCreateModal}
+                className="h-8 px-3.5 rounded bg-primary text-on-primary hover:bg-[#e09419] transition-all font-space text-xs font-semibold flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98]"
+              >
+                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                <span>Crear Historia</span>
               </button>
             )}
 

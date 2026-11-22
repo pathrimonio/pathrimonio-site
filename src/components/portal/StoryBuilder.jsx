@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { ROLE_SUGGESTIONS } from '../../data/initialStories';
 
 export default function StoryBuilder({ 
+  isOpen = false,
+  onClose,
   onSaveStory, 
   onNotify, 
   activeProjectId = 'pathway',
@@ -28,6 +30,16 @@ export default function StoryBuilder({
     size: '1.4 MB',
     time: 'Subido hace 5 min'
   });
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Sync role if selectedRole changes from external trigger
   useEffect(() => {
@@ -106,6 +118,7 @@ export default function StoryBuilder({
 
     onSaveStory(newStory);
     onNotify?.(`Historia ${newStory.id} guardada exitosamente bajo el rol "${effectiveRole}".`);
+    onClose?.();
   };
 
   const handleFileDrop = (e) => {
@@ -121,31 +134,57 @@ export default function StoryBuilder({
     }
   };
 
-  return (
-    <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-y-4 shadow-sm">
-      
-      {/* Card Header & Product Tip */}
-      <div className="flex flex-col gap-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-x-2">
-            <span className="material-symbols-outlined text-primary text-[20px]">edit_note</span>
-            <h2 className="font-space text-base text-white font-semibold">Guided Story Builder</h2>
-          </div>
-          <span className="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold uppercase tracking-wider">
-            Modo Guiado
-          </span>
-        </div>
-        <p className="font-jakarta text-xs text-on-surface-variant">
-          Escribe requerimientos claros y medibles sin jerga técnica.
-        </p>
+  if (!isOpen) return null;
 
-        <div className="p-2.5 rounded-xl bg-surface-container border border-outline-variant/60 flex items-start gap-x-2 text-on-surface-variant">
-          <span className="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0">lightbulb</span>
-          <p className="font-jakarta text-xs text-on-surface leading-relaxed">
-            <strong className="text-white">Tip de producto:</strong> Selecciona el <strong className="text-primary">Rol del Negocio</strong> registrado para asegurar coherencia con los permisos y áreas del sistema.
-          </p>
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm animate-fadeIn"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+    >
+      <div className="relative w-full max-w-2xl bg-surface-container border border-outline-variant rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+        
+        {/* Sticky Header */}
+        <div className="bg-surface-container-low shrink-0 border-b border-outline-variant/60 p-4 sm:p-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space">
+              <span className="material-symbols-outlined text-[20px]">edit_note</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-space text-sm sm:text-base text-white font-bold">
+                  Nueva Historia de Usuario
+                </h2>
+                <span className="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold uppercase tracking-wider">
+                  Modo Guiado
+                </span>
+              </div>
+              <p className="font-jakarta text-[11px] text-on-surface-variant">
+                Escribe requerimientos claros y medibles sin jerga técnica.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-white hover:bg-surface-container-highest transition-colors"
+            title="Cerrar modal (Esc)"
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
         </div>
-      </div>
+
+        {/* Scrollable Form Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col gap-4">
+          <div className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/60 flex items-start gap-x-2 text-on-surface-variant">
+            <span className="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0">lightbulb</span>
+            <p className="font-jakarta text-xs text-on-surface leading-relaxed">
+              <strong className="text-white">Tip de producto:</strong> Selecciona el <strong className="text-primary">Rol del Negocio</strong> registrado para asegurar coherencia con los permisos y áreas del sistema.
+            </p>
+          </div>
 
       {/* Structured Formula Inputs */}
       <div className="flex flex-col gap-y-3.5">
@@ -478,25 +517,35 @@ export default function StoryBuilder({
 
       </div>
 
-      {/* Action Footer */}
-      <div className="flex items-center gap-x-2 pt-1 border-t border-outline-variant/60">
-        <button 
-          type="button"
-          onClick={() => handleSubmit('Approved')}
-          className="h-10 flex-1 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] transition-all font-space text-xs font-semibold flex items-center justify-center gap-x-1.5 shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98]"
-        >
-          <span className="material-symbols-outlined text-[18px]">add_circle</span>
-          <span>Guardar Historia de Usuario</span>
-        </button>
-        <button 
-          type="button"
-          onClick={() => handleSubmit('Draft')}
-          className="h-10 px-3.5 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-white font-space text-xs transition-colors"
-        >
-          Borrador
-        </button>
-      </div>
+        </div>
 
+        {/* Sticky Action Footer */}
+        <div className="bg-surface-container-low shrink-0 border-t border-outline-variant/60 p-4 flex items-center justify-end gap-2.5">
+          <button 
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-white font-space text-xs transition-colors"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="button"
+            onClick={() => handleSubmit('Draft')}
+            className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-white font-space text-xs transition-colors"
+          >
+            Guardar Borrador
+          </button>
+          <button 
+            type="button"
+            onClick={() => handleSubmit('Approved')}
+            className="px-5 py-2 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] transition-all font-space text-xs font-semibold flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98]"
+          >
+            <span className="material-symbols-outlined text-[16px]">add_circle</span>
+            <span>Guardar Historia</span>
+          </button>
+        </div>
+
+      </div>
     </div>
   );
 }

@@ -7,7 +7,8 @@ export default function StoryFeed({
   onDeleteStory,
   onToggleCriterion,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
+  onOpenCreateModal
 }) {
   const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'compact'
   const [sortBy, setSortBy] = useState('priority'); // 'priority' | 'id'
@@ -86,6 +87,18 @@ export default function StoryFeed({
               <span className="material-symbols-outlined text-[16px]">table_rows</span>
             </button>
           </div>
+
+          {/* Nueva Historia Button */}
+          {onOpenCreateModal && (
+            <button
+              onClick={onOpenCreateModal}
+              className="h-8 px-3 rounded-lg bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+              title="Crear nueva Historia de Usuario"
+            >
+              <span className="material-symbols-outlined text-[16px]">add_circle</span>
+              <span className="hidden sm:inline">Nueva Historia</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -95,6 +108,15 @@ export default function StoryFeed({
           <span className="material-symbols-outlined text-outline-variant text-[40px]">search_off</span>
           <p className="font-space text-sm text-white font-semibold">No se encontraron historias</p>
           <p className="font-jakarta text-xs text-on-surface-variant">Prueba ajustando los filtros de módulo o la búsqueda.</p>
+          {onOpenCreateModal && (
+            <button
+              onClick={onOpenCreateModal}
+              className="mt-3 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-all"
+            >
+              <span className="material-symbols-outlined text-[16px]">add_circle</span>
+              <span>Crear Nueva Historia</span>
+            </button>
+          )}
         </div>
       ) : viewMode === 'compact' ? (
         /* Compact Table View */

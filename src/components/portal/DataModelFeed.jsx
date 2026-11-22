@@ -13,7 +13,8 @@ export default function DataModelFeed({
   onDeleteTable,
   onQuickStatusChange,
   searchQuery,
-  setSearchQuery
+  setSearchQuery,
+  onOpenCreateModal
 }) {
   const [selectedStorage, setSelectedStorage] = useState('Todos');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
@@ -159,18 +160,31 @@ export default function DataModelFeed({
           </div>
 
           {/* Sort By */}
-          <div className="flex items-center gap-2">
-            <span className="text-on-surface-variant text-[11px]">Ordenar:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-surface-container-highest text-white px-2.5 py-1.5 rounded-xl border border-outline-variant font-medium focus:outline-none cursor-pointer"
-            >
-              <option value="recent" className="bg-surface-container-highest text-white">Más Recientes / Importadas</option>
-              <option value="name" className="bg-surface-container-highest text-white">Nombre de Tabla</option>
-              <option value="attributes" className="bg-surface-container-highest text-white">Nº de Atributos</option>
-              <option value="status" className="bg-surface-container-highest text-white">Estado de Arquitectura</option>
-            </select>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="text-on-surface-variant text-[11px]">Ordenar:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-surface-container-highest text-white px-2.5 py-1.5 rounded-xl border border-outline-variant font-medium focus:outline-none cursor-pointer"
+              >
+                <option value="recent" className="bg-surface-container-highest text-white">Más Recientes / Importadas</option>
+                <option value="name" className="bg-surface-container-highest text-white">Nombre de Tabla</option>
+                <option value="attributes" className="bg-surface-container-highest text-white">Nº de Atributos</option>
+                <option value="status" className="bg-surface-container-highest text-white">Estado de Arquitectura</option>
+              </select>
+            </div>
+
+            {onOpenCreateModal && (
+              <button
+                onClick={onOpenCreateModal}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover text-surface font-space font-bold text-xs transition-colors shadow-sm"
+                title="Diseñar nueva tabla"
+              >
+                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                <span>Nueva Tabla</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -221,7 +235,7 @@ export default function DataModelFeed({
               ? `Hay ${tables.length} entidades en este proyecto, pero los filtros activos (motor, módulo o búsqueda) las están ocultando.`
               : 'No hay entidades de datos registradas en este proyecto todavía.'}
           </p>
-          {tables.length > 0 && (
+          {tables.length > 0 ? (
             <button
               type="button"
               onClick={handleClearAllFilters}
@@ -230,6 +244,17 @@ export default function DataModelFeed({
               <span className="material-symbols-outlined text-[16px]">filter_alt_off</span>
               <span>Mostrar Todas las Entidades ({tables.length})</span>
             </button>
+          ) : (
+            onOpenCreateModal && (
+              <button
+                type="button"
+                onClick={onOpenCreateModal}
+                className="mt-2 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:bg-primary-hover text-surface font-space font-bold text-xs transition-colors shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                <span>Diseñar Primera Tabla</span>
+              </button>
+            )
           )}
         </div>
       )}

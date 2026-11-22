@@ -14,7 +14,8 @@ export default function FileFeed({
   onDuplicateFile,
   searchQuery,
   setSearchQuery,
-  onNotify
+  onNotify,
+  onOpenUpload
 }) {
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
@@ -198,19 +199,32 @@ export default function FileFeed({
           </div>
 
           {/* Sort By */}
-          <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant ml-auto">
-            <span className="material-symbols-outlined text-on-surface-variant text-[16px]">sort</span>
-            <label className="text-on-surface-variant text-[11px]">Ordenar:</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
-            >
-              <option value="date" className="bg-surface-container-highest text-white">Fecha de Subida</option>
-              <option value="name" className="bg-surface-container-highest text-white">Alfabético</option>
-              <option value="size" className="bg-surface-container-highest text-white">Tamaño de Archivo</option>
-              <option value="version" className="bg-surface-container-highest text-white">Versión</option>
-            </select>
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
+              <span className="material-symbols-outlined text-on-surface-variant text-[16px]">sort</span>
+              <label className="text-on-surface-variant text-[11px]">Ordenar:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
+              >
+                <option value="date" className="bg-surface-container-highest text-white">Fecha de Subida</option>
+                <option value="name" className="bg-surface-container-highest text-white">Alfabético</option>
+                <option value="size" className="bg-surface-container-highest text-white">Tamaño de Archivo</option>
+                <option value="version" className="bg-surface-container-highest text-white">Versión</option>
+              </select>
+            </div>
+
+            {onOpenUpload && (
+              <button
+                onClick={onOpenUpload}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all"
+                title="Subir o registrar nuevo archivo o entregable"
+              >
+                <span className="material-symbols-outlined text-[16px]">cloud_upload</span>
+                <span>Subir Archivo</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -230,8 +244,17 @@ export default function FileFeed({
           </div>
           <h3 className="font-space text-base font-bold text-white">No se encontraron archivos</h3>
           <p className="font-jakarta text-xs text-on-surface-variant max-w-md">
-            No hay archivos o entregables que coincidan con los filtros seleccionados. Prueba limpiando la búsqueda o sube un nuevo archivo desde el panel izquierdo.
+            No hay archivos o entregables que coincidan con los filtros seleccionados. Prueba limpiando la búsqueda o sube un nuevo archivo al repositorio.
           </p>
+          {onOpenUpload && (
+            <button
+              onClick={onOpenUpload}
+              className="mt-2 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all"
+            >
+              <span className="material-symbols-outlined text-[16px]">cloud_upload</span>
+              <span>Subir Primer Archivo</span>
+            </button>
+          )}
         </div>
       ) : viewMode === 'grid' ? (
         /* ── GRID VIEW ── */

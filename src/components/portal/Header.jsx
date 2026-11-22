@@ -3,8 +3,6 @@ import UserMenu from './UserMenu';
 
 export default function Header({ 
   onToggleSidebar, 
-  searchQuery, 
-  setSearchQuery, 
   user, 
   onLogout,
   activeProject,
@@ -54,23 +52,8 @@ export default function Header({
         </div>
       </div>
 
-      {/* Right: Search, Collabs & User Menu */}
+      {/* Right: Collabs & User Menu */}
       <div className="flex items-center gap-x-3">
-        {/* Search Input */}
-        <div className="flex items-center gap-x-2 bg-surface-container-low border border-outline-variant px-2.5 py-1 rounded text-on-surface-variant font-jakarta text-xs focus-within:border-primary transition-colors w-36 sm:w-48 md:w-60">
-          <span className="material-symbols-outlined text-[16px] text-primary">search</span>
-          <input 
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar historias..."
-            className="bg-transparent text-white placeholder-on-surface-variant/70 text-xs font-jakarta w-full focus:outline-none"
-          />
-          <kbd className="hidden sm:inline-block px-1.5 py-0.2 rounded bg-surface-container-highest border border-outline-variant font-mono text-[9px] text-white">
-            ⌘K
-          </kbd>
-        </div>
-
         {/* Collaborators avatars (project team, excluding the logged-in user) */}
         {collaborators.length > 0 && (
           <div

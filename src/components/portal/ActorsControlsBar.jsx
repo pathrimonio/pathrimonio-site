@@ -6,7 +6,8 @@ export default function ActorsControlsBar({
   stories = [],
   activeProject,
   onNotify,
-  onNavigateToStories
+  onNavigateToStories,
+  onOpenCreateModal
 }) {
   const totalActors = actors.length;
 
@@ -125,6 +126,18 @@ export default function ActorsControlsBar({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Registrar Actor Modal Trigger */}
+            {onOpenCreateModal && (
+              <button
+                onClick={onOpenCreateModal}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98] transition-all"
+                title="Registrar nuevo rol o actor del negocio"
+              >
+                <span className="material-symbols-outlined text-[16px]">person_add</span>
+                <span>Registrar Actor</span>
+              </button>
+            )}
+
             {/* Ir a Historias de Usuario */}
             {onNavigateToStories && (
               <button

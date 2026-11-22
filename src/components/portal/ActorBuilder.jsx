@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   PERMISSION_LEVEL_OPTIONS, 
   ACTOR_CATEGORY_OPTIONS, 
@@ -27,6 +27,8 @@ const COLOR_OPTIONS = [
 ];
 
 export default function ActorBuilder({
+  isOpen = false,
+  onClose,
   onSaveActor,
   onNotify,
   activeProjectId
@@ -42,6 +44,16 @@ export default function ActorBuilder({
   const [assignedWorkerName, setAssignedWorkerName] = useState('');
   const [assignedWorker, setAssignedWorker] = useState('');
   const [isPrimaryRole, setIsPrimaryRole] = useState(false);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Toggle area checkbox
   const toggleArea = (area) => {
@@ -153,6 +165,7 @@ export default function ActorBuilder({
 
     onSaveActor(newActor);
     onNotify?.(`¡Actor "${newActor.name}" registrado con éxito! Ya está disponible en el Combobox de Historias de Usuario.`);
+    onClose?.();
 
     // Reset form
     setName('');
@@ -162,62 +175,87 @@ export default function ActorBuilder({
     setIsPrimaryRole(false);
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-5 shadow-sm">
-      
-      {/* Header */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-[22px]">person_add</span>
-            <h2 className="font-space text-base text-white font-semibold">Registrar Actor o Rol</h2>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm animate-fadeIn"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+    >
+      <div className="relative w-full max-w-2xl bg-surface-container border border-outline-variant rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+        
+        {/* Sticky Header */}
+        <div className="bg-surface-container-low shrink-0 border-b border-outline-variant/60 p-4 sm:p-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space">
+              <span className="material-symbols-outlined text-[22px]">person_add</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-space text-sm sm:text-base text-white font-bold">
+                  Registrar Actor o Rol
+                </h2>
+                <span className="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold uppercase tracking-wider">
+                  Requerimientos
+                </span>
+              </div>
+              <p className="font-jakarta text-[11px] text-on-surface-variant">
+                Establece quién actúa en el sistema, su alcance y permisos para mantener coherencia técnica.
+              </p>
+            </div>
           </div>
-          <span className="px-2 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold uppercase tracking-wider">
-            Requerimientos
-          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-white hover:bg-surface-container-highest transition-colors"
+            title="Cerrar modal (Esc)"
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
         </div>
-        <p className="font-jakarta text-xs text-on-surface-variant">
-          Establece quién actúa en el sistema, su alcance y permisos para que las Historias de Usuario mantengan coherencia técnica.
-        </p>
 
-        {/* Quick Presets */}
-        <div className="flex flex-col gap-1.5 pt-1">
-          <span className="font-space text-[11px] text-on-surface-variant">Plantillas rápidas:</span>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button
-              type="button"
-              onClick={() => loadPreset('admin')}
-              className="px-2 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white font-space text-[11px] transition-colors"
-            >
-              👑 Administrador
-            </button>
-            <button
-              type="button"
-              onClick={() => loadPreset('operator')}
-              className="px-2 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white font-space text-[11px] transition-colors"
-            >
-              💳 Operador Ventas
-            </button>
-            <button
-              type="button"
-              onClick={() => loadPreset('inventory')}
-              className="px-2 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white font-space text-[11px] transition-colors"
-            >
-              📦 Almacén / Stock
-            </button>
-            <button
-              type="button"
-              onClick={() => loadPreset('enduser')}
-              className="px-2 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white font-space text-[11px] transition-colors"
-            >
-              📱 Usuario Final B2C
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Form */}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* Modal Form with Scrollable Body */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col gap-4">
+            
+            {/* Quick Presets */}
+            <div className="flex flex-col gap-1.5 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60">
+              <span className="font-space text-[11px] text-on-surface-variant font-medium">Plantillas rápidas:</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => loadPreset('admin')}
+                  className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white font-space text-[11px] transition-colors"
+                >
+                  👑 Administrador
+                </button>
+                <button
+                  type="button"
+                  onClick={() => loadPreset('operator')}
+                  className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white font-space text-[11px] transition-colors"
+                >
+                  💳 Operador Ventas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => loadPreset('inventory')}
+                  className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white font-space text-[11px] transition-colors"
+                >
+                  📦 Almacén / Stock
+                </button>
+                <button
+                  type="button"
+                  onClick={() => loadPreset('enduser')}
+                  className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white font-space text-[11px] transition-colors"
+                >
+                  📱 Usuario Final B2C
+                </button>
+              </div>
+            </div>
         
         {/* Nombre del Rol */}
         <div className="flex flex-col gap-1">
@@ -413,15 +451,28 @@ export default function ActorBuilder({
           <span className="font-space text-xs text-white">Marcar como Rol Principal de este Proyecto</span>
         </label>
 
-        {/* Submit CTA */}
-        <button
-          type="submit"
-          className="w-full mt-2 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-space text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:shadow-primary/20 transition-all duration-200"
-        >
-          <span className="material-symbols-outlined text-[18px]">check_circle</span>
-          <span>Registrar Actor de Negocio</span>
-        </button>
-      </form>
+          </div>
+
+          {/* Sticky Footer */}
+          <div className="bg-surface-container-low shrink-0 border-t border-outline-variant/60 p-4 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-surface-container hover:bg-surface-container-high border border-outline-variant text-white font-space text-xs transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-space text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg hover:shadow-primary/20 transition-all duration-200"
+            >
+              <span className="material-symbols-outlined text-[18px]">check_circle</span>
+              <span>Registrar Actor de Negocio</span>
+            </button>
+          </div>
+        </form>
+
+      </div>
     </div>
   );
 }

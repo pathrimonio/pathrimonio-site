@@ -15,7 +15,8 @@ export default function ActorFeed({
   onSelectForStory,
   searchQuery,
   setSearchQuery,
-  onNotify
+  onNotify,
+  onOpenCreateModal
 }) {
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [selectedPermission, setSelectedPermission] = useState('Todos');
@@ -160,18 +161,31 @@ export default function ActorFeed({
           </div>
 
           {/* Sort By */}
-          <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant ml-auto">
-            <span className="material-symbols-outlined text-on-surface-variant text-[16px]">sort</span>
-            <label className="text-on-surface-variant text-[11px]">Ordenar:</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
-            >
-              <option value="name" className="bg-surface-container-highest text-white">Alfabético</option>
-              <option value="stories" className="bg-surface-container-highest text-white">HU Vinculadas</option>
-              <option value="permission" className="bg-surface-container-highest text-white">Nivel de Permiso</option>
-            </select>
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
+              <span className="material-symbols-outlined text-on-surface-variant text-[16px]">sort</span>
+              <label className="text-on-surface-variant text-[11px]">Ordenar:</label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
+              >
+                <option value="name" className="bg-surface-container-highest text-white">Alfabético</option>
+                <option value="stories" className="bg-surface-container-highest text-white">HU Vinculadas</option>
+                <option value="permission" className="bg-surface-container-highest text-white">Nivel de Permiso</option>
+              </select>
+            </div>
+
+            {onOpenCreateModal && (
+              <button
+                onClick={onOpenCreateModal}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all"
+                title="Registrar nuevo rol o actor del negocio"
+              >
+                <span className="material-symbols-outlined text-[16px]">person_add</span>
+                <span>Nuevo Actor</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -191,8 +205,17 @@ export default function ActorFeed({
           </div>
           <h3 className="font-space text-base font-bold text-white">No se encontraron actores o roles</h3>
           <p className="font-jakarta text-xs text-on-surface-variant max-w-md">
-            No hay roles que coincidan con los filtros seleccionados. Prueba limpiando la búsqueda o crea un nuevo actor desde el panel izquierdo.
+            No hay roles que coincidan con los filtros seleccionados. Prueba limpiando la búsqueda o registra un nuevo actor de negocio.
           </p>
+          {onOpenCreateModal && (
+            <button
+              onClick={onOpenCreateModal}
+              className="mt-2 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all"
+            >
+              <span className="material-symbols-outlined text-[16px]">person_add</span>
+              <span>Registrar Primer Actor</span>
+            </button>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-4">

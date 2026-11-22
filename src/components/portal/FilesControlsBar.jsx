@@ -139,6 +139,18 @@ export default function FilesControlsBar({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Subir Archivo Modal Trigger */}
+            {onOpenUpload && (
+              <button
+                onClick={onOpenUpload}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98] transition-all"
+                title="Subir o registrar nuevo archivo o entregable"
+              >
+                <span className="material-symbols-outlined text-[16px]">cloud_upload</span>
+                <span>Subir Archivo</span>
+              </button>
+            )}
+
             {/* Validar Repositorio */}
             <button
               onClick={handleValidateRepository}

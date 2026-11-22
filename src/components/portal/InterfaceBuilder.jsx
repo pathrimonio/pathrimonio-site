@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import ModuleSelect from './ModuleSelect';
 import DataUsagePicker from './DataUsagePicker';
 import DataUsageList from './DataUsageList';
@@ -21,7 +21,21 @@ export default function InterfaceBuilder({
   onAddRole,
   onRolesChange
 }) {
-  const [number, setNumber] = useState('4');
+  // Número automático: siguiente al mayor número del proyecto activo.
+  const targetProjectId = activeProjectId === 'all' ? 'pathway' : activeProjectId;
+  const nextNumber = useMemo(() => {
+    const max = (existingInterfaces || [])
+      .filter((item) => {
+        const projectId = item.projectId || (item.id === 'INT-04' ? 'portal-admin' : item.id === 'INT-07' ? 'core-hub' : 'pathway');
+        return projectId === targetProjectId;
+      })
+      .reduce((acc, item) => {
+        const parsed = parseInt(item.number, 10);
+        return Number.isFinite(parsed) && parsed > acc ? parsed : acc;
+      }, 0);
+    return String(max + 1);
+  }, [existingInterfaces, targetProjectId]);
+
   const [title, setTitle] = useState('Dashboard');
   const [module, setModule] = useState(() => modules[0] || 'Sin módulo');
   const [platform, setPlatform] = useState('Web & Mobile');
@@ -203,7 +217,7 @@ export default function InterfaceBuilder({
       return;
     }
 
-    const numClean = number.trim() || '1';
+    const numClean = nextNumber;
     const titleClean = title.trim();
     const fullName = `${numClean}. ${titleClean}`;
 
@@ -246,7 +260,6 @@ export default function InterfaceBuilder({
 
     // Reset some fields
     setTitle('');
-    setNumber(prev => (parseInt(prev, 10) + 1).toString());
     setObjetivo('');
     setContenido('');
     setReglas('');
@@ -365,13 +378,18 @@ export default function InterfaceBuilder({
             />
           </div>
           <div className="sm:col-span-2 flex flex-col gap-1">
-            <label className="text-xs font-space text-white">Número</label>
+            <label className="text-xs font-space text-white flex items-center justify-between">
+              <span>Número</span>
+              <span className="text-[9px] font-mono text-primary/80">AUTO</span>
+            </label>
             <input
               type="text"
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              placeholder="ej. 4"
-              className="w-full h-9 px-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-space font-bold text-primary focus:border-primary focus:outline-none"
+              value={nextNumber}
+              readOnly
+              tabIndex={-1}
+              aria-readonly="true"
+              title="Se asigna automáticamente según el último número del proyecto"
+              className="w-full h-9 px-2.5 bg-surface-container-lowest/60 border border-outline-variant rounded-lg text-xs font-space font-bold text-primary cursor-default focus:outline-none"
             />
           </div>
           <div className="sm:col-span-6 flex flex-col gap-1">

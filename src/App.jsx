@@ -257,6 +257,12 @@ export default function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
 
+  // ── Create entity modals (registered via dedicated button modals, not embedded)
+  const [isCreateStoryModalOpen, setIsCreateStoryModalOpen] = useState(false);
+  const [isCreateActorModalOpen, setIsCreateActorModalOpen] = useState(false);
+  const [isCreateTableModalOpen, setIsCreateTableModalOpen] = useState(false);
+  const [isCreateFileModalOpen, setIsCreateFileModalOpen] = useState(false);
+
   // ── Contact modal (landing)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
@@ -736,7 +742,7 @@ export default function App() {
       );
     });
 
-    return matched.length > 0 ? matched : users;
+    return matched;
   }, [portalUsers, activeProjectId, projectStories, projectInterfaces, projectDataModels, projectFiles]);
 
   // ── Data Model Handlers
@@ -890,6 +896,7 @@ export default function App() {
   const handleSelectActorForStory = (actor) => {
     setPreselectedRoleForStory(actor.name);
     setActivePortalTab('stories');
+    setIsCreateStoryModalOpen(true);
     notify(`Rol "${actor.name}" seleccionado. Completa los detalles de la Historia de Usuario.`);
   };
 
@@ -1081,8 +1088,6 @@ export default function App() {
           <div className="lg:pl-64 flex flex-col flex-1 min-w-0">
             <Header
               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
               user={currentUser}
               onLogout={handleLogout}
               activeProject={activeProject}
@@ -1100,32 +1105,33 @@ export default function App() {
                     activeProject={activeProject}
                     onNavigateToActors={() => setActivePortalTab('actors')}
                     actorsCount={projectActors.length}
+                    onOpenCreateModal={() => setIsCreateStoryModalOpen(true)}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                      <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
-                        <StoryBuilder 
-                          onSaveStory={handleSaveStory} 
-                          onNotify={notify} 
-                          activeProjectId={activeProjectId}
-                          projectActors={projectActors}
-                          selectedRole={preselectedRoleForStory}
-                          onNavigateToActors={() => setActivePortalTab('actors')}
-                        />
-                      </section>
-                      <section className="lg:col-span-7 flex flex-col gap-y-4">
-                        <StoryFeed
-                          stories={filteredStories}
-                          onEditStory={(story) => { setSelectedStory(story); setIsDetailModalOpen(true); }}
-                          onDuplicateStory={handleDuplicateStory}
-                          onDeleteStory={handleDeleteStory}
-                          onToggleCriterion={handleToggleCriterion}
-                          searchQuery={searchQuery}
-                          setSearchQuery={setSearchQuery}
-                        />
-                      </section>
+                    <div className="w-full flex flex-col gap-y-4">
+                      <StoryFeed
+                        stories={filteredStories}
+                        onEditStory={(story) => { setSelectedStory(story); setIsDetailModalOpen(true); }}
+                        onDuplicateStory={handleDuplicateStory}
+                        onDeleteStory={handleDeleteStory}
+                        onToggleCriterion={handleToggleCriterion}
+                        searchQuery={searchQuery}
+                        setSearchQuery={setSearchQuery}
+                        onOpenCreateModal={() => setIsCreateStoryModalOpen(true)}
+                      />
                     </div>
                   </div>
+
+                  <StoryBuilder 
+                    isOpen={isCreateStoryModalOpen}
+                    onClose={() => setIsCreateStoryModalOpen(false)}
+                    onSaveStory={handleSaveStory} 
+                    onNotify={notify} 
+                    activeProjectId={activeProjectId}
+                    projectActors={projectActors}
+                    selectedRole={preselectedRoleForStory}
+                    onNavigateToActors={() => setActivePortalTab('actors')}
+                  />
                 </div>
               )}
               {activePortalTab === 'actors' && (
@@ -1136,32 +1142,33 @@ export default function App() {
                     activeProject={activeProject}
                     onNotify={notify}
                     onNavigateToStories={() => setActivePortalTab('stories')}
+                    onOpenCreateModal={() => setIsCreateActorModalOpen(true)}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                      <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
-                        <ActorBuilder
-                          onSaveActor={handleSaveActor}
-                          onNotify={notify}
-                          activeProjectId={activeProjectId}
-                        />
-                      </section>
-                      <section className="lg:col-span-7 flex flex-col gap-y-4">
-                        <ActorFeed
-                          actors={projectActors}
-                          stories={projectStories}
-                          interfaces={projectInterfaces}
-                          onEditActor={(actor) => { setSelectedActor(actor); setIsActorModalOpen(true); }}
-                          onDuplicateActor={handleDuplicateActor}
-                          onDeleteActor={handleDeleteActor}
-                          onSelectForStory={handleSelectActorForStory}
-                          searchQuery={actorSearchQuery}
-                          setSearchQuery={setActorSearchQuery}
-                          onNotify={notify}
-                        />
-                      </section>
+                    <div className="w-full flex flex-col gap-y-4">
+                      <ActorFeed
+                        actors={projectActors}
+                        stories={projectStories}
+                        interfaces={projectInterfaces}
+                        onEditActor={(actor) => { setSelectedActor(actor); setIsActorModalOpen(true); }}
+                        onDuplicateActor={handleDuplicateActor}
+                        onDeleteActor={handleDeleteActor}
+                        onSelectForStory={handleSelectActorForStory}
+                        searchQuery={actorSearchQuery}
+                        setSearchQuery={setActorSearchQuery}
+                        onNotify={notify}
+                        onOpenCreateModal={() => setIsCreateActorModalOpen(true)}
+                      />
                     </div>
                   </div>
+
+                  <ActorBuilder
+                    isOpen={isCreateActorModalOpen}
+                    onClose={() => setIsCreateActorModalOpen(false)}
+                    onSaveActor={handleSaveActor}
+                    onNotify={notify}
+                    activeProjectId={activeProjectId}
+                  />
                 </div>
               )}
               {activePortalTab === 'interfaces' && (
@@ -1223,32 +1230,33 @@ export default function App() {
                     activeProject={activeProject}
                     onOpenDERModal={() => setIsDERModalOpen(true)}
                     onOpenSQLModal={() => setIsSQLModalOpen(true)}
+                    onOpenCreateModal={() => setIsCreateTableModalOpen(true)}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                      <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
-                        <DataModelBuilder
-                          onSaveTable={handleSaveTable}
-                          onNotify={notify}
-                          existingStories={projectStories}
-                          existingInterfaces={projectInterfaces}
-                          activeProjectId={activeProjectId}
-                          onOpenSQLModal={() => setIsSQLModalOpen(true)}
-                        />
-                      </section>
-                      <section className="lg:col-span-7 flex flex-col gap-y-4">
-                        <DataModelFeed
-                          tables={projectDataModels}
-                          onEditTable={(table) => { setSelectedTable(table); setIsTableModalOpen(true); }}
-                          onDuplicateTable={handleDuplicateTable}
-                          onDeleteTable={handleDeleteTable}
-                          onQuickStatusChange={handleQuickTableStatus}
-                          searchQuery={dataModelSearchQuery}
-                          setSearchQuery={setDataModelSearchQuery}
-                        />
-                      </section>
+                    <div className="w-full flex flex-col gap-y-4">
+                      <DataModelFeed
+                        tables={projectDataModels}
+                        onEditTable={(table) => { setSelectedTable(table); setIsTableModalOpen(true); }}
+                        onDuplicateTable={handleDuplicateTable}
+                        onDeleteTable={handleDeleteTable}
+                        onQuickStatusChange={handleQuickTableStatus}
+                        searchQuery={dataModelSearchQuery}
+                        setSearchQuery={setDataModelSearchQuery}
+                        onOpenCreateModal={() => setIsCreateTableModalOpen(true)}
+                      />
                     </div>
                   </div>
+
+                  <DataModelBuilder
+                    isOpen={isCreateTableModalOpen}
+                    onClose={() => setIsCreateTableModalOpen(false)}
+                    onSaveTable={handleSaveTable}
+                    onNotify={notify}
+                    existingStories={projectStories}
+                    existingInterfaces={projectInterfaces}
+                    activeProjectId={activeProjectId}
+                    onOpenSQLModal={() => setIsSQLModalOpen(true)}
+                  />
                 </div>
               )}
               {activePortalTab === 'files' && (
@@ -1257,30 +1265,31 @@ export default function App() {
                     files={projectFiles}
                     activeProject={activeProject}
                     onNotify={notify}
+                    onOpenUpload={() => setIsCreateFileModalOpen(true)}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                      <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
-                        <FileUploader
-                          onSaveFile={handleSaveFile}
-                          onNotify={notify}
-                          activeProjectId={activeProjectId}
-                        />
-                      </section>
-                      <section className="lg:col-span-7 flex flex-col gap-y-4">
-                        <FileFeed
-                          files={projectFiles}
-                          onPreviewFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
-                          onEditFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
-                          onDeleteFile={handleDeleteFile}
-                          onDuplicateFile={handleDuplicateFile}
-                          searchQuery={fileSearchQuery}
-                          setSearchQuery={setFileSearchQuery}
-                          onNotify={notify}
-                        />
-                      </section>
+                    <div className="w-full flex flex-col gap-y-4">
+                      <FileFeed
+                        files={projectFiles}
+                        onPreviewFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
+                        onEditFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
+                        onDeleteFile={handleDeleteFile}
+                        onDuplicateFile={handleDuplicateFile}
+                        searchQuery={fileSearchQuery}
+                        setSearchQuery={setFileSearchQuery}
+                        onNotify={notify}
+                        onOpenUpload={() => setIsCreateFileModalOpen(true)}
+                      />
                     </div>
                   </div>
+
+                  <FileUploader
+                    isOpen={isCreateFileModalOpen}
+                    onClose={() => setIsCreateFileModalOpen(false)}
+                    onSaveFile={handleSaveFile}
+                    onNotify={notify}
+                    activeProjectId={activeProjectId}
+                  />
                 </div>
               )}
               {activePortalTab === 'backlog'   && <BacklogView stories={projectStories} />}
