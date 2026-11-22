@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function InterfaceHotspotOverlay({
   children,
@@ -53,6 +54,124 @@ export default function InterfaceHotspotOverlay({
   const currentImageHotspots = useMemo(() => {
     return (hotspots || []).filter(h => (h.imageIndex ?? 0) === currentImageIndex);
   }, [hotspots, currentImageIndex]);
+
+  // Active hotspot data for the floating card (rendered in a portal to escape clipping).
+  const popoverRef = useRef(null);
+  const activeHotspot = useMemo(
+    () => currentImageHotspots.find(h => h.id === activeHotspotId) || null,
+    [currentImageHotspots, activeHotspotId]
+  );
+  const activeHotspotIndex = useMemo(
+    () => currentImageHotspots.findIndex(h => h.id === activeHotspotId),
+    [currentImageHotspots, activeHotspotId]
+  );
+  const [popoverPosition, setPopoverPosition] = useState(null);
+
+  const activeIsDb = activeHotspot && (activeHotspot.linkType === 'database' || activeHotspot.linkType === 'both');
+  const activeIsInt = activeHotspot && (activeHotspot.linkType === 'interface' || activeHotspot.linkType === 'both');
+  const activeThemeBadge = activeHotspot
+    ? (activeIsDb && activeIsInt
+        ? 'bg-amber-500 text-surface'
+        : activeIsInt
+        ? 'bg-cyan-500 text-surface'
+        : 'bg-emerald-500 text-surface')
+    : '';
+
+  // Smart floating popover position calculation
+  useEffect(() => {
+    if (!activeHotspot || !containerRef.current) {
+      setPopoverPosition(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      const containerRect = containerRef.current?.getBoundingClientRect();
+      if (!containerRect) return;
+
+      const isBox = activeHotspot.width > 0 && activeHotspot.height > 0;
+      
+      // Calculate exact screen coordinates of anchor
+      const anchorLeft = containerRect.left + (activeHotspot.x / 100) * containerRect.width;
+      const anchorTop = containerRect.top + (activeHotspot.y / 100) * containerRect.height;
+      const anchorWidth = isBox ? (activeHotspot.width / 100) * containerRect.width : 28;
+      const anchorHeight = isBox ? (activeHotspot.height / 100) * containerRect.height : 28;
+      
+      const anchorCenterX = isBox ? anchorLeft + anchorWidth / 2 : anchorLeft;
+      const anchorCenterY = isBox ? anchorTop + anchorHeight / 2 : anchorTop;
+
+      // Popover element measurements
+      const popoverEl = popoverRef.current;
+      const popoverWidth = popoverEl?.offsetWidth || Math.min(290, window.innerWidth * 0.9);
+      const popoverHeight = popoverEl?.offsetHeight || 220;
+
+      const gap = 10;
+      const screenPadding = 12;
+
+      // Check space available above vs below
+      const spaceBelow = window.innerHeight - (isBox ? anchorTop + anchorHeight : anchorCenterY + 14) - gap;
+      const spaceAbove = (isBox ? anchorTop : anchorCenterY - 14) - gap;
+
+      let top;
+      let placement = 'below';
+
+      if (spaceBelow >= popoverHeight || spaceBelow >= spaceAbove) {
+        // Place below anchor
+        top = isBox ? anchorTop + anchorHeight + gap : anchorCenterY + 16 + gap;
+        placement = 'below';
+      } else {
+        // Place above anchor
+        top = isBox ? anchorTop - popoverHeight - gap : anchorCenterY - 16 - popoverHeight - gap;
+        placement = 'above';
+      }
+
+      // Clamp vertical position so it stays fully visible on screen
+      top = Math.max(screenPadding, Math.min(top, window.innerHeight - popoverHeight - screenPadding));
+
+      // Calculate horizontal placement centered on anchorCenterX
+      let left = anchorCenterX - popoverWidth / 2;
+      left = Math.max(screenPadding, Math.min(left, window.innerWidth - popoverWidth - screenPadding));
+
+      setPopoverPosition({ left, top, width: popoverWidth, placement });
+    };
+
+    updatePosition();
+    const rafId = requestAnimationFrame(updatePosition);
+
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [activeHotspot, currentImageIndex]);
+
+  // Close active popover when pressing Escape or clicking outside
+  useEffect(() => {
+    if (!activeHotspotId) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setActiveHotspotId(null);
+      }
+    };
+
+    const handleOutsideClick = (e) => {
+      if (popoverRef.current && popoverRef.current.contains(e.target)) return;
+      if (containerRef.current && containerRef.current.contains(e.target)) {
+        // Handled by canvas or marker click
+        return;
+      }
+      setActiveHotspotId(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('mousedown', handleOutsideClick);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [activeHotspotId]);
 
   // Handle pointer down (drawing start)
   const handleMouseDown = (e) => {
@@ -168,6 +287,7 @@ export default function InterfaceHotspotOverlay({
       actionTrigger: hotspot.interfaceLink?.action || 'Al hacer clic (Navegación directa)',
       colorTheme: hotspot.colorTheme || (hotspot.linkType === 'interface' ? 'cyan' : 'emerald')
     });
+    setActiveHotspotId(null);
     setEditingHotspot(hotspot);
     setIsConfigModalOpen(true);
   };
@@ -493,118 +613,122 @@ export default function InterfaceHotspotOverlay({
                 </div>
               )}
 
-              {/* ── Popover Card for Active Hotspot ── */}
-              {isActive && (
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    left: `${Math.min(75, Math.max(5, h.x))}%`,
-                    top: `${Math.min(80, Math.max(10, h.y + (isBox ? h.height + 2 : 5)))}%`
-                  }}
-                  className="absolute z-40 w-72 max-w-[90vw] p-3.5 rounded-xl bg-surface-container-lowest/95 backdrop-blur-md border border-outline-variant shadow-2xl text-xs font-space animate-fadeIn flex flex-col gap-2.5"
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between gap-2 border-b border-outline-variant/60 pb-2">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono shrink-0 ${themeBadge}`}>
-                        {idx + 1}
-                      </span>
-                      <strong className="text-white truncate font-bold text-xs">{h.title}</strong>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); setActiveHotspotId(null); }}
-                      className="text-on-surface-variant hover:text-white"
-                    >
-                      <span className="material-symbols-outlined text-[15px]">close</span>
-                    </button>
-                  </div>
-
-                  {/* Target Details */}
-                  {h.databaseLink && (
-                    <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex flex-col gap-1">
-                      <span className="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[13px]">database</span>
-                        <span>Campo de Base de Datos</span>
-                      </span>
-                      <div className="font-mono text-white text-[11px] font-bold">
-                        {h.databaseLink.tableName}.<span className="text-emerald-300">{h.databaseLink.attributeName}</span>
-                      </div>
-                      <div className="text-[10px] text-on-surface-variant flex items-center gap-2">
-                        <span>Tipo: <strong className="text-white">{h.databaseLink.attributeType}</strong></span>
-                        {h.databaseLink.isPrimary && (
-                          <span className="px-1 rounded bg-amber-500/20 text-amber-300 font-mono text-[9px]">PK</span>
-                        )}
-                        {h.databaseLink.foreignKey && (
-                          <span className="px-1 rounded bg-cyan-500/20 text-cyan-300 font-mono text-[9px]">FK</span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {h.interfaceLink && (
-                    <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex flex-col gap-1.5">
-                      <span className="text-[10px] uppercase font-bold text-cyan-400 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[13px]">open_in_new</span>
-                        <span>Navegación de Pantalla</span>
-                      </span>
-                      <div className="font-space text-white text-xs font-bold truncate">
-                        {h.interfaceLink.interfaceNumber ? `${h.interfaceLink.interfaceNumber}. ` : ''}{h.interfaceLink.interfaceTitle}
-                      </div>
-                      <p className="font-jakarta text-[10px] text-on-surface-variant">
-                        {h.interfaceLink.action || 'Al hacer clic'}
-                      </p>
-
-                      {/* Navigation Action Button */}
-                      {onNavigateToInterface && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const target = existingInterfaces.find(i => i.id === h.interfaceLink.interfaceId);
-                            if (target) onNavigateToInterface(target);
-                          }}
-                          className="mt-1 flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-surface font-space font-bold text-xs transition-colors shadow-sm cursor-pointer"
-                        >
-                          <span>Navegar a esta Pantalla</span>
-                          <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {h.description && (
-                    <p className="font-jakarta text-[11px] text-on-surface-variant bg-surface-container p-2 rounded border border-outline-variant/40">
-                      {h.description}
-                    </p>
-                  )}
-
-                  {/* Actions (if editable) */}
-                  {isEditable && (
-                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-outline-variant/40">
-                      <button
-                        type="button"
-                        onClick={(e) => openConfigForEdit(h, e)}
-                        className="flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold"
-                      >
-                        <span className="material-symbols-outlined text-[13px]">edit</span>
-                        <span>Editar</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => handleDeleteHotspot(h.id, e)}
-                        className="flex items-center gap-1 text-[11px] text-red-400 hover:underline font-semibold"
-                      >
-                        <span className="material-symbols-outlined text-[13px]">delete</span>
-                        <span>Eliminar</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
             </React.Fragment>
           );
         })}
       </div>
+
+      {activeHotspot && popoverPosition && createPortal(
+        <div
+          ref={popoverRef}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            left: `${popoverPosition.left}px`,
+            top: `${popoverPosition.top}px`,
+            width: `${popoverPosition.width}px`,
+            maxHeight: 'calc(100vh - 24px)'
+          }}
+          className="z-[99999] p-4 rounded-xl bg-surface-container border border-outline-variant shadow-[0_25px_60px_-10px_rgba(0,0,0,0.95)] text-xs font-space animate-fadeIn flex flex-col gap-3 overflow-y-auto"
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between gap-2 border-b border-outline-variant/60 pb-2.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold font-mono shrink-0 shadow-sm ${activeThemeBadge}`}>
+                {activeHotspotIndex + 1}
+              </span>
+              <strong className="text-white truncate font-bold text-xs">{activeHotspot.title}</strong>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setActiveHotspotId(null); }}
+              className="text-on-surface-variant hover:text-white p-0.5 rounded hover:bg-surface-container-high transition-colors cursor-pointer"
+              title="Cerrar (Esc)"
+            >
+              <span className="material-symbols-outlined text-[15px]">close</span>
+            </button>
+          </div>
+
+          {/* Target Details */}
+          {activeHotspot.databaseLink && (
+            <div className="p-2.5 rounded-lg bg-surface-container-lowest border border-emerald-500/40 flex flex-col gap-1 shadow-sm">
+              <span className="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px]">database</span>
+                <span>Campo de Base de Datos</span>
+              </span>
+              <div className="font-mono text-white text-[11px] font-bold">
+                {activeHotspot.databaseLink.tableName}.<span className="text-emerald-300">{activeHotspot.databaseLink.attributeName}</span>
+              </div>
+              <div className="text-[10px] text-on-surface-variant flex items-center gap-2">
+                <span>Tipo: <strong className="text-white">{activeHotspot.databaseLink.attributeType}</strong></span>
+                {activeHotspot.databaseLink.isPrimary && (
+                  <span className="px-1 rounded bg-amber-500/20 text-amber-300 font-mono text-[9px]">PK</span>
+                )}
+                {activeHotspot.databaseLink.foreignKey && (
+                  <span className="px-1 rounded bg-cyan-500/20 text-cyan-300 font-mono text-[9px]">FK</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeHotspot.interfaceLink && (
+            <div className="p-2.5 rounded-lg bg-surface-container-lowest border border-cyan-500/40 flex flex-col gap-1.5 shadow-sm">
+              <span className="text-[10px] uppercase font-bold text-cyan-400 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                <span>Navegación de Pantalla</span>
+              </span>
+              <div className="font-space text-white text-xs font-bold truncate">
+                {activeHotspot.interfaceLink.interfaceNumber ? `${activeHotspot.interfaceLink.interfaceNumber}. ` : ''}{activeHotspot.interfaceLink.interfaceTitle}
+              </div>
+              <p className="font-jakarta text-[10px] text-on-surface-variant">
+                {activeHotspot.interfaceLink.action || 'Al hacer clic'}
+              </p>
+
+              {onNavigateToInterface && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = existingInterfaces.find(i => i.id === activeHotspot.interfaceLink.interfaceId);
+                    if (target) onNavigateToInterface(target);
+                  }}
+                  className="mt-1 flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-surface font-space font-bold text-xs transition-colors shadow-sm cursor-pointer"
+                >
+                  <span>Navegar a esta Pantalla</span>
+                  <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {activeHotspot.description && (
+            <p className="font-jakarta text-[11px] text-on-surface-variant bg-surface-container-lowest p-2.5 rounded-lg border border-outline-variant/60">
+              {activeHotspot.description}
+            </p>
+          )}
+
+          {isEditable && (
+            <div className="flex items-center justify-end gap-2 pt-1 border-t border-outline-variant/40">
+              <button
+                type="button"
+                onClick={(e) => openConfigForEdit(activeHotspot, e)}
+                className="flex items-center gap-1 text-[11px] text-primary hover:underline font-semibold"
+              >
+                <span className="material-symbols-outlined text-[13px]">edit</span>
+                <span>Editar</span>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleDeleteHotspot(activeHotspot.id, e)}
+                className="flex items-center gap-1 text-[11px] text-red-400 hover:underline font-semibold"
+              >
+                <span className="material-symbols-outlined text-[13px]">delete</span>
+                <span>Eliminar</span>
+              </button>
+            </div>
+          )}
+        </div>,
+        document.body
+      )}
 
       {/* ── Hotspot List & Management Panel ── */}
       {currentImageHotspots.length > 0 && (
