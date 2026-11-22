@@ -27,7 +27,7 @@ export default function InterfaceDetailModal({
         parsed.roles = parsed.role ? [parsed.role] : [];
       }
       setFormData(parsed);
-      setIsEditing(false);
+      setIsEditing(true);
       setShowAddRoleInput(false);
       setNewRoleInput('');
     }
@@ -89,10 +89,31 @@ export default function InterfaceDetailModal({
     }
   };
 
+  const handleUpdateDataUsageItem = (key, updatedFields) => {
+    setFormData(prev => ({
+      ...prev,
+      dataUsage: (prev.dataUsage || []).map(ref => ref.key === key ? { ...ref, ...updatedFields } : ref)
+    }));
+  };
+
+  const handleAddDataUsageItem = (newItem) => {
+    setFormData(prev => ({
+      ...prev,
+      dataUsage: [...(prev.dataUsage || []), newItem]
+    }));
+  };
+
+  const handleRemoveDataUsageItem = (key) => {
+    setFormData(prev => ({
+      ...prev,
+      dataUsage: (prev.dataUsage || []).filter(ref => ref.key !== key)
+    }));
+  };
+
   const handleSave = (e) => {
     e?.preventDefault();
     onUpdateInterface?.(formData);
-    setIsEditing(false);
+    onClose?.();
   };
 
   const handleSetStatus = (newStatus) => {
@@ -139,9 +160,9 @@ export default function InterfaceDetailModal({
               }`}
             >
               <span className="material-symbols-outlined text-[15px]">
-                {isEditing ? 'visibility' : 'edit'}
+                {isEditing ? 'visibility' : 'edit_note'}
               </span>
-              <span>{isEditing ? 'Ver Ficha' : 'Editar Datos'}</span>
+              <span>{isEditing ? 'Ver Vista Previa' : 'Editar Ficha'}</span>
             </button>
 
             <button
@@ -436,26 +457,23 @@ export default function InterfaceDetailModal({
               </div>
 
               {isEditing ? (
-                <>
+                <div className="flex flex-col gap-2.5">
+                  <p className="text-[11px] text-on-surface-variant font-jakarta">
+                    Busca campos en el modelado de datos o agrégalos manualmente. Puedes modificar directamente cualquier campo desde la tabla.
+                  </p>
                   <DataUsagePicker
                     tables={dataModels}
                     selected={formData.dataUsage || []}
                     onChange={(next) => setFormData({ ...formData, dataUsage: next })}
                   />
-                  {(formData.dataUsage || []).length > 0 ? (
-                    <DataUsageList
-                      items={formData.dataUsage}
-                      onRemove={(key) => setFormData({
-                        ...formData,
-                        dataUsage: (formData.dataUsage || []).filter(ref => ref.key !== key)
-                      })}
-                    />
-                  ) : (
-                    <span className="text-[10px] font-jakarta italic text-on-surface-variant">
-                      Aún no agregaste datos a esta interfaz.
-                    </span>
-                  )}
-                </>
+                  <DataUsageList
+                    items={formData.dataUsage || []}
+                    onRemove={handleRemoveDataUsageItem}
+                    onUpdate={handleUpdateDataUsageItem}
+                    onAdd={handleAddDataUsageItem}
+                    tables={dataModels}
+                  />
+                </div>
               ) : (
                 (formData.dataUsage || []).length > 0 ? (
                   <DataUsageList items={formData.dataUsage} />

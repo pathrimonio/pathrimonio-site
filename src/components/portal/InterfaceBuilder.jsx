@@ -15,7 +15,9 @@ export default function InterfaceBuilder({
   onRenameModule,
   onDeleteModule,
   existingInterfaces = [],
-  dataModels = []
+  dataModels = [],
+  onAddRole,
+  onRolesChange
 }) {
   const [number, setNumber] = useState('4');
   const [title, setTitle] = useState('Dashboard');
@@ -36,17 +38,33 @@ export default function InterfaceBuilder({
   const [customRoleInput, setCustomRoleInput] = useState('');
   const [showAddCustomRole, setShowAddCustomRole] = useState(false);
 
-  // Sync roles if projectActors change
+  // Notify parent of roles on mount or when selectedRoles change
   useEffect(() => {
-    if (projectActors && projectActors.length > 0) {
-      const stillValid = selectedRoles.filter(r => 
-        projectActors.some(a => a.name.toLowerCase() === r.toLowerCase())
-      );
-      if (stillValid.length === 0) {
-        setSelectedRoles([projectActors[0].name]);
+    onRolesChange?.(selectedRoles);
+  }, [selectedRoles, onRolesChange]);
+
+  // Sync roles only if activeProjectId changes, without wiping user custom roles within the same project
+  const prevProjectIdRef = useRef(activeProjectId);
+  const initializedRef = useRef(false);
+
+  useEffect(() => {
+    if (prevProjectIdRef.current !== activeProjectId) {
+      prevProjectIdRef.current = activeProjectId;
+      if (projectActors && projectActors.length > 0) {
+        const next = [projectActors[0].name];
+        setSelectedRoles(next);
+        onRolesChange?.(next);
+      } else {
+        setSelectedRoles([]);
+        onRolesChange?.([]);
       }
+    } else if (!initializedRef.current && projectActors && projectActors.length > 0 && selectedRoles.length === 0) {
+      initializedRef.current = true;
+      const next = [projectActors[0].name];
+      setSelectedRoles(next);
+      onRolesChange?.(next);
     }
-  }, [activeProjectId, projectActors]);
+  }, [activeProjectId, projectActors, onRolesChange, selectedRoles.length]);
 
   // Keep the selected module valid when the catalog changes (rename/delete).
   useEffect(() => {
@@ -57,11 +75,11 @@ export default function InterfaceBuilder({
 
   const handleToggleRole = (roleName) => {
     setSelectedRoles(prev => {
-      if (prev.includes(roleName)) {
-        return prev.filter(r => r !== roleName);
-      } else {
-        return [...prev, roleName];
-      }
+      const next = prev.includes(roleName)
+        ? prev.filter(r => r !== roleName)
+        : [...prev, roleName];
+      onRolesChange?.(next);
+      return next;
     });
   };
 
@@ -69,8 +87,11 @@ export default function InterfaceBuilder({
     const trimmed = customRoleInput.trim();
     if (!trimmed) return;
     if (!selectedRoles.includes(trimmed)) {
-      setSelectedRoles(prev => [...prev, trimmed]);
+      const next = [...selectedRoles, trimmed];
+      setSelectedRoles(next);
+      onRolesChange?.(next);
     }
+    onAddRole?.(trimmed);
     setCustomRoleInput('');
     setShowAddCustomRole(false);
   };
@@ -515,16 +536,14 @@ export default function InterfaceBuilder({
             onChange={setDataUsage}
             onNotify={onNotify}
           />
-          {dataUsage.length > 0 ? (
-            <DataUsageList
-              items={dataUsage}
-              onRemove={(key) => setDataUsage(prev => prev.filter(ref => ref.key !== key))}
-            />
-          ) : (
-            <span className="text-[10px] font-jakarta italic text-on-surface-variant">
-              Aún no agregaste datos a esta interfaz.
-            </span>
-          )}
+          <DataUsageList
+            items={dataUsage}
+            onRemove={(key) => setDataUsage(prev => prev.filter(ref => ref.key !== key))}
+            onUpdate={(key, updated) => setDataUsage(prev => prev.map(ref => ref.key === key ? { ...ref, ...updated } : ref))}
+            onAdd={(newItem) => setDataUsage(prev => [...prev, newItem])}
+            tables={dataModels}
+            onNotify={onNotify}
+          />
         </div>
 
         {/* 5. Metadatos complementarios */}
