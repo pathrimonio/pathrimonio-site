@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import DataUsageExplorerModal from './DataUsageExplorerModal';
 
 function getDataModelSchema(table) {
   const raw = `${table?.storageTarget || ''} ${table?.storageLocation || ''}`.toLowerCase();
@@ -14,6 +15,7 @@ function getDataModelSchema(table) {
 export default function DataUsagePicker({ tables = [], selected = [], onChange, onNotify }) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+  const [isExplorerOpen, setIsExplorerOpen] = useState(false);
   const rootRef = useRef(null);
 
   const index = useMemo(() => tables.flatMap((table) => {
@@ -79,19 +81,31 @@ export default function DataUsagePicker({ tables = [], selected = [], onChange, 
 
   return (
     <div className="relative" ref={rootRef}>
-      <div className="relative">
-        <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-on-surface-variant pointer-events-none">
-          search
-        </span>
-        <input
-          type="text"
-          value={query}
-          onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={handleKeyDown}
-          placeholder="Buscar campo, tabla o esquema en Modelado de Datos..."
-          className="h-9 w-full pl-8 pr-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white placeholder:text-on-surface-variant/60 focus:border-primary focus:outline-none"
-        />
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-on-surface-variant pointer-events-none">
+            search
+          </span>
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => { setQuery(event.target.value); setOpen(true); }}
+            onFocus={() => setOpen(true)}
+            onKeyDown={handleKeyDown}
+            placeholder="Buscar campo, tabla o esquema en Modelado de Datos..."
+            className="h-9 w-full pl-8 pr-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white placeholder:text-on-surface-variant/60 focus:border-primary focus:outline-none"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsExplorerOpen(true)}
+          className="h-9 px-3 rounded-lg bg-surface-container border border-amber-400/50 hover:border-amber-400 text-amber-300 hover:bg-amber-500/15 text-xs font-space font-semibold flex items-center gap-1.5 transition-all shadow-sm shrink-0 cursor-pointer"
+          title="Explorar y seleccionar campos en el DER Físico (Detalle Completo)"
+        >
+          <span className="material-symbols-outlined text-[17px] text-amber-400">schema</span>
+          <span>Explorar</span>
+        </button>
       </div>
 
       {open && query.trim() && (
@@ -131,6 +145,16 @@ export default function DataUsagePicker({ tables = [], selected = [], onChange, 
           )}
         </div>
       )}
+
+      {/* Modal Explorador DER Físico (Detalle Completo) */}
+      <DataUsageExplorerModal
+        isOpen={isExplorerOpen}
+        onClose={() => setIsExplorerOpen(false)}
+        tables={tables}
+        selected={selected}
+        onChange={onChange}
+        onNotify={onNotify}
+      />
     </div>
   );
 }
