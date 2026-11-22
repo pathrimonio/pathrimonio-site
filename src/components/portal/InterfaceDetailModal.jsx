@@ -24,7 +24,7 @@ export default function InterfaceDetailModal({
   const [showAddRoleInput, setShowAddRoleInput] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [newImageUrl, setNewImageUrl] = useState('');
-  const [showAddUrlInput, setShowAddUrlInput] = useState(false);
+  const [showUploadZone, setShowUploadZone] = useState(false);
   const [navHistory, setNavHistory] = useState([]);
   const fileInputRef = useRef(null);
 
@@ -46,7 +46,7 @@ export default function InterfaceDetailModal({
       setShowAddRoleInput(false);
       setNewRoleInput('');
       setNewImageUrl('');
-      setShowAddUrlInput(false);
+      setShowUploadZone(false);
       setNavHistory([]);
     }
   }, [item]);
@@ -145,7 +145,7 @@ export default function InterfaceDetailModal({
     });
     setActiveImageIndex(currentImages.length);
     setNewImageUrl('');
-    setShowAddUrlInput(false);
+    onNotify?.('¡Imagen agregada por URL correctamente!');
   };
 
   const handleRemoveImage = (indexToRemove) => {
@@ -335,68 +335,80 @@ export default function InterfaceDetailModal({
                 )}
               </div>
 
-              {/* Botones para subir o añadir URL */}
+              {/* Botón para alternar zona de carga */}
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => setShowUploadZone((prev) => !prev)}
                   className="inline-flex items-center gap-1 text-[11px] font-space text-primary hover:underline cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[14px]">upload</span>
                   <span>+ Subir Imágenes</span>
                 </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-
-                <span className="text-outline-variant">•</span>
-
-                <button
-                  type="button"
-                  onClick={() => setShowAddUrlInput(!showAddUrlInput)}
-                  className="inline-flex items-center gap-1 text-[11px] font-space text-on-surface-variant hover:text-white hover:underline cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[14px]">link</span>
-                  <span>+ Añadir URL</span>
-                </button>
               </div>
             </div>
 
-            {/* Input para URL si está abierto */}
-            {showAddUrlInput && (
-              <div className="flex items-center gap-2 p-2 bg-surface-container-lowest border border-outline-variant rounded-lg">
+            {/* Panel de subida de imágenes si está abierto */}
+            {showUploadZone && (
+              <div className="flex flex-col gap-2.5 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-space text-white font-semibold flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px] text-primary">add_photo_alternate</span>
+                    <span>Imágenes o Wireframes de la Pantalla:</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadZone(false)}
+                    className="text-on-surface-variant hover:text-white transition-colors p-0.5 rounded cursor-pointer"
+                    title="Cerrar panel de carga"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">close</span>
+                  </button>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-outline-variant hover:border-primary rounded-lg p-3 text-center cursor-pointer transition-colors bg-surface-container/40"
+                  >
+                    <span className="material-symbols-outlined text-primary text-[24px]">cloud_upload</span>
+                    <p className="text-[11px] text-white font-space mt-1 font-semibold">
+                      Haz clic para subir una o varias imágenes (PNG, JPG)
+                    </p>
+                    <span className="text-[10px] text-on-surface-variant">
+                      Puedes seleccionar múltiples capturas a la vez o agregar por URL
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <input
+                      type="text"
+                      placeholder="O pega URL de imagen (Figma / Web)..."
+                      className="h-8 px-2.5 bg-surface-container border border-outline-variant rounded text-[11px] font-mono text-white flex-1 focus:border-primary focus:outline-none"
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddImageUrl();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImageUrl}
+                      className="px-2.5 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space shrink-0 cursor-pointer"
+                    >
+                      Cargar
+                    </button>
+                  </div>
+                </div>
                 <input
-                  type="url"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  placeholder="https://ejemplo.com/captura.png"
-                  className="h-8 px-2.5 bg-surface-container border border-outline-variant rounded text-xs font-jakarta text-white flex-1 focus:border-primary focus:outline-none"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddImageUrl();
-                    }
-                  }}
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
-                <button
-                  type="button"
-                  onClick={handleAddImageUrl}
-                  className="px-3 h-8 rounded bg-primary text-on-primary font-space text-xs font-bold"
-                >
-                  Añadir
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddUrlInput(false)}
-                  className="px-2 h-8 rounded text-on-surface-variant hover:text-white text-xs font-space"
-                >
-                  Cancelar
-                </button>
               </div>
             )}
 
