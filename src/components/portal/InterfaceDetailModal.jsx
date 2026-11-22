@@ -19,6 +19,9 @@ export default function InterfaceDetailModal({
   const [isEditing, setIsEditing] = useState(false);
   const [newRoleInput, setNewRoleInput] = useState('');
   const [showAddRoleInput, setShowAddRoleInput] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [showAddUrlInput, setShowAddUrlInput] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -27,14 +30,26 @@ export default function InterfaceDetailModal({
       if (!parsed.roles || !Array.isArray(parsed.roles)) {
         parsed.roles = parsed.role ? [parsed.role] : [];
       }
+      const rawImages = Array.isArray(parsed.images) && parsed.images.length > 0
+        ? parsed.images
+        : (parsed.image ? [parsed.image] : []);
+      parsed.images = rawImages;
+      parsed.image = rawImages[0] || null;
       setFormData(parsed);
+      setActiveImageIndex(0);
       setIsEditing(true);
       setShowAddRoleInput(false);
       setNewRoleInput('');
+      setNewImageUrl('');
+      setShowAddUrlInput(false);
     }
   }, [item]);
 
-  const detectedRatio = useImageAspect(formData?.image, formData?.imageAspect);
+  const currentImages = Array.isArray(formData?.images) && formData.images.length > 0
+    ? formData.images
+    : (formData?.image ? [formData.image] : []);
+  const activeImage = currentImages[activeImageIndex] || currentImages[0] || formData?.image || null;
+  const detectedRatio = useImageAspect(activeImage, formData?.imageAspect);
 
   if (!isOpen || !formData) return null;
 
@@ -78,17 +93,84 @@ export default function InterfaceDetailModal({
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    let loaded = [];
+    let count = 0;
+    files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
-        setFormData({
-          ...formData,
-          image: event.target.result
-        });
+        loaded.push(event.target.result);
+        count++;
+        if (count === files.length) {
+          setFormData((prev) => {
+            const currentList = Array.isArray(prev.images) && prev.images.length > 0
+              ? prev.images
+              : (prev.image ? [prev.image] : []);
+            const nextImages = [...currentList, ...loaded];
+            return {
+              ...prev,
+              images: nextImages,
+              image: nextImages[0] || null
+            };
+          });
+          setActiveImageIndex(currentImages.length);
+        }
       };
       reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  const handleAddImageUrl = () => {
+    const trimmed = newImageUrl.trim();
+    if (!trimmed) return;
+    setFormData((prev) => {
+      const currentList = Array.isArray(prev.images) && prev.images.length > 0
+        ? prev.images
+        : (prev.image ? [prev.image] : []);
+      const nextImages = [...currentList, trimmed];
+      return {
+        ...prev,
+        images: nextImages,
+        image: nextImages[0] || null
+      };
+    });
+    setActiveImageIndex(currentImages.length);
+    setNewImageUrl('');
+    setShowAddUrlInput(false);
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setFormData((prev) => {
+      const currentList = Array.isArray(prev.images) ? prev.images : (prev.image ? [prev.image] : []);
+      const nextImages = currentList.filter((_, idx) => idx !== indexToRemove);
+      return {
+        ...prev,
+        images: nextImages,
+        image: nextImages[0] || null
+      };
+    });
+    if (activeImageIndex >= indexToRemove && activeImageIndex > 0) {
+      setActiveImageIndex((prev) => prev - 1);
     }
+  };
+
+  const handleSetPrimaryImage = (index) => {
+    if (index === 0) return;
+    setFormData((prev) => {
+      const list = [...(Array.isArray(prev.images) ? prev.images : (prev.image ? [prev.image] : []))];
+      if (index >= list.length) return prev;
+      const [moved] = list.splice(index, 1);
+      list.unshift(moved);
+      return {
+        ...prev,
+        images: list,
+        image: list[0] || null
+      };
+    });
+    setActiveImageIndex(0);
   };
 
   const handleUpdateDataUsageItem = (key, updatedFields) => {
@@ -114,7 +196,12 @@ export default function InterfaceDetailModal({
 
   const handleSave = (e) => {
     e?.preventDefault();
-    onUpdateInterface?.(formData);
+    const toSave = {
+      ...formData,
+      images: currentImages,
+      image: currentImages[0] || null
+    };
+    onUpdateInterface?.(toSave);
     onClose?.();
   };
 
@@ -184,39 +271,154 @@ export default function InterfaceDetailModal({
             : 'flex flex-col gap-6'}>
 
           {/* 1. SECCIÓN DE IMAGEN / MOCKUP */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-on-surface-variant font-space">
-              <span className="flex items-center gap-1.5 font-semibold text-white">
-                <span className="material-symbols-outlined text-[16px] text-primary">image</span>
-                <span>Visualización de la Interfaz</span>
-              </span>
-
               <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 font-semibold text-white">
+                  <span className="material-symbols-outlined text-[16px] text-primary">photo_library</span>
+                  <span>Visualización de la Interfaz</span>
+                </span>
+                {currentImages.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 font-mono text-[10px] font-bold">
+                    {currentImages.length} {currentImages.length === 1 ? 'imagen' : 'imágenes'}
+                  </span>
+                )}
+              </div>
+
+              {/* Botones para subir o añadir URL */}
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="inline-flex items-center gap-1 text-[11px] font-space text-primary hover:underline cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[14px]">upload</span>
-                  <span>{formData.image ? 'Reemplazar Imagen' : 'Subir Imagen Real'}</span>
+                  <span>+ Subir Imágenes</span>
                 </button>
                 <input
                   ref={fileInputRef}
                   type="file"
+                  multiple
                   accept="image/*"
                   onChange={handleFileChange}
                   className="hidden"
                 />
+
+                <span className="text-outline-variant">•</span>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddUrlInput(!showAddUrlInput)}
+                  className="inline-flex items-center gap-1 text-[11px] font-space text-on-surface-variant hover:text-white hover:underline cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[14px]">link</span>
+                  <span>+ Añadir URL</span>
+                </button>
               </div>
             </div>
 
+            {/* Input para URL si está abierto */}
+            {showAddUrlInput && (
+              <div className="flex items-center gap-2 p-2 bg-surface-container-lowest border border-outline-variant rounded-lg">
+                <input
+                  type="url"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="https://ejemplo.com/captura.png"
+                  className="h-8 px-2.5 bg-surface-container border border-outline-variant rounded text-xs font-jakarta text-white flex-1 focus:border-primary focus:outline-none"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddImageUrl();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddImageUrl}
+                  className="px-3 h-8 rounded bg-primary text-on-primary font-space text-xs font-bold"
+                >
+                  Añadir
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddUrlInput(false)}
+                  className="px-2 h-8 rounded text-on-surface-variant hover:text-white text-xs font-space"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+
+            {/* Visor Mockup Preview con carousel */}
             <InterfaceMockupPreview
-              image={formData.image}
+              image={activeImage}
+              images={currentImages}
+              activeIndex={activeImageIndex}
+              onNextImage={() => setActiveImageIndex((prev) => (prev + 1) % currentImages.length)}
+              onPrevImage={() => setActiveImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length)}
               placeholderType={formData.imagePlaceholder || 'dashboard'}
               title={formData.fullName}
               aspectRatio={effectiveAspect}
-              onImageClick={() => fileInputRef.current?.click()}
             />
+
+            {/* Tira de miniaturas de la galería */}
+            {currentImages.length > 0 && (
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                {currentImages.map((src, idx) => (
+                  <div key={idx} className="relative group shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer bg-surface-container flex items-center justify-center ${
+                        activeImageIndex === idx
+                          ? 'border-primary ring-2 ring-primary/40 scale-105'
+                          : 'border-outline-variant/60 opacity-70 hover:opacity-100 hover:border-outline-variant'
+                      }`}
+                      title={`Ver imagen ${idx + 1}`}
+                    >
+                      <img src={src} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                    {idx === 0 && (
+                      <span className="absolute bottom-0 left-0 right-0 bg-primary/90 text-on-primary font-mono text-[8px] font-bold text-center leading-tight py-0.5 pointer-events-none">
+                        PORTADA
+                      </span>
+                    )}
+                    {idx !== 0 && isEditing && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSetPrimaryImage(idx); }}
+                        className="absolute bottom-0 left-0 right-0 bg-black/80 hover:bg-primary hover:text-on-primary text-white font-mono text-[8px] text-center leading-tight py-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        title="Hacer portada"
+                      >
+                        PORTADA
+                      </button>
+                    )}
+                    {isEditing && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow cursor-pointer"
+                        title="Eliminar imagen"
+                      >
+                        <span className="material-symbols-outlined text-[10px]">close</span>
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {/* Botón para añadir más imágenes directamente desde la tira */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-14 h-14 rounded-lg border-2 border-dashed border-outline-variant hover:border-primary text-on-surface-variant hover:text-primary flex flex-col items-center justify-center gap-0.5 shrink-0 transition-colors bg-surface-container/30 cursor-pointer"
+                  title="Subir más imágenes desde tu dispositivo"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+                  <span className="font-space text-[9px] font-semibold">+ Más</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 2. CUADRO DE DETALLES Y DATOS UTILIZADOS */}

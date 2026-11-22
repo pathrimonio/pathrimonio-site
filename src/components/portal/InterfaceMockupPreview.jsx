@@ -2,16 +2,51 @@ import React from 'react';
 
 export default function InterfaceMockupPreview({ 
   image, 
+  images = [],
   placeholderType, 
   title, 
   onImageClick,
-  aspectRatio = 'desktop'
+  aspectRatio = 'desktop',
+  onNextImage,
+  onPrevImage,
+  activeIndex: controlledIndex
 }) {
   const isPhone = aspectRatio === 'phone';
   const isTablet = aspectRatio === 'tablet';
 
+  const imageList = React.useMemo(() => {
+    if (Array.isArray(images) && images.length > 0) {
+      return images;
+    }
+    return image ? [image] : [];
+  }, [images, image]);
+
+  const [internalIndex, setInternalIndex] = React.useState(0);
+  const activeIndex = typeof controlledIndex === 'number' ? controlledIndex : internalIndex;
+
+  const currentDisplayImage = imageList[activeIndex] || imageList[0] || image;
+  const hasMultiple = imageList.length > 1;
+
+  const handlePrev = (e) => {
+    e.stopPropagation();
+    if (onPrevImage) {
+      onPrevImage();
+    } else {
+      setInternalIndex(prev => (prev - 1 + imageList.length) % imageList.length);
+    }
+  };
+
+  const handleNext = (e) => {
+    e.stopPropagation();
+    if (onNextImage) {
+      onNextImage();
+    } else {
+      setInternalIndex(prev => (prev + 1) % imageList.length);
+    }
+  };
+
   // If an uploaded image or image URL is available
-  if (image) {
+  if (currentDisplayImage) {
     return (
       <div 
         onClick={onImageClick}
@@ -21,13 +56,45 @@ export default function InterfaceMockupPreview({
         title="Clic para ampliar imagen"
       >
         <img 
-          src={image} 
+          src={currentDisplayImage} 
           alt={title} 
           className={`w-auto max-w-full object-contain rounded-lg transition-transform duration-300 group-hover/img:scale-[1.01] ${
             isPhone ? 'max-h-[540px]' : isTablet ? 'max-h-[400px]' : 'max-h-[340px]'
           }`}
         />
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+
+        {/* Counter badge if multiple images */}
+        {hasMultiple && (
+          <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-white font-mono text-[10px] font-bold flex items-center gap-1 border border-white/20 z-10 shadow-lg pointer-events-none">
+            <span className="material-symbols-outlined text-[13px] text-primary">photo_library</span>
+            <span>{activeIndex + 1} / {imageList.length}</span>
+          </div>
+        )}
+
+        {/* Floating navigation chevrons for multiple images */}
+        {hasMultiple && (
+          <>
+            <button
+              type="button"
+              onClick={handlePrev}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all opacity-0 group-hover/img:opacity-100 z-10 shadow-lg cursor-pointer"
+              title="Pantalla anterior"
+            >
+              <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all opacity-0 group-hover/img:opacity-100 z-10 shadow-lg cursor-pointer"
+              title="Siguiente pantalla"
+            >
+              <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
+          </>
+        )}
+
+        {/* Hover zoom banner */}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
           <span className="px-3 py-1.5 rounded-lg bg-surface-container-high/90 text-white font-space text-xs font-semibold flex items-center gap-1.5 shadow-lg">
             <span className="material-symbols-outlined text-[16px] text-primary">zoom_in</span>
             <span>Ampliar Imagen</span>

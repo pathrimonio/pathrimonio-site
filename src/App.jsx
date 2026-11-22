@@ -511,11 +511,17 @@ export default function App() {
   };
 
   const handleDuplicateInterface = (item) => {
+    const dupImages = Array.isArray(item.images) && item.images.length > 0
+      ? [...item.images]
+      : (item.image ? [item.image] : []);
+
     const dup = {
       ...item,
       id: `INT-${Math.floor(10 + Math.random() * 90)}`,
       fullName: `${item.fullName || item.title} (Copia)`,
       title: `${item.title || item.fullName} (Copia)`,
+      images: dupImages,
+      image: dupImages[0] || item.image || null,
       status: 'Borrador',
       createdAt: 'Justo ahora',
       version: `${item.version || 'v1.0'}-copy`

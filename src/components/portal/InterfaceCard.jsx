@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import InterfaceMockupPreview from './InterfaceMockupPreview';
 import DataUsageList from './DataUsageList';
 import { getEffectiveAspect } from '../../utils/aspectRatio';
@@ -49,7 +49,18 @@ export default function InterfaceCard({
   const statusMeta = getStatusBadge(item.status);
   const fields = item.fields || {};
   const roles = Array.isArray(item.roles) ? item.roles : (item.role ? [item.role] : []);
-  const detectedRatio = useImageAspect(item.image, item.imageAspect);
+
+  const currentImages = useMemo(() => {
+    if (Array.isArray(item.images) && item.images.length > 0) {
+      return item.images;
+    }
+    return item.image ? [item.image] : [];
+  }, [item.images, item.image]);
+
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const currentImage = currentImages[activeImageIndex] || item.image || null;
+
+  const detectedRatio = useImageAspect(currentImage, item.imageAspect);
   const effectiveAspect = getEffectiveAspect(item, detectedRatio);
   const isPhoneLayout = effectiveAspect === 'phone';
 
@@ -215,92 +226,116 @@ export default function InterfaceCard({
           </div>
         </div>
 
-        {/* Roles del Negocio Asignados */}
-        <div className="flex items-center gap-1.5 flex-wrap pt-1">
-          <span className="text-[11px] font-space text-on-surface-variant flex items-center gap-1 shrink-0 font-medium">
-            <span className="material-symbols-outlined text-[15px] text-primary">badge</span>
-            <span>Roles del Negocio:</span>
-          </span>
-          {roles.length > 0 ? (
-            roles.map((r, idx) => (
-              <span
-                key={idx}
-                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-space bg-surface-container border border-outline-variant text-white hover:border-primary/50 transition-colors shadow-sm"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                <span>{r}</span>
-              </span>
-            ))
-          ) : (
-            <span className="text-[11px] font-jakarta italic text-on-surface-variant/60">
-              Sin roles asignados
-            </span>
-          )}
-        </div>
       </div>
 
       {/* ── 2. SECCIÓN PRINCIPAL: MOCKUP + ESPECIFICACIÓN Y DATOS ── */}
-      {isPhoneLayout ? (
-        /* INTERFACES VERTICALES (Phone):
-           - Izquierda: Mockup vertical de teléfono
-           - Derecha: Cuadro de Especificación Técnica y DEBAJO de él la sección Datos Utilizados en esta Interfaz */
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(220px,300px)_minmax(0,1fr)] gap-5 items-start">
+      {(() => {
+        const previewBlock = (
           <div className="flex flex-col gap-1.5">
             <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-on-surface-variant font-space px-1">
               <span className="flex items-center gap-1.5 font-semibold text-white/90">
                 <span className="material-symbols-outlined text-[16px] text-primary">image</span>
                 <span>Vista de Interfaz</span>
+                {currentImages.length > 1 && (
+                  <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 text-[10px] font-mono font-bold">
+                    {currentImages.length} pantallas
+                  </span>
+                )}
               </span>
               <span className="text-[11px] font-mono text-on-surface-variant">
-                {item.image ? 'Captura / Mockup cargado' : 'Wireframe referencial UI'}
+                {currentImages.length > 1
+                  ? `Pantalla ${activeImageIndex + 1} de ${currentImages.length}`
+                  : (item.image ? 'Captura / Mockup cargado' : 'Wireframe referencial UI')}
               </span>
             </div>
 
             <InterfaceMockupPreview
-              image={item.image}
+              image={currentImage}
+              images={currentImages}
+              activeIndex={activeImageIndex}
+              onNextImage={() => setActiveImageIndex((prev) => (prev + 1) % currentImages.length)}
+              onPrevImage={() => setActiveImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length)}
               placeholderType={item.imagePlaceholder || 'dashboard'}
               title={item.fullName}
               aspectRatio={effectiveAspect}
               onImageClick={() => onEdit?.(item)}
             />
-          </div>
 
-          <div className="flex flex-col gap-5 min-w-0">
-            {specTableBlock}
-            {dataUsageBlock}
+            {/* Mini Galería / Carrusel de Miniaturas cuando hay múltiples pantallas */}
+            {currentImages.length > 1 && (
+              <div className="flex items-center justify-between gap-2 px-1 pt-1">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                  {currentImages.map((imgSrc, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setActiveImageIndex(idx); }}
+                      className={`w-11 h-11 rounded-lg overflow-hidden border transition-all cursor-pointer shrink-0 bg-surface-container ${
+                        activeImageIndex === idx
+                          ? 'border-primary ring-2 ring-primary/40 scale-105'
+                          : 'border-outline-variant/70 opacity-60 hover:opacity-100 hover:border-outline-variant'
+                      }`}
+                      title={`Ver pantalla ${idx + 1}`}
+                    >
+                      <img src={imgSrc} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length);
+                    }}
+                    className="p-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-white border border-outline-variant/60 cursor-pointer"
+                    title="Pantalla anterior"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">chevron_left</span>
+                  </button>
+                  <span className="font-mono text-[10px] text-on-surface-variant px-1">
+                    {activeImageIndex + 1}/{currentImages.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => (prev + 1) % currentImages.length);
+                    }}
+                    className="p-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-white border border-outline-variant/60 cursor-pointer"
+                    title="Siguiente pantalla"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      ) : (
-        /* INTERFACES HORIZONTALES (Desktop / Tablet / Web):
-           - Arriba: Mockup horizontal
-           - Abajo: A lado derecho de Cuadro de Especificación Técnica -> Datos Utilizados en esta Interfaz */
-        <div className="flex flex-col gap-5">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-on-surface-variant font-space px-1">
-              <span className="flex items-center gap-1.5 font-semibold text-white/90">
-                <span className="material-symbols-outlined text-[16px] text-primary">image</span>
-                <span>Vista de Interfaz</span>
-              </span>
-              <span className="text-[11px] font-mono text-on-surface-variant">
-                {item.image ? 'Captura / Mockup cargado' : 'Wireframe referencial UI'}
-              </span>
+        );
+
+        if (isPhoneLayout) {
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(220px,300px)_minmax(0,1fr)] gap-5 items-start">
+              {previewBlock}
+              <div className="flex flex-col gap-5 min-w-0">
+                {specTableBlock}
+                {dataUsageBlock}
+              </div>
             </div>
+          );
+        }
 
-            <InterfaceMockupPreview
-              image={item.image}
-              placeholderType={item.imagePlaceholder || 'dashboard'}
-              title={item.fullName}
-              aspectRatio={effectiveAspect}
-              onImageClick={() => onEdit?.(item)}
-            />
+        return (
+          <div className="flex flex-col gap-5">
+            {previewBlock}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+              {specTableBlock}
+              {dataUsageBlock}
+            </div>
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-            {specTableBlock}
-            {dataUsageBlock}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── 4. Footer: Trazabilidad y Acciones ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-outline-variant/60">

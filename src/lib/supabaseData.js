@@ -50,48 +50,65 @@ const mapStory = (row) => ({
   imageMeta: row.image_meta
 });
 
-const mapInterface = (row) => ({
-  id: row.id,
-  projectId: row.project_id,
-  number: row.number,
-  title: row.title,
-  fullName: row.full_name,
-  module: row.module,
-  status: row.status,
-  platform: row.platform,
-  image: row.image,
-  imagePlaceholder: row.image_placeholder,
-  fields: {
-    objetivo: row.objective,
-    contenido: row.content,
-    reglas: row.rules,
-    detalles: row.details
-  },
-  roles: (row.interface_roles || [])
-    .slice()
-    .sort((a, b) => a.position - b.position)
-    .map((role) => role.role_name),
-  linkedStory: row.linked_story_id,
-  author: row.author,
-  reviewedBy: row.reviewed_by,
-  approvedAt: row.approved_at,
-  version: row.version,
-  imageAspect: row.image_aspect,
-  dataUsage: (row.interface_data_usage || [])
-    .slice()
-    .sort((a, b) => a.position - b.position)
-    .map((ref) => ({
-      key: `${ref.data_model_id || ref.table_name}:${ref.attribute_id || ref.attribute_name}`,
-      tableId: ref.data_model_id,
-      tableName: ref.table_name,
-      tableLabel: ref.table_label,
-      schema: ref.schema_name,
-      attribute: ref.attribute_name,
-      type: ref.data_type,
-      isPrimary: ref.is_primary,
-      foreignKey: ref.foreign_key
-    }))
-});
+const mapInterface = (row) => {
+  let images = [];
+  if (row.image) {
+    try {
+      const parsed = JSON.parse(row.image);
+      if (Array.isArray(parsed)) {
+        images = parsed.filter(Boolean);
+      } else if (typeof row.image === 'string') {
+        images = [row.image];
+      }
+    } catch (_) {
+      images = [row.image];
+    }
+  }
+
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    number: row.number,
+    title: row.title,
+    fullName: row.full_name,
+    module: row.module,
+    status: row.status,
+    platform: row.platform,
+    image: images[0] || row.image || null,
+    images: images,
+    imagePlaceholder: row.image_placeholder,
+    fields: {
+      objetivo: row.objective,
+      contenido: row.content,
+      reglas: row.rules,
+      detalles: row.details
+    },
+    roles: (row.interface_roles || [])
+      .slice()
+      .sort((a, b) => a.position - b.position)
+      .map((role) => role.role_name),
+    linkedStory: row.linked_story_id,
+    author: row.author,
+    reviewedBy: row.reviewed_by,
+    approvedAt: row.approved_at,
+    version: row.version,
+    imageAspect: row.image_aspect,
+    dataUsage: (row.interface_data_usage || [])
+      .slice()
+      .sort((a, b) => a.position - b.position)
+      .map((ref) => ({
+        key: `${ref.data_model_id || ref.table_name}:${ref.attribute_id || ref.attribute_name}`,
+        tableId: ref.data_model_id,
+        tableName: ref.table_name,
+        tableLabel: ref.table_label,
+        schema: ref.schema_name,
+        attribute: ref.attribute_name,
+        type: ref.data_type,
+        isPrimary: ref.is_primary,
+        foreignKey: ref.foreign_key
+      }))
+  };
+};
 
 const mapDataModel = (row) => ({
   id: row.id,
@@ -240,6 +257,13 @@ export async function saveInterface(item, actorLookup, validDataModelIds, validS
     return null;
   };
 
+  const serializedImage = (() => {
+    if (Array.isArray(item.images) && item.images.length > 0) {
+      return item.images.length === 1 ? item.images[0] : JSON.stringify(item.images);
+    }
+    return item.image || null;
+  })();
+
   check(await db.from('interfaces').upsert({
     id: item.id,
     project_id: item.projectId,
@@ -249,7 +273,7 @@ export async function saveInterface(item, actorLookup, validDataModelIds, validS
     module: orNull(item.module),
     status: orNull(item.status),
     platform: orNull(item.platform),
-    image: orNull(item.image),
+    image: orNull(serializedImage),
     image_placeholder: orNull(item.imagePlaceholder),
     objective: orNull(item.fields?.objetivo),
     content: orNull(item.fields?.contenido),

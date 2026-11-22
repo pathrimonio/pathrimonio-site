@@ -23,8 +23,8 @@ export default function InterfaceBuilder({
   const [title, setTitle] = useState('Dashboard');
   const [module, setModule] = useState(() => modules[0] || 'Sin módulo');
   const [platform, setPlatform] = useState('Web & Mobile');
-  const [status, setStatus] = useState('Aprobado por Cliente');
-  const [linkedStory, setLinkedStory] = useState('US-104');
+  const [status, setStatus] = useState('Borrador');
+  const [linkedStory, setLinkedStory] = useState(() => existingStories[0]?.id || '');
   const [imageAspect, setImageAspect] = useState(null);
   const [dataUsage, setDataUsage] = useState([]);
 
@@ -73,6 +73,13 @@ export default function InterfaceBuilder({
     }
   }, [modules]);
 
+  // Keep the linked story valid when the project stories change.
+  useEffect(() => {
+    if (linkedStory && !existingStories.some((story) => story.id === linkedStory)) {
+      setLinkedStory(existingStories[0]?.id || '');
+    }
+  }, [existingStories, linkedStory]);
+
   const handleToggleRole = (roleName) => {
     setSelectedRoles(prev => {
       const next = prev.includes(roleName)
@@ -102,34 +109,77 @@ export default function InterfaceBuilder({
   const [reglas, setReglas] = useState('Solo administrador.');
   const [detalles, setDetalles] = useState('Datos en tiempo real.');
 
-  // Image handling
-  const [imagePreview, setImagePreview] = useState(null);
+  // Image handling (multiple images support)
+  const [images, setImages] = useState([]);
+  const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [imageUrlInput, setImageUrlInput] = useState('');
   const fileInputRef = useRef(null);
 
-  // File to base64 reader
+  // Files to base64 reader (supports multiple files)
   const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        onNotify?.('La imagen supera el límite de 5MB.');
-        return;
-      }
+    const fileList = Array.from(e.target.files || []);
+    if (fileList.length === 0) return;
+
+    const validFiles = fileList.filter((f) => f.size <= 8 * 1024 * 1024);
+    if (validFiles.length < fileList.length) {
+      onNotify?.('Algunas imágenes superaban el límite de 8MB y fueron omitidas.');
+    }
+    if (validFiles.length === 0) return;
+
+    let loaded = [];
+    let count = 0;
+    validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
-        setImagePreview(event.target.result);
-        onNotify?.('Imagen de interfaz cargada correctamente.');
+        loaded.push(event.target.result);
+        count++;
+        if (count === validFiles.length) {
+          setImages((prev) => {
+            const next = [...prev, ...loaded];
+            setActiveImageIdx(next.length - 1);
+            return next;
+          });
+          onNotify?.(`¡${validFiles.length} imagen(es) agregada(s) correctamente!`);
+        }
       };
       reader.readAsDataURL(file);
-    }
+    });
+    e.target.value = '';
   };
 
   const handleUrlApply = () => {
-    if (imageUrlInput.trim()) {
-      setImagePreview(imageUrlInput.trim());
-      setImageAspect(null);
-      onNotify?.('Enlace de imagen de interfaz aplicado.');
+    const trimmed = imageUrlInput.trim();
+    if (trimmed) {
+      setImages((prev) => {
+        const next = [...prev, trimmed];
+        setActiveImageIdx(next.length - 1);
+        return next;
+      });
+      setImageUrlInput('');
+      onNotify?.('Enlace de imagen agregado a la interfaz.');
     }
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setImages((prev) => {
+      const next = prev.filter((_, idx) => idx !== indexToRemove);
+      if (activeImageIdx >= next.length) {
+        setActiveImageIdx(Math.max(0, next.length - 1));
+      }
+      return next;
+    });
+  };
+
+  const handleSetPrimaryImage = (index) => {
+    if (index === 0) return;
+    setImages((prev) => {
+      const copy = [...prev];
+      const [moved] = copy.splice(index, 1);
+      copy.unshift(moved);
+      return copy;
+    });
+    setActiveImageIdx(0);
+    onNotify?.('Imagen establecida como portada principal de la interfaz.');
   };
 
   const handleSubmit = (e) => {
@@ -169,7 +219,8 @@ export default function InterfaceBuilder({
       imageAspect,
       dataUsage,
       roles: [...selectedRoles],
-      image: imagePreview,
+      image: images[0] || null,
+      images: [...images],
       imagePlaceholder: titleClean.toLowerCase().includes('dash') ? 'dashboard' :
                         titleClean.toLowerCase().includes('login') ? 'login' :
                         titleClean.toLowerCase().includes('meta') ? 'goal_create' :
@@ -189,7 +240,7 @@ export default function InterfaceBuilder({
     };
 
     onSaveInterface?.(newInterface);
-    onNotify?.(`¡Ficha de interfaz "${fullName}" registrada exitosamente con ${selectedRoles.length} roles asignados!`);
+    onNotify?.(`¡Ficha de interfaz "${fullName}" registrada exitosamente con ${images.length} imágenes y ${selectedRoles.length} roles asignados!`);
 
     // Reset some fields
     setTitle('');
@@ -198,10 +249,13 @@ export default function InterfaceBuilder({
     setContenido('');
     setReglas('');
     setDetalles('');
-    setImagePreview(null);
+    setImages([]);
+    setActiveImageIdx(0);
     setImageUrlInput('');
     setImageAspect(null);
     setDataUsage([]);
+    setStatus('Borrador');
+    setLinkedStory(existingStories[0]?.id || '');
     if (projectActors.length > 0) {
       setSelectedRoles([projectActors[0].name]);
     }
@@ -237,9 +291,13 @@ export default function InterfaceBuilder({
             setContenido('');
             setReglas('');
             setDetalles('');
-            setImagePreview(null);
+            setImages([]);
+            setActiveImageIdx(0);
+            setImageUrlInput('');
             setImageAspect(null);
             setDataUsage([]);
+            setStatus('Borrador');
+            setLinkedStory(existingStories[0]?.id || '');
           }}
           className="text-on-surface-variant hover:text-white p-1 rounded transition-colors"
           title="Limpiar formulario"
@@ -250,19 +308,31 @@ export default function InterfaceBuilder({
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         
-        {/* 1. Título y Número */}
+        {/* 1. Módulo, Número, Nombre e Historia vinculada */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-          <div className="sm:col-span-3 flex flex-col gap-1">
+          <div className="sm:col-span-4 flex flex-col gap-1">
+            <label className="text-xs font-space text-white">Módulo</label>
+            <ModuleSelect
+              value={module}
+              modules={modules}
+              onChange={setModule}
+              onAdd={onAddModule}
+              onRename={onRenameModule}
+              onDelete={onDeleteModule}
+              interfaces={existingInterfaces}
+            />
+          </div>
+          <div className="sm:col-span-2 flex flex-col gap-1">
             <label className="text-xs font-space text-white">Número</label>
             <input
               type="text"
               value={number}
               onChange={(e) => setNumber(e.target.value)}
               placeholder="ej. 4"
-              className="h-9 px-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-space font-bold text-primary focus:border-primary focus:outline-none"
+              className="w-full h-9 px-2.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-space font-bold text-primary focus:border-primary focus:outline-none"
             />
           </div>
-          <div className="sm:col-span-9 flex flex-col gap-1">
+          <div className="sm:col-span-6 flex flex-col gap-1">
             <label className="text-xs font-space text-white flex items-center justify-between">
               <span>Nombre de la Interfaz *</span>
               <span className="text-[10px] text-on-surface-variant">Ej: Dashboard</span>
@@ -272,8 +342,23 @@ export default function InterfaceBuilder({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="ej. Dashboard"
-              className="h-9 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
+              className="w-full h-9 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
             />
+          </div>
+          <div className="sm:col-span-6 sm:col-start-7 flex flex-col gap-1">
+            <label className="text-xs font-space text-white">Historia de Usuario Vinculada</label>
+            <select
+              value={linkedStory}
+              onChange={(e) => setLinkedStory(e.target.value)}
+              className="w-full h-9 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-mono text-white focus:border-primary focus:outline-none"
+            >
+              <option value="">Sin historia vinculada</option>
+              {existingStories.map(story => (
+                <option key={story.id} value={story.id}>
+                  {story.id} — {story.module} ({story.role})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -371,33 +456,129 @@ export default function InterfaceBuilder({
         </div>
 
         {/* 3. Sección de Imagen de la Interfaz */}
-        <div className="flex flex-col gap-2 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60">
-          <span className="text-xs font-space text-white font-semibold flex items-center gap-1.5">
-            <span className="material-symbols-outlined text-[16px] text-primary">add_photo_alternate</span>
-            <span>Imagen o Wireframe de la Pantalla:</span>
-          </span>
+        <div className="flex flex-col gap-2.5 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-space text-white font-semibold flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px] text-primary">add_photo_alternate</span>
+              <span>Imágenes o Wireframes de la Pantalla:</span>
+            </span>
+            {images.length > 0 && (
+              <span className="text-[11px] font-mono text-primary font-bold flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px]">photo_library</span>
+                <span>{images.length} {images.length === 1 ? 'imagen' : 'imágenes'}</span>
+              </span>
+            )}
+          </div>
 
-          {imagePreview ? (
-            <div className={`relative rounded-lg overflow-hidden border border-outline-variant p-2 bg-surface-container flex items-center justify-center max-h-48 ${classifyAspect(imageAspect) === 'phone' ? 'max-w-[240px] mx-auto' : ''}`}>
-              <img
-                src={imagePreview}
-                alt="Preview"
-                onLoad={(event) => {
-                  const el = event.currentTarget;
-                  if (el.naturalWidth && el.naturalHeight) {
-                    setImageAspect(el.naturalWidth / el.naturalHeight);
-                  }
-                }}
-                className="max-h-44 object-contain rounded"
-              />
-              <button
-                type="button"
-                onClick={() => setImagePreview(null)}
-                className="absolute top-2 right-2 p-1 rounded-full bg-red-500/80 hover:bg-red-500 text-white transition-colors"
-                title="Quitar imagen"
-              >
-                <span className="material-symbols-outlined text-[14px]">close</span>
-              </button>
+          {images.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {/* Visor de la imagen actualmente seleccionada */}
+              <div className={`relative rounded-lg overflow-hidden border border-outline-variant p-2 bg-surface-container flex items-center justify-center max-h-52 ${classifyAspect(imageAspect) === 'phone' ? 'max-w-[240px] mx-auto' : ''}`}>
+                <img
+                  src={images[activeImageIdx] || images[0]}
+                  alt={`Preview ${activeImageIdx + 1}`}
+                  onLoad={(event) => {
+                    const el = event.currentTarget;
+                    if (el.naturalWidth && el.naturalHeight) {
+                      setImageAspect(el.naturalWidth / el.naturalHeight);
+                    }
+                  }}
+                  className="max-h-48 object-contain rounded"
+                />
+
+                {/* Badges on active preview */}
+                <div className="absolute top-2 left-2 flex items-center gap-1">
+                  <span className="px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-white font-mono text-[10px] font-bold border border-white/20">
+                    {activeImageIdx + 1} / {images.length}
+                  </span>
+                  {activeImageIdx === 0 ? (
+                    <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/40 font-space text-[10px] font-bold">
+                      ★ Portada
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleSetPrimaryImage(activeImageIdx)}
+                      className="px-2 py-0.5 rounded-full bg-black/75 hover:bg-primary hover:text-on-primary text-white font-space text-[10px] border border-white/20 transition-colors cursor-pointer"
+                      title="Convertir esta imagen en la portada principal"
+                    >
+                      Hacer portada
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(activeImageIdx)}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-red-500/80 hover:bg-red-500 text-white transition-colors cursor-pointer shadow"
+                  title="Quitar esta imagen"
+                >
+                  <span className="material-symbols-outlined text-[14px]">close</span>
+                </button>
+              </div>
+
+              {/* Tira de miniaturas de la galería */}
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                {images.map((src, idx) => (
+                  <div key={idx} className="relative group shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setActiveImageIdx(idx)}
+                      className={`w-14 h-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer bg-surface-container flex items-center justify-center ${
+                        activeImageIdx === idx
+                          ? 'border-primary ring-2 ring-primary/40 scale-105'
+                          : 'border-outline-variant/60 opacity-70 hover:opacity-100 hover:border-outline-variant'
+                      }`}
+                      title={`Ver imagen ${idx + 1}`}
+                    >
+                      <img src={src} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                    {idx === 0 && (
+                      <span className="absolute bottom-0 left-0 right-0 bg-primary/90 text-on-primary font-mono text-[8px] font-bold text-center leading-tight py-0.5 pointer-events-none">
+                        PORTADA
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }}
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow cursor-pointer"
+                      title="Eliminar"
+                    >
+                      <span className="material-symbols-outlined text-[10px]">close</span>
+                    </button>
+                  </div>
+                ))}
+
+                {/* Botón para añadir más imágenes */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-14 h-14 rounded-lg border-2 border-dashed border-outline-variant hover:border-primary text-on-surface-variant hover:text-primary flex flex-col items-center justify-center gap-0.5 shrink-0 transition-colors bg-surface-container/30 cursor-pointer"
+                  title="Subir más imágenes desde tu dispositivo"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+                  <span className="font-space text-[9px] font-semibold">+ Más</span>
+                </button>
+              </div>
+
+              {/* URL input para añadir más por enlace */}
+              <div className="flex items-center gap-1.5 pt-1 border-t border-outline-variant/40">
+                <input
+                  type="text"
+                  value={imageUrlInput}
+                  onChange={(e) => setImageUrlInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleUrlApply(); } }}
+                  placeholder="Pegar otra URL de imagen (Figma / Web)..."
+                  className="h-8 px-2.5 bg-surface-container border border-outline-variant rounded text-[11px] font-mono text-white flex-1 focus:border-primary focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleUrlApply}
+                  className="px-2.5 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space shrink-0 cursor-pointer"
+                >
+                  + Añadir URL
+                </button>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -406,16 +587,13 @@ export default function InterfaceBuilder({
                 className="border-2 border-dashed border-outline-variant hover:border-primary rounded-lg p-3 text-center cursor-pointer transition-colors bg-surface-container/40"
               >
                 <span className="material-symbols-outlined text-primary text-[24px]">cloud_upload</span>
-                <p className="text-[11px] text-white font-space mt-1">Haz clic para subir imagen o wireframe (PNG, JPG)</p>
-                <span className="text-[10px] text-on-surface-variant">O déjalo vacío para usar el mockup interactivo generado</span>
+                <p className="text-[11px] text-white font-space mt-1 font-semibold">
+                  Haz clic para subir una o varias imágenes (PNG, JPG)
+                </p>
+                <span className="text-[10px] text-on-surface-variant">
+                  Puedes seleccionar múltiples capturas a la vez o agregar por URL
+                </span>
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
 
               {/* URL fallback */}
               <div className="flex items-center gap-1.5 pt-1">
@@ -423,19 +601,29 @@ export default function InterfaceBuilder({
                   type="text"
                   value={imageUrlInput}
                   onChange={(e) => setImageUrlInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleUrlApply(); } }}
                   placeholder="O pega URL de imagen (Figma / Web)..."
                   className="h-8 px-2.5 bg-surface-container border border-outline-variant rounded text-[11px] font-mono text-white flex-1 focus:border-primary focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={handleUrlApply}
-                  className="px-2.5 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space"
+                  className="px-2.5 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space shrink-0 cursor-pointer"
                 >
                   Cargar
                 </button>
               </div>
             </div>
           )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
 
           {imageAspect && (
             <span className="text-[10px] font-jakarta text-on-surface-variant">
@@ -543,46 +731,17 @@ export default function InterfaceBuilder({
         {/* 5. Metadatos complementarios */}
         <div className="flex flex-col gap-3 pt-2 border-t border-outline-variant/60">
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-space text-white">Módulo</label>
-            <ModuleSelect
-              value={module}
-              modules={modules}
-              onChange={setModule}
-              onAdd={onAddModule}
-              onRename={onRenameModule}
-              onDelete={onDeleteModule}
-              interfaces={existingInterfaces}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
             <label className="text-xs font-space text-white">Estado Inicial</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-jakarta text-white focus:border-primary focus:outline-none"
             >
-              <option value="Aprobado por Cliente">Aprobado por Cliente</option>
-              <option value="En Revisión">En Revisión</option>
               <option value="Borrador">Borrador</option>
+              <option value="En Revisión">En Revisión</option>
+              <option value="Aprobado por Cliente">Aprobado por Cliente</option>
             </select>
           </div>
-        </div>
-
-        {/* Historia vinculada */}
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-space text-white">Historia de Usuario Vinculada</label>
-          <select
-            value={linkedStory}
-            onChange={(e) => setLinkedStory(e.target.value)}
-            className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-xs font-mono text-white focus:border-primary focus:outline-none"
-          >
-            {existingStories.map(story => (
-              <option key={story.id} value={story.id}>
-                {story.id} — {story.module} ({story.role})
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Submit CTA */}
