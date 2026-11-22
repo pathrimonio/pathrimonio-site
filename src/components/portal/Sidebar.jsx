@@ -47,9 +47,14 @@ export default function Sidebar({
               <div className="w-7 h-7 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center group-hover:border-primary transition-colors">
                 <img src="/assets/images/logo.png" alt="Pathrimonio" className="w-4 h-4 object-contain" />
               </div>
-              <div className="flex items-baseline tracking-tight font-space text-base">
-                <span className="text-white font-bold">PATH</span>
-                <span className="text-primary font-bold">RIMONIO</span>
+              <div className="flex flex-col">
+                <div className="flex items-baseline tracking-tight font-space text-base leading-none">
+                  <span className="text-white font-bold">PATH</span>
+                  <span className="text-primary font-bold">RIMONIO</span>
+                </div>
+                <span className="font-space text-[9px] text-primary/90 font-medium tracking-tight mt-0.5">
+                  Impulsamos el desarrollo comunitario
+                </span>
               </div>
             </div>
 

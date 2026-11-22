@@ -26,8 +26,8 @@ export default function Navbar({ onOpenContact, onOpenPortal }) {
             <span className="font-space text-lg font-bold tracking-tight text-white flex items-center">
               PATH<span className="text-primary">RIMONIO</span>
             </span>
-            <span className="font-space text-[10px] uppercase tracking-wider text-on-surface-variant font-semibold">
-              Software Development
+            <span className="font-space text-[10px] tracking-wide text-primary font-medium">
+              Impulsamos el desarrollo comunitario
             </span>
           </div>
         </div>

@@ -21,8 +21,8 @@ export default function Hero({ onOpenContact }) {
             {/* Status Pill */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-surface-container-high border border-outline-variant rounded-full w-fit">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-              <span className="font-space text-xs uppercase tracking-widest text-primary font-semibold">
-                Compañía de Desarrollo de Software
+              <span className="font-space text-xs tracking-wide text-primary font-semibold">
+                Impulsamos el desarrollo comunitario
               </span>
             </div>
 

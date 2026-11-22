@@ -69,8 +69,8 @@ export default function LoginPage({ onLoginSuccess }) {
             <h1 className="font-space text-2xl font-bold text-white tracking-tight">
               PATH<span className="text-primary">RIMONIO</span>
             </h1>
-            <p className="font-space text-xs uppercase tracking-widest text-on-surface-variant mt-0.5">
-              Portal Core · Impact Hub v2.4
+            <p className="font-space text-xs tracking-wider text-primary font-medium mt-0.5">
+              Impulsamos el desarrollo comunitario
             </p>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-space text-[11px]">
@@ -175,7 +175,7 @@ export default function LoginPage({ onLoginSuccess }) {
             Sesión cifrada · Acceso institucional restringido
           </span>
           <span className="block mt-1 text-outline">
-            © 2026 Pathrimonio — Arquitectura con Propósito Social
+            © 2026 Pathrimonio — Impulsamos el desarrollo comunitario
           </span>
         </div>
       </div>
