@@ -17,7 +17,8 @@ export default function InterfaceFeed({
   onToggleCriterion,
   searchQuery,
   setSearchQuery,
-  builderRoles = []
+  builderRoles = [],
+  onOpenRegisterModal
 }) {
   const [selectedPlatform, setSelectedPlatform] = useState('Todas');
   const [selectedStatus, setSelectedStatus] = useState('Todos');
@@ -152,8 +153,19 @@ export default function InterfaceFeed({
             )}
           </div>
 
-          {/* Quick Stats Badges */}
-          <div className="flex items-center gap-2 flex-wrap text-xs font-space">
+          {/* Actions & Quick Stats */}
+          <div className="flex items-center gap-2 flex-wrap text-xs font-space ml-auto">
+            {onOpenRegisterModal && (
+              <button
+                type="button"
+                onClick={onOpenRegisterModal}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-on-primary font-space text-xs font-bold transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">add_circle</span>
+                <span>Registrar Interfaz</span>
+              </button>
+            )}
+
             <div className="px-2.5 py-1 rounded-lg bg-surface-container border border-outline-variant flex items-center gap-1.5 text-white">
               <span className="text-on-surface-variant">Total:</span>
               <span className="font-mono font-bold text-primary">{totalCount}</span>
@@ -332,23 +344,37 @@ export default function InterfaceFeed({
             No se encontraron interfaces con los filtros actuales
           </h3>
           <p className="font-jakarta text-xs text-on-surface-variant max-w-md">
-            Intenta ajustar los criterios de búsqueda o registra una nueva pantalla utilizando el formulario de formalización a la izquierda.
+            Intenta ajustar los criterios de búsqueda o registra una nueva pantalla en el sistema.
           </p>
-          {(searchQuery || selectedPlatform !== 'Todas' || selectedStatus !== 'Todos' || selectedModule !== 'Todos' || selectedRole !== 'Todos') && (
-            <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedPlatform('Todas');
-                setSelectedStatus('Todos');
-                setSelectedModule('Todos');
-                setSelectedRole('Todos');
-              }}
-              className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold transition-colors"
-            >
-              <span className="material-symbols-outlined text-[16px]">clear_all</span>
-              <span>Restablecer Filtros</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2 flex-wrap justify-center mt-2">
+            {(searchQuery || selectedPlatform !== 'Todas' || selectedStatus !== 'Todos' || selectedModule !== 'Todos' || selectedRole !== 'Todos') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedPlatform('Todas');
+                  setSelectedStatus('Todos');
+                  setSelectedModule('Todos');
+                  setSelectedRole('Todos');
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">clear_all</span>
+                <span>Restablecer Filtros</span>
+              </button>
+            )}
+
+            {onOpenRegisterModal && (
+              <button
+                type="button"
+                onClick={onOpenRegisterModal}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-on-primary font-space text-xs font-bold transition-all shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[17px]">add_circle</span>
+                <span>Registrar Nueva Interfaz</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 

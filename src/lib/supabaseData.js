@@ -29,6 +29,16 @@ const mapProject = (row) => ({
   modules: row.modules || []
 });
 
+const mapPortalUser = (row) => ({
+  id: row.id,
+  email: row.email,
+  name: row.name,
+  role: row.role,
+  avatar: row.avatar,
+  color: row.color,
+  permissions: row.permissions || []
+});
+
 const mapStory = (row) => ({
   id: row.id,
   projectId: row.project_id,
@@ -200,14 +210,15 @@ const mapFile = (row) => ({
 export async function fetchWorkspace() {
   const db = requireSupabase();
 
-  const [projects, stories, interfaces, dataModels, actors, files, modules] = await Promise.all([
+  const [projects, stories, interfaces, dataModels, actors, files, modules, portalUsers] = await Promise.all([
     db.from('projects').select('*').order('name'),
     db.from('stories').select('*, story_criteria(*)').order('id'),
     db.from('interfaces').select('*, interface_roles(*), interface_data_usage(*)').order('id'),
     db.from('data_models').select('*, data_model_attributes(*)').order('id'),
     db.from('actors').select('*').order('id'),
     db.from('files').select('*').order('id'),
-    db.from('interface_modules').select('*').order('name')
+    db.from('interface_modules').select('*').order('name'),
+    db.from('portal_users').select('*').order('name')
   ]);
 
   return {
@@ -217,7 +228,8 @@ export async function fetchWorkspace() {
     dataModels: check(dataModels).map(mapDataModel),
     actors: check(actors).map(mapActor),
     files: check(files).map(mapFile),
-    interfaceModules: check(modules)
+    interfaceModules: check(modules),
+    portalUsers: check(portalUsers).map(mapPortalUser)
   };
 }
 

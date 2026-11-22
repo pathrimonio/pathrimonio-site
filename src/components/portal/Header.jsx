@@ -7,8 +7,22 @@ export default function Header({
   setSearchQuery, 
   user, 
   onLogout,
-  activeProject
+  activeProject,
+  projectUsers = []
 }) {
+  const currentEmail = String(user?.email || '').toLowerCase();
+  const collaborators = (projectUsers || []).filter(
+    (member) => String(member.email || '').toLowerCase() !== currentEmail
+  );
+  const visibleCollaborators = collaborators.slice(0, 2);
+  const hiddenCollaborators = collaborators.slice(2);
+  const initialsOf = (name) => String(name || '')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+
   return (
     <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md z-30 border-b border-outline-variant px-4 sm:px-6 flex items-center justify-between gap-4">
       
@@ -57,12 +71,31 @@ export default function Header({
           </kbd>
         </div>
 
-        {/* Collaborators avatars (non-logged users) */}
-        <div className="hidden sm:flex items-center -space-x-1.5">
-          <div className="w-6 h-6 rounded-full bg-blue-500/80 border border-outline-variant flex items-center justify-center font-space text-[10px] font-semibold text-white" title="Alonso L.">AL</div>
-          <div className="w-6 h-6 rounded-full bg-teal-500/80 border border-outline-variant flex items-center justify-center font-space text-[10px] font-semibold text-white" title="Mariana R.">MR</div>
-          <div className="w-6 h-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-space text-[10px] font-bold text-primary" title="3 colaboradores más">+2</div>
-        </div>
+        {/* Collaborators avatars (project team, excluding the logged-in user) */}
+        {collaborators.length > 0 && (
+          <div
+            className="hidden sm:flex items-center -space-x-1.5"
+            title={`Equipo de ${activeProject?.shortName || activeProject?.name || 'Pathrimonio'}`}
+          >
+            {visibleCollaborators.map((member) => (
+              <div
+                key={member.id || member.email}
+                className={`w-6 h-6 rounded-full border border-outline-variant flex items-center justify-center font-space text-[10px] font-semibold text-white ${member.color || 'bg-blue-500'}`}
+                title={`${member.name}${member.role ? ` · ${member.role}` : ''}`}
+              >
+                {member.avatar || initialsOf(member.name)}
+              </div>
+            ))}
+            {hiddenCollaborators.length > 0 && (
+              <div
+                className="w-6 h-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-space text-[10px] font-bold text-primary"
+                title={hiddenCollaborators.map((member) => member.name).join(', ')}
+              >
+                +{hiddenCollaborators.length}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Notification bell */}
         <button className="relative p-1.5 rounded text-on-surface-variant hover:text-white hover:bg-surface-container-low transition-colors">

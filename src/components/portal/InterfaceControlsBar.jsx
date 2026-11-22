@@ -7,7 +7,8 @@ export default function InterfaceControlsBar({
   projectActors = [],
   onNotify,
   onConfirmClientReview,
-  activeProject
+  activeProject,
+  onOpenRegisterModal
 }) {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const totalInterfaces = interfaces.length;
@@ -122,11 +123,23 @@ export default function InterfaceControlsBar({
             {/* Confirm client review button */}
             <button
               onClick={() => setIsReviewModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-surface-container-high border border-outline-variant hover:border-emerald-500/50 text-white hover:text-emerald-400 font-space text-xs font-semibold transition-all shadow-sm cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[17px]">fact_check</span>
+              <span className="material-symbols-outlined text-[17px] text-emerald-400">fact_check</span>
               <span>Confirmar Revisión</span>
             </button>
+
+            {/* Register new interface button */}
+            {onOpenRegisterModal && (
+              <button
+                type="button"
+                onClick={onOpenRegisterModal}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                <span>Registrar Interfaz</span>
+              </button>
+            )}
           </div>
         </div>
 

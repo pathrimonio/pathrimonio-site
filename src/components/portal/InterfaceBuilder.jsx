@@ -5,6 +5,8 @@ import DataUsageList from './DataUsageList';
 import { ASPECT_RATIO_LABELS, classifyAspect } from '../../utils/aspectRatio';
 
 export default function InterfaceBuilder({
+  isOpen = false,
+  onClose,
   onSaveInterface,
   onNotify,
   existingStories = [],
@@ -259,54 +261,94 @@ export default function InterfaceBuilder({
     if (projectActors.length > 0) {
       setSelectedRoles([projectActors[0].name]);
     }
+
+    onClose?.();
   };
 
+  const handleReset = () => {
+    setTitle('');
+    setObjetivo('');
+    setContenido('');
+    setReglas('');
+    setDetalles('');
+    setImages([]);
+    setActiveImageIdx(0);
+    setImageUrlInput('');
+    setImageAspect(null);
+    setDataUsage([]);
+    setStatus('Borrador');
+    setLinkedStory(existingStories[0]?.id || '');
+    if (projectActors && projectActors.length > 0) {
+      setSelectedRoles([projectActors[0].name]);
+    }
+    onNotify?.('Formulario reiniciado.');
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
   return (
-    <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-5 shadow-lg">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-outline-variant/60 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space">
-            <span className="material-symbols-outlined text-[18px]">table_chart</span>
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose?.();
+      }}
+    >
+      <div className="relative w-full max-w-4xl bg-surface-container border border-outline-variant rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/60 bg-surface-container-low shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space">
+              <span className="material-symbols-outlined text-[20px]">table_chart</span>
+            </div>
+            <div>
+              <h2 className="font-space text-base font-bold text-white flex items-center gap-2">
+                <span>Nueva Ficha de Interfaz</span>
+                <span className="px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/30 text-[10px] font-mono font-semibold">
+                  UI SPEC
+                </span>
+              </h2>
+              <p className="font-jakarta text-xs text-on-surface-variant">
+                Imagen de la interfaz + cuadro formal de especificación
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-space text-sm font-bold text-white flex items-center gap-2">
-              <span>Nueva Ficha de Interfaz</span>
-              <span className="px-1.5 py-0.2 rounded bg-primary/20 text-primary border border-primary/30 text-[10px] font-mono">
-                UI SPEC
-              </span>
-            </h2>
-            <p className="font-jakarta text-[11px] text-on-surface-variant">
-              Imagen de la interfaz + cuadro formal de especificación
-            </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleReset}
+              className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-surface-container transition-colors cursor-pointer"
+              title="Limpiar formulario"
+            >
+              <span className="material-symbols-outlined text-[18px]">restart_alt</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-surface-container transition-colors cursor-pointer"
+              title="Cerrar modal (Esc)"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setTitle('');
-            setObjetivo('');
-            setContenido('');
-            setReglas('');
-            setDetalles('');
-            setImages([]);
-            setActiveImageIdx(0);
-            setImageUrlInput('');
-            setImageAspect(null);
-            setDataUsage([]);
-            setStatus('Borrador');
-            setLinkedStory(existingStories[0]?.id || '');
-          }}
-          className="text-on-surface-variant hover:text-white p-1 rounded transition-colors"
-          title="Limpiar formulario"
-        >
-          <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          
+          {/* Scrollable Form Body */}
+          <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-5">
         
         {/* 1. Módulo, Número, Nombre e Historia vinculada */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
@@ -744,16 +786,29 @@ export default function InterfaceBuilder({
           </div>
         </div>
 
-        {/* Submit CTA */}
+      </div>
+
+      {/* Sticky Modal Footer */}
+      <div className="flex items-center justify-between px-6 py-4 border-t border-outline-variant/60 bg-surface-container-low shrink-0">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2 rounded-lg bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs transition-colors cursor-pointer"
+        >
+          Cancelar
+        </button>
+
         <button
           type="submit"
-          className="w-full mt-2 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.01] active:scale-[0.98]"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
         >
           <span className="material-symbols-outlined text-[17px]">save</span>
           <span>Registrar Ficha de Pantalla</span>
         </button>
+      </div>
 
-      </form>
-    </div>
-  );
+    </form>
+  </div>
+</div>
+);
 }

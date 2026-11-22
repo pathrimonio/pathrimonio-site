@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { INITIAL_STORIES } from './data/initialStories';
 import { INITIAL_INTERFACES, INTERFACE_MODULE_OPTIONS } from './data/initialInterfaces';
 import { INITIAL_PROJECTS } from './data/initialProjects';
 import { INITIAL_DATA_MODELS } from './data/initialDataModels';
 import { INITIAL_ACTORS } from './data/initialActors';
 import { INITIAL_FILES } from './data/initialFiles';
-import { mapSupabaseUser } from './auth/authConfig';
+import { mapSupabaseUser, DEMO_USERS } from './auth/authConfig';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import {
   fetchWorkspace,
@@ -207,6 +207,19 @@ export default function App() {
     return INITIAL_FILES;
   });
 
+  // ── Portal users (team directory)
+  const [portalUsers, setPortalUsers] = useState(() =>
+    DEMO_USERS.map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatar: user.avatar,
+      color: user.color,
+      permissions: user.permissions
+    }))
+  );
+
   // ── Filters & Search
   const [activeModule, setActiveModule] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
@@ -231,6 +244,7 @@ export default function App() {
 
   const [selectedInterface, setSelectedInterface] = useState(null);
   const [isInterfaceModalOpen, setIsInterfaceModalOpen] = useState(false);
+  const [isRegisterInterfaceModalOpen, setIsRegisterInterfaceModalOpen] = useState(false);
 
   const [selectedTable, setSelectedTable] = useState(null);
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
@@ -385,6 +399,9 @@ export default function App() {
         setDataModels(data.dataModels);
         setActors(data.actors);
         setFiles(data.files);
+        if (data.portalUsers) {
+          setPortalUsers(data.portalUsers);
+        }
         if (data.interfaceModules.length > 0) {
           setInterfaceModules(data.interfaceModules.map((module) => module.name));
         }
@@ -683,6 +700,44 @@ export default function App() {
         const pId = f.projectId || (f.id === 'FILE-05' || f.id === 'FILE-06' || f.id === 'FILE-07' || f.id === 'FILE-08' ? 'portal-admin' : (f.id === 'FILE-09' || f.id === 'FILE-10' ? 'core-hub' : 'pathway'));
         return pId === activeProjectId;
       });
+
+  // Team members of the active project: portal users that authored/uploaded project artifacts.
+  const projectUsers = useMemo(() => {
+    const users = portalUsers || [];
+    if (users.length === 0) return [];
+    if (activeProjectId === 'all') return users;
+
+    const normalize = (value) => String(value || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\([^)]*\)/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const artifactNames = new Set();
+    const collect = (value) => {
+      const normalized = normalize(value);
+      if (normalized) artifactNames.add(normalized);
+    };
+
+    projectStories.forEach((story) => collect(story.author));
+    projectInterfaces.forEach((item) => collect(item.author));
+    projectDataModels.forEach((model) => collect(model.author));
+    projectFiles.forEach((file) => collect(file.uploadedBy));
+
+    const matched = users.filter((portalUser) => {
+      const userName = normalize(portalUser.name);
+      if (!userName) return false;
+      return [...artifactNames].some((artifactName) =>
+        artifactName === userName ||
+        artifactName.startsWith(`${userName} `) ||
+        userName.startsWith(`${artifactName} `)
+      );
+    });
+
+    return matched.length > 0 ? matched : users;
+  }, [portalUsers, activeProjectId, projectStories, projectInterfaces, projectDataModels, projectFiles]);
 
   // ── Data Model Handlers
   const handleSaveTable = (newTable) => {
@@ -1031,6 +1086,7 @@ export default function App() {
               user={currentUser}
               onLogout={handleLogout}
               activeProject={activeProject}
+              projectUsers={projectUsers}
             />
 
             <main className="w-full pt-14 flex-1">
@@ -1117,43 +1173,44 @@ export default function App() {
                     onNotify={notify}
                     onConfirmClientReview={handleConfirmClientReview}
                     activeProject={activeProject}
+                    onOpenRegisterModal={() => setIsRegisterInterfaceModalOpen(true)}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                      <section className="lg:col-span-5 flex flex-col gap-y-4 lg:sticky lg:top-20">
-                        <InterfaceBuilder
-                          onSaveInterface={handleSaveInterface}
-                          onNotify={notify}
-                          existingStories={projectStories}
-                          activeProjectId={activeProjectId}
-                          projectActors={projectActors}
-                          modules={interfaceModules}
-                          onAddModule={handleAddInterfaceModule}
-                          onRenameModule={handleRenameInterfaceModule}
-                          onDeleteModule={handleDeleteInterfaceModule}
-                          existingInterfaces={interfaces}
-                          dataModels={projectDataModels}
-                          onAddRole={handleAddRoleFromInterface}
-                          onRolesChange={setBuilderRoles}
-                        />
-                      </section>
-                      <section className="lg:col-span-7 flex flex-col gap-y-4">
-                        <InterfaceFeed
-                          interfaces={projectInterfaces}
-                          projectActors={projectActors}
-                          modules={interfaceModules}
-                          onEditInterface={(item) => { setSelectedInterface(item); setIsInterfaceModalOpen(true); }}
-                          onDuplicateInterface={handleDuplicateInterface}
-                          onDeleteInterface={handleDeleteInterface}
-                          onQuickStatusChange={handleQuickInterfaceStatus}
-                          onToggleCriterion={handleToggleVisualCriterion}
-                          searchQuery={interfaceSearchQuery}
-                          setSearchQuery={setInterfaceSearchQuery}
-                          builderRoles={builderRoles}
-                        />
-                      </section>
+                    <div className="w-full flex flex-col gap-y-4">
+                      <InterfaceFeed
+                        interfaces={projectInterfaces}
+                        projectActors={projectActors}
+                        modules={interfaceModules}
+                        onEditInterface={(item) => { setSelectedInterface(item); setIsInterfaceModalOpen(true); }}
+                        onDuplicateInterface={handleDuplicateInterface}
+                        onDeleteInterface={handleDeleteInterface}
+                        onQuickStatusChange={handleQuickInterfaceStatus}
+                        onToggleCriterion={handleToggleVisualCriterion}
+                        searchQuery={interfaceSearchQuery}
+                        setSearchQuery={setInterfaceSearchQuery}
+                        builderRoles={builderRoles}
+                        onOpenRegisterModal={() => setIsRegisterInterfaceModalOpen(true)}
+                      />
                     </div>
                   </div>
+
+                  <InterfaceBuilder
+                    isOpen={isRegisterInterfaceModalOpen}
+                    onClose={() => setIsRegisterInterfaceModalOpen(false)}
+                    onSaveInterface={handleSaveInterface}
+                    onNotify={notify}
+                    existingStories={projectStories}
+                    activeProjectId={activeProjectId}
+                    projectActors={projectActors}
+                    modules={interfaceModules}
+                    onAddModule={handleAddInterfaceModule}
+                    onRenameModule={handleRenameInterfaceModule}
+                    onDeleteModule={handleDeleteInterfaceModule}
+                    existingInterfaces={interfaces}
+                    dataModels={projectDataModels}
+                    onAddRole={handleAddRoleFromInterface}
+                    onRolesChange={setBuilderRoles}
+                  />
                 </div>
               )}
               {activePortalTab === 'dataModel' && (
