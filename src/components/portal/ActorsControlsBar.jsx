@@ -18,8 +18,13 @@ export default function ActorsControlsBar({
   });
   const totalAreasCovered = coveredAreas.size;
 
-  // Collaborators assigned
-  const collaboratorsCount = actors.filter(a => a.assignedWorker || a.assignedWorkerName).length;
+  // Unique business users assigned to roles (email first, name as fallback)
+  const collaboratorKeys = new Set();
+  actors.forEach(a => {
+    const key = (a.assignedWorker || a.assignedWorkerName || '').trim().toLowerCase();
+    if (key) collaboratorKeys.add(key);
+  });
+  const collaboratorsCount = collaboratorKeys.size;
 
   // Stories linked to any actor
   const storiesLinkedCount = stories.filter(s => 
@@ -101,7 +106,7 @@ export default function ActorsControlsBar({
               <span className="material-symbols-outlined text-[18px] text-tertiary">share</span>
               <div className="flex flex-col">
                 <span className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider">Colaboradores</span>
-                <span className="font-mono text-xs font-bold text-white">{collaboratorsCount} Asignados</span>
+                <span className="font-mono text-xs font-bold text-white">{collaboratorsCount} Usuarios</span>
               </div>
             </div>
 

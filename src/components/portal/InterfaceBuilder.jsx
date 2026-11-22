@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import ModuleSelect from './ModuleSelect';
 import DataUsagePicker from './DataUsagePicker';
 import DataUsageList from './DataUsageList';
@@ -129,39 +129,73 @@ export default function InterfaceBuilder({
   const [images, setImages] = useState([]);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [imageUrlInput, setImageUrlInput] = useState('');
+  const [isImageAreaHovered, setIsImageAreaHovered] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Files to base64 reader (supports multiple files)
-  const handleFileChange = (e) => {
-    const fileList = Array.from(e.target.files || []);
-    if (fileList.length === 0) return;
+  // Reads files as data URLs and appends them to the gallery (shared by file picker & clipboard paste).
+  const processImageFiles = useCallback((fileList) => {
+    const files = Array.from(fileList || []);
+    if (files.length === 0) return;
 
-    const validFiles = fileList.filter((f) => f.size <= 8 * 1024 * 1024);
-    if (validFiles.length < fileList.length) {
+    const validFiles = files.filter((f) => f.size <= 8 * 1024 * 1024);
+    if (validFiles.length < files.length) {
       onNotify?.('Algunas imágenes superaban el límite de 8MB y fueron omitidas.');
     }
     if (validFiles.length === 0) return;
 
-    let loaded = [];
-    let count = 0;
-    validFiles.forEach((file) => {
+    const readFile = (file) => new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onload = (event) => {
-        loaded.push(event.target.result);
-        count++;
-        if (count === validFiles.length) {
-          setImages((prev) => {
-            const next = [...prev, ...loaded];
-            setActiveImageIdx(next.length - 1);
-            return next;
-          });
-          onNotify?.(`¡${validFiles.length} imagen(es) agregada(s) correctamente!`);
-        }
-      };
+      reader.onload = (event) => resolve(event.target.result);
+      reader.onerror = () => resolve(null);
       reader.readAsDataURL(file);
     });
+
+    Promise.all(validFiles.map(readFile)).then((results) => {
+      const loaded = results.filter(Boolean);
+      if (loaded.length === 0) return;
+      setImages((prev) => {
+        const next = [...prev, ...loaded];
+        setActiveImageIdx(next.length - 1);
+        return next;
+      });
+      onNotify?.(`¡${loaded.length} imagen(es) agregada(s) correctamente!`);
+    });
+  }, [onNotify]);
+
+  const handleFileChange = (e) => {
+    processImageFiles(e.target.files);
     e.target.value = '';
   };
+
+  // Paste an image from the clipboard while hovering the image section.
+  useEffect(() => {
+    if (!isImageAreaHovered) return;
+
+    const handlePaste = (event) => {
+      const clipboard = event.clipboardData;
+      if (!clipboard) return;
+
+      let imageFiles = Array.from(clipboard.files || []).filter((file) => file.type.startsWith('image/'));
+      if (imageFiles.length === 0) {
+        imageFiles = Array.from(clipboard.items || [])
+          .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+          .map((item) => item.getAsFile())
+          .filter(Boolean);
+      }
+      if (imageFiles.length === 0) return;
+
+      event.preventDefault();
+      processImageFiles(imageFiles);
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, [isImageAreaHovered, processImageFiles]);
+
+  // Avoid keeping the paste listener armed when the modal closes.
+  useEffect(() => {
+    if (!isOpen) setIsImageAreaHovered(false);
+  }, [isOpen]);
 
   const handleUrlApply = () => {
     const trimmed = imageUrlInput.trim();
@@ -519,7 +553,11 @@ export default function InterfaceBuilder({
         </div>
 
         {/* 3. Sección de Imagen de la Interfaz */}
-        <div className="flex flex-col gap-2.5 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60">
+        <div
+          className="flex flex-col gap-2.5 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60"
+          onMouseEnter={() => setIsImageAreaHovered(true)}
+          onMouseLeave={() => setIsImageAreaHovered(false)}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-space text-white font-semibold flex items-center gap-1.5">
               <span className="material-symbols-outlined text-[16px] text-primary">add_photo_alternate</span>
@@ -656,6 +694,12 @@ export default function InterfaceBuilder({
                 <span className="text-[10px] text-on-surface-variant">
                   Puedes seleccionar múltiples capturas a la vez o agregar por URL
                 </span>
+                {isImageAreaHovered && (
+                  <span className="mt-1.5 inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-primary/10 border border-primary/30 text-[10px] font-space font-semibold text-primary animate-fadeIn">
+                    <span className="material-symbols-outlined text-[13px]">content_paste</span>
+                    <span>Ctrl + V para pegar una imagen</span>
+                  </span>
+                )}
               </div>
 
               {/* URL fallback */}
