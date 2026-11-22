@@ -552,6 +552,27 @@ export default function App() {
     notify(`Estado de interfaz ${id} cambiado a "${newStatus}".`);
   };
 
+  const handleConfirmClientReview = (itemsToApprove = []) => {
+    if (!Array.isArray(itemsToApprove) || itemsToApprove.length === 0) {
+      notify('No hay interfaces en revisión para confirmar.');
+      return 0;
+    }
+    const approvedAt = new Date().toISOString().split('T')[0];
+    const updated = itemsToApprove.map(item => ({
+      ...item,
+      status: 'Aprobado por Cliente',
+      reviewedBy: 'Cliente / PO',
+      approvedAt
+    }));
+    const updatedById = new Map(updated.map(item => [item.id, item]));
+    setInterfaces(prev => prev.map(item => updatedById.get(item.id) || item));
+    updated.forEach(item => {
+      persist(saveInterface(item, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
+    });
+    notify(`${updated.length} ${updated.length === 1 ? 'interfaz marcada' : 'interfaces marcadas'} como revisadas por el cliente.`);
+    return updated.length;
+  };
+
   const handleToggleVisualCriterion = (interfaceId, criterionId) => {
     setInterfaces(prev => prev.map(i => {
       if (i.id !== interfaceId) return i;
@@ -1094,6 +1115,7 @@ export default function App() {
                     stories={projectStories}
                     projectActors={projectActors}
                     onNotify={notify}
+                    onConfirmClientReview={handleConfirmClientReview}
                     activeProject={activeProject}
                   />
                   <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -1236,7 +1258,9 @@ export default function App() {
             existingStories={projectStories}
             projectActors={projectActors}
             dataModels={projectDataModels}
+            existingInterfaces={projectInterfaces}
             onAddRole={handleAddRoleFromInterface}
+            onNotify={notify}
           />
 
           <DataModelDetailModal

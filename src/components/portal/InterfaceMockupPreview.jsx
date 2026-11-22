@@ -9,7 +9,8 @@ export default function InterfaceMockupPreview({
   aspectRatio = 'desktop',
   onNextImage,
   onPrevImage,
-  activeIndex: controlledIndex
+  activeIndex: controlledIndex,
+  disableZoomBanner = false
 }) {
   const isPhone = aspectRatio === 'phone';
   const isTablet = aspectRatio === 'tablet';
@@ -94,12 +95,14 @@ export default function InterfaceMockupPreview({
         )}
 
         {/* Hover zoom banner */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
-          <span className="px-3 py-1.5 rounded-lg bg-surface-container-high/90 text-white font-space text-xs font-semibold flex items-center gap-1.5 shadow-lg">
-            <span className="material-symbols-outlined text-[16px] text-primary">zoom_in</span>
-            <span>Ampliar Imagen</span>
-          </span>
-        </div>
+        {!disableZoomBanner && (
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2 pointer-events-none">
+            <span className="px-3 py-1.5 rounded-lg bg-surface-container-high/90 text-white font-space text-xs font-semibold flex items-center gap-1.5 shadow-lg">
+              <span className="material-symbols-outlined text-[16px] text-primary">zoom_in</span>
+              <span>Ampliar Imagen</span>
+            </span>
+          </div>
+        )}
       </div>
     );
   }

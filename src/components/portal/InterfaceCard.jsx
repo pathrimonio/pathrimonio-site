@@ -216,6 +216,13 @@ export default function InterfaceCard({
                 • {item.platform}
               </span>
             )}
+
+            {Array.isArray(item.hotspots) && item.hotspots.length > 0 && (
+              <span className="font-space text-[11px] px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-semibold inline-flex items-center gap-1">
+                <span className="material-symbols-outlined text-[13px]">ads_click</span>
+                <span>{item.hotspots.length} {item.hotspots.length === 1 ? 'Punto Interactivo' : 'Puntos Interactivos'}</span>
+              </span>
+            )}
           </div>
 
           {/* Status Pill */}
@@ -239,6 +246,12 @@ export default function InterfaceCard({
                 {currentImages.length > 1 && (
                   <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30 text-[10px] font-mono font-bold">
                     {currentImages.length} pantallas
+                  </span>
+                )}
+                {Array.isArray(item.hotspots) && item.hotspots.length > 0 && (
+                  <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-mono font-bold flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[12px]">touch_app</span>
+                    <span>{item.hotspots.length} interactivos</span>
                   </span>
                 )}
               </span>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 
 export default function InterfaceControlsBar({ 
@@ -6,11 +6,15 @@ export default function InterfaceControlsBar({
   stories = [],
   projectActors = [],
   onNotify,
+  onConfirmClientReview,
   activeProject
 }) {
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const totalInterfaces = interfaces.length;
   const approvedInterfaces = interfaces.filter(i => i.status === 'Aprobado por Cliente' || i.status === 'Aprobado').length;
   const approvalRate = totalInterfaces > 0 ? Math.round((approvedInterfaces / totalInterfaces) * 100) : 0;
+  const reviewPending = interfaces.filter(i => i.status === 'En Revisión');
+  const draftCount = interfaces.filter(i => i.status === 'Borrador').length;
   
   // Interfaces with linked stories coverage
   const coveredWithStories = interfaces.filter(i => i.linkedStories && i.linkedStories.length > 0).length;
@@ -37,17 +41,21 @@ export default function InterfaceControlsBar({
     }
   };
 
-  // Formal presentation to client
-  const handlePresentToClient = () => {
-    confetti({
-      particleCount: 120,
-      spread: 80,
-      origin: { y: 0.3 }
-    });
-    onNotify?.(`¡Catálogo de ${totalInterfaces} interfaces (${approvedInterfaces} aprobadas) preparado para sesión de revisión con el cliente!`);
+  // Confirm client review: mark all in-review interfaces as approved by the client.
+  const handleConfirmReview = () => {
+    const approvedCount = onConfirmClientReview?.(reviewPending) ?? 0;
+    setIsReviewModalOpen(false);
+    if (approvedCount > 0) {
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.3 }
+      });
+    }
   };
 
   return (
+    <>
     <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-4 sm:px-6 lg:px-8 py-4">
       <div className="max-w-[1520px] mx-auto flex flex-col gap-y-4">
         
@@ -111,18 +119,110 @@ export default function InterfaceControlsBar({
               <span className="hidden sm:inline">Exportar Specs</span>
             </button>
 
-            {/* Present to client button */}
+            {/* Confirm client review button */}
             <button
-              onClick={handlePresentToClient}
+              onClick={() => setIsReviewModalOpen(true)}
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98]"
             >
-              <span className="material-symbols-outlined text-[17px]">present_to_all</span>
-              <span>Revisión con Cliente</span>
+              <span className="material-symbols-outlined text-[17px]">fact_check</span>
+              <span>Confirmar Revisión</span>
             </button>
           </div>
         </div>
 
       </div>
     </section>
+
+    {isReviewModalOpen && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="client-review-title"
+      >
+        <div className="w-full max-w-lg bg-surface-container border border-outline-variant rounded-2xl shadow-2xl overflow-hidden">
+          <div className="flex items-start justify-between gap-4 px-6 py-4 border-b border-outline-variant/60 bg-surface-container-low">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+                <span className="material-symbols-outlined text-[22px]">verified</span>
+              </span>
+              <div>
+                <h2 id="client-review-title" className="font-space text-base font-bold text-white">
+                  Confirmar revisión con el cliente
+                </h2>
+                <p className="font-jakarta text-xs text-on-surface-variant">
+                  Revisado por el cliente
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsReviewModalOpen(false)}
+              className="p-1.5 rounded-lg text-on-surface-variant hover:text-white hover:bg-surface-container transition-colors"
+              aria-label="Cerrar"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+
+          <div className="px-6 py-5 flex flex-col gap-4">
+            <p className="font-jakarta text-sm text-on-surface leading-relaxed">
+              ¿Confirmás que el cliente revisó y aprobó las interfaces en revisión de{' '}
+              <strong className="text-white">{activeProject?.name || 'este proyecto'}</strong>?
+            </p>
+
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl bg-surface-container-lowest border border-outline-variant p-3 text-center">
+                <span className="block font-mono text-lg font-bold text-primary">{reviewPending.length}</span>
+                <span className="font-space text-[10px] uppercase tracking-wider text-on-surface-variant">En revisión</span>
+              </div>
+              <div className="rounded-xl bg-surface-container-lowest border border-outline-variant p-3 text-center">
+                <span className="block font-mono text-lg font-bold text-emerald-400">{approvedInterfaces}</span>
+                <span className="font-space text-[10px] uppercase tracking-wider text-on-surface-variant">Aprobadas</span>
+              </div>
+              <div className="rounded-xl bg-surface-container-lowest border border-outline-variant p-3 text-center">
+                <span className="block font-mono text-lg font-bold text-on-surface-variant">{draftCount}</span>
+                <span className="font-space text-[10px] uppercase tracking-wider text-on-surface-variant">Borradores</span>
+              </div>
+            </div>
+
+            {reviewPending.length > 0 && (
+              <div className="rounded-xl bg-surface-container-lowest border border-outline-variant/60 p-3">
+                <p className="font-jakarta text-[11px] text-on-surface-variant leading-relaxed">
+                  Las {reviewPending.length} interfaces en revisión pasarán a{' '}
+                  <strong className="text-emerald-400">Aprobado por Cliente</strong> y se registrará la fecha de aprobación. Los borradores no se modifican.
+                </p>
+              </div>
+            )}
+
+            {reviewPending.length === 0 && (
+              <p className="font-jakarta text-xs text-amber-400">
+                No hay interfaces en revisión para confirmar. Podés aprobar fichas individualmente desde cada tarjeta.
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-outline-variant/60 bg-surface-container-low">
+            <button
+              type="button"
+              onClick={() => setIsReviewModalOpen(false)}
+              className="px-4 py-2 rounded-lg bg-surface-container-high border border-outline-variant hover:border-primary text-white font-space text-xs font-semibold transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmReview}
+              disabled={reviewPending.length === 0}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              <span className="material-symbols-outlined text-[17px]">verified</span>
+              <span>Confirmar revisión</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

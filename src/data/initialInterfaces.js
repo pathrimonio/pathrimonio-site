@@ -48,6 +48,47 @@ export const INITIAL_INTERFACES = [
       "Usuario con metas complejas",
       "Usuario constante"
     ],
+    hotspots: [
+      {
+        id: "hp_int01_1",
+        imageIndex: 0,
+        title: "Campo Correo Electrónico",
+        description: "Input de texto con validación regex de formato email",
+        x: 14,
+        y: 42,
+        width: 72,
+        height: 12,
+        linkType: "database",
+        colorTheme: "emerald",
+        databaseLink: {
+          tableId: "TBL-01",
+          tableName: "tb_metas",
+          tableLabel: "Metas y Grandes Propósitos",
+          schema: "main",
+          attributeName: "user_id",
+          attributeType: "UUID",
+          isPrimary: false
+        }
+      },
+      {
+        id: "hp_int01_2",
+        imageIndex: 0,
+        title: "Botón 'Iniciar Sesión'",
+        description: "Valida credenciales en el backend y transiciona a la pantalla de Onboarding",
+        x: 14,
+        y: 72,
+        width: 72,
+        height: 13,
+        linkType: "interface",
+        colorTheme: "cyan",
+        interfaceLink: {
+          interfaceId: "INT-02",
+          interfaceNumber: "2",
+          interfaceTitle: "Onboarding & Bienvenida",
+          action: "Valida credenciales y redirige a la pantalla de Onboarding"
+        }
+      }
+    ],
     dataUsage: [
       { key: "TBL-01:c1", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "id", type: "UUID", isPrimary: true },
       { key: "TBL-01:c2", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "user_id", type: "UUID", isPrimary: false }
@@ -78,6 +119,56 @@ export const INITIAL_INTERFACES = [
     roles: [
       "Usuario enfocado en superación",
       "Usuario con metas complejas"
+    ],
+    hotspots: [
+      {
+        id: "hp_int03_1",
+        imageIndex: 0,
+        title: "Input Título de Meta",
+        description: "Campo de texto para registrar el título de la meta (mínimo 5 caracteres)",
+        x: 10,
+        y: 22,
+        width: 80,
+        height: 14,
+        linkType: "database",
+        colorTheme: "emerald",
+        databaseLink: {
+          tableId: "TBL-01",
+          tableName: "tb_metas",
+          tableLabel: "Metas y Grandes Propósitos",
+          schema: "main",
+          attributeName: "titulo",
+          attributeType: "VARCHAR(255)",
+          isPrimary: false
+        }
+      },
+      {
+        id: "hp_int03_2",
+        imageIndex: 0,
+        title: "Botón 'Guardar y Desglosar en Pasos'",
+        description: "Persiste la meta en tb_metas y navega al mapa de pasos (INT-05)",
+        x: 10,
+        y: 78,
+        width: 80,
+        height: 14,
+        linkType: "both",
+        colorTheme: "amber",
+        databaseLink: {
+          tableId: "TBL-01",
+          tableName: "tb_metas",
+          tableLabel: "Metas y Grandes Propósitos",
+          schema: "main",
+          attributeName: "id",
+          attributeType: "UUID",
+          isPrimary: true
+        },
+        interfaceLink: {
+          interfaceId: "INT-05",
+          interfaceNumber: "5",
+          interfaceTitle: "Mapa Secuencial de Pasos e Hitos",
+          action: "Al hacer clic guarda la meta y redirige al roadmap secuencial de pasos"
+        }
+      }
     ],
     dataUsage: [
       { key: "TBL-01:c3", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "titulo", type: "VARCHAR(255)", isPrimary: false },
@@ -111,6 +202,56 @@ export const INITIAL_INTERFACES = [
     roles: [
       "Usuario enfocado en superación",
       "Usuario con metas complejas"
+    ],
+    hotspots: [
+      {
+        id: "hp_int03_1",
+        imageIndex: 0,
+        title: "Input Título de Meta",
+        description: "Campo de texto para registrar el título de la meta (mínimo 5 caracteres)",
+        x: 10,
+        y: 22,
+        width: 80,
+        height: 14,
+        linkType: "database",
+        colorTheme: "emerald",
+        databaseLink: {
+          tableId: "TBL-01",
+          tableName: "tb_metas",
+          tableLabel: "Metas y Grandes Propósitos",
+          schema: "main",
+          attributeName: "titulo",
+          attributeType: "VARCHAR(255)",
+          isPrimary: false
+        }
+      },
+      {
+        id: "hp_int03_2",
+        imageIndex: 0,
+        title: "Botón 'Guardar y Desglosar en Pasos'",
+        description: "Persiste la meta en tb_metas y navega al mapa de pasos (INT-05)",
+        x: 10,
+        y: 78,
+        width: 80,
+        height: 14,
+        linkType: "both",
+        colorTheme: "amber",
+        databaseLink: {
+          tableId: "TBL-01",
+          tableName: "tb_metas",
+          tableLabel: "Metas y Grandes Propósitos",
+          schema: "main",
+          attributeName: "id",
+          attributeType: "UUID",
+          isPrimary: true
+        },
+        interfaceLink: {
+          interfaceId: "INT-05",
+          interfaceNumber: "5",
+          interfaceTitle: "Mapa Secuencial de Pasos e Hitos",
+          action: "Al hacer clic guarda la meta y redirige al roadmap secuencial de pasos"
+        }
+      }
     ],
     dataUsage: [
       { key: "TBL-01:c3", tableId: "TBL-01", tableName: "tb_metas", tableLabel: "Metas y Grandes Propósitos", schema: "main", attribute: "titulo", type: "VARCHAR(255)", isPrimary: false },

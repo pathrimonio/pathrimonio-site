@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import InterfaceMockupPreview from './InterfaceMockupPreview';
+import InterfaceHotspotOverlay from './InterfaceHotspotOverlay';
 import DataUsagePicker from './DataUsagePicker';
 import DataUsageList from './DataUsageList';
 import { getEffectiveAspect } from '../../utils/aspectRatio';
@@ -13,7 +14,9 @@ export default function InterfaceDetailModal({
   existingStories = [],
   projectActors = [],
   dataModels = [],
-  onAddRole
+  existingInterfaces = [],
+  onAddRole,
+  onNotify
 }) {
   const [formData, setFormData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -22,6 +25,7 @@ export default function InterfaceDetailModal({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [showAddUrlInput, setShowAddUrlInput] = useState(false);
+  const [navHistory, setNavHistory] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -35,6 +39,7 @@ export default function InterfaceDetailModal({
         : (parsed.image ? [parsed.image] : []);
       parsed.images = rawImages;
       parsed.image = rawImages[0] || null;
+      parsed.hotspots = Array.isArray(parsed.hotspots) ? parsed.hotspots : [];
       setFormData(parsed);
       setActiveImageIndex(0);
       setIsEditing(true);
@@ -42,6 +47,7 @@ export default function InterfaceDetailModal({
       setNewRoleInput('');
       setNewImageUrl('');
       setShowAddUrlInput(false);
+      setNavHistory([]);
     }
   }, [item]);
 
@@ -216,6 +222,32 @@ export default function InterfaceDetailModal({
     onUpdateInterface?.(updated);
   };
 
+  const handleNavigateToInterface = (targetInterface) => {
+    if (!targetInterface) return;
+    setNavHistory(prev => [...prev, formData]);
+    const parsed = JSON.parse(JSON.stringify(targetInterface));
+    if (!parsed.roles || !Array.isArray(parsed.roles)) {
+      parsed.roles = parsed.role ? [parsed.role] : [];
+    }
+    const rawImages = Array.isArray(parsed.images) && parsed.images.length > 0
+      ? parsed.images
+      : (parsed.image ? [parsed.image] : []);
+    parsed.images = rawImages;
+    parsed.image = rawImages[0] || null;
+    parsed.hotspots = Array.isArray(parsed.hotspots) ? parsed.hotspots : [];
+    setFormData(parsed);
+    setActiveImageIndex(0);
+    onNotify?.(`Simulación de flujo: Navegando a "${parsed.fullName || parsed.title}"`);
+  };
+
+  const handleBackNavigation = () => {
+    if (navHistory.length === 0) return;
+    const prev = navHistory[navHistory.length - 1];
+    setNavHistory(h => h.slice(0, -1));
+    setFormData(prev);
+    setActiveImageIndex(0);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-4xl bg-surface-container border border-outline-variant rounded-2xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
@@ -262,6 +294,24 @@ export default function InterfaceDetailModal({
             </button>
           </div>
         </div>
+
+        {/* Interactive Prototype Navigation Banner */}
+        {navHistory.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-2.5 bg-cyan-950/60 border-b border-cyan-800/40 text-cyan-300 text-xs font-space animate-fadeIn shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[17px] text-cyan-400 animate-pulse">navigation</span>
+              <span>Flujo Interactivo: Viendo <strong>{formData.fullName || formData.title}</strong></span>
+            </div>
+            <button
+              type="button"
+              onClick={handleBackNavigation}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-white font-bold transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[15px]">arrow_back</span>
+              <span>Volver a {navHistory[navHistory.length - 1].number ? `${navHistory[navHistory.length - 1].number}. ` : ''}{navHistory[navHistory.length - 1].title}</span>
+            </button>
+          </div>
+        )}
 
         {/* Modal Body */}
         <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-6">
@@ -350,17 +400,50 @@ export default function InterfaceDetailModal({
               </div>
             )}
 
-            {/* Visor Mockup Preview con carousel */}
-            <InterfaceMockupPreview
+            {/* Visor Mockup Preview con Puntos Interactivos */}
+            <InterfaceHotspotOverlay
               image={activeImage}
-              images={currentImages}
-              activeIndex={activeImageIndex}
-              onNextImage={() => setActiveImageIndex((prev) => (prev + 1) % currentImages.length)}
-              onPrevImage={() => setActiveImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length)}
-              placeholderType={formData.imagePlaceholder || 'dashboard'}
-              title={formData.fullName}
-              aspectRatio={effectiveAspect}
-            />
+              hotspots={formData.hotspots || []}
+              onUpdateHotspots={(updated) => {
+                const next = { ...formData, hotspots: updated };
+                setFormData(next);
+                onUpdateInterface?.(next);
+              }}
+              isEditable={isEditing}
+              dataModels={dataModels}
+              existingInterfaces={existingInterfaces}
+              currentInterfaceId={formData.id}
+              currentImageIndex={activeImageIndex}
+              onNavigateToInterface={handleNavigateToInterface}
+              onSyncDataUsage={(newUsageItem) => {
+                const existing = formData.dataUsage || [];
+                const exists = existing.some(u => 
+                  (u.tableId === newUsageItem.tableId || u.tableName === newUsageItem.tableName) &&
+                  u.attribute === newUsageItem.attribute
+                );
+                if (!exists) {
+                  const next = {
+                    ...formData,
+                    dataUsage: [...existing, newUsageItem]
+                  };
+                  setFormData(next);
+                  onUpdateInterface?.(next);
+                }
+              }}
+              onNotify={onNotify}
+            >
+              <InterfaceMockupPreview
+                image={activeImage}
+                images={currentImages}
+                activeIndex={activeImageIndex}
+                onNextImage={() => setActiveImageIndex((prev) => (prev + 1) % currentImages.length)}
+                onPrevImage={() => setActiveImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length)}
+                placeholderType={formData.imagePlaceholder || 'dashboard'}
+                title={formData.fullName}
+                aspectRatio={effectiveAspect}
+                disableZoomBanner={true}
+              />
+            </InterfaceHotspotOverlay>
 
             {/* Tira de miniaturas de la galería */}
             {currentImages.length > 0 && (

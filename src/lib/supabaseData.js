@@ -65,6 +65,23 @@ const mapInterface = (row) => {
     }
   }
 
+  // Parse hotspots from details if serialized
+  let detailsText = row.details;
+  let hotspots = [];
+  if (row.details) {
+    try {
+      const parsed = JSON.parse(row.details);
+      if (parsed && typeof parsed === 'object') {
+        if (Array.isArray(parsed.hotspots)) {
+          hotspots = parsed.hotspots;
+        }
+        if (typeof parsed.text === 'string') {
+          detailsText = parsed.text;
+        }
+      }
+    } catch (_) {}
+  }
+
   return {
     id: row.id,
     projectId: row.project_id,
@@ -76,12 +93,13 @@ const mapInterface = (row) => {
     platform: row.platform,
     image: images[0] || row.image || null,
     images: images,
+    hotspots: hotspots,
     imagePlaceholder: row.image_placeholder,
     fields: {
       objetivo: row.objective,
       contenido: row.content,
       reglas: row.rules,
-      detalles: row.details
+      detalles: detailsText
     },
     roles: (row.interface_roles || [])
       .slice()
@@ -264,6 +282,17 @@ export async function saveInterface(item, actorLookup, validDataModelIds, validS
     return item.image || null;
   })();
 
+  const serializedDetails = (() => {
+    const plainText = item.fields?.detalles || '';
+    if (Array.isArray(item.hotspots) && item.hotspots.length > 0) {
+      return JSON.stringify({
+        text: plainText,
+        hotspots: item.hotspots
+      });
+    }
+    return plainText || null;
+  })();
+
   check(await db.from('interfaces').upsert({
     id: item.id,
     project_id: item.projectId,
@@ -278,7 +307,7 @@ export async function saveInterface(item, actorLookup, validDataModelIds, validS
     objective: orNull(item.fields?.objetivo),
     content: orNull(item.fields?.contenido),
     rules: orNull(item.fields?.reglas),
-    details: orNull(item.fields?.detalles),
+    details: orNull(serializedDetails),
     linked_story_id: item.linkedStory && (!validStoryIds || validStoryIds.has(item.linkedStory))
       ? item.linkedStory
       : null,
