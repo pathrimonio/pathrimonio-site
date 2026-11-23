@@ -17,21 +17,30 @@ export default function UserMenu({ user, onLogout }) {
     'Admin': 'text-primary',
     'Fintech Lead': 'text-blue-400',
     'Desarrollador': 'text-purple-400',
-    'Auditora de Impacto': 'text-teal-400'
+    'Auditora de Impacto': 'text-teal-400',
+    'Colaborador': 'text-amber-400',
+    'Product Owner': 'text-emerald-400',
+    'Cliente': 'text-cyan-400'
   };
 
   const roleBadgeColors = {
     'Admin': 'bg-primary/20 border-primary/40 text-primary',
     'Fintech Lead': 'bg-blue-500/20 border-blue-500/40 text-blue-400',
     'Desarrollador': 'bg-purple-500/20 border-purple-500/40 text-purple-400',
-    'Auditora de Impacto': 'bg-teal-500/20 border-teal-500/40 text-teal-400'
+    'Auditora de Impacto': 'bg-teal-500/20 border-teal-500/40 text-teal-400',
+    'Colaborador': 'bg-amber-500/20 border-amber-500/40 text-amber-300',
+    'Product Owner': 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300',
+    'Cliente': 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
   };
 
   const avatarBg = {
     'Admin': 'bg-primary',
     'Fintech Lead': 'bg-blue-500',
     'Desarrollador': 'bg-purple-500',
-    'Auditora de Impacto': 'bg-teal-500'
+    'Auditora de Impacto': 'bg-teal-500',
+    'Colaborador': 'bg-amber-600',
+    'Product Owner': 'bg-emerald-600',
+    'Cliente': 'bg-cyan-600'
   };
 
   return (
@@ -67,6 +76,12 @@ export default function UserMenu({ user, onLogout }) {
             </div>
             <div className="flex flex-col min-w-0">
               <span className="font-space text-sm text-white font-bold truncate">{user.name}</span>
+              {user.organization && (
+                <span className="font-space text-[10px] text-primary truncate flex items-center gap-1 font-semibold">
+                  <span className="material-symbols-outlined text-[12px]">domain</span>
+                  <span>{user.organization}</span>
+                </span>
+              )}
               <span className="font-jakarta text-[11px] text-on-surface-variant truncate">{user.email}</span>
               <span className={`mt-0.5 inline-block px-1.5 py-0 rounded border text-[10px] font-space font-semibold w-fit ${roleBadgeColors[user.role] || ''}`}>
                 {user.role}

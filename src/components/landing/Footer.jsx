@@ -93,6 +93,12 @@ export default function Footer({ onOpenContact }) {
                 </a>
               </li>
               <li>
+                <a href="#portal?mode=register" className="hover:text-primary transition-colors text-left flex items-center gap-1.5 text-primary font-medium">
+                  <span className="material-symbols-outlined text-[15px] text-primary">person_add</span>
+                  Crear Cuenta Colaborador
+                </a>
+              </li>
+              <li>
                 <button onClick={onOpenContact} className="hover:text-primary transition-colors text-left flex items-center gap-1.5 text-white font-medium">
                   <span className="material-symbols-outlined text-[15px] text-primary">chat</span>
                   Iniciar un Proyecto

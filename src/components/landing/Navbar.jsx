@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function Navbar({ onOpenContact, onOpenPortal }) {
+export default function Navbar({ onOpenContact, onOpenPortal, onOpenRegister }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollToSection = (id) => {
@@ -73,12 +73,21 @@ export default function Navbar({ onOpenContact, onOpenPortal }) {
         {/* Action CTAs */}
         <div className="flex items-center gap-3">
           <button 
+            onClick={onOpenRegister || onOpenPortal}
+            title="Crear cuenta para colaboradores de software"
+            className="hidden lg:inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded bg-primary/10 border border-primary/30 hover:border-primary text-primary hover:text-white font-space text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[16px]">person_add</span>
+            <span>Crear Cuenta</span>
+          </button>
+
+          <button 
             onClick={onOpenPortal}
-            title="Ir al Portal"
-            className="hidden sm:inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded bg-surface-container-high border border-outline-variant hover:border-primary text-white hover:text-primary font-space text-xs font-semibold tracking-wide transition-all duration-200"
+            title="Ir al Portal de Requerimientos"
+            className="hidden sm:inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded bg-surface-container-high border border-outline-variant hover:border-primary text-white hover:text-primary font-space text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer"
           >
             <span className="material-symbols-outlined text-[16px] text-primary">login</span>
-            <span>Ir al Portal</span>
+            <span>Portal</span>
           </button>
 
           {/* Contacto / Iniciar Proyecto */}
@@ -139,6 +148,13 @@ export default function Navbar({ onOpenContact, onOpenPortal }) {
             Visión &amp; Próximos Productos
           </button>
           <div className="pt-2 border-t border-outline-variant flex flex-col gap-2">
+            <button 
+              onClick={() => { setMobileMenuOpen(false); (onOpenRegister || onOpenPortal)(); }}
+              className="w-full py-2.5 rounded bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-on-primary font-space text-xs font-semibold tracking-wide flex items-center justify-center gap-2 transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              Crear Cuenta Colaborador
+            </button>
             <button 
               onClick={() => { setMobileMenuOpen(false); onOpenPortal?.(); }}
               className="w-full py-2.5 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide flex items-center justify-center gap-2"

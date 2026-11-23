@@ -103,6 +103,7 @@ export default function App() {
   const [authReady, setAuthReady] = useState(!isSupabaseConfigured);
   const [workspaceReady, setWorkspaceReady] = useState(!isSupabaseConfigured);
   const [showLogin, setShowLogin] = useState(false);
+  const [loginMode, setLoginMode] = useState('login');
 
   // ── Portal nav
   const [activePortalTab, setActivePortalTab] = useState('stories');
@@ -362,6 +363,13 @@ export default function App() {
           const tab = params.get('tab');
           const roleParam = params.get('role');
           const projectParam = params.get('project');
+          const modeParam = params.get('mode') || params.get('action');
+
+          if (modeParam === 'register' || modeParam === 'signup') {
+            setLoginMode('register');
+          } else if (modeParam === 'login') {
+            setLoginMode('login');
+          }
 
           if (tab) setActivePortalTab(tab);
           if (roleParam) {
@@ -443,11 +451,19 @@ export default function App() {
     });
   };
 
-  const navigateToPortal = () => {
-    window.location.hash = '#portal';
+  const navigateToPortal = (initialAction = 'login') => {
+    if (initialAction === 'register') {
+      window.location.hash = '#portal?mode=register';
+      setLoginMode('register');
+    } else {
+      window.location.hash = '#portal';
+      setLoginMode('login');
+    }
     setCurrentView('portal');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const navigateToRegister = () => navigateToPortal('register');
 
   const navigateToHome = () => {
     window.location.hash = '#home';
@@ -459,7 +475,26 @@ export default function App() {
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
     setShowLogin(false);
-    notify(`¡Bienvenido al Portal, ${user.name}!`);
+
+    if (user.initialProject && projects.some(p => p.id === user.initialProject)) {
+      setActiveProjectId(user.initialProject);
+    }
+
+    setPortalUsers(prev => {
+      if (prev.some(u => u.email.toLowerCase() === user.email.toLowerCase())) return prev;
+      return [...prev, {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        organization: user.organization || null,
+        role: user.role || 'Colaborador',
+        avatar: user.avatar,
+        color: user.color || 'bg-primary',
+        permissions: user.permissions || ['read', 'write']
+      }];
+    });
+
+    notify(`¡Bienvenido al Portal, ${user.name}! Acceso concedido a roles e historias de usuario.`);
   };
 
   const handleLogout = async () => {
@@ -1048,7 +1083,11 @@ export default function App() {
       ══════════════════════════════════════════ */}
       {currentView === 'landing' && (
         <div className="flex flex-col w-full">
-          <Navbar onOpenContact={() => setIsContactModalOpen(true)} onOpenPortal={navigateToPortal} />
+          <Navbar 
+            onOpenContact={() => setIsContactModalOpen(true)} 
+            onOpenPortal={() => navigateToPortal('login')}
+            onOpenRegister={navigateToRegister} 
+          />
 
           <main className="w-full">
             <Hero onOpenContact={() => setIsContactModalOpen(true)} />
@@ -1077,6 +1116,13 @@ export default function App() {
                     <span className="material-symbols-outlined text-[18px]">calculate</span>
                     Cotizar mi Software ($1/día)
                   </a>
+                  <button
+                    onClick={navigateToRegister}
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-primary/10 border border-primary/40 text-primary hover:text-white hover:bg-primary/20 font-space text-xs font-semibold tracking-wide transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">person_add</span>
+                    Crear Cuenta Colaborador
+                  </button>
                   <button
                     onClick={() => setIsContactModalOpen(true)}
                     className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide hover:bg-surface-container-highest transition-all"
@@ -1109,7 +1155,13 @@ export default function App() {
       )}
 
       {currentView === 'portal' && authReady && showLogin && (
-        <LoginPage onLoginSuccess={handleLoginSuccess} />
+        <LoginPage 
+          onLoginSuccess={handleLoginSuccess}
+          projects={projects}
+          activeProjectId={activeProjectId}
+          initialMode={loginMode}
+          onBackToLanding={navigateToHome}
+        />
       )}
 
       {currentView === 'portal' && authReady && !showLogin && currentUser && !workspaceReady && (

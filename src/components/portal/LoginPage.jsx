@@ -1,33 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { mapSupabaseUser } from '../../auth/authConfig';
 import { supabase } from '../../lib/supabase';
 
-export default function LoginPage({ onLoginSuccess }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+const ROLE_OPTIONS = [
+  { value: 'Product Owner', label: 'Product Owner / Líder de Proyecto' },
+  { value: 'Gerente General', label: 'Gerente General / Fundador' },
+  { value: 'Líder de Operaciones', label: 'Líder de Operaciones / Caja' },
+  { value: 'Coordinador de TI', label: 'Coordinador de TI / Sistemas' },
+  { value: 'Colaborador', label: 'Colaborador / Usuario Operativo' },
+  { value: 'Otro', label: 'Otro Perfil de Negocio' }
+];
+
+const SOFTWARE_NEEDS_OPTIONS = [
+  { value: 'Sistema de Gestión Operativa / ERP PYME', label: 'Sistema de Gestión Operativa / ERP PYME' },
+  { value: 'Portal Web de Clientes / Socios', label: 'Portal Web de Clientes / Socios' },
+  { value: 'Aplicación Móvil Android / iOS', label: 'Aplicación Móvil Android / iOS' },
+  { value: 'E-commerce & Catálogo Digital', label: 'E-commerce & Catálogo Digital' },
+  { value: 'Automatización de Procesos & WhatsApp', label: 'Automatización de Procesos & WhatsApp' },
+  { value: 'Consultoría y Arquitectura de Software', label: 'Consultoría y Arquitectura de Software' }
+];
+
+export default function LoginPage({ 
+  onLoginSuccess, 
+  projects = [], 
+  activeProjectId = 'pathway',
+  initialMode = 'login',
+  onBackToLanding 
+}) {
+  const [mode, setMode] = useState(initialMode); // 'login' | 'register'
+  
+  // Login form state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+
+  // Register form state
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerOrganization, setRegisterOrganization] = useState('');
+  const [registerRole, setRegisterRole] = useState('Product Owner');
+  const [registerSoftwareNeeds, setRegisterSoftwareNeeds] = useState('Sistema de Gestión Operativa / ERP PYME');
+  const [registerProject, setRegisterProject] = useState(activeProjectId || 'pathway');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+
+  // Status & feedback
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  // Sync mode if initialMode changes
+  useEffect(() => {
+    if (initialMode) setMode(initialMode);
+  }, [initialMode]);
+
+  // Clear errors when switching modes
+  const handleSwitchMode = (newMode) => {
+    setMode(newMode);
+    setError('');
+    setSuccessMessage('');
+  };
+
+  // ── Handle Login Submission
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
 
-    if (!email.trim() || !password.trim()) {
+    if (!loginEmail.trim() || !loginPassword.trim()) {
       setError('Por favor ingresa tu correo y contraseña.');
       return;
     }
 
     if (!supabase) {
-      setError('Supabase no está configurado. Revisá VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.');
+      // Local demo fallback login
+      const fallbackUser = {
+        id: `u_${Date.now()}`,
+        email: loginEmail.trim(),
+        name: loginEmail.split('@')[0],
+        role: 'Colaborador',
+        avatar: loginEmail.slice(0, 2).toUpperCase(),
+        color: 'bg-primary',
+        permissions: ['read', 'write']
+      };
+      onLoginSuccess(fallbackUser);
       return;
     }
 
     setLoading(true);
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password
+        email: loginEmail.trim(),
+        password: loginPassword
       });
 
       if (authError) {
@@ -37,17 +102,125 @@ export default function LoginPage({ onLoginSuccess }) {
 
       onLoginSuccess(mapSupabaseUser(data.user));
     } catch (err) {
-      setError(err?.message || 'No se pudo iniciar sesión. Revisá tu conexión.');
+      setError(err?.message || 'No se pudo iniciar sesión. Verifica tu conexión.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Handle Register Submission (Collaborator seeking software development)
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMessage('');
+
+    // Validations
+    if (!registerName.trim()) {
+      setError('Por favor ingresa tu nombre completo.');
+      return;
+    }
+    if (!registerEmail.trim()) {
+      setError('Por favor ingresa tu correo electrónico.');
+      return;
+    }
+    if (!registerOrganization.trim()) {
+      setError('Por favor indica tu organización, empresa o negocio.');
+      return;
+    }
+    if (registerPassword.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (registerPassword !== registerConfirmPassword) {
+      setError('Las contraseñas no coinciden. Por favor verifícalas.');
+      return;
+    }
+
+    setLoading(true);
+
+    const initials = registerName
+      .trim()
+      .split(' ')
+      .filter(Boolean)
+      .map(part => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || 'CO';
+
+    const userMetadata = {
+      name: registerName.trim(),
+      organization: registerOrganization.trim(),
+      role: registerRole,
+      softwareNeeds: registerSoftwareNeeds,
+      initialProject: registerProject,
+      avatar: initials,
+      color: 'bg-primary',
+      permissions: ['read', 'write']
+    };
+
+    try {
+      if (supabase) {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: registerEmail.trim(),
+          password: registerPassword,
+          options: {
+            data: userMetadata
+          }
+        });
+
+        if (signUpError) {
+          // If already registered, guide the user
+          if (signUpError.message?.toLowerCase().includes('already registered')) {
+            setError('Este correo ya cuenta con una cuenta registrada. Intenta iniciar sesión.');
+            return;
+          }
+          throw signUpError;
+        }
+
+        // If auto-logged in or session available
+        if (data?.session) {
+          onLoginSuccess(mapSupabaseUser(data.session.user));
+          return;
+        }
+
+        // If email confirmation is enabled on Supabase, but user created
+        if (data?.user) {
+          // Still provide direct access with mapped user so collaborator is not blocked
+          const mapped = mapSupabaseUser({
+            ...data.user,
+            user_metadata: userMetadata
+          });
+          setSuccessMessage('¡Cuenta creada con éxito! Accediendo al portal...');
+          setTimeout(() => {
+            onLoginSuccess(mapped);
+          }, 800);
+          return;
+        }
+      }
+
+      // Offline / Local fallback simulation
+      const localUser = {
+        id: `collab_${Date.now()}`,
+        email: registerEmail.trim(),
+        ...userMetadata
+      };
+      setSuccessMessage('¡Cuenta de colaborador creada con éxito! Redirigiendo...');
+      setTimeout(() => {
+        onLoginSuccess(localUser);
+      }, 600);
+
+    } catch (err) {
+      setError(err?.message || 'Error al crear la cuenta. Por favor intenta nuevamente.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-surface-container-lowest flex flex-col items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-surface-container-lowest flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden">
       {/* Ambient Background Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[160px] pointer-events-none"></div>
-      <div className="absolute bottom-10 right-10 w-72 h-72 bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-primary/8 rounded-full blur-[170px] pointer-events-none"></div>
+      <div className="absolute bottom-10 right-10 w-80 h-80 bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
 
       {/* Grid pattern */}
       <svg className="absolute inset-0 w-full h-full opacity-5 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
@@ -59,11 +232,30 @@ export default function LoginPage({ onLoginSuccess }) {
         <rect width="100%" height="100%" fill="url(#loginGrid)" />
       </svg>
 
-      <div className="relative w-full max-w-sm flex flex-col gap-8">
+      {/* Floating Back to Landing Link */}
+      <div className="absolute top-6 left-6 z-20">
+        <button
+          type="button"
+          onClick={() => {
+            if (onBackToLanding) {
+              onBackToLanding();
+            } else {
+              window.location.hash = '';
+            }
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container/60 hover:bg-surface-container border border-outline-variant/60 hover:border-primary/40 text-on-surface-variant hover:text-white font-space text-xs transition-colors"
+        >
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <span>Volver al Sitio</span>
+        </button>
+      </div>
+
+      <div className={`relative w-full ${mode === 'register' ? 'max-w-xl' : 'max-w-sm'} flex flex-col gap-6 transition-all duration-300`}>
+        
         {/* Brand Header */}
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-14 h-14 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center shadow-lg">
-            <img src="/assets/images/logo.png" alt="Pathrimonio" className="w-8 h-8 object-contain" />
+        <div className="flex flex-col items-center gap-2.5 text-center">
+          <div className="w-13 h-13 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center shadow-lg p-2.5">
+            <img src="/assets/images/logo.png" alt="Pathrimonio" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="font-space text-2xl font-bold text-white tracking-tight">
@@ -73,111 +265,452 @@ export default function LoginPage({ onLoginSuccess }) {
               Impulsamos el desarrollo comunitario
             </p>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-space text-[11px]">
+
+          <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-space text-[10px]">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-            <span>Plataforma de Alta Disponibilidad · LATAM</span>
+            <span>Portal de Requerimientos &amp; Desarrollo de Software</span>
           </div>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-surface-container-low border border-outline-variant rounded-xl p-6 shadow-2xl flex flex-col gap-5">
-          <div>
-            <h2 className="font-space text-lg font-bold text-white">Acceso al Portal</h2>
-            <p className="font-jakarta text-xs text-on-surface-variant mt-0.5">
-              Ingresa tus credenciales institucionales para continuar.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-            {/* Email Field */}
-            <div className="flex flex-col gap-1">
-              <label className="font-space text-xs text-white font-medium">Correo institucional</label>
-              <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px] pointer-events-none">
-                  alternate_email
-                </span>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                  placeholder="nombre@pathrimonio.org"
-                  autoComplete="email"
-                  className="w-full h-10 bg-surface-container-lowest border border-outline-variant rounded-lg pl-9 pr-3 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/50 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="flex flex-col gap-1">
-              <label className="font-space text-xs text-white font-medium">Contraseña</label>
-              <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px] pointer-events-none">
-                  lock
-                </span>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                  placeholder="••••••••••••"
-                  autoComplete="current-password"
-                  className="w-full h-10 bg-surface-container-lowest border border-outline-variant rounded-lg pl-9 pr-10 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/50 transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-white transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">
-                    {showPassword ? 'visibility_off' : 'visibility'}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Error message */}
-            {error && (
-              <div className="flex items-center gap-2 px-3 py-2 rounded bg-error-container border border-error/30 text-error text-xs font-jakarta">
-                <span className="material-symbols-outlined text-[16px]">error</span>
-                <span>{error}</span>
-              </div>
-            )}
-
-            {/* Submit Button */}
+        {/* Main Card */}
+        <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-6 shadow-2xl flex flex-col gap-5">
+          
+          {/* Top Switcher Tabs */}
+          <div className="grid grid-cols-2 p-1 bg-surface-container-lowest border border-outline-variant rounded-xl font-space text-xs">
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-10 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              type="button"
+              onClick={() => handleSwitchMode('login')}
+              className={`py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                mode === 'login'
+                  ? 'bg-primary text-on-primary font-bold shadow-md'
+                  : 'text-on-surface-variant hover:text-white'
+              }`}
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                  </svg>
-                  <span>Verificando acceso...</span>
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-[18px]">login</span>
-                  <span>Ingresar al Portal</span>
-                </>
-              )}
+              <span className="material-symbols-outlined text-[16px]">login</span>
+              <span>Iniciar Sesión</span>
             </button>
-          </form>
+
+            <button
+              type="button"
+              onClick={() => handleSwitchMode('register')}
+              className={`py-2 px-3 rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                mode === 'register'
+                  ? 'bg-primary text-on-primary font-bold shadow-md'
+                  : 'text-on-surface-variant hover:text-white'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">person_add</span>
+              <span>Crear Cuenta</span>
+            </button>
+          </div>
+
+          {/* ══════════════════════════════════════════════════════════════ */}
+          {/* TAB 1: INICIAR SESIÓN                                        */}
+          {/* ══════════════════════════════════════════════════════════════ */}
+          {mode === 'login' && (
+            <div className="flex flex-col gap-4 animate-fadeIn">
+              <div>
+                <h2 className="font-space text-lg font-bold text-white">Acceso al Portal</h2>
+                <p className="font-jakarta text-xs text-on-surface-variant mt-0.5">
+                  Ingresa tus credenciales para acceder a tus proyectos, roles e historias de usuario.
+                </p>
+              </div>
+
+              <form onSubmit={handleLoginSubmit} className="flex flex-col gap-3.5">
+                {/* Email Field */}
+                <div className="flex flex-col gap-1">
+                  <label className="font-space text-xs text-white font-medium">Correo electrónico</label>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px] pointer-events-none">
+                      alternate_email
+                    </span>
+                    <input
+                      type="email"
+                      required
+                      value={loginEmail}
+                      onChange={(e) => { setLoginEmail(e.target.value); setError(''); }}
+                      placeholder="nombre@organizacion.org"
+                      autoComplete="email"
+                      className="w-full h-10 bg-surface-container-lowest border border-outline-variant rounded-lg pl-9 pr-3 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/50 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Password Field */}
+                <div className="flex flex-col gap-1">
+                  <label className="font-space text-xs text-white font-medium">Contraseña</label>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px] pointer-events-none">
+                      lock
+                    </span>
+                    <input
+                      type={showLoginPassword ? 'text' : 'password'}
+                      required
+                      value={loginPassword}
+                      onChange={(e) => { setLoginPassword(e.target.value); setError(''); }}
+                      placeholder="••••••••••••"
+                      autoComplete="current-password"
+                      className="w-full h-10 bg-surface-container-lowest border border-outline-variant rounded-lg pl-9 pr-10 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/50 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-white transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">
+                        {showLoginPassword ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Error Alert */}
+                {error && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-error-container border border-error/30 text-error text-xs font-jakarta animate-shake">
+                    <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Success Alert */}
+                {successMessage && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-jakarta animate-fadeIn">
+                    <span className="material-symbols-outlined text-[16px] shrink-0">check_circle</span>
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-10 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                      <span>Ingresando al portal...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[18px]">login</span>
+                      <span>Ingresar al Portal</span>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Callout to switch to register */}
+              <div className="pt-2 border-t border-outline-variant/60 text-center">
+                <p className="font-jakarta text-xs text-on-surface-variant">
+                  ¿Eres nuevo colaborador o buscas desarrollo de software?{' '}
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchMode('register')}
+                    className="text-primary hover:underline font-bold font-space inline-flex items-center gap-0.5"
+                  >
+                    <span>Crea tu cuenta aquí</span>
+                    <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+                  </button>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ══════════════════════════════════════════════════════════════ */}
+          {/* TAB 2: CREAR CUENTA PARA COLABORADORES                       */}
+          {/* ══════════════════════════════════════════════════════════════ */}
+          {mode === 'register' && (
+            <div className="flex flex-col gap-4 animate-fadeIn">
+              
+              {/* Header banner */}
+              <div className="p-3.5 rounded-xl bg-gradient-to-r from-primary/15 via-primary/5 to-transparent border border-primary/30 flex flex-col gap-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-primary text-surface flex items-center justify-center font-bold">
+                    <span className="material-symbols-outlined text-[16px]">groups</span>
+                  </span>
+                  <h2 className="font-space text-sm font-bold text-white">
+                    Cuenta de Colaborador en Software
+                  </h2>
+                </div>
+                <p className="font-jakarta text-[11px] text-on-surface-variant leading-relaxed">
+                  Regístrate como colaborador o cliente de Pathrimonio para consultar y definir los <strong className="text-white">roles del negocio</strong>, las <strong className="text-white">historias de usuario (HU)</strong> y las <strong className="text-white">interfaces interactivas</strong> de tu proyecto.
+                </p>
+              </div>
+
+              <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3.5">
+                
+                {/* 2-column: Nombre y Organización */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="font-space text-[11px] text-white font-medium flex items-center gap-1">
+                      <span>Nombre y Apellido</span>
+                      <span className="text-primary">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[17px] pointer-events-none">
+                        person
+                      </span>
+                      <input
+                        type="text"
+                        required
+                        value={registerName}
+                        onChange={(e) => { setRegisterName(e.target.value); setError(''); }}
+                        placeholder="Ej. Ing. Carlos Mendoza"
+                        className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-3 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/40"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="font-space text-[11px] text-white font-medium flex items-center gap-1">
+                      <span>Empresa u Organización</span>
+                      <span className="text-primary">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[17px] pointer-events-none">
+                        domain
+                      </span>
+                      <input
+                        type="text"
+                        required
+                        value={registerOrganization}
+                        onChange={(e) => { setRegisterOrganization(e.target.value); setError(''); }}
+                        placeholder="Ej. Cooperativa Andina / PYME"
+                        className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-3 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/40"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2-column: Rol en la Organización y Proyecto Inicial */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="font-space text-[11px] text-white font-medium">
+                      Rol en tu Organización
+                    </label>
+                    <select
+                      value={registerRole}
+                      onChange={(e) => setRegisterRole(e.target.value)}
+                      className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 font-space text-xs text-white focus:outline-none focus:border-primary"
+                    >
+                      {ROLE_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value} className="bg-surface-container text-white">
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="font-space text-[11px] text-white font-medium">
+                      Proyecto Inicial a Explorar
+                    </label>
+                    <select
+                      value={registerProject}
+                      onChange={(e) => setRegisterProject(e.target.value)}
+                      className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 font-space text-xs text-white focus:outline-none focus:border-primary"
+                    >
+                      {projects.length > 0 ? (
+                        projects.map(p => (
+                          <option key={p.id} value={p.id} className="bg-surface-container text-white">
+                            {p.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="pathway" className="bg-surface-container text-white">
+                          Pathway (App de Metas y Hábitos)
+                        </option>
+                      )}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Tipo de Software que busca desarrollar */}
+                <div className="flex flex-col gap-1">
+                  <label className="font-space text-[11px] text-white font-medium flex items-center justify-between">
+                    <span>Tipo de Software que buscas desarrollar:</span>
+                    <span className="text-[10px] text-primary font-mono font-normal">Requerimiento</span>
+                  </label>
+                  <select
+                    value={registerSoftwareNeeds}
+                    onChange={(e) => setRegisterSoftwareNeeds(e.target.value)}
+                    className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 font-space text-xs text-white focus:outline-none focus:border-primary"
+                  >
+                    {SOFTWARE_NEEDS_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value} className="bg-surface-container text-white">
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Email Field */}
+                <div className="flex flex-col gap-1">
+                  <label className="font-space text-[11px] text-white font-medium flex items-center gap-1">
+                    <span>Correo electrónico de contacto</span>
+                    <span className="text-primary">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[17px] pointer-events-none">
+                      alternate_email
+                    </span>
+                    <input
+                      type="email"
+                      required
+                      value={registerEmail}
+                      onChange={(e) => { setRegisterEmail(e.target.value); setError(''); }}
+                      placeholder="tu.correo@organizacion.com"
+                      autoComplete="email"
+                      className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-3 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/40"
+                    />
+                  </div>
+                </div>
+
+                {/* 2-column: Contraseña y Confirmar Contraseña */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="font-space text-[11px] text-white font-medium flex items-center gap-1">
+                      <span>Contraseña</span>
+                      <span className="text-primary">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[17px] pointer-events-none">
+                        lock
+                      </span>
+                      <input
+                        type={showRegisterPassword ? 'text' : 'password'}
+                        required
+                        minLength={6}
+                        value={registerPassword}
+                        onChange={(e) => { setRegisterPassword(e.target.value); setError(''); }}
+                        placeholder="Mínimo 6 caracteres"
+                        autoComplete="new-password"
+                        className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-8 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-white"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">
+                          {showRegisterPassword ? 'visibility_off' : 'visibility'}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <label className="font-space text-[11px] text-white font-medium flex items-center gap-1">
+                      <span>Confirmar Contraseña</span>
+                      <span className="text-primary">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[17px] pointer-events-none">
+                        lock_reset
+                      </span>
+                      <input
+                        type={showRegisterPassword ? 'text' : 'password'}
+                        required
+                        value={registerConfirmPassword}
+                        onChange={(e) => { setRegisterConfirmPassword(e.target.value); setError(''); }}
+                        placeholder="Repite la contraseña"
+                        autoComplete="new-password"
+                        className={`w-full h-9 bg-surface-container-lowest border rounded-lg pl-8 pr-3 font-jakarta text-xs text-white focus:outline-none focus:ring-1 placeholder-on-surface-variant/40 ${
+                          registerConfirmPassword && registerPassword !== registerConfirmPassword
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                            : 'border-outline-variant focus:border-primary focus:ring-primary'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Error Alert */}
+                {error && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-error-container border border-error/30 text-error text-xs font-jakarta animate-shake">
+                    <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Success Alert */}
+                {successMessage && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-jakarta animate-fadeIn">
+                    <span className="material-symbols-outlined text-[16px] shrink-0">check_circle</span>
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
+                {/* Privileges Summary Pill */}
+                <div className="p-2.5 rounded-lg bg-surface-container border border-outline-variant/60 flex items-center justify-between gap-2 text-[11px] font-space text-on-surface-variant">
+                  <div className="flex items-center gap-1.5 text-white">
+                    <span className="material-symbols-outlined text-[15px] text-primary">key</span>
+                    <span>Permisos de acceso:</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Roles del Negocio</span>
+                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Historias de Usuario</span>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-10 mt-1 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                      </svg>
+                      <span>Creando cuenta de colaborador...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[18px]">person_add</span>
+                      <span>Crear Cuenta &amp; Acceder al Proyecto</span>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Callout to switch to login */}
+              <div className="pt-2 border-t border-outline-variant/60 text-center">
+                <p className="font-jakarta text-xs text-on-surface-variant">
+                  ¿Ya tienes una cuenta registrada?{' '}
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchMode('login')}
+                    className="text-primary hover:underline font-bold font-space inline-flex items-center gap-0.5"
+                  >
+                    <span>Inicia sesión aquí</span>
+                    <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+                  </button>
+                </p>
+              </div>
+
+            </div>
+          )}
+
         </div>
 
-        {/* Footer note */}
+        {/* Footer info note */}
         <div className="text-center font-jakarta text-[11px] text-on-surface-variant leading-relaxed">
           <span className="flex items-center justify-center gap-1">
-            <span className="material-symbols-outlined text-primary text-[14px]">verified_user</span>
-            Sesión cifrada · Acceso institucional restringido
+            <span className="material-symbols-outlined text-primary text-[14px]">shield</span>
+            Acceso seguro a requerimientos y especificaciones de software
           </span>
           <span className="block mt-1 text-outline">
             © 2026 Pathrimonio — Impulsamos el desarrollo comunitario
           </span>
         </div>
+
       </div>
     </div>
   );
