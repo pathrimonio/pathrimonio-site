@@ -327,12 +327,12 @@ export default function InteractiveEstimator({ onOpenContact }) {
                     isActive
                       ? 'bg-[#FFC000] text-[#09090B] font-semibold'
                       : isPast
-                      ? 'bg-[#FFFBEB] text-[#D97706] font-medium'
+                      ? 'bg-[#FFFBEB] text-[#9A6700] font-medium'
                       : 'text-[#52525B] hover:text-[#09090B]'
                   }`}
                 >
                   <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-mono shrink-0 ${
-                    isActive ? 'bg-white text-[#D97706] font-bold' : isPast ? 'bg-[#FFC000] text-[#09090B]' : 'bg-[#E4E4E7] text-[#52525B]'
+                    isActive ? 'bg-white text-[#9A6700] font-bold' : isPast ? 'bg-[#FFC000] text-[#09090B]' : 'bg-[#E4E4E7] text-[#52525B]'
                   }`}>
                     {step.num}
                   </span>
@@ -478,7 +478,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                               <span className="text-[11px] text-[#52525B]">{p.desc}</span>
                             </div>
                           </div>
-                          {isSelected && <Check size={14} strokeWidth={2} className="text-[#D97706]" />}
+                          {isSelected && <Check size={14} strokeWidth={2} className="text-[#9A6700]" />}
                         </div>
                       );
                     })}
@@ -502,7 +502,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                   <button
                     type="button"
                     onClick={() => goToStep(2)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E6AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
                   >
                     <span>Continuar a Roles</span>
                     <ArrowRight size={14} strokeWidth={1.5} />
@@ -523,7 +523,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-[#52525B] block">Total Roles</span>
-                    <span className="text-xl font-bold font-mono tabular-nums text-[#D97706]">
+                    <span className="text-xl font-bold font-mono tabular-nums text-[#9A6700]">
                       {pricing.totalAdminUsers}
                     </span>
                   </div>
@@ -571,7 +571,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                           <button
                             type="button"
                             onClick={() => handleRoleCountChange(role.id, 1)}
-                            className="w-8 h-8 rounded-[4px] border border-[#FFC000] bg-[#FFC000] hover:bg-[#E6AC00] flex items-center justify-center text-[#09090B] transition-colors cursor-pointer"
+                            className="w-8 h-8 rounded-[4px] border border-[#FFC000] bg-[#FFC000] hover:bg-[#E5AC00] flex items-center justify-center text-[#09090B] transition-colors cursor-pointer"
                           >
                             <Plus size={13} strokeWidth={2} />
                           </button>
@@ -594,7 +594,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                   <button
                     type="button"
                     onClick={() => goToStep(3)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E6AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
                   >
                     <span>Continuar a Canales</span>
                     <ArrowRight size={14} strokeWidth={1.5} />
@@ -631,7 +631,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-bold text-[#09090B]">{tier.name}</span>
-                            <span className="text-xs font-mono font-bold text-[#D97706] tabular-nums">
+                            <span className="text-xs font-mono font-bold text-[#9A6700] tabular-nums">
                               {tier.monthlyPrice === 0 ? 'Incluido' : `+$${tier.monthlyPrice}/mes`}
                             </span>
                           </div>
@@ -673,7 +673,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                             <p className="text-[11px] text-[#52525B]">{opt.desc}</p>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-xs font-mono font-bold text-[#D97706] tabular-nums">
+                            <span className="text-xs font-mono font-bold text-[#9A6700] tabular-nums">
                               {opt.monthlyPrice === 0 ? '$0' : `+$${opt.monthlyPrice}/mes`}
                             </span>
                             <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center ${
@@ -711,7 +711,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                             <p className="text-[11px] text-[#52525B]">{pkg.desc}</p>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-xs font-mono font-bold text-[#D97706] tabular-nums">
+                            <span className="text-xs font-mono font-bold text-[#9A6700] tabular-nums">
                               {pkg.monthlyPrice === 0 ? '$0' : `+$${pkg.monthlyPrice}/mes`}
                             </span>
                             <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center ${
@@ -739,7 +739,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                   <button
                     type="button"
                     onClick={() => goToStep(4)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E6AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
                   >
                     <span>Continuar a Modalidad</span>
                     <ArrowRight size={14} strokeWidth={1.5} />
@@ -781,7 +781,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                             </span>
                           )}
                           <span className="block text-xs font-bold text-[#09090B] mb-1">{mode.name}</span>
-                          <span className="text-xs font-mono font-bold text-[#D97706] block mb-2 tabular-nums">
+                          <span className="text-xs font-mono font-bold text-[#9A6700] block mb-2 tabular-nums">
                             {mode.setupPrice === 0 ? 'Setup: $0 USD' : `Setup: $${mode.setupPrice} USD (pago único)`}
                           </span>
                           <p className="text-[11px] text-[#52525B] leading-relaxed">{mode.desc}</p>
@@ -845,7 +845,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC000] hover:bg-[#E6AC00] text-[#09090B] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                   >
                     <MessageSquare size={14} strokeWidth={1.5} />
                     <span>Enviar Cotización por WhatsApp</span>
@@ -881,13 +881,13 @@ export default function InteractiveEstimator({ onOpenContact }) {
                     id="tarifaSocioSwitch"
                     checked={tarifaSocio}
                     onChange={(e) => setTarifaSocio(e.target.checked)}
-                    className="w-4 h-4 text-[#D97706] rounded border-zinc-300 focus:ring-amber-400 cursor-pointer accent-[#FFC000]"
+                    className="w-4 h-4 text-[#9A6700] rounded border-zinc-300 focus:ring-amber-400 cursor-pointer accent-[#FFC000]"
                   />
                   <label htmlFor="tarifaSocioSwitch" className="text-xs font-medium text-[#09090B] cursor-pointer">
                     Tarifa Socio ($1/día)
                   </label>
                 </div>
-                <span className="text-[10px] font-mono font-semibold text-[#D97706] bg-white px-2 py-0.5 rounded border border-amber-200">
+                <span className="text-[10px] font-mono font-semibold text-[#9A6700] bg-white px-2 py-0.5 rounded border border-amber-200">
                   {tarifaSocio ? 'ACTIVA' : 'INACTIVA'}
                 </span>
               </div>
@@ -916,7 +916,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                 <span className="text-xs text-[#52525B]">/ mes</span>
               </div>
 
-              <div className="text-xs text-[#D97706] font-mono tabular-nums font-semibold">
+              <div className="text-xs text-[#9A6700] font-mono tabular-nums font-semibold">
                 ≈ ${pricing.dailyEquivalent} USD al día
               </div>
             </div>
@@ -928,7 +928,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                 {pricing.setupFeeSavings > 0 && (
                   <span className="text-[#A1A1AA] line-through">$500 USD</span>
                 )}
-                <span className={`font-bold ${pricing.setupFee === 0 ? 'text-[#D97706]' : 'text-[#09090B]'}`}>
+                <span className={`font-bold ${pricing.setupFee === 0 ? 'text-[#9A6700]' : 'text-[#09090B]'}`}>
                   ${pricing.setupFee} USD
                 </span>
               </div>
@@ -956,15 +956,15 @@ export default function InteractiveEstimator({ onOpenContact }) {
                 Garantías de la Alianza
               </span>
               <div className="flex items-center gap-2 text-xs text-[#52525B]">
-                <Check size={13} strokeWidth={2} className="text-[#D97706]" />
+                <Check size={13} strokeWidth={2} className="text-[#9A6700]" />
                 <span>Base de datos 100% propia (SQLite/Postgres)</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-[#52525B]">
-                <Check size={13} strokeWidth={2} className="text-[#D97706]" />
+                <Check size={13} strokeWidth={2} className="text-[#9A6700]" />
                 <span>Arquitectura Offline-First sin cortes</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-[#52525B]">
-                <Check size={13} strokeWidth={2} className="text-[#D97706]" />
+                <Check size={13} strokeWidth={2} className="text-[#9A6700]" />
                 <span>Soporte continuo y sin costo por hora</span>
               </div>
             </div>
@@ -974,7 +974,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
               <button
                 type="button"
                 onClick={() => goToStep(4)}
-                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E6AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer text-center"
+                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer text-center"
               >
                 Completar y Enviar Cotización
               </button>
@@ -982,7 +982,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
               <button
                 type="button"
                 onClick={handleFinalSubmit}
-                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E6AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer text-center"
+                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer text-center"
               >
                 Enviar a WhatsApp Ahora
               </button>

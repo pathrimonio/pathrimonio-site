@@ -17,10 +17,13 @@
   --border-subtle: #E4E4E7;
   --border-strong: #D4D4D8;
 
-  /* Acento Institucional (1 solo color dominante) */
-  --accent-primary: #FFC000;       /* Amarillo dorado / dinamismo + claridad */
-  --accent-primary-hover: #E6AC00;
-  --accent-soft: #FFFBEB;          /* Fondo suave para badge Socio / Pathway */
+  /* Acento Institucional (#FFC000) */
+  --accent-primary: #FFC000;          /* Botones sólidos, switches, barras de progreso */
+  --accent-primary-hover: #E5AC00;    /* Hover de botón sólido */
+  --accent-text-on-solid: #09090B;    /* Texto oscuro obligatorio sobre #FFC000 */
+  --accent-text: #9A6700;             /* Solo para enlaces, íconos o texto destacado sobre blanco */
+  --accent-soft: #FFFBEB;             /* Fondo suave para tarjeta Socio / Pathway */
+  --accent-border: #FDE047;           /* Borde sutil dorado en modo claro */
 
   /* Estados */
   --status-success: #15803D;
@@ -38,6 +41,32 @@
   --m-lift: -2px;
   --m-ease: cubic-bezier(0, 0, 0.2, 1);
   --m-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"], .dark {
+  color-scheme: dark;
+
+  /* Superficies */
+  --bg-page: #09090B;
+  --bg-surface: #111113;
+  --bg-subtle: #18181B;
+
+  /* Texto */
+  --text-primary: #F4F4F5;
+  --text-secondary: #A1A1AA;
+  --text-muted: #71717A;
+
+  /* Bordes */
+  --border-subtle: #27272A;
+  --border-strong: #3F3F46;
+
+  /* Acento Institucional (#FFC000) */
+  --accent-primary: #FFC000;                 /* Contraste > 11:1 sobre #09090B */
+  --accent-primary-hover: #FFD133;           /* Hover ligeramente más luminoso */
+  --accent-text-on-solid: #09090B;           /* Texto oscuro obligatorio sobre botón #FFC000 */
+  --accent-text: #FFC000;                    /* Enlaces e íconos destacados en oscuro */
+  --accent-soft: rgba(255, 192, 0, 0.08);    /* Fondo translúcido para Socio / Pathway */
+  --accent-border: rgba(255, 192, 0, 0.30);  /* Borde dorado sutil sin brillo neón */
 }
 
 @layer base {

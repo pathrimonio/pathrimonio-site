@@ -21,7 +21,7 @@ export default function Navbar({ onOpenPortal, onOpenRegister }) {
             <ShieldCheck size={18} strokeWidth={1.5} />
           </div>
           <span className="font-semibold text-[17px] tracking-tight">Pathrimonio</span>
-          <span className="hidden sm:inline-block text-[11px] font-mono font-medium text-[#92400E] bg-[#FFFBEB] px-2 py-0.5 rounded-[4px] border border-amber-200/80">
+          <span className="hidden sm:inline-block text-[11px] font-mono font-medium text-[#9A6700] bg-[#FFFBEB] px-2 py-0.5 rounded-[4px] border border-amber-200/80">
             Company
           </span>
         </a>
@@ -49,7 +49,7 @@ export default function Navbar({ onOpenPortal, onOpenRegister }) {
           </button>
           <a
             href="#cotizador"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#09090B] bg-[#FFC000] hover:bg-[#E6AC00] rounded-[6px] transition-colors shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#09090B] bg-[#FFC000] hover:bg-[#E5AC00] rounded-[6px] transition-colors shadow-sm cursor-pointer"
           >
             <span>Cotizar ($1/día)</span>
             <ArrowRight size={13} strokeWidth={1.5} />
@@ -88,14 +88,14 @@ export default function Navbar({ onOpenPortal, onOpenRegister }) {
             </button>
             <button
               onClick={() => { setMobileMenuOpen(false); onOpenRegister(); }}
-              className="w-full text-center py-2 text-xs font-medium text-[#92400E] bg-[#FFFBEB] border border-amber-200/80 rounded-[6px]"
+              className="w-full text-center py-2 text-xs font-medium text-[#9A6700] bg-[#FFFBEB] border border-amber-200/80 rounded-[6px]"
             >
               Crear Cuenta Colaborador
             </button>
             <a
               href="#cotizador"
               onClick={() => setMobileMenuOpen(false)}
-              className="w-full text-center py-2 text-xs font-semibold text-[#09090B] bg-[#FFC000] hover:bg-[#E6AC00] rounded-[6px]"
+              className="w-full text-center py-2 text-xs font-semibold text-[#09090B] bg-[#FFC000] hover:bg-[#E5AC00] rounded-[6px]"
             >
               Cotizar Sistema a Medida
             </a>

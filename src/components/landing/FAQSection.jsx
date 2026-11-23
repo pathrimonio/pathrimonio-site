@@ -66,12 +66,12 @@ export default function FAQSection() {
                   aria-expanded={isOpen}
                 >
                   <span className={`text-base font-semibold transition-colors pr-6 ${
-                    isOpen ? 'text-[#D97706]' : 'text-[#09090B] group-hover:text-[#D97706]'
+                    isOpen ? 'text-[#9A6700]' : 'text-[#09090B] group-hover:text-[#9A6700]'
                   }`}>
                     {faq.q}
                   </span>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 ${
-                    isOpen ? 'rotate-180 text-[#D97706]' : 'text-[#A1A1AA] group-hover:text-[#09090B]'
+                    isOpen ? 'rotate-180 text-[#9A6700]' : 'text-[#A1A1AA] group-hover:text-[#09090B]'
                   }`}>
                     <ChevronDown size={18} strokeWidth={1.5} />
                   </div>
@@ -97,7 +97,7 @@ export default function FAQSection() {
               href="https://wa.me/51950293223?text=Hola,%20quisiera%20hacer%20una%20consulta%20técnica%20sobre%20el%20software%20de%20Pathrimonio"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#D97706] font-semibold underline underline-offset-2 hover:text-[#B45309]"
+              className="text-[#9A6700] font-semibold underline underline-offset-2 hover:text-[#B45309]"
             >
               Consulta directa por WhatsApp con un ingeniero
             </a>

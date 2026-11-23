@@ -7,7 +7,7 @@ export default function Hero({ onOpenPortal }) {
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         <div className="max-w-[680px] mx-auto text-center flex flex-col items-center">
           {/* Badge Minimalista */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFBEB] border border-amber-200/80 text-[#92400E] text-xs font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFBEB] border border-amber-200/80 text-[#9A6700] text-xs font-medium mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000]"></span>
             <span>Programa de Socios Pathrimonio</span>
           </div>
@@ -27,7 +27,7 @@ export default function Hero({ onOpenPortal }) {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto mb-12">
             <a
               href="#cotizador"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC000] hover:bg-[#E6AC00] text-[#09090B] text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-sm font-semibold transition-colors shadow-sm cursor-pointer"
             >
               <span>Cotizar Sistema ($1/día)</span>
               <ArrowRight size={15} strokeWidth={1.5} />
@@ -43,17 +43,17 @@ export default function Hero({ onOpenPortal }) {
           {/* Garantías de Confianza Institucional */}
           <div className="pt-6 border-t border-[#E4E4E7] w-full flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-xs text-[#52525B]">
             <span className="inline-flex items-center gap-1.5">
-              <CheckCircle2 size={14} strokeWidth={1.5} className="text-[#D97706]" />
+              <CheckCircle2 size={14} strokeWidth={1.5} className="text-[#9A6700]" />
               <span>100% Offline-First (SQLite Local)</span>
             </span>
             <span className="text-[#D4D4D8] hidden sm:inline">•</span>
             <span className="inline-flex items-center gap-1.5">
-              <Database size={14} strokeWidth={1.5} className="text-[#D97706]" />
+              <Database size={14} strokeWidth={1.5} className="text-[#9A6700]" />
               <span>Soberanía absoluta de código y base de datos</span>
             </span>
             <span className="text-[#D4D4D8] hidden sm:inline">•</span>
             <span className="inline-flex items-center gap-1.5">
-              <Shield size={14} strokeWidth={1.5} className="text-[#D97706]" />
+              <Shield size={14} strokeWidth={1.5} className="text-[#9A6700]" />
               <span>$0 costo de setup con permanencia</span>
             </span>
           </div>

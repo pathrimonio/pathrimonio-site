@@ -18,7 +18,7 @@ export default function Footer({ onOpenContact }) {
             <p className="text-xs text-[#52525B] leading-relaxed mb-4">
               Ingeniería de software sobria, accesible y de alto rendimiento. Construimos herramientas para la economía real y fortalecemos el tejido comunitario en América Latina.
             </p>
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#92400E] bg-[#FFFBEB] px-2 py-1 rounded-[4px] border border-amber-200/80 w-fit">
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#9A6700] bg-[#FFFBEB] px-2 py-1 rounded-[4px] border border-amber-200/80 w-fit">
               <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000]"></span>
               <span>100% Soberanía Tecnológica</span>
             </div>
@@ -99,7 +99,7 @@ export default function Footer({ onOpenContact }) {
                   href="https://wa.me/51950293223?text=Hola,%20quisiera%20contactar%20al%20equipo%20de%20Pathrimonio"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[#D97706] font-medium hover:text-[#B45309]"
+                  className="inline-flex items-center gap-1.5 text-[#9A6700] font-medium hover:text-[#B45309]"
                 >
                   <span>WhatsApp: +51 950 293 223</span>
                 </a>
@@ -135,7 +135,7 @@ export default function Footer({ onOpenContact }) {
           <div className="flex items-center gap-6 font-mono text-[11px]">
             <span>Hecho para la economía real</span>
             <span>•</span>
-            <span className="text-[#D97706]">Sistemas Verificados</span>
+            <span className="text-[#9A6700]">Sistemas Verificados</span>
           </div>
         </div>
       </div>

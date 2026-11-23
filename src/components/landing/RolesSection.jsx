@@ -93,7 +93,7 @@ export default function RolesSection() {
                 <div>
                   {/* Top Bar: Icono + Badge */}
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-10 h-10 rounded-[6px] bg-[#FFFBEB] border border-amber-200/80 flex items-center justify-center text-[#D97706]">
+                    <div className="w-10 h-10 rounded-[6px] bg-[#FFFBEB] border border-amber-200/80 flex items-center justify-center text-[#9A6700]">
                       <Icon size={20} strokeWidth={1.5} />
                     </div>
                     <span className="text-[11px] font-mono font-medium text-[#52525B] bg-[#F4F4F5] px-2.5 py-1 rounded-[4px]">
@@ -138,7 +138,7 @@ export default function RolesSection() {
           </div>
           <a
             href="#cotizador"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D97706] hover:text-[#B45309] shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9A6700] hover:text-[#B45309] shrink-0"
           >
             <span>Configurar mis roles en el cotizador</span>
             <ArrowRight size={13} strokeWidth={1.5} />
