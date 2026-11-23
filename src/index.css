@@ -95,14 +95,14 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F4F4F5;
+  background: var(--bg-subtle);
 }
 ::-webkit-scrollbar-thumb {
-  background: #D4D4D8;
+  background: var(--border-strong);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #A1A1AA;
+  background: var(--text-muted);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -119,10 +119,10 @@
 }
 
 .card-minimal {
-  background-color: #FFFFFF;
+  background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  transition: border-color var(--m-out) var(--m-ease), transform var(--m-out) var(--m-ease);
+  transition: border-color var(--m-out) var(--m-ease), transform var(--m-out) var(--m-ease), background-color var(--m-out) var(--m-ease);
 }
 @media (hover: hover) and (pointer: fine) {
   .card-minimal:hover {
@@ -134,7 +134,8 @@
 
 .btn-accent {
   background-color: var(--accent-primary);
-  color: #FFFFFF;
+  color: var(--accent-text-on-solid);
+  font-weight: 600;
   border-radius: var(--radius-sm);
   transition: background-color var(--m-out) var(--m-ease), transform var(--m-press) var(--m-ease);
 }
@@ -146,7 +147,7 @@
 }
 
 .btn-secondary-ghost {
-  background-color: #FFFFFF;
+  background-color: var(--bg-surface);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);

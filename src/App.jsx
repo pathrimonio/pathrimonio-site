@@ -92,6 +92,37 @@ function PortalLoader({ message }) {
 }
 
 export default function App() {
+  // ── Theme state: 'light' | 'dark'
+  const [theme, setTheme] = useState(() => {
+    try {
+      const savedTheme = localStorage.getItem('pathrimonio_theme');
+      if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
+      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
+    } catch (_) {}
+    return 'light';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pathrimonio_theme', theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.documentElement.style.colorScheme = 'dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+        document.documentElement.style.colorScheme = 'light';
+      }
+    } catch (_) {}
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   // ── View state: 'landing' | 'portal'
   const [currentView, setCurrentView] = useState(() =>
     window.location.hash === '#portal' ? 'portal' : 'landing'
@@ -1103,8 +1134,10 @@ export default function App() {
           VIEW: LANDING PAGE (Minimalista Moderno - SDD)
       ══════════════════════════════════════════ */}
       {currentView === 'landing' && (
-        <div className="flex flex-col w-full bg-[#FAFAFA] text-[#09090B] min-h-screen selection:bg-amber-100 selection:text-amber-950">
+        <div className="flex flex-col w-full bg-[#FAFAFA] dark:bg-[#09090B] text-[#09090B] dark:text-[#F4F4F5] min-h-screen selection:bg-amber-100 dark:selection:bg-amber-900/40 selection:text-amber-950 dark:selection:text-amber-200 transition-colors duration-200">
           <Navbar 
+            theme={theme}
+            onToggleTheme={toggleTheme}
             onOpenPortal={() => navigateToPortal('login')}
             onOpenRegister={navigateToRegister} 
           />
