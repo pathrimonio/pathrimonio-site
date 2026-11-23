@@ -30,6 +30,7 @@ import {
 // Landing Components
 import Navbar from './components/landing/Navbar';
 import Hero from './components/landing/Hero';
+import CommunityImpactSection from './components/landing/CommunityImpactSection';
 import ServicesSection from './components/landing/ServicesSection';
 import Pillars from './components/landing/Pillars';
 import InteractiveEstimator from './components/landing/InteractiveEstimator';
@@ -1090,11 +1091,12 @@ export default function App() {
           />
 
           <main className="w-full">
-            <Hero onOpenContact={() => setIsContactModalOpen(true)} />
+            <Hero onOpenContact={() => setIsContactModalOpen(true)} onOpenPortal={() => navigateToPortal('login')} />
+            <CommunityImpactSection onOpenContact={() => setIsContactModalOpen(true)} onOpenPortal={() => navigateToPortal('login')} />
             <ServicesSection />
-            <Pillars />
             <InteractiveEstimator onOpenContact={() => setIsContactModalOpen(true)} />
             <PathwaySection />
+            <Pillars />
             <FutureProducts onOpenContact={() => setIsContactModalOpen(true)} />
             <Manifesto />
 
@@ -1103,10 +1105,10 @@ export default function App() {
               <div className="max-w-5xl mx-auto px-6 text-center flex flex-col items-center gap-6">
                 <div className="w-12 h-1 bg-primary rounded-full"></div>
                 <h2 className="font-space text-3xl sm:text-4xl text-white font-bold tracking-tight max-w-3xl">
-                  ¿Listo para hacer realidad tu próxima idea o proyecto de software?
+                  Impulsa la digitalización de tu comunidad o negocio local
                 </h2>
                 <p className="font-jakarta text-sm sm:text-base text-on-surface-variant max-w-2xl leading-relaxed">
-                  En Pathrimonio combinamos diseño centrado en el usuario, ingeniería de alto rendimiento y metodologías ágiles para construir aplicaciones móviles y plataformas web que marcan la diferencia.
+                  En Pathrimonio combinamos ingeniería de alto rendimiento, arquitectura offline-first y transparencia radical para construir aplicaciones móviles y plataformas web que transforman la economía real.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
                   <a
@@ -1125,7 +1127,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={() => setIsContactModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide hover:bg-surface-container-highest transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide hover:bg-surface-container-highest transition-all cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[18px]">chat</span>
                     Iniciar Conversación

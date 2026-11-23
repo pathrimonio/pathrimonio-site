@@ -1,72 +1,73 @@
 import React from 'react';
 
 export default function Pillars() {
-  const pillars = [
+  const principles = [
     {
       num: "01",
-      title: "Claridad y Foco en el Usuario",
-      icon: "person_check",
-      desc: "Evitamos la complejidad innecesaria. Cada pantalla, botón y flujo está pensado para que cualquier persona lo entienda y disfrute usarlo desde el primer día.",
-      tag: "Experiencia Intuitiva"
+      title: "Soberanía y Datos Propios",
+      icon: "key",
+      desc: "La base de datos y los registros pertenecen exclusivamente a tu comunidad u organización. No retenemos información ni aplicamos bloqueos por suscripción.",
+      tag: "Propiedad Comunitaria"
     },
     {
       num: "02",
-      title: "Desarrollo Ágil y Entregas Reales",
-      icon: "rocket_launch",
-      desc: "Construimos prototipos y MVPs funcionales en plazos claros, permitiendo validar productos reales con usuarios reales antes de sobredimensionar.",
-      tag: "Validación Rápida"
+      title: "Resiliencia Offline-First",
+      icon: "cloud_off",
+      desc: "Diseñado para la realidad de campo: si se corta la conexión o estás en una zona sin cobertura móvil, el sistema sigue operando y sincroniza al volver la señal.",
+      tag: "Cero Interrupciones"
     },
     {
       num: "03",
-      title: "Rendimiento y Estabilidad",
-      icon: "bolt",
-      desc: "Aplicamos las mejores prácticas de programación moderna para asegurar que tu aplicación cargue al instante y funcione de manera fluida y confiable.",
-      tag: "Cero Fricción"
+      title: "Usabilidad Inclusiva",
+      icon: "accessibility_new",
+      desc: "Eliminamos la jerga técnica innecesaria. Cada pantalla, botón y formulario está pensado para que cualquier trabajador o socio lo comprenda de inmediato.",
+      tag: "Diseño para Todos"
     },
     {
       num: "04",
-      title: "Acompañamiento y Evolución",
-      icon: "trending_up",
-      desc: "El lanzamiento es solo el comienzo. Te acompañamos en la recopilación de retroalimentación y en la evolución continua de tus productos digitales.",
-      tag: "Crecimiento Continuo"
+      title: "Acompañamiento en Terreno",
+      icon: "handshake",
+      desc: "El desarrollo de software no termina al compilar. Capacitamos a los colaboradores de cada área y adaptamos el sistema a la medida de su flujo real.",
+      tag: "Crecimiento Compartido"
     }
   ];
 
   return (
-    <section className="w-full py-20 lg:py-28 bg-surface" id="metodologia">
+    <section className="w-full py-20 lg:py-28 bg-surface-container-lowest border-b border-outline-variant/60" id="metodologia">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col gap-12">
+        
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex flex-col gap-2 max-w-2xl">
             <span className="font-space text-xs text-primary uppercase tracking-widest font-bold">
-              Nuestra Forma de Trabajar
+              Manifiesto de Desarrollo
             </span>
             <h2 className="font-space text-3xl lg:text-4xl text-white font-bold tracking-tight">
-              Software Construido con Disciplina y Sentido Práctico
+              Principios Inquebrantables de Nuestro Software
             </h2>
             <p className="font-jakarta text-sm sm:text-base text-on-surface-variant leading-relaxed">
-              Trabajamos con procesos claros y transparentes, enfocados en entregar valor real para tu negocio y una experiencia impecable para tus usuarios.
+              Creemos que el desarrollo de software adquiere su verdadero valor cuando dignifica el trabajo de las personas y fortalece los lazos de confianza en la comunidad.
             </p>
           </div>
-          <div className="hidden md:flex items-center gap-2 text-on-surface-variant font-space text-xs uppercase bg-surface-container-high px-3.5 py-1.5 rounded border border-outline-variant">
-            <span className="material-symbols-outlined text-primary text-[18px]">workspace_premium</span>
-            <span>Calidad Garantizada</span>
+          <div className="flex items-center gap-2 text-on-surface-variant font-space text-xs uppercase bg-surface-container-high px-3.5 py-1.5 rounded-lg border border-outline-variant">
+            <span className="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+            <span>Compromiso Ético</span>
           </div>
         </div>
 
         {/* 4 Pillars Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {pillars.map((pillar) => (
+          {principles.map((pillar) => (
             <div 
               key={pillar.num}
-              className="bg-surface-container border border-outline-variant/60 p-6 rounded-xl flex flex-col justify-between hover:border-primary/40 hover:bg-surface-container-high transition-all duration-300 group shadow-sm hover:shadow-xl"
+              className="card-hover bg-surface-container border border-outline-variant/60 p-6 rounded-2xl flex flex-col justify-between group shadow-sm"
             >
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                   <span className="font-space text-3xl font-bold text-outline-variant group-hover:text-primary transition-colors">
                     {pillar.num}
                   </span>
-                  <div className="w-10 h-10 rounded bg-surface-container-highest border border-outline-variant/80 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                  <div className="w-10 h-10 rounded-xl bg-surface-container-highest border border-outline-variant/80 flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
                     <span className="material-symbols-outlined text-[20px]">{pillar.icon}</span>
                   </div>
                 </div>
@@ -86,6 +87,7 @@ export default function Pillars() {
             </div>
           ))}
         </div>
+
       </div>
     </section>
   );

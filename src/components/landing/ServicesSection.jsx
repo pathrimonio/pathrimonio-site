@@ -3,51 +3,55 @@ import React from 'react';
 export default function ServicesSection() {
   const services = [
     {
-      title: "Desarrollo de Apps Móviles",
-      desc: "Creamos aplicaciones fluidas para Android e iOS con tecnología moderna, listas para publicar en Google Play Store y Apple App Store.",
+      title: "Apps Móviles Nativas & Offline-First",
+      desc: "Desarrollamos aplicaciones para Android e iOS preparadas para trabajar en terreno sin señal continua. Los datos se guardan en el dispositivo y se sincronizan de inmediato al reconectar.",
       icon: "smartphone",
-      badge: "Android & iOS"
+      badge: "Android & iOS · SQLite Local",
+      focus: "Operación de campo, acopio y ventas rurales"
     },
     {
-      title: "Plataformas Web a Medida",
-      desc: "Desarrollamos sitios web, portales y aplicaciones SaaS rápidas, responsivas y optimizadas para brindar la mejor experiencia en cualquier navegador.",
+      title: "Plataformas Web Operativas & Portales",
+      desc: "Sistemas de gestión, cuadros de mando y portales de socios rápidos y transparentes. Construidos con React y PostgreSQL para soportar miles de registros sin lentitud.",
       icon: "web",
-      badge: "Frontend & Backend"
+      badge: "Full-Stack Web · PostgreSQL",
+      focus: "Administración, control de socios y caja"
     },
     {
-      title: "Diseño de Producto & UX/UI",
-      desc: "Diseñamos interfaces atractivas, limpias y fáciles de usar, asegurando que cada funcionalidad sea intuitiva para tus usuarios finales.",
+      title: "Automatización & Flujos con WhatsApp",
+      desc: "Conectamos las conversaciones de WhatsApp directamente a tu base de datos para registrar pedidos, confirmar despachos y enviar estados de cuenta automáticos.",
+      icon: "quick_reference_all",
+      badge: "APIs & Webhooks · Cero Fugas",
+      focus: "Atención directa sin pagar comisiones"
+    },
+    {
+      title: "Diseño Participativo & Prototipado UI",
+      desc: "Especificamos cada rol y pantalla junto con las personas que usarán el software. Validamos mockups interactivos e historias de usuario antes de programar una sola línea.",
       icon: "design_services",
-      badge: "Centrado en el Usuario"
-    },
-    {
-      title: "Arquitectura Offline-First",
-      desc: "Especialistas en crear software que sigue funcionando incluso cuando el usuario pierde la conexión a internet, sincronizando datos al reconectarse.",
-      icon: "cloud_sync",
-      badge: "Alta Disponibilidad"
+      badge: "Validación Temprana · HU Claras",
+      focus: "Cero fricción para el usuario de base"
     }
   ];
 
   return (
-    <section className="w-full py-16 lg:py-24 bg-surface-container-low border-y border-outline-variant/60" id="servicios">
+    <section className="w-full py-20 lg:py-28 bg-surface border-b border-outline-variant/60" id="servicios">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col gap-12">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex flex-col gap-2 max-w-2xl">
             <span className="font-space text-xs text-primary uppercase tracking-widest font-bold">
-              Lo Que Hacemos
+              Capacidades Técnicas
             </span>
             <h2 className="font-space text-3xl lg:text-4xl text-white font-bold tracking-tight">
-              Servicios de Desarrollo de Software
+              Ingeniería de Software con Sentido Práctico
             </h2>
             <p className="font-jakarta text-sm sm:text-base text-on-surface-variant leading-relaxed">
-              Acompañamos a emprendedores, empresas y organizaciones en cada etapa: desde la concepción del producto hasta su despliegue y crecimiento.
+              Combinamos estándares modernos de desarrollo de software con un profundo entendimiento de la realidad operativa de cooperativas, organizaciones sociales y empresas locales.
             </p>
           </div>
           <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-surface-container border border-outline-variant text-white font-space text-xs">
-            <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
-            <span>Estándares de Calidad de Software</span>
+            <span className="material-symbols-outlined text-primary text-[18px]">code</span>
+            <span>Arquitectura Modular &amp; Escalable</span>
           </div>
         </div>
 
@@ -56,25 +60,31 @@ export default function ServicesSection() {
           {services.map((svc, idx) => (
             <div 
               key={idx}
-              className="bg-surface-container border border-outline-variant/70 p-6 rounded-xl flex flex-col justify-between hover:border-primary/50 hover:bg-surface-container-high transition-all duration-300 group shadow-sm"
+              className="card-hover bg-surface-container border border-outline-variant/70 p-6 rounded-2xl flex flex-col justify-between group shadow-sm"
             >
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <div className="w-11 h-11 rounded-lg bg-surface-container-highest border border-outline-variant flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-[24px]">{svc.icon}</span>
+                  <div className="w-11 h-11 rounded-xl bg-surface-container-highest border border-outline-variant flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                    <span className="material-symbols-outlined text-[22px]">{svc.icon}</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-space text-[10px] font-semibold">
+                  <span className="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono text-[10px] font-semibold border border-outline-variant/60">
                     {svc.badge}
                   </span>
                 </div>
-                <div className="flex flex-col gap-1.5">
+
+                <div className="flex flex-col gap-2">
                   <h3 className="font-space text-lg text-white font-bold group-hover:text-primary transition-colors">
                     {svc.title}
                   </h3>
-                  <p className="font-jakarta text-xs sm:text-sm text-on-surface-variant leading-relaxed">
+                  <p className="font-jakarta text-xs text-on-surface-variant leading-relaxed">
                     {svc.desc}
                   </p>
                 </div>
+              </div>
+
+              <div className="pt-5 border-t border-outline-variant/40 mt-4 flex items-center gap-1.5 text-primary font-space text-[11px] font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0"></span>
+                <span className="truncate">{svc.focus}</span>
               </div>
             </div>
           ))}

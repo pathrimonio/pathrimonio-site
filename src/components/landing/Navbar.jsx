@@ -35,6 +35,13 @@ export default function Navbar({ onOpenContact, onOpenPortal, onOpenRegister }) 
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-1">
           <button 
+            onClick={() => scrollToSection('comunidad')} 
+            className="px-3 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-[16px] text-primary">groups_3</span>
+            <span>Impacto Comunitario</span>
+          </button>
+          <button 
             onClick={() => scrollToSection('cotizador')} 
             className="px-3 py-1.5 rounded text-xs font-semibold text-primary hover:text-white hover:bg-surface-container transition-all flex items-center gap-1.5 border border-primary/20 bg-primary/5"
           >
@@ -47,7 +54,7 @@ export default function Navbar({ onOpenContact, onOpenPortal, onOpenRegister }) 
             className="px-3.5 py-1.5 rounded text-xs font-semibold text-primary hover:text-white hover:bg-surface-container transition-all flex items-center gap-1.5"
           >
             <span className="material-symbols-outlined text-[16px]">route</span>
-            <span>Pathway (App MVP)</span>
+            <span>Pathway (MVP)</span>
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
           </button>
           <button 
@@ -60,13 +67,7 @@ export default function Navbar({ onOpenContact, onOpenPortal, onOpenRegister }) 
             onClick={() => scrollToSection('metodologia')} 
             className="px-3.5 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all"
           >
-            Cómo Trabajamos
-          </button>
-          <button 
-            onClick={() => scrollToSection('futuro')} 
-            className="px-3.5 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all"
-          >
-            Visión &amp; Futuro
+            Principios
           </button>
         </nav>
 
@@ -113,6 +114,13 @@ export default function Navbar({ onOpenContact, onOpenPortal, onOpenRegister }) 
       {mobileMenuOpen && (
         <div className="md:hidden bg-surface-container-lowest border-b border-outline-variant px-6 py-4 flex flex-col gap-3">
           <button 
+            onClick={() => scrollToSection('comunidad')} 
+            className="text-left py-2 text-sm text-white font-semibold flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px] text-primary">groups_3</span>
+            <span>Impacto Comunitario</span>
+          </button>
+          <button 
             onClick={() => scrollToSection('cotizador')} 
             className="text-left py-2 text-sm text-primary font-semibold flex items-center justify-between"
           >
@@ -127,7 +135,7 @@ export default function Navbar({ onOpenContact, onOpenPortal, onOpenRegister }) 
             className="text-left py-2 text-sm text-primary font-semibold flex items-center gap-2"
           >
             <span className="material-symbols-outlined text-[18px]">route</span>
-            Pathway (App de Metas MVP)
+            Pathway (App MVP)
           </button>
           <button 
             onClick={() => scrollToSection('servicios')} 
@@ -139,13 +147,7 @@ export default function Navbar({ onOpenContact, onOpenPortal, onOpenRegister }) 
             onClick={() => scrollToSection('metodologia')} 
             className="text-left py-2 text-sm text-on-surface-variant hover:text-white font-medium"
           >
-            Cómo Trabajamos
-          </button>
-          <button 
-            onClick={() => scrollToSection('futuro')} 
-            className="text-left py-2 text-sm text-on-surface-variant hover:text-white font-medium"
-          >
-            Visión &amp; Próximos Productos
+            Principios &amp; Metodología
           </button>
           <div className="pt-2 border-t border-outline-variant flex flex-col gap-2">
             <button 
