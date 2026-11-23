@@ -27,16 +27,14 @@ import {
   removeProjectMember
 } from './lib/supabaseData';
 
-// Landing Components
+// Landing Components (Minimalist Modern SDD)
 import Navbar from './components/landing/Navbar';
 import Hero from './components/landing/Hero';
-import CommunityImpactSection from './components/landing/CommunityImpactSection';
-import ServicesSection from './components/landing/ServicesSection';
-import Pillars from './components/landing/Pillars';
+import RolesSection from './components/landing/RolesSection';
+import PartnershipSection from './components/landing/PartnershipSection';
+import ImpactPathwayBento from './components/landing/ImpactPathwayBento';
 import InteractiveEstimator from './components/landing/InteractiveEstimator';
-import PathwaySection from './components/landing/PathwaySection';
-import FutureProducts from './components/landing/FutureProducts';
-import Manifesto from './components/landing/Manifesto';
+import FAQSection from './components/landing/FAQSection';
 import Footer from './components/landing/Footer';
 import ContactModal from './components/landing/ContactModal';
 
@@ -477,7 +475,29 @@ export default function App() {
     setCurrentUser(user);
     setShowLogin(false);
 
-    if (user.initialProject && projects.some(p => p.id === user.initialProject)) {
+    if (user.initialProjectName && (!user.initialProject || !projects.some(p => p.id === user.initialProject))) {
+      const slug = (user.initialProject || user.initialProjectName)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') || `proj-${Date.now().toString().slice(-4)}`;
+      const newProj = {
+        id: slug,
+        name: user.initialProjectName,
+        shortName: user.initialProjectName,
+        subtitle: `Proyecto de ${user.organization || user.name}`,
+        description: `Espacio de trabajo creado por ${user.name} (${user.organization || 'Organización'})`,
+        category: 'Software a Medida',
+        client: user.organization || user.name,
+        icon: 'rocket_launch',
+        color: 'amber',
+        status: 'Fase Inicial / Requerimientos',
+        version: 'v0.1.0',
+        modules: ['General', 'Autenticación', 'Módulo Principal']
+      };
+      setProjects(prev => [...prev, newProj]);
+      setActiveProjectId(newProj.id);
+      persist(saveProject(newProj), 'proyecto');
+    } else if (user.initialProject && projects.some(p => p.id === user.initialProject)) {
       setActiveProjectId(user.initialProject);
     }
 
@@ -1080,70 +1100,36 @@ export default function App() {
       )}
 
       {/* ══════════════════════════════════════════
-          VIEW: LANDING PAGE
+          VIEW: LANDING PAGE (Minimalista Moderno - SDD)
       ══════════════════════════════════════════ */}
       {currentView === 'landing' && (
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full bg-[#FAFAFA] text-[#09090B] min-h-screen selection:bg-teal-100 selection:text-teal-900">
           <Navbar 
-            onOpenContact={() => setIsContactModalOpen(true)} 
             onOpenPortal={() => navigateToPortal('login')}
             onOpenRegister={navigateToRegister} 
           />
 
           <main className="w-full">
-            <Hero onOpenContact={() => setIsContactModalOpen(true)} onOpenPortal={() => navigateToPortal('login')} />
-            <CommunityImpactSection onOpenContact={() => setIsContactModalOpen(true)} onOpenPortal={() => navigateToPortal('login')} />
-            <ServicesSection />
-            <InteractiveEstimator onOpenContact={() => setIsContactModalOpen(true)} />
-            <PathwaySection />
-            <Pillars />
-            <FutureProducts onOpenContact={() => setIsContactModalOpen(true)} />
-            <Manifesto />
+            {/* Sección 01: Hero */}
+            <Hero onOpenPortal={() => navigateToPortal('login')} />
 
-            {/* Pre-Footer CTA */}
-            <section className="w-full py-20 bg-surface border-t border-outline-variant/60">
-              <div className="max-w-5xl mx-auto px-6 text-center flex flex-col items-center gap-6">
-                <div className="w-12 h-1 bg-primary rounded-full"></div>
-                <h2 className="font-space text-3xl sm:text-4xl text-white font-bold tracking-tight max-w-3xl">
-                  Impulsa la digitalización de tu comunidad o negocio local
-                </h2>
-                <p className="font-jakarta text-sm sm:text-base text-on-surface-variant max-w-2xl leading-relaxed">
-                  En Pathrimonio combinamos ingeniería de alto rendimiento, arquitectura offline-first y transparencia radical para construir aplicaciones móviles y plataformas web que transforman la economía real.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-                  <a
-                    href="#cotizador"
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider shadow-[0_0_24px_rgba(245,166,35,0.35)] hover:shadow-[0_0_36px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98] transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">calculate</span>
-                    Cotizar mi Software ($1/día)
-                  </a>
-                  <button
-                    onClick={navigateToRegister}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-primary/10 border border-primary/40 text-primary hover:text-white hover:bg-primary/20 font-space text-xs font-semibold tracking-wide transition-all cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">person_add</span>
-                    Crear Cuenta Colaborador
-                  </button>
-                  <button
-                    onClick={() => setIsContactModalOpen(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide hover:bg-surface-container-highest transition-all cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">chat</span>
-                    Iniciar Conversación
-                  </button>
-                  <a
-                    href="#pathway"
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-lg bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide hover:bg-surface-container-highest transition-all"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">route</span>
-                    Conocer Pathway (App MVP)
-                  </a>
-                </div>
-              </div>
-            </section>
+            {/* Sección 02: Roles y Control */}
+            <RolesSection />
+
+            {/* Sección 03: Programa de Socios & Simulador de Créditos */}
+            <PartnershipSection />
+
+            {/* Sección 04: Impacto y Pathway (Bento Grid) */}
+            <ImpactPathwayBento />
+
+            {/* Sección 05: Cotizador Interactivo (Split-Screen 65/35) */}
+            <InteractiveEstimator onOpenContact={() => setIsContactModalOpen(true)} />
+
+            {/* Sección 06: FAQ Minimalista */}
+            <FAQSection />
           </main>
 
+          {/* Sección 07: Footer */}
           <Footer onOpenContact={() => setIsContactModalOpen(true)} />
           <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
         </div>

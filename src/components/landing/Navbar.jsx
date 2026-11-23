@@ -1,176 +1,104 @@
 import React, { useState } from 'react';
+import { Menu, X, ArrowRight, ShieldCheck } from 'lucide-react';
 
-export default function Navbar({ onOpenContact, onOpenPortal, onOpenRegister }) {
+export default function Navbar({ onOpenPortal, onOpenRegister }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const scrollToSection = (id) => {
-    setMobileMenuOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const navLinks = [
+    { name: 'Roles & Control', href: '#roles' },
+    { name: 'Programa de Socios', href: '#socios' },
+    { name: 'Impacto & Pathway', href: '#impacto' },
+    { name: 'Cotizador', href: '#cotizador' },
+    { name: 'FAQ', href: '#faq' },
+  ];
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-xl border-b border-white/[0.08] transition-all">
-      <div className="h-20 w-full px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between gap-4">
-        {/* Logo & Brand */}
-        <div 
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
-          className="flex items-center gap-3 group cursor-pointer"
-        >
-          <div className="w-10 h-10 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center group-hover:border-primary/50 transition-colors shadow-sm">
-            <img src="/assets/images/logo.png" alt="Pathrimonio Logo" className="w-6 h-6 object-contain" />
+    <header className="sticky top-0 z-50 w-full bg-[#FFFFFF]/90 backdrop-blur-md border-b border-[#E4E4E7]">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Brand */}
+        <a href="#" className="flex items-center gap-2.5 text-[#09090B] font-semibold tracking-tight text-lg group">
+          <div className="w-8 h-8 rounded-[6px] bg-[#0F766E] flex items-center justify-center text-white shrink-0 transition-transform group-hover:scale-105">
+            <ShieldCheck size={18} strokeWidth={1.5} />
           </div>
-          <div className="flex flex-col">
-            <span className="font-space text-lg font-bold tracking-tight text-white flex items-center">
-              PATH<span className="text-primary">RIMONIO</span>
-            </span>
-            <span className="font-space text-[10px] tracking-wide text-primary font-medium">
-              Impulsamos el desarrollo comunitario
-            </span>
-          </div>
-        </div>
+          <span className="font-semibold text-[17px] tracking-tight">Pathrimonio</span>
+          <span className="hidden sm:inline-block text-[11px] font-mono font-medium text-[#0F766E] bg-[#F0FDFA] px-2 py-0.5 rounded-[4px] border border-teal-200/60">
+            Company
+          </span>
+        </a>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-1">
-          <button 
-            onClick={() => scrollToSection('comunidad')} 
-            className="px-3 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all flex items-center gap-1.5"
-          >
-            <span className="material-symbols-outlined text-[16px] text-primary">groups_3</span>
-            <span>Impacto Comunitario</span>
-          </button>
-          <button 
-            onClick={() => scrollToSection('cotizador')} 
-            className="px-3 py-1.5 rounded text-xs font-semibold text-primary hover:text-white hover:bg-surface-container transition-all flex items-center gap-1.5 border border-primary/20 bg-primary/5"
-          >
-            <span className="material-symbols-outlined text-[16px]">calculate</span>
-            <span>Cotizador</span>
-            <span className="text-[10px] bg-primary text-on-primary px-1.5 py-0.2 rounded font-mono font-bold">$1/día</span>
-          </button>
-          <button 
-            onClick={() => scrollToSection('pathway')} 
-            className="px-3.5 py-1.5 rounded text-xs font-semibold text-primary hover:text-white hover:bg-surface-container transition-all flex items-center gap-1.5"
-          >
-            <span className="material-symbols-outlined text-[16px]">route</span>
-            <span>Pathway (MVP)</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-          </button>
-          <button 
-            onClick={() => scrollToSection('servicios')} 
-            className="px-3.5 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all"
-          >
-            Servicios
-          </button>
-          <button 
-            onClick={() => scrollToSection('metodologia')} 
-            className="px-3.5 py-1.5 rounded text-xs font-semibold text-on-surface-variant hover:text-white hover:bg-surface-container transition-all"
-          >
-            Principios
-          </button>
+        {/* Desktop Nav Links */}
+        <nav className="hidden md:flex items-center gap-7">
+          {navLinks.map((link) => (
+            <a
+              key={link.name}
+              href={link.href}
+              className="text-sm font-medium text-[#52525B] hover:text-[#09090B] transition-colors"
+            >
+              {link.name}
+            </a>
+          ))}
         </nav>
 
-        {/* Action CTAs */}
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={onOpenRegister || onOpenPortal}
-            title="Crear cuenta para colaboradores de software"
-            className="hidden lg:inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded bg-primary/10 border border-primary/30 hover:border-primary text-primary hover:text-white font-space text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[16px]">person_add</span>
-            <span>Crear Cuenta</span>
-          </button>
-
-          <button 
+        {/* Desktop Actions */}
+        <div className="hidden sm:flex items-center gap-3">
+          <button
             onClick={onOpenPortal}
-            title="Ir al Portal de Requerimientos"
-            className="hidden sm:inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded bg-surface-container-high border border-outline-variant hover:border-primary text-white hover:text-primary font-space text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer"
+            className="px-3.5 py-1.5 text-xs font-medium text-[#52525B] hover:text-[#09090B] bg-[#FFFFFF] border border-[#E4E4E7] hover:border-[#D4D4D8] hover:bg-[#F4F4F5] rounded-[6px] transition-all cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[16px] text-primary">login</span>
-            <span>Portal</span>
+            Portal Operativo
           </button>
-
-          {/* Contacto / Iniciar Proyecto */}
-          <button 
-            onClick={onOpenContact}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-[0_0_16px_rgba(245,166,35,0.35)] hover:shadow-[0_0_24px_rgba(245,166,35,0.55)] hover:scale-[1.02] active:scale-[0.98]"
+          <a
+            href="#cotizador"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#0F766E] hover:bg-[#115E59] rounded-[6px] transition-colors shadow-sm cursor-pointer"
           >
-            <span className="material-symbols-outlined text-[18px]">chat</span>
-            <span>Hablemos</span>
-          </button>
-
-          {/* Mobile hamburger menu button */}
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded text-on-surface-variant hover:text-white hover:bg-surface-container"
-          >
-            <span className="material-symbols-outlined">{mobileMenuOpen ? 'close' : 'menu'}</span>
-          </button>
+            <span>Cotizar ($1/día)</span>
+            <ArrowRight size={13} strokeWidth={1.5} />
+          </a>
         </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 rounded-[6px] text-[#52525B] hover:text-[#09090B] hover:bg-[#F4F4F5] transition-colors"
+          aria-label="Abrir menú"
+        >
+          {mobileMenuOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
+        </button>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-surface-container-lowest border-b border-outline-variant px-6 py-4 flex flex-col gap-3">
-          <button 
-            onClick={() => scrollToSection('comunidad')} 
-            className="text-left py-2 text-sm text-white font-semibold flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px] text-primary">groups_3</span>
-            <span>Impacto Comunitario</span>
-          </button>
-          <button 
-            onClick={() => scrollToSection('cotizador')} 
-            className="text-left py-2 text-sm text-primary font-semibold flex items-center justify-between"
-          >
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">calculate</span>
-              <span>Cotizador Interactivo</span>
-            </div>
-            <span className="text-[10px] bg-primary text-on-primary px-1.5 py-0.5 rounded font-mono font-bold">$1/día</span>
-          </button>
-          <button 
-            onClick={() => scrollToSection('pathway')} 
-            className="text-left py-2 text-sm text-primary font-semibold flex items-center gap-2"
-          >
-            <span className="material-symbols-outlined text-[18px]">route</span>
-            Pathway (App MVP)
-          </button>
-          <button 
-            onClick={() => scrollToSection('servicios')} 
-            className="text-left py-2 text-sm text-on-surface-variant hover:text-white font-medium"
-          >
-            Servicios de Desarrollo
-          </button>
-          <button 
-            onClick={() => scrollToSection('metodologia')} 
-            className="text-left py-2 text-sm text-on-surface-variant hover:text-white font-medium"
-          >
-            Principios &amp; Metodología
-          </button>
-          <div className="pt-2 border-t border-outline-variant flex flex-col gap-2">
-            <button 
-              onClick={() => { setMobileMenuOpen(false); (onOpenRegister || onOpenPortal)(); }}
-              className="w-full py-2.5 rounded bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-on-primary font-space text-xs font-semibold tracking-wide flex items-center justify-center gap-2 transition-colors"
+        <div className="md:hidden bg-[#FFFFFF] border-b border-[#E4E4E7] px-6 py-4 flex flex-col gap-3">
+          {navLinks.map((link) => (
+            <a
+              key={link.name}
+              href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-medium text-[#52525B] hover:text-[#09090B] py-1.5 transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              {link.name}
+            </a>
+          ))}
+          <div className="pt-3 border-t border-[#E4E4E7] flex flex-col gap-2">
+            <button
+              onClick={() => { setMobileMenuOpen(false); onOpenPortal(); }}
+              className="w-full text-center py-2 text-xs font-medium text-[#52525B] bg-[#F4F4F5] rounded-[6px]"
+            >
+              Portal Operativo (Ingreso)
+            </button>
+            <button
+              onClick={() => { setMobileMenuOpen(false); onOpenRegister(); }}
+              className="w-full text-center py-2 text-xs font-medium text-[#0F766E] bg-[#F0FDFA] border border-teal-200/80 rounded-[6px]"
+            >
               Crear Cuenta Colaborador
             </button>
-            <button 
-              onClick={() => { setMobileMenuOpen(false); onOpenPortal?.(); }}
-              className="w-full py-2.5 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary font-space text-xs font-semibold tracking-wide flex items-center justify-center gap-2"
+            <a
+              href="#cotizador"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full text-center py-2 text-xs font-semibold text-white bg-[#0F766E] rounded-[6px]"
             >
-              <span className="material-symbols-outlined text-[18px] text-primary">login</span>
-              Ir al Portal
-            </button>
-            <button 
-              onClick={() => { setMobileMenuOpen(false); onOpenContact(); }}
-              className="w-full py-2.5 rounded bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-outlined text-[18px]">chat</span>
-              Contactar al Equipo
-            </button>
+              Cotizar Sistema a Medida
+            </a>
           </div>
         </div>
       )}

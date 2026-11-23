@@ -40,7 +40,7 @@ export default function LoginPage({
   const [registerOrganization, setRegisterOrganization] = useState('');
   const [registerRole, setRegisterRole] = useState('Product Owner');
   const [registerSoftwareNeeds, setRegisterSoftwareNeeds] = useState('Sistema de Gestión Operativa / ERP PYME');
-  const [registerProject, setRegisterProject] = useState(activeProjectId || 'pathway');
+  const [registerProjectName, setRegisterProjectName] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
@@ -127,6 +127,10 @@ export default function LoginPage({
       setError('Por favor indica tu organización, empresa o negocio.');
       return;
     }
+    if (!registerProjectName.trim()) {
+      setError('Por favor ingresa el nombre del nuevo proyecto o software que vas a crear.');
+      return;
+    }
     if (registerPassword.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres.');
       return;
@@ -147,12 +151,19 @@ export default function LoginPage({
       .slice(0, 2)
       .toUpperCase() || 'CO';
 
+    const trimmedProjectName = registerProjectName.trim();
+    const projectSlug = trimmedProjectName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') || `proj-${Date.now().toString().slice(-4)}`;
+
     const userMetadata = {
       name: registerName.trim(),
       organization: registerOrganization.trim(),
       role: registerRole,
       softwareNeeds: registerSoftwareNeeds,
-      initialProject: registerProject,
+      initialProject: projectSlug,
+      initialProjectName: trimmedProjectName,
       avatar: initials,
       color: 'bg-primary',
       permissions: ['read', 'write']
@@ -506,26 +517,23 @@ export default function LoginPage({
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="font-space text-[11px] text-white font-medium">
-                      Proyecto Inicial a Explorar
+                    <label className="font-space text-[11px] text-white font-medium flex items-center justify-between">
+                      <span>Nombre del Proyecto a Crear *</span>
+                      <span className="text-[10px] text-primary font-mono font-normal">Nuevo Software</span>
                     </label>
-                    <select
-                      value={registerProject}
-                      onChange={(e) => setRegisterProject(e.target.value)}
-                      className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 font-space text-xs text-white focus:outline-none focus:border-primary"
-                    >
-                      {projects.length > 0 ? (
-                        projects.map(p => (
-                          <option key={p.id} value={p.id} className="bg-surface-container text-white">
-                            {p.name}
-                          </option>
-                        ))
-                      ) : (
-                        <option value="pathway" className="bg-surface-container text-white">
-                          Pathway (App de Metas y Hábitos)
-                        </option>
-                      )}
-                    </select>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[17px] pointer-events-none">
+                        rocket_launch
+                      </span>
+                      <input
+                        type="text"
+                        required
+                        value={registerProjectName}
+                        onChange={(e) => { setRegisterProjectName(e.target.value); setError(''); }}
+                        placeholder="Ej. App de Logística / Portal ERP"
+                        className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-3 font-jakarta text-xs text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary placeholder-on-surface-variant/40"
+                      />
+                    </div>
                   </div>
                 </div>
 
