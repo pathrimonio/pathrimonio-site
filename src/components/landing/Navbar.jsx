@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, ArrowRight, ShieldCheck, Sun, Moon } from 'lucide-react';
+import { Menu, X, ArrowRight, Sun, Moon } from 'lucide-react';
 
 export default function Navbar({ onOpenPortal, onOpenRegister, theme, onToggleTheme }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -17,9 +17,11 @@ export default function Navbar({ onOpenPortal, onOpenRegister, theme, onToggleTh
       <div className="max-w-6xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
         <a href="#" className="flex items-center gap-2.5 text-[#09090B] dark:text-[#F4F4F5] font-semibold tracking-tight text-lg group">
-          <div className="w-8 h-8 rounded-[6px] bg-[#FFC000] flex items-center justify-center text-[#09090B] shrink-0 transition-transform group-hover:scale-105">
-            <ShieldCheck size={18} strokeWidth={1.5} />
-          </div>
+          <img
+            src="/assets/images/icono_202609011609.jpg"
+            alt="Pathrimonio"
+            className="w-8 h-8 rounded-[6px] object-cover shrink-0 transition-transform group-hover:scale-105 shadow-xs"
+          />
           <span className="font-semibold text-[17px] tracking-tight">Pathrimonio</span>
           <span className="hidden sm:inline-block text-[11px] font-mono font-medium text-[#9A6700] dark:text-[#FFC000] bg-[#FFFBEB] dark:bg-amber-500/10 px-2 py-0.5 rounded-[4px] border border-amber-200/80 dark:border-amber-500/30">
             Company

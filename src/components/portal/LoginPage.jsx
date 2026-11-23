@@ -1,6 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { mapSupabaseUser } from '../../auth/authConfig';
 import { supabase } from '../../lib/supabase';
+import { PORTAL_USERS_STORAGE_KEY } from '../../auth/permissionsConfig';
+
+function registerPortalUserLocally(user) {
+  try {
+    const raw = localStorage.getItem(PORTAL_USERS_STORAGE_KEY);
+    const existing = raw ? JSON.parse(raw) : [];
+    const filtered = existing.filter(u => u.email?.toLowerCase() !== user.email?.toLowerCase());
+    const updated = [
+      {
+        id: user.id || `collab_${Date.now()}`,
+        name: user.name,
+        email: user.email,
+        organization: user.organization || 'Pathrimonio Colaboradores',
+        role: 'Colaborador',
+        avatar: user.avatar || 'CO',
+        color: 'bg-amber-600',
+        status: 'active',
+        permissions: ['create_role', 'create_story', 'create_interface']
+      },
+      ...filtered
+    ];
+    localStorage.setItem(PORTAL_USERS_STORAGE_KEY, JSON.stringify(updated));
+  } catch (_) {}
+}
 
 const ROLE_OPTIONS = [
   { value: 'Product Owner', label: 'Product Owner / Líder de Proyecto' },
@@ -160,13 +184,14 @@ export default function LoginPage({
     const userMetadata = {
       name: registerName.trim(),
       organization: registerOrganization.trim(),
-      role: registerRole,
+      role: 'Colaborador', // Las cuentas creadas desde el login se inicializan estrictamente como Colaborador
+      jobTitle: registerRole,
       softwareNeeds: registerSoftwareNeeds,
       initialProject: projectSlug,
       initialProjectName: trimmedProjectName,
       avatar: initials,
-      color: 'bg-primary',
-      permissions: ['read', 'write']
+      color: 'bg-amber-600',
+      permissions: ['create_role', 'create_story', 'create_interface']
     };
 
     try {
@@ -190,7 +215,9 @@ export default function LoginPage({
 
         // If auto-logged in or session available
         if (data?.session) {
-          onLoginSuccess(mapSupabaseUser(data.session.user));
+          const mapped = mapSupabaseUser(data.session.user);
+          registerPortalUserLocally(mapped);
+          onLoginSuccess(mapped);
           return;
         }
 
@@ -201,6 +228,7 @@ export default function LoginPage({
             ...data.user,
             user_metadata: userMetadata
           });
+          registerPortalUserLocally(mapped);
           setSuccessMessage('¡Cuenta creada con éxito! Accediendo al portal...');
           setTimeout(() => {
             onLoginSuccess(mapped);
@@ -215,6 +243,7 @@ export default function LoginPage({
         email: registerEmail.trim(),
         ...userMetadata
       };
+      registerPortalUserLocally(localUser);
       setSuccessMessage('¡Cuenta de colaborador creada con éxito! Redirigiendo...');
       setTimeout(() => {
         onLoginSuccess(localUser);
@@ -653,15 +682,24 @@ export default function LoginPage({
                   </div>
                 )}
 
-                {/* Privileges Summary Pill */}
-                <div className="p-2.5 rounded-lg bg-surface-container border border-outline-variant/60 flex items-center justify-between gap-2 text-[11px] font-space text-on-surface-variant">
-                  <div className="flex items-center gap-1.5 text-white">
-                    <span className="material-symbols-outlined text-[15px] text-primary">key</span>
-                    <span>Permisos de acceso:</span>
+                {/* Privileges Summary Pill & Scope Callout */}
+                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 flex flex-col gap-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-white font-space font-semibold">
+                      <span className="material-symbols-outlined text-[16px] text-amber-400">shield_person</span>
+                      <span>Perfil de Acceso: Colaborador</span>
+                    </div>
+                    <span className="px-1.5 py-0.2 rounded font-mono text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                      ACOTADO
+                    </span>
                   </div>
-                  <div className="flex items-center gap-1.5 font-mono text-[10px]">
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Roles del Negocio</span>
-                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Historias de Usuario</span>
+                  <p className="font-jakarta text-[11px] text-on-surface-variant leading-tight">
+                    Tu cuenta tendrá permisos exclusivos para <strong className="text-white">crear roles</strong>, <strong className="text-white">crear historias de usuario</strong> y <strong className="text-white">crear interfaces</strong>. Los demás módulos del software quedan reservados y pueden ser autorizados por un Administrador en la gestión de usuarios.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px] pt-1">
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">✓ Crear Roles</span>
+                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">✓ Crear Historias</span>
+                    <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">✓ Crear Interfaces</span>
                   </div>
                 </div>
 

@@ -67,6 +67,14 @@ import FileDetailModal from './components/portal/FileDetailModal';
 import NewProjectModal from './components/portal/NewProjectModal';
 import InviteProjectMemberModal from './components/portal/InviteProjectMemberModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
+import AdminUsersView from './components/portal/AdminUsersView';
+import { 
+  loadRoleDefinitions, 
+  saveRoleDefinitions, 
+  PORTAL_USERS_STORAGE_KEY,
+  isTabAllowedForRole,
+  isActionAllowedForRole
+} from './auth/permissionsConfig';
 
 const STORAGE_KEY = 'pathrimonio_stories_v3';
 const INTERFACES_STORAGE_KEY = 'pathrimonio_interfaces_v3';
@@ -241,18 +249,60 @@ export default function App() {
     return INITIAL_FILES;
   });
 
-  // ── Portal users (team directory)
-  const [portalUsers, setPortalUsers] = useState(() =>
-    DEMO_USERS.map((user) => ({
+  // ── Role Definitions & Access Matrix
+  const [roleDefinitions, setRoleDefinitions] = useState(() => loadRoleDefinitions());
+
+  // ── Portal users (team directory with persisted accounts)
+  const [portalUsers, setPortalUsers] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PORTAL_USERS_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return DEMO_USERS.map((user) => ({
       id: user.id,
       email: user.email,
       name: user.name,
       role: user.role,
+      organization: user.role === 'Admin' ? 'Pathrimonio Central' : 'Equipo de Desarrollo',
       avatar: user.avatar,
       color: user.color,
+      status: 'active',
       permissions: user.permissions
-    }))
-  );
+    }));
+  });
+
+  // Persist portal users
+  useEffect(() => {
+    try {
+      localStorage.setItem(PORTAL_USERS_STORAGE_KEY, JSON.stringify(portalUsers));
+    } catch (_) {}
+  }, [portalUsers]);
+
+  const handleUpdatePortalUsers = (updatedUsers) => {
+    setPortalUsers(updatedUsers);
+    try {
+      localStorage.setItem(PORTAL_USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+    } catch (_) {}
+
+    // Si el usuario actual fue actualizado en el directorio, sincronizar su sesión viva
+    if (currentUser) {
+      const matching = updatedUsers.find(u => u.email?.toLowerCase() === currentUser.email?.toLowerCase());
+      if (matching && matching.role !== currentUser.role) {
+        setCurrentUser(prev => ({
+          ...prev,
+          role: matching.role
+        }));
+      }
+    }
+  };
+
+  const handleUpdateRoleDefinitions = (updatedDefs) => {
+    setRoleDefinitions(updatedDefs);
+    saveRoleDefinitions(updatedDefs);
+  };
 
   // ── Real project memberships (portal_users with access per project)
   const [projectMembers, setProjectMembers] = useState([]);
@@ -426,6 +476,19 @@ export default function App() {
       setShowLogin(false);
     }
   }, [currentView, currentUser, authReady]);
+
+  // Restricción estricta de navegación según rol (Colaborador solo puede ver roles, historias e interfaces)
+  useEffect(() => {
+    if (currentView === 'portal' && currentUser) {
+      const userRole = currentUser.role || 'Colaborador';
+      const isAllowed = isTabAllowedForRole(userRole, activePortalTab, roleDefinitions);
+      if (!isAllowed) {
+        const allowed = roleDefinitions[userRole]?.allowedTabs || ['actors', 'stories', 'interfaces'];
+        const fallbackTab = allowed.includes('stories') ? 'stories' : allowed[0];
+        setActivePortalTab(fallbackTab);
+      }
+    }
+  }, [currentView, currentUser, activePortalTab, roleDefinitions]);
 
   const notify = (msg) => {
     setToastMessage(msg);
@@ -1204,6 +1267,8 @@ export default function App() {
             activeProjectId={activeProjectId}
             onSelectProject={setActiveProjectId}
             onOpenNewProjectModal={() => setIsNewProjectModalOpen(true)}
+            currentUser={currentUser}
+            roleDefinitions={roleDefinitions}
           />
 
           <div className="lg:pl-64 flex flex-col flex-1 min-w-0">
@@ -1213,213 +1278,254 @@ export default function App() {
               onLogout={handleLogout}
               activeProject={activeProject}
               projectUsers={projectUsers}
-              onInvite={activeProjectId !== 'all' ? () => setIsInviteMemberModalOpen(true) : undefined}
+              onInvite={activeProjectId !== 'all' && isActionAllowedForRole(currentUser?.role, 'canManageUsers', roleDefinitions) ? () => setIsInviteMemberModalOpen(true) : undefined}
             />
 
             <main className="w-full pt-14 flex-1">
-              {activePortalTab === 'stories' && (
-                <div className="flex flex-col w-full">
-                  <ControlsBar
-                    stories={projectStories}
-                    activeModule={activeModule}
-                    setActiveModule={setActiveModule}
-                    onNotify={notify}
-                    activeProject={activeProject}
-                    onNavigateToActors={() => setActivePortalTab('actors')}
-                    actorsCount={projectActors.length}
-                    onOpenCreateModal={() => setIsCreateStoryModalOpen(true)}
-                  />
-                  <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="w-full flex flex-col gap-y-4">
-                      <StoryFeed
-                        stories={filteredStories}
-                        onEditStory={(story) => { setSelectedStory(story); setIsDetailModalOpen(true); }}
-                        onDuplicateStory={handleDuplicateStory}
-                        onDeleteStory={handleDeleteStory}
-                        onToggleCriterion={handleToggleCriterion}
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
+              {!isTabAllowedForRole(currentUser?.role, activePortalTab, roleDefinitions) ? (
+                <div className="flex flex-col items-center justify-center py-20 px-4 text-center max-w-lg mx-auto gap-4">
+                  <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                    <span className="material-symbols-outlined text-[28px]">lock</span>
+                  </div>
+                  <h2 className="font-space text-lg text-white font-bold">
+                    Acceso Restringido para Perfil {currentUser?.role || 'Colaborador'}
+                  </h2>
+                  <p className="font-jakarta text-xs text-on-surface-variant leading-relaxed">
+                    Tu cuenta tiene permisos acotados exclusivamente para registrar <strong className="text-white">roles del equipo</strong>, <strong className="text-white">historias de usuario</strong> e <strong className="text-white">interfaces de software</strong>. Para acceder a este módulo, solicita autorización a un Administrador en la gestión de usuarios.
+                  </p>
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setActivePortalTab('actors')}
+                      className="px-4 py-2 rounded-lg bg-surface-container border border-outline-variant hover:border-primary text-xs font-space text-white transition-colors cursor-pointer"
+                    >
+                      Ver Actores & Roles
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActivePortalTab('stories')}
+                      className="px-4 py-2 rounded-lg bg-primary text-on-primary text-xs font-space font-semibold cursor-pointer"
+                    >
+                      Ver Historias de Usuario
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {activePortalTab === 'stories' && (
+                    <div className="flex flex-col w-full">
+                      <ControlsBar
+                        stories={projectStories}
+                        activeModule={activeModule}
+                        setActiveModule={setActiveModule}
+                        onNotify={notify}
+                        activeProject={activeProject}
+                        onNavigateToActors={() => setActivePortalTab('actors')}
+                        actorsCount={projectActors.length}
                         onOpenCreateModal={() => setIsCreateStoryModalOpen(true)}
                       />
-                    </div>
-                  </div>
+                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                        <div className="w-full flex flex-col gap-y-4">
+                          <StoryFeed
+                            stories={filteredStories}
+                            onEditStory={(story) => { setSelectedStory(story); setIsDetailModalOpen(true); }}
+                            onDuplicateStory={handleDuplicateStory}
+                            onDeleteStory={handleDeleteStory}
+                            onToggleCriterion={handleToggleCriterion}
+                            searchQuery={searchQuery}
+                            setSearchQuery={setSearchQuery}
+                            onOpenCreateModal={() => setIsCreateStoryModalOpen(true)}
+                          />
+                        </div>
+                      </div>
 
-                  <StoryBuilder 
-                    isOpen={isCreateStoryModalOpen}
-                    onClose={() => setIsCreateStoryModalOpen(false)}
-                    onSaveStory={handleSaveStory} 
-                    onNotify={notify} 
-                    activeProjectId={activeProjectId}
-                    projectActors={projectActors}
-                    selectedRole={preselectedRoleForStory}
-                    onNavigateToActors={() => setActivePortalTab('actors')}
-                  />
-                </div>
-              )}
-              {activePortalTab === 'actors' && (
-                <div className="flex flex-col w-full">
-                  <ActorsControlsBar
-                    actors={projectActors}
-                    stories={projectStories}
-                    activeProject={activeProject}
-                    projectUsers={projectUsers}
-                    onManageUsers={activeProjectId !== 'all' ? () => setIsInviteMemberModalOpen(true) : undefined}
-                    onNotify={notify}
-                    onNavigateToStories={() => setActivePortalTab('stories')}
-                    onOpenCreateModal={() => setIsCreateActorModalOpen(true)}
-                  />
-                  <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="w-full flex flex-col gap-y-4">
-                      <ActorFeed
+                      <StoryBuilder 
+                        isOpen={isCreateStoryModalOpen}
+                        onClose={() => setIsCreateStoryModalOpen(false)}
+                        onSaveStory={handleSaveStory} 
+                        onNotify={notify} 
+                        activeProjectId={activeProjectId}
+                        projectActors={projectActors}
+                        selectedRole={preselectedRoleForStory}
+                        onNavigateToActors={() => setActivePortalTab('actors')}
+                      />
+                    </div>
+                  )}
+                  {activePortalTab === 'actors' && (
+                    <div className="flex flex-col w-full">
+                      <ActorsControlsBar
                         actors={projectActors}
                         stories={projectStories}
-                        interfaces={projectInterfaces}
-                        onEditActor={(actor) => { setSelectedActor(actor); setIsActorModalOpen(true); }}
-                        onDuplicateActor={handleDuplicateActor}
-                        onDeleteActor={handleDeleteActor}
-                        onSelectForStory={handleSelectActorForStory}
-                        searchQuery={actorSearchQuery}
-                        setSearchQuery={setActorSearchQuery}
+                        activeProject={activeProject}
+                        projectUsers={projectUsers}
+                        onManageUsers={activeProjectId !== 'all' && isActionAllowedForRole(currentUser?.role, 'canManageUsers', roleDefinitions) ? () => setIsInviteMemberModalOpen(true) : undefined}
                         onNotify={notify}
+                        onNavigateToStories={() => setActivePortalTab('stories')}
                         onOpenCreateModal={() => setIsCreateActorModalOpen(true)}
                       />
-                    </div>
-                  </div>
+                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                        <div className="w-full flex flex-col gap-y-4">
+                          <ActorFeed
+                            actors={projectActors}
+                            stories={projectStories}
+                            interfaces={projectInterfaces}
+                            onEditActor={(actor) => { setSelectedActor(actor); setIsActorModalOpen(true); }}
+                            onDuplicateActor={handleDuplicateActor}
+                            onDeleteActor={handleDeleteActor}
+                            onSelectForStory={handleSelectActorForStory}
+                            searchQuery={actorSearchQuery}
+                            setSearchQuery={setActorSearchQuery}
+                            onNotify={notify}
+                            onOpenCreateModal={() => setIsCreateActorModalOpen(true)}
+                          />
+                        </div>
+                      </div>
 
-                  <ActorBuilder
-                    isOpen={isCreateActorModalOpen}
-                    onClose={() => setIsCreateActorModalOpen(false)}
-                    onSaveActor={handleSaveActor}
-                    onNotify={notify}
-                    activeProjectId={activeProjectId}
-                  />
-                </div>
-              )}
-              {activePortalTab === 'interfaces' && (
-                <div className="flex flex-col w-full">
-                  <InterfaceControlsBar
-                    interfaces={projectInterfaces}
-                    stories={projectStories}
-                    projectActors={projectActors}
-                    onNotify={notify}
-                    onConfirmClientReview={handleConfirmClientReview}
-                    activeProject={activeProject}
-                    onOpenRegisterModal={() => setIsRegisterInterfaceModalOpen(true)}
-                  />
-                  <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="w-full flex flex-col gap-y-4">
-                      <InterfaceFeed
+                      <ActorBuilder
+                        isOpen={isCreateActorModalOpen}
+                        onClose={() => setIsCreateActorModalOpen(false)}
+                        onSaveActor={handleSaveActor}
+                        onNotify={notify}
+                        activeProjectId={activeProjectId}
+                      />
+                    </div>
+                  )}
+                  {activePortalTab === 'interfaces' && (
+                    <div className="flex flex-col w-full">
+                      <InterfaceControlsBar
                         interfaces={projectInterfaces}
+                        stories={projectStories}
                         projectActors={projectActors}
-                        modules={interfaceModules}
-                        onEditInterface={(item) => { setSelectedInterface(item); setIsInterfaceModalOpen(true); }}
-                        onDuplicateInterface={handleDuplicateInterface}
-                        onDeleteInterface={handleDeleteInterface}
-                        onQuickStatusChange={handleQuickInterfaceStatus}
-                        onToggleCriterion={handleToggleVisualCriterion}
-                        searchQuery={interfaceSearchQuery}
-                        setSearchQuery={setInterfaceSearchQuery}
-                        builderRoles={builderRoles}
+                        onNotify={notify}
+                        onConfirmClientReview={handleConfirmClientReview}
+                        activeProject={activeProject}
                         onOpenRegisterModal={() => setIsRegisterInterfaceModalOpen(true)}
                       />
-                    </div>
-                  </div>
+                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                        <div className="w-full flex flex-col gap-y-4">
+                          <InterfaceFeed
+                            interfaces={projectInterfaces}
+                            projectActors={projectActors}
+                            modules={interfaceModules}
+                            onEditInterface={(item) => { setSelectedInterface(item); setIsInterfaceModalOpen(true); }}
+                            onDuplicateInterface={handleDuplicateInterface}
+                            onDeleteInterface={handleDeleteInterface}
+                            onQuickStatusChange={handleQuickInterfaceStatus}
+                            onToggleCriterion={handleToggleVisualCriterion}
+                            searchQuery={interfaceSearchQuery}
+                            setSearchQuery={setInterfaceSearchQuery}
+                            builderRoles={builderRoles}
+                            onOpenRegisterModal={() => setIsRegisterInterfaceModalOpen(true)}
+                          />
+                        </div>
+                      </div>
 
-                  <InterfaceBuilder
-                    isOpen={isRegisterInterfaceModalOpen}
-                    onClose={() => setIsRegisterInterfaceModalOpen(false)}
-                    onSaveInterface={handleSaveInterface}
-                    onNotify={notify}
-                    existingStories={projectStories}
-                    activeProjectId={activeProjectId}
-                    projectActors={projectActors}
-                    modules={interfaceModules}
-                    onAddModule={handleAddInterfaceModule}
-                    onRenameModule={handleRenameInterfaceModule}
-                    onDeleteModule={handleDeleteInterfaceModule}
-                    existingInterfaces={interfaces}
-                    dataModels={projectDataModels}
-                    onAddRole={handleAddRoleFromInterface}
-                    onRolesChange={setBuilderRoles}
-                  />
-                </div>
-              )}
-              {activePortalTab === 'dataModel' && (
-                <div className="flex flex-col w-full">
-                  <DataModelControlsBar
-                    tables={projectDataModels}
-                    stories={projectStories}
-                    interfaces={projectInterfaces}
-                    onNotify={notify}
-                    activeProject={activeProject}
-                    onOpenDERModal={() => setIsDERModalOpen(true)}
-                    onOpenSQLModal={() => setIsSQLModalOpen(true)}
-                    onOpenCreateModal={() => setIsCreateTableModalOpen(true)}
-                  />
-                  <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="w-full flex flex-col gap-y-4">
-                      <DataModelFeed
-                        tables={projectDataModels}
-                        onEditTable={(table) => { setSelectedTable(table); setIsTableModalOpen(true); }}
-                        onDuplicateTable={handleDuplicateTable}
-                        onDeleteTable={handleDeleteTable}
-                        onQuickStatusChange={handleQuickTableStatus}
-                        searchQuery={dataModelSearchQuery}
-                        setSearchQuery={setDataModelSearchQuery}
-                        onOpenCreateModal={() => setIsCreateTableModalOpen(true)}
+                      <InterfaceBuilder
+                        isOpen={isRegisterInterfaceModalOpen}
+                        onClose={() => setIsRegisterInterfaceModalOpen(false)}
+                        onSaveInterface={handleSaveInterface}
+                        onNotify={notify}
+                        existingStories={projectStories}
+                        activeProjectId={activeProjectId}
+                        projectActors={projectActors}
+                        modules={interfaceModules}
+                        onAddModule={handleAddInterfaceModule}
+                        onRenameModule={handleRenameInterfaceModule}
+                        onDeleteModule={handleDeleteInterfaceModule}
+                        existingInterfaces={interfaces}
+                        dataModels={projectDataModels}
+                        onAddRole={handleAddRoleFromInterface}
+                        onRolesChange={setBuilderRoles}
                       />
                     </div>
-                  </div>
+                  )}
+                  {activePortalTab === 'dataModel' && (
+                    <div className="flex flex-col w-full">
+                      <DataModelControlsBar
+                        tables={projectDataModels}
+                        stories={projectStories}
+                        interfaces={projectInterfaces}
+                        onNotify={notify}
+                        activeProject={activeProject}
+                        onOpenDERModal={() => setIsDERModalOpen(true)}
+                        onOpenSQLModal={() => setIsSQLModalOpen(true)}
+                        onOpenCreateModal={() => setIsCreateTableModalOpen(true)}
+                      />
+                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                        <div className="w-full flex flex-col gap-y-4">
+                          <DataModelFeed
+                            tables={projectDataModels}
+                            onEditTable={(table) => { setSelectedTable(table); setIsTableModalOpen(true); }}
+                            onDuplicateTable={handleDuplicateTable}
+                            onDeleteTable={handleDeleteTable}
+                            onQuickStatusChange={handleQuickTableStatus}
+                            searchQuery={dataModelSearchQuery}
+                            setSearchQuery={setDataModelSearchQuery}
+                            onOpenCreateModal={() => setIsCreateTableModalOpen(true)}
+                          />
+                        </div>
+                      </div>
 
-                  <DataModelBuilder
-                    isOpen={isCreateTableModalOpen}
-                    onClose={() => setIsCreateTableModalOpen(false)}
-                    onSaveTable={handleSaveTable}
-                    onNotify={notify}
-                    existingStories={projectStories}
-                    existingInterfaces={projectInterfaces}
-                    activeProjectId={activeProjectId}
-                    onOpenSQLModal={() => setIsSQLModalOpen(true)}
-                  />
-                </div>
-              )}
-              {activePortalTab === 'files' && (
-                <div className="flex flex-col w-full">
-                  <FilesControlsBar
-                    files={projectFiles}
-                    activeProject={activeProject}
-                    onNotify={notify}
-                    onOpenUpload={() => setIsCreateFileModalOpen(true)}
-                  />
-                  <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <div className="w-full flex flex-col gap-y-4">
-                      <FileFeed
+                      <DataModelBuilder
+                        isOpen={isCreateTableModalOpen}
+                        onClose={() => setIsCreateTableModalOpen(false)}
+                        onSaveTable={handleSaveTable}
+                        onNotify={notify}
+                        existingStories={projectStories}
+                        existingInterfaces={projectInterfaces}
+                        activeProjectId={activeProjectId}
+                        onOpenSQLModal={() => setIsSQLModalOpen(true)}
+                      />
+                    </div>
+                  )}
+                  {activePortalTab === 'files' && (
+                    <div className="flex flex-col w-full">
+                      <FilesControlsBar
                         files={projectFiles}
-                        onPreviewFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
-                        onEditFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
-                        onDeleteFile={handleDeleteFile}
-                        onDuplicateFile={handleDuplicateFile}
-                        searchQuery={fileSearchQuery}
-                        setSearchQuery={setFileSearchQuery}
+                        activeProject={activeProject}
                         onNotify={notify}
                         onOpenUpload={() => setIsCreateFileModalOpen(true)}
                       />
-                    </div>
-                  </div>
+                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                        <div className="w-full flex flex-col gap-y-4">
+                          <FileFeed
+                            files={projectFiles}
+                            onPreviewFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
+                            onEditFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
+                            onDeleteFile={handleDeleteFile}
+                            onDuplicateFile={handleDuplicateFile}
+                            searchQuery={fileSearchQuery}
+                            setSearchQuery={setFileSearchQuery}
+                            onNotify={notify}
+                            onOpenUpload={() => setIsCreateFileModalOpen(true)}
+                          />
+                        </div>
+                      </div>
 
-                  <FileUploader
-                    isOpen={isCreateFileModalOpen}
-                    onClose={() => setIsCreateFileModalOpen(false)}
-                    onSaveFile={handleSaveFile}
-                    onNotify={notify}
-                    activeProjectId={activeProjectId}
-                  />
-                </div>
+                      <FileUploader
+                        isOpen={isCreateFileModalOpen}
+                        onClose={() => setIsCreateFileModalOpen(false)}
+                        onSaveFile={handleSaveFile}
+                        onNotify={notify}
+                        activeProjectId={activeProjectId}
+                      />
+                    </div>
+                  )}
+                  {activePortalTab === 'backlog'   && <BacklogView stories={projectStories} />}
+                  {activePortalTab === 'sprints'   && <SprintsView />}
+                  {activePortalTab === 'docs'      && <DocsView />}
+                  {activePortalTab === 'settings'  && (
+                    <AdminUsersView
+                      currentUser={currentUser}
+                      portalUsers={portalUsers}
+                      onUpdatePortalUsers={handleUpdatePortalUsers}
+                      roleDefinitions={roleDefinitions}
+                      onUpdateRoleDefinitions={handleUpdateRoleDefinitions}
+                      onNotify={notify}
+                    />
+                  )}
+                </>
               )}
-              {activePortalTab === 'backlog'   && <BacklogView stories={projectStories} />}
-              {activePortalTab === 'sprints'   && <SprintsView />}
-              {activePortalTab === 'docs'      && <DocsView />}
-              {activePortalTab === 'settings'  && <SettingsView />}
             </main>
           </div>
 

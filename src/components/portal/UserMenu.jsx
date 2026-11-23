@@ -93,7 +93,7 @@ export default function UserMenu({ user, onLogout }) {
           <div className="px-4 py-2.5 border-b border-outline-variant">
             <p className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider mb-1.5">Permisos activos</p>
             <div className="flex flex-wrap gap-1">
-              {user.permissions.map(p => (
+              {(user.permissions || []).map(p => (
                 <span key={p} className="px-1.5 py-0.5 rounded bg-surface-container-high border border-outline-variant/60 text-[10px] font-space text-on-surface capitalize">
                   {p}
                 </span>

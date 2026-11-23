@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, ExternalLink, Heart } from 'lucide-react';
+import { ExternalLink, Heart } from 'lucide-react';
 
 export default function Footer({ onOpenContact }) {
   return (
@@ -10,9 +10,11 @@ export default function Footer({ onOpenContact }) {
           {/* Columna 1: Brand & Misión */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-[6px] bg-[#FFC000] flex items-center justify-center text-[#09090B] shrink-0">
-                <ShieldCheck size={16} strokeWidth={1.5} />
-              </div>
+              <img
+                src="/assets/images/icono_202609011609.jpg"
+                alt="Pathrimonio"
+                className="w-7 h-7 rounded-[6px] object-cover shrink-0"
+              />
               <span className="font-semibold text-base text-[#09090B] dark:text-[#F4F4F5] tracking-tight">Pathrimonio</span>
             </div>
             <p className="text-xs text-[#52525B] dark:text-[#A1A1AA] leading-relaxed mb-4">

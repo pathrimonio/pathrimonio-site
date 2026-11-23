@@ -10,9 +10,11 @@ export default function Sidebar({
   projects = [],
   activeProjectId,
   onSelectProject,
-  onOpenNewProjectModal
+  onOpenNewProjectModal,
+  currentUser,
+  roleDefinitions
 }) {
-  const navItems = [
+  const allNavItems = [
     { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US' },
     { id: 'actors', label: 'Actores & Roles', icon: 'badge', badge: 'ROL' },
     { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX' },
@@ -21,8 +23,15 @@ export default function Sidebar({
     { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted' },
     { id: 'sprints', label: 'Sprints & Ciclos', icon: 'timelapse' },
     { id: 'docs', label: 'Documentación', icon: 'article' },
-    { id: 'settings', label: 'Configuración', icon: 'settings' }
+    { id: 'settings', label: 'Administración & Usuarios', icon: 'admin_panel_settings', badge: 'ADMIN' }
   ];
+
+  // Restricción según el rol y permisos configurados
+  const userRole = currentUser?.role || 'Colaborador';
+  const roleConfig = roleDefinitions?.[userRole] || roleDefinitions?.['Colaborador'];
+  const allowedTabs = roleConfig?.allowedTabs || ['actors', 'stories', 'interfaces'];
+
+  const navItems = allNavItems.filter(item => allowedTabs.includes(item.id));
 
   return (
     <>
@@ -78,6 +87,12 @@ export default function Sidebar({
           </div>
 
           {/* Navigation Items */}
+          {userRole === 'Colaborador' && (
+            <div className="mx-1 my-1 p-2 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-amber-300 font-space text-[10px]">
+              <span className="material-symbols-outlined text-[15px] shrink-0">shield_person</span>
+              <span className="font-semibold leading-tight">Acceso Acotado: Roles, Historias & UI</span>
+            </div>
+          )}
           <nav className="flex flex-col gap-y-1 pt-1">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
