@@ -22,7 +22,9 @@ import {
   saveProject,
   addInterfaceModule,
   renameInterfaceModule,
-  deleteInterfaceModule
+  deleteInterfaceModule,
+  addProjectMember,
+  removeProjectMember
 } from './lib/supabaseData';
 
 // Landing Components
@@ -64,6 +66,7 @@ import FileUploader from './components/portal/FileUploader';
 import FileFeed from './components/portal/FileFeed';
 import FileDetailModal from './components/portal/FileDetailModal';
 import NewProjectModal from './components/portal/NewProjectModal';
+import InviteProjectMemberModal from './components/portal/InviteProjectMemberModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 
 const STORAGE_KEY = 'pathrimonio_stories_v3';
@@ -220,6 +223,9 @@ export default function App() {
     }))
   );
 
+  // ── Real project memberships (portal_users with access per project)
+  const [projectMembers, setProjectMembers] = useState([]);
+
   // ── Filters & Search
   const [activeModule, setActiveModule] = useState('Todos');
   const [searchQuery, setSearchQuery] = useState('');
@@ -262,6 +268,7 @@ export default function App() {
   const [isCreateActorModalOpen, setIsCreateActorModalOpen] = useState(false);
   const [isCreateTableModalOpen, setIsCreateTableModalOpen] = useState(false);
   const [isCreateFileModalOpen, setIsCreateFileModalOpen] = useState(false);
+  const [isInviteMemberModalOpen, setIsInviteMemberModalOpen] = useState(false);
 
   // ── Contact modal (landing)
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
@@ -408,6 +415,9 @@ export default function App() {
         if (data.portalUsers) {
           setPortalUsers(data.portalUsers);
         }
+        if (data.projectMembers) {
+          setProjectMembers(data.projectMembers);
+        }
         if (data.interfaceModules.length > 0) {
           setInterfaceModules(data.interfaceModules.map((module) => module.name));
         }
@@ -463,6 +473,47 @@ export default function App() {
     setCurrentUser(null);
     navigateToHome();
     notify('Sesión cerrada correctamente. Hasta pronto.');
+  };
+
+  // ── Project members (real portal users with access)
+  const handleAddProjectMember = async ({ userId, role }) => {
+    const projectId = activeProjectId === 'all' ? null : activeProjectId;
+    if (!projectId) {
+      notify('Seleccioná un proyecto específico para invitar usuarios.');
+      return false;
+    }
+
+    try {
+      const member = await addProjectMember({
+        projectId,
+        userId,
+        role,
+        invitedBy: currentPortalUser?.id || null
+      });
+      setProjectMembers((prev) => [...prev, member]);
+      notify('Usuario agregado al proyecto.');
+      return true;
+    } catch (error) {
+      console.error('[Supabase] addProjectMember', error);
+      notify(`No se pudo agregar el usuario: ${error.message}`);
+      return false;
+    }
+  };
+
+  const handleRemoveProjectMember = async (membershipId) => {
+    const previous = projectMembers;
+    setProjectMembers((prev) => prev.filter((member) => member.id !== membershipId));
+
+    try {
+      await removeProjectMember(membershipId);
+      notify('Usuario quitado del proyecto.');
+      return true;
+    } catch (error) {
+      console.error('[Supabase] removeProjectMember', error);
+      setProjectMembers(previous);
+      notify(`No se pudo quitar el usuario: ${error.message}`);
+      return false;
+    }
   };
 
   // ── Story CRUD
@@ -618,7 +669,7 @@ export default function App() {
     }
     setInterfaceModules(prev => [...prev, clean]);
     persist(addInterfaceModule(clean), 'módulo');
-    notify(`Módulo "${clean}" agregado a la base de datos.`);
+    notify(`Módulo del Software "${clean}" agregado a la base de datos.`);
     return true;
   };
 
@@ -633,7 +684,7 @@ export default function App() {
     setInterfaces(prev => prev.map(i => i.module === oldName ? { ...i, module: clean } : i));
     setSelectedInterface(prev => (prev && prev.module === oldName ? { ...prev, module: clean } : prev));
     persist(renameInterfaceModule(oldName, clean), 'módulo');
-    notify(`Módulo "${oldName}" renombrado a "${clean}".`);
+    notify(`Módulo del Software "${oldName}" renombrado a "${clean}".`);
     return true;
   };
 
@@ -643,7 +694,7 @@ export default function App() {
     setInterfaces(prev => prev.map(i => i.module === name ? { ...i, module: 'Sin módulo' } : i));
     persist(deleteInterfaceModule(name), 'módulo');
     notify(
-      `Módulo "${name}" eliminado de la base de datos` +
+      `Módulo del Software "${name}" eliminado de la base de datos` +
       (affected > 0 ? ` — ${affected} interfaz(es) quedaron sin módulo.` : '.')
     );
   };
@@ -707,43 +758,40 @@ export default function App() {
         return pId === activeProjectId;
       });
 
-  // Team members of the active project: portal users that authored/uploaded project artifacts.
+  // Real team members of the active project (project_members joined with portal_users).
   const projectUsers = useMemo(() => {
     const users = portalUsers || [];
     if (users.length === 0) return [];
-    if (activeProjectId === 'all') return users;
 
-    const normalize = (value) => String(value || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/\([^)]*\)/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const memberships = activeProjectId === 'all'
+      ? projectMembers
+      : projectMembers.filter((member) => member.projectId === activeProjectId);
 
-    const artifactNames = new Set();
-    const collect = (value) => {
-      const normalized = normalize(value);
-      if (normalized) artifactNames.add(normalized);
-    };
+    const seen = new Set();
+    const result = [];
 
-    projectStories.forEach((story) => collect(story.author));
-    projectInterfaces.forEach((item) => collect(item.author));
-    projectDataModels.forEach((model) => collect(model.author));
-    projectFiles.forEach((file) => collect(file.uploadedBy));
-
-    const matched = users.filter((portalUser) => {
-      const userName = normalize(portalUser.name);
-      if (!userName) return false;
-      return [...artifactNames].some((artifactName) =>
-        artifactName === userName ||
-        artifactName.startsWith(`${userName} `) ||
-        userName.startsWith(`${artifactName} `)
-      );
+    memberships.forEach((membership) => {
+      if (seen.has(membership.userId)) return;
+      const user = users.find((item) => item.id === membership.userId);
+      if (!user) return;
+      seen.add(membership.userId);
+      result.push({
+        ...user,
+        membershipId: membership.id,
+        projectRole: membership.role
+      });
     });
 
-    return matched;
-  }, [portalUsers, activeProjectId, projectStories, projectInterfaces, projectDataModels, projectFiles]);
+    return result;
+  }, [portalUsers, projectMembers, activeProjectId]);
+
+  const currentPortalUser = useMemo(() => {
+    const email = String(currentUser?.email || '').toLowerCase();
+    if (!email) return null;
+    return (portalUsers || []).find(
+      (item) => String(item.email || '').toLowerCase() === email
+    ) || null;
+  }, [portalUsers, currentUser]);
 
   // ── Data Model Handlers
   const handleSaveTable = (newTable) => {
@@ -1092,6 +1140,7 @@ export default function App() {
               onLogout={handleLogout}
               activeProject={activeProject}
               projectUsers={projectUsers}
+              onInvite={activeProjectId !== 'all' ? () => setIsInviteMemberModalOpen(true) : undefined}
             />
 
             <main className="w-full pt-14 flex-1">
@@ -1140,6 +1189,8 @@ export default function App() {
                     actors={projectActors}
                     stories={projectStories}
                     activeProject={activeProject}
+                    projectUsers={projectUsers}
+                    onManageUsers={activeProjectId !== 'all' ? () => setIsInviteMemberModalOpen(true) : undefined}
                     onNotify={notify}
                     onNavigateToStories={() => setActivePortalTab('stories')}
                     onOpenCreateModal={() => setIsCreateActorModalOpen(true)}
@@ -1367,6 +1418,17 @@ export default function App() {
             onClose={() => { setIsFileModalOpen(false); setSelectedFile(null); }}
             onUpdateFile={handleUpdateFile}
             onNotify={notify}
+          />
+
+          <InviteProjectMemberModal
+            isOpen={isInviteMemberModalOpen}
+            onClose={() => setIsInviteMemberModalOpen(false)}
+            project={activeProject}
+            portalUsers={portalUsers}
+            projectUsers={projectUsers}
+            currentUser={currentUser}
+            onAdd={handleAddProjectMember}
+            onRemove={handleRemoveProjectMember}
           />
         </div>
       )}

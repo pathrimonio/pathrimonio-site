@@ -93,7 +93,7 @@ export default function ActorFeed({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar por rol (ej. Administrador, Cajero), área (ej. Ventas), o colaborador..."
+            placeholder="Buscar por rol (ej. Administrador, Cajero), área de negocio (ej. Ventas), o colaborador..."
             className="w-full bg-surface-container-highest border border-outline-variant rounded-xl pl-10 pr-4 py-2 text-xs font-jakarta text-white placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
           />
           {searchQuery && (

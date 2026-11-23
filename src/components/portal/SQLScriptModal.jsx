@@ -242,7 +242,7 @@ export default function SQLScriptModal({
             </div>
 
             <div className="flex items-center gap-1.5 bg-surface-container px-2.5 py-1 rounded-lg border border-outline-variant">
-              <span className="text-on-surface-variant text-[11px]">Módulo:</span>
+              <span className="text-on-surface-variant text-[11px]">Módulo del Software:</span>
               <select
                 value={targetModule}
                 onChange={(e) => setTargetModule(e.target.value)}

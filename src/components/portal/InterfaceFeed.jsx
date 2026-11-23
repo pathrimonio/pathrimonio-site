@@ -246,7 +246,7 @@ export default function InterfaceFeed({
 
             {/* Module Filter */}
             <div className="flex items-center gap-1 text-xs text-on-surface-variant">
-              <span className="font-space text-[11px] hidden sm:inline">Módulo:</span>
+              <span className="font-space text-[11px] hidden sm:inline">Módulo del Software:</span>
               <select
                 value={selectedModule}
                 onChange={(e) => setSelectedModule(e.target.value)}

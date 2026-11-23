@@ -5,6 +5,8 @@ export default function ActorsControlsBar({
   actors = [],
   stories = [],
   activeProject,
+  projectUsers = [],
+  onManageUsers,
   onNotify,
   onNavigateToStories,
   onOpenCreateModal
@@ -18,13 +20,8 @@ export default function ActorsControlsBar({
   });
   const totalAreasCovered = coveredAreas.size;
 
-  // Unique business users assigned to roles (email first, name as fallback)
-  const collaboratorKeys = new Set();
-  actors.forEach(a => {
-    const key = (a.assignedWorker || a.assignedWorkerName || '').trim().toLowerCase();
-    if (key) collaboratorKeys.add(key);
-  });
-  const collaboratorsCount = collaboratorKeys.size;
+  // Real portal users with access to the active project.
+  const collaboratorsCount = projectUsers.length;
 
   // Stories linked to any actor
   const storiesLinkedCount = stories.filter(s => 
@@ -53,7 +50,7 @@ export default function ActorsControlsBar({
       spread: 80,
       origin: { y: 0.3 }
     });
-    onNotify?.(`¡Matriz de actores validada con ${totalActors} roles cubriendo ${totalAreasCovered} áreas clave para ${activeProject?.name}!`);
+    onNotify?.(`¡Matriz de actores validada con ${totalActors} roles cubriendo ${totalAreasCovered} áreas de negocio para ${activeProject?.name}!`);
   };
 
   return (
@@ -76,7 +73,7 @@ export default function ActorsControlsBar({
                 </span>
               </div>
               <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate max-w-xl">
-                Define quiénes interactúan con el software, sus responsabilidades y permisos por área antes de formular Historias de Usuario.
+                Define quiénes interactúan con el software, sus responsabilidades y permisos por área de negocio antes de formular Historias de Usuario.
               </p>
             </div>
           </div>
@@ -92,23 +89,32 @@ export default function ActorsControlsBar({
               </div>
             </div>
 
-            {/* Metric 2: Áreas cubiertas */}
-            <div className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl">
+            {/* Metric 2: Áreas de negocio cubiertas */}
+            <div
+              className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl"
+              title="Áreas de negocio cubiertas por al menos un rol del proyecto"
+            >
               <span className="material-symbols-outlined text-[18px] text-secondary">domain_verification</span>
               <div className="flex flex-col">
-                <span className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider">Áreas con Permiso</span>
+                <span className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider">Áreas de Negocio</span>
                 <span className="font-mono text-xs font-bold text-white">{totalAreasCovered} Áreas</span>
               </div>
             </div>
 
-            {/* Metric 3: Colaboradores */}
-            <div className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl">
-              <span className="material-symbols-outlined text-[18px] text-tertiary">share</span>
+            {/* Metric 3: Usuarios del proyecto */}
+            <button
+              type="button"
+              onClick={onManageUsers}
+              disabled={!onManageUsers}
+              className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl text-left enabled:cursor-pointer enabled:hover:border-primary/50 transition-colors disabled:cursor-default"
+              title="Usuarios del portal con acceso real a este proyecto"
+            >
+              <span className="material-symbols-outlined text-[18px] text-tertiary">group</span>
               <div className="flex flex-col">
                 <span className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider">Colaboradores</span>
                 <span className="font-mono text-xs font-bold text-white">{collaboratorsCount} Usuarios</span>
               </div>
-            </div>
+            </button>
 
             {/* Metric 4: HU vinculadas */}
             <div className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl">

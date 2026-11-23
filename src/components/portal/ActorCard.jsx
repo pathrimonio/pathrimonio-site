@@ -126,7 +126,7 @@ export default function ActorCard({
       <div className="flex flex-col gap-2">
         <span className="font-space text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
           <span className="material-symbols-outlined text-cyan-400 text-[15px]">lock_open</span>
-          <span>Áreas del Sistema con Permiso ({actor.systemAreas?.length || 0})</span>
+          <span>Áreas de Negocio con Permiso ({actor.systemAreas?.length || 0})</span>
         </span>
 
         <div className="flex flex-wrap gap-1.5">
@@ -141,7 +141,7 @@ export default function ActorCard({
           ))}
           {(!actor.systemAreas || actor.systemAreas.length === 0) && (
             <span className="text-on-surface-variant text-xs italic">
-              Sin áreas asignadas aún (definido por equipo de desarrollo).
+              Sin áreas de negocio asignadas aún (definido por equipo de desarrollo).
             </span>
           )}
         </div>

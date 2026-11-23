@@ -39,6 +39,15 @@ const mapPortalUser = (row) => ({
   permissions: row.permissions || []
 });
 
+const mapProjectMember = (row) => ({
+  id: row.id,
+  projectId: row.project_id,
+  userId: row.user_id,
+  role: row.role,
+  invitedBy: row.invited_by,
+  createdAt: row.created_at
+});
+
 const mapStory = (row) => ({
   id: row.id,
   projectId: row.project_id,
@@ -210,7 +219,7 @@ const mapFile = (row) => ({
 export async function fetchWorkspace() {
   const db = requireSupabase();
 
-  const [projects, stories, interfaces, dataModels, actors, files, modules, portalUsers] = await Promise.all([
+  const [projects, stories, interfaces, dataModels, actors, files, modules, portalUsers, projectMembers] = await Promise.all([
     db.from('projects').select('*').order('name'),
     db.from('stories').select('*, story_criteria(*)').order('id'),
     db.from('interfaces').select('*, interface_roles(*), interface_data_usage(*)').order('id'),
@@ -218,7 +227,8 @@ export async function fetchWorkspace() {
     db.from('actors').select('*').order('id'),
     db.from('files').select('*').order('id'),
     db.from('interface_modules').select('*').order('name'),
-    db.from('portal_users').select('*').order('name')
+    db.from('portal_users').select('*').order('name'),
+    db.from('project_members').select('*').order('created_at')
   ]);
 
   return {
@@ -229,7 +239,8 @@ export async function fetchWorkspace() {
     actors: check(actors).map(mapActor),
     files: check(files).map(mapFile),
     interfaceModules: check(modules),
-    portalUsers: check(portalUsers).map(mapPortalUser)
+    portalUsers: check(portalUsers).map(mapPortalUser),
+    projectMembers: check(projectMembers).map(mapProjectMember)
   };
 }
 
@@ -527,4 +538,38 @@ export async function deleteInterfaceModule(name) {
   const db = requireSupabase();
   check(await db.from('interface_modules').delete().eq('name', name));
   check(await db.from('interfaces').update({ module: 'Sin módulo' }).eq('module', name));
+}
+
+// ── Project members ───────────────────────────────────────────
+export async function addProjectMember({ projectId, userId, role = 'viewer', invitedBy = null }) {
+  const db = requireSupabase();
+  const { data, error } = await db
+    .from('project_members')
+    .insert({
+      project_id: projectId,
+      user_id: userId,
+      role,
+      invited_by: orNull(invitedBy)
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return mapProjectMember(data);
+}
+
+export async function updateProjectMemberRole(id, role) {
+  const db = requireSupabase();
+  const { data, error } = await db
+    .from('project_members')
+    .update({ role })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return mapProjectMember(data);
+}
+
+export async function removeProjectMember(id) {
+  const db = requireSupabase();
+  check(await db.from('project_members').delete().eq('id', id));
 }

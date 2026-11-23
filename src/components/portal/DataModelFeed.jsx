@@ -143,7 +143,7 @@ export default function DataModelFeed({
 
             {/* Module Filter */}
             <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
-              <span className="text-on-surface-variant font-medium text-[11px]">Módulo:</span>
+              <span className="text-on-surface-variant font-medium text-[11px]">Módulo del Software:</span>
               <select
                 value={selectedModule}
                 onChange={(e) => setSelectedModule(e.target.value)}

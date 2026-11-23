@@ -182,7 +182,7 @@ export default function StoryBuilder({
           <div className="p-2.5 rounded-xl bg-surface-container-lowest border border-outline-variant/60 flex items-start gap-x-2 text-on-surface-variant">
             <span className="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0">lightbulb</span>
             <p className="font-jakarta text-xs text-on-surface leading-relaxed">
-              <strong className="text-white">Tip de producto:</strong> Selecciona el <strong className="text-primary">Rol del Negocio</strong> registrado para asegurar coherencia con los permisos y áreas del sistema.
+              <strong className="text-white">Tip de producto:</strong> Selecciona el <strong className="text-primary">Rol del Negocio</strong> registrado para asegurar coherencia con los permisos y áreas de negocio.
             </p>
           </div>
 
@@ -192,7 +192,7 @@ export default function StoryBuilder({
         {/* Module Selection */}
         <div className="flex flex-col gap-y-1">
           <label className="font-space text-xs text-white flex items-center justify-between">
-            <span className="font-medium">Módulo de Software</span>
+            <span className="font-medium">Módulo del Software</span>
             <span className="text-on-surface-variant font-space text-[10px] uppercase">Requerido</span>
           </label>
           <div className="relative">

@@ -59,7 +59,7 @@ export default function ActorBuilder({
   const toggleArea = (area) => {
     if (selectedAreas.includes(area)) {
       if (selectedAreas.length === 1) {
-        onNotify?.('Debes seleccionar al menos un área del sistema con permisos.');
+        onNotify?.('Debes seleccionar al menos un área de negocio con permisos.');
         return;
       }
       setSelectedAreas(selectedAreas.filter(a => a !== area));
@@ -142,7 +142,7 @@ export default function ActorBuilder({
     }
 
     if (selectedAreas.length === 0) {
-      onNotify?.('Debes asociar al menos un área del sistema donde el actor tenga permisos.');
+      onNotify?.('Debes asociar al menos un área de negocio donde el actor tenga permisos.');
       return;
     }
 
@@ -363,10 +363,10 @@ export default function ActorBuilder({
           />
         </div>
 
-        {/* Áreas del Sistema con Permisos */}
+        {/* Áreas de Negocio con Permisos */}
         <div className="flex flex-col gap-2">
           <label className="font-space text-xs text-white flex items-center justify-between">
-            <span className="font-medium">Áreas del Sistema con Permisos</span>
+            <span className="font-medium">Áreas de Negocio con Permisos</span>
             <span className="text-primary font-mono text-[10px]">{selectedAreas.length} seleccionadas</span>
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-40 overflow-y-auto p-2 bg-surface-container-lowest border border-outline-variant rounded-xl">
@@ -397,7 +397,7 @@ export default function ActorBuilder({
               type="text"
               value={newAreaInput}
               onChange={(e) => setNewAreaInput(e.target.value)}
-              placeholder="Añadir otra área personalizada..."
+              placeholder="Añadir otra área de negocio personalizada..."
               className="flex-1 h-8 bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 font-jakarta text-xs text-white focus:outline-none focus:border-primary"
             />
             <button

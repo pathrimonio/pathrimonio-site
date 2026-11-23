@@ -167,9 +167,40 @@ export default function InterfaceBuilder({
     e.target.value = '';
   };
 
-  // Paste an image from the clipboard while hovering the image section.
+  // Reads an image directly from the clipboard (button fallback for Ctrl+V).
+  const handlePasteFromClipboard = async () => {
+    try {
+      if (!navigator.clipboard?.read) {
+        onNotify?.('Tu navegador no permite leer el portapapeles. Usá Ctrl + V sobre la zona de imágenes.');
+        return;
+      }
+
+      const clipboardItems = await navigator.clipboard.read();
+      const imageFiles = [];
+
+      for (const item of clipboardItems) {
+        const imageType = item.types.find((type) => type.startsWith('image/'));
+        if (!imageType) continue;
+        const blob = await item.getType(imageType);
+        const extension = imageType.split('/')[1] || 'png';
+        imageFiles.push(new File([blob], `portapapeles-${Date.now()}-${imageFiles.length}.${extension}`, { type: imageType }));
+      }
+
+      if (imageFiles.length === 0) {
+        onNotify?.('El portapapeles no contiene una imagen.');
+        return;
+      }
+
+      processImageFiles(imageFiles);
+    } catch (error) {
+      console.error('[Clipboard] paste', error);
+      onNotify?.('No se pudo leer el portapapeles. Verificá los permisos del navegador o usá Ctrl + V.');
+    }
+  };
+
+  // Ctrl+V works while the builder modal is open (text pastes are left untouched).
   useEffect(() => {
-    if (!isImageAreaHovered) return;
+    if (!isOpen) return;
 
     const handlePaste = (event) => {
       const clipboard = event.clipboardData;
@@ -190,7 +221,7 @@ export default function InterfaceBuilder({
 
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, [isImageAreaHovered, processImageFiles]);
+  }, [isOpen, processImageFiles]);
 
   // Avoid keeping the paste listener armed when the modal closes.
   useEffect(() => {
@@ -397,10 +428,10 @@ export default function InterfaceBuilder({
           {/* Scrollable Form Body */}
           <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-5">
         
-        {/* 1. Módulo, Número, Nombre e Historia vinculada */}
+        {/* 1. Módulo del Software, Número, Nombre e Historia vinculada */}
         <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
           <div className="sm:col-span-3 flex flex-col gap-1">
-            <label className="text-xs font-space text-white">Módulo</label>
+            <label className="text-xs font-space text-white">Módulo del Software</label>
             <ModuleSelect
               value={module}
               modules={modules}
@@ -718,6 +749,15 @@ export default function InterfaceBuilder({
                   className="px-2.5 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space shrink-0 cursor-pointer"
                 >
                   Cargar
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePasteFromClipboard}
+                  className="px-2.5 h-8 rounded bg-surface-container-high border border-outline-variant text-white hover:text-primary text-xs font-space shrink-0 cursor-pointer inline-flex items-center gap-1"
+                  title="Pegar una imagen del portapapeles"
+                >
+                  <span className="material-symbols-outlined text-[14px]">content_paste</span>
+                  Pegar
                 </button>
               </div>
             </div>

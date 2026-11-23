@@ -50,7 +50,7 @@ export default function StoryDetailModal({
         <form onSubmit={handleSave} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1">
-              <label className="font-space text-xs text-white">Módulo</label>
+              <label className="font-space text-xs text-white">Módulo del Software</label>
               <input 
                 type="text" 
                 value={formData.module} 
@@ -135,7 +135,7 @@ export default function StoryDetailModal({
                 </div>
                 {currentActor.systemAreas?.length > 0 && (
                   <span className="font-mono text-[10px] text-primary">
-                    {currentActor.systemAreas.length} áreas con permisos
+                    {currentActor.systemAreas.length} áreas de negocio con permisos
                   </span>
                 )}
               </div>

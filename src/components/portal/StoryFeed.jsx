@@ -125,7 +125,7 @@ export default function StoryFeed({
             <thead className="bg-surface-container font-space text-[11px] text-on-surface-variant uppercase border-b border-outline-variant">
               <tr>
                 <th className="p-3">ID</th>
-                <th className="p-3">Módulo</th>
+                <th className="p-3">Módulo del Software</th>
                 <th className="p-3">Prioridad</th>
                 <th className="p-3">Rol & Acción</th>
                 <th className="p-3">Criterios</th>

@@ -231,10 +231,10 @@ export default function ActorDetailModal({
             />
           </div>
 
-          {/* Row 5: Áreas del Sistema con Permisos */}
+          {/* Row 5: Áreas de Negocio con Permisos */}
           <div className="flex flex-col gap-2">
             <label className="font-space text-xs text-white flex items-center justify-between">
-              <span className="font-medium">Áreas del Sistema con Permisos</span>
+              <span className="font-medium">Áreas de Negocio con Permisos</span>
               <span className="text-primary font-mono text-[10px]">
                 {formData.systemAreas?.length || 0} autorizadas
               </span>
@@ -266,7 +266,7 @@ export default function ActorDetailModal({
                 type="text"
                 value={newAreaInput}
                 onChange={(e) => setNewAreaInput(e.target.value)}
-                placeholder="Añadir otra área..."
+                placeholder="Añadir otra área de negocio..."
                 className="flex-1 h-8 bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 font-jakarta text-xs text-white focus:outline-none focus:border-primary"
               />
               <button

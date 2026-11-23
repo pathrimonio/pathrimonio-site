@@ -958,7 +958,7 @@ export default function InterfaceHotspotOverlay({
                     <div className="flex items-center gap-2 text-[10px] text-on-surface-variant font-mono">
                       <span>Motor: <strong className="text-white">{selectedTableObj.storageTarget?.includes('SQLite') ? 'SQLite Móvil' : 'PostgreSQL'}</strong></span>
                       <span>•</span>
-                      <span>Módulo: <strong className="text-white">{selectedTableObj.module}</strong></span>
+                      <span>Módulo del Software: <strong className="text-white">{selectedTableObj.module}</strong></span>
                     </div>
                   )}
                 </div>

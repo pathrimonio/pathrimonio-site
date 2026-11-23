@@ -6,7 +6,8 @@ export default function Header({
   user, 
   onLogout,
   activeProject,
-  projectUsers = []
+  projectUsers = [],
+  onInvite
 }) {
   const currentEmail = String(user?.email || '').toLowerCase();
   const collaborators = (projectUsers || []).filter(
@@ -55,27 +56,42 @@ export default function Header({
       {/* Right: Collabs & User Menu */}
       <div className="flex items-center gap-x-3">
         {/* Collaborators avatars (project team, excluding the logged-in user) */}
-        {collaborators.length > 0 && (
-          <div
-            className="hidden sm:flex items-center -space-x-1.5"
-            title={`Equipo de ${activeProject?.shortName || activeProject?.name || 'Pathrimonio'}`}
-          >
-            {visibleCollaborators.map((member) => (
+        {(collaborators.length > 0 || onInvite) && (
+          <div className="hidden sm:flex items-center gap-1.5">
+            {collaborators.length > 0 && (
               <div
-                key={member.id || member.email}
-                className={`w-6 h-6 rounded-full border border-outline-variant flex items-center justify-center font-space text-[10px] font-semibold text-white ${member.color || 'bg-blue-500'}`}
-                title={`${member.name}${member.role ? ` · ${member.role}` : ''}`}
+                className="flex items-center -space-x-1.5"
+                title={`Equipo de ${activeProject?.shortName || activeProject?.name || 'Pathrimonio'}`}
               >
-                {member.avatar || initialsOf(member.name)}
+                {visibleCollaborators.map((member) => (
+                  <div
+                    key={member.id || member.email}
+                    className={`w-6 h-6 rounded-full border border-outline-variant flex items-center justify-center font-space text-[10px] font-semibold text-white ${member.color || 'bg-blue-500'}`}
+                    title={`${member.name}${member.role ? ` · ${member.role}` : ''}`}
+                  >
+                    {member.avatar || initialsOf(member.name)}
+                  </div>
+                ))}
+                {hiddenCollaborators.length > 0 && (
+                  <div
+                    className="w-6 h-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-space text-[10px] font-bold text-primary"
+                    title={hiddenCollaborators.map((member) => member.name).join(', ')}
+                  >
+                    +{hiddenCollaborators.length}
+                  </div>
+                )}
               </div>
-            ))}
-            {hiddenCollaborators.length > 0 && (
-              <div
-                className="w-6 h-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center font-space text-[10px] font-bold text-primary"
-                title={hiddenCollaborators.map((member) => member.name).join(', ')}
+            )}
+
+            {onInvite && (
+              <button
+                type="button"
+                onClick={onInvite}
+                className="w-6 h-6 rounded-full border border-dashed border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary flex items-center justify-center transition-colors"
+                title={collaborators.length > 0 ? 'Gestionar usuarios del proyecto' : 'Invitar usuario al proyecto'}
               >
-                +{hiddenCollaborators.length}
-              </div>
+                <span className="material-symbols-outlined text-[14px]">person_add</span>
+              </button>
             )}
           </div>
         )}
