@@ -119,12 +119,12 @@ export default function InteractiveEstimator({ onOpenContact }) {
     if (!tarifaSocio) {
       // Tarifa mercado tradicional (ej: $90/mes por rol y setup obligatorio de $500)
       const traditionalRolesTotal = base.totalAdminUsers * 90;
-      const traditionalMonthly = traditionalRolesTotal + base.endCustomersCost + base.interfacesTotal + base.dataAndApisTotal;
+      const traditionalMonthly = traditionalRolesTotal + base.monthlyCustomersExtra + base.monthlyInterfaces + base.monthlyDataAndApis;
       return {
         ...base,
-        rolesBaseTotal: traditionalRolesTotal,
+        monthlyRolesBase: traditionalRolesTotal,
         monthlyTotal: traditionalMonthly,
-        dailyEquivalent: (traditionalMonthly / 30).toFixed(2),
+        dailyEquivalent: Number((traditionalMonthly / 30).toFixed(2)),
         setupFee: 500,
         setupFeeSavings: 0
       };
@@ -630,9 +630,9 @@ export default function InteractiveEstimator({ onOpenContact }) {
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold text-[#09090B]">{tier.label}</span>
+                            <span className="text-xs font-bold text-[#09090B]">{tier.name}</span>
                             <span className="text-xs font-mono font-bold text-[#0F766E] tabular-nums">
-                              {tier.extraPrice === 0 ? 'Incluido' : `+$${tier.extraPrice}/mes`}
+                              {tier.monthlyPrice === 0 ? 'Incluido' : `+$${tier.monthlyPrice}/mes`}
                             </span>
                           </div>
                           <span className="text-[11px] text-[#52525B]">{tier.desc}</span>
@@ -650,7 +650,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                   <div className="flex flex-col gap-2.5">
                     {INTERFACE_OPTIONS.map(opt => {
                       const isChecked = quoteState.configuration.interfaces.includes(opt.id);
-                      const isRequired = opt.required;
+                      const isRequired = opt.includedAlways;
                       return (
                         <div
                           key={opt.id}
@@ -674,7 +674,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             <span className="text-xs font-mono font-bold text-[#0F766E] tabular-nums">
-                              {opt.cost === 0 ? '$0' : `+$${opt.cost}/mes`}
+                              {opt.monthlyPrice === 0 ? '$0' : `+$${opt.monthlyPrice}/mes`}
                             </span>
                             <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center ${
                               isChecked ? 'bg-[#0F766E] border-[#0F766E] text-white' : 'border-[#D4D4D8] bg-white'
@@ -712,7 +712,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
                             <span className="text-xs font-mono font-bold text-[#0F766E] tabular-nums">
-                              +${pkg.cost}/mes
+                              {pkg.monthlyPrice === 0 ? '$0' : `+$${pkg.monthlyPrice}/mes`}
                             </span>
                             <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center ${
                               isChecked ? 'bg-[#0F766E] border-[#0F766E] text-white' : 'border-[#D4D4D8] bg-white'
@@ -780,9 +780,9 @@ export default function InteractiveEstimator({ onOpenContact }) {
                               $0 SETUP
                             </span>
                           )}
-                          <span className="block text-xs font-bold text-[#09090B] mb-1">{mode.label}</span>
+                          <span className="block text-xs font-bold text-[#09090B] mb-1">{mode.name}</span>
                           <span className="text-xs font-mono font-bold text-[#0F766E] block mb-2 tabular-nums">
-                            {mode.setupFee === 0 ? 'Setup: $0 USD' : `Setup: $${mode.setupFee} USD (pago único)`}
+                            {mode.setupPrice === 0 ? 'Setup: $0 USD' : `Setup: $${mode.setupPrice} USD (pago único)`}
                           </span>
                           <p className="text-[11px] text-[#52525B] leading-relaxed">{mode.desc}</p>
                         </div>
@@ -904,7 +904,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
                 )}
                 {tarifaSocio && (
                   <span className="text-xs font-mono text-[#A1A1AA] line-through">
-                    ${(pricing.totalAdminUsers * 90) + (pricing.monthlyTotal - pricing.rolesBaseTotal)} USD
+                    ${(pricing.totalAdminUsers * 90) + (pricing.monthlyCustomersExtra + pricing.monthlyInterfaces + pricing.monthlyDataAndApis)} USD
                   </span>
                 )}
               </div>
@@ -939,13 +939,13 @@ export default function InteractiveEstimator({ onOpenContact }) {
               <div className="flex justify-between">
                 <span>Roles administrativos ({pricing.totalAdminUsers}):</span>
                 <span className="font-mono tabular-nums text-[#09090B] font-medium">
-                  ${pricing.rolesBaseTotal} USD
+                  ${pricing.monthlyRolesBase} USD
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Clientes e infraestructura:</span>
                 <span className="font-mono tabular-nums text-[#09090B] font-medium">
-                  ${pricing.endCustomersCost + pricing.interfacesTotal + pricing.dataAndApisTotal} USD
+                  ${pricing.monthlyCustomersExtra + pricing.monthlyInterfaces + pricing.monthlyDataAndApis} USD
                 </span>
               </div>
             </div>
