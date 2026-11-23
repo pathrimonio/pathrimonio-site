@@ -18,9 +18,9 @@
   --border-strong: #D4D4D8;
 
   /* Acento Institucional (1 solo color dominante) */
-  --accent-primary: #0F766E;       /* Verde petróleo / confianza + impacto */
-  --accent-primary-hover: #115E59;
-  --accent-soft: #F0FDFA;          /* Fondo suave para badge Socio / Pathway */
+  --accent-primary: #FFC000;       /* Amarillo dorado / dinamismo + claridad */
+  --accent-primary-hover: #E6AC00;
+  --accent-soft: #FFFBEB;          /* Fondo suave para badge Socio / Pathway */
 
   /* Estados */
   --status-success: #15803D;

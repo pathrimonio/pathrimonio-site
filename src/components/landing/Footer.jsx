@@ -10,7 +10,7 @@ export default function Footer({ onOpenContact }) {
           {/* Columna 1: Brand & Misión */}
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-[6px] bg-[#0F766E] flex items-center justify-center text-white shrink-0">
+              <div className="w-7 h-7 rounded-[6px] bg-[#FFC000] flex items-center justify-center text-[#09090B] shrink-0">
                 <ShieldCheck size={16} strokeWidth={1.5} />
               </div>
               <span className="font-semibold text-base text-[#09090B] tracking-tight">Pathrimonio</span>
@@ -18,8 +18,8 @@ export default function Footer({ onOpenContact }) {
             <p className="text-xs text-[#52525B] leading-relaxed mb-4">
               Ingeniería de software sobria, accesible y de alto rendimiento. Construimos herramientas para la economía real y fortalecemos el tejido comunitario en América Latina.
             </p>
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#0F766E] bg-[#F0FDFA] px-2 py-1 rounded-[4px] border border-teal-200/60 w-fit">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E]"></span>
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#92400E] bg-[#FFFBEB] px-2 py-1 rounded-[4px] border border-amber-200/80 w-fit">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000]"></span>
               <span>100% Soberanía Tecnológica</span>
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function Footer({ onOpenContact }) {
                   href="https://wa.me/51950293223?text=Hola,%20quisiera%20contactar%20al%20equipo%20de%20Pathrimonio"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[#0F766E] font-medium hover:text-[#115E59]"
+                  className="inline-flex items-center gap-1.5 text-[#D97706] font-medium hover:text-[#B45309]"
                 >
                   <span>WhatsApp: +51 950 293 223</span>
                 </a>
@@ -135,7 +135,7 @@ export default function Footer({ onOpenContact }) {
           <div className="flex items-center gap-6 font-mono text-[11px]">
             <span>Hecho para la economía real</span>
             <span>•</span>
-            <span className="text-[#0F766E]">Sistemas Verificados</span>
+            <span className="text-[#D97706]">Sistemas Verificados</span>
           </div>
         </div>
       </div>

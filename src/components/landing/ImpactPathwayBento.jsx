@@ -93,15 +93,15 @@ export default function ImpactPathwayBento() {
               </p>
             </div>
             <div className="pt-4 border-t border-[#E4E4E7] flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono tabular-nums text-[#0F766E]">0% fees</span>
+              <span className="text-2xl font-bold font-mono tabular-nums text-[#D97706]">0% fees</span>
               <span className="text-xs text-[#52525B]">cero intermediación</span>
             </div>
           </div>
 
           {/* Celda 4: Celda Destacada Pathway (Ocupa 3 columnas en LG) */}
-          <div className="md:col-span-2 lg:col-span-3 bg-[#F0FDFA] border border-teal-200 rounded-[10px] p-6 sm:p-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+          <div className="md:col-span-2 lg:col-span-3 bg-[#FFFBEB] border border-amber-200 rounded-[10px] p-6 sm:p-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-white border border-teal-200/80 text-[#0F766E] text-xs font-mono font-medium mb-3">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-white border border-amber-200/80 text-[#92400E] text-xs font-mono font-medium mb-3">
                 <Route size={13} strokeWidth={1.5} />
                 <span>BENEFICIO VINCULADO · APP MVP</span>
               </div>
@@ -113,15 +113,15 @@ export default function ImpactPathwayBento() {
               </p>
               <div className="flex flex-wrap items-center gap-4 text-xs text-[#09090B]">
                 <span className="inline-flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 size={14} strokeWidth={1.5} className="text-[#0F766E]" />
+                  <CheckCircle2 size={14} strokeWidth={1.5} className="text-[#D97706]" />
                   <span>Tablero de hitos públicos</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 size={14} strokeWidth={1.5} className="text-[#0F766E]" />
+                  <CheckCircle2 size={14} strokeWidth={1.5} className="text-[#D97706]" />
                   <span>Seguimiento de aportes verificables</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5 font-medium">
-                  <CheckCircle2 size={14} strokeWidth={1.5} className="text-[#0F766E]" />
+                  <CheckCircle2 size={14} strokeWidth={1.5} className="text-[#D97706]" />
                   <span>Disponible en Android y Web</span>
                 </span>
               </div>
@@ -132,7 +132,7 @@ export default function ImpactPathwayBento() {
                 href="https://play.google.com/store/apps/details?id=com.pathrimonio.pathway"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[6px] bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-semibold transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E6AC00] text-[#09090B] text-xs font-semibold transition-colors"
               >
                 <Smartphone size={14} strokeWidth={1.5} />
                 <span>Google Play (Pathway)</span>
@@ -140,7 +140,7 @@ export default function ImpactPathwayBento() {
               </a>
               <a
                 href="#cotizador"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[6px] bg-white hover:bg-[#F4F4F5] border border-teal-200 text-[#09090B] text-xs font-medium transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[6px] bg-white hover:bg-[#F4F4F5] border border-amber-200 text-[#09090B] text-xs font-medium transition-colors"
               >
                 <span>Vincular mi proyecto</span>
                 <ArrowUpRight size={13} strokeWidth={1.5} />

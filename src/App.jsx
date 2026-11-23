@@ -1103,7 +1103,7 @@ export default function App() {
           VIEW: LANDING PAGE (Minimalista Moderno - SDD)
       ══════════════════════════════════════════ */}
       {currentView === 'landing' && (
-        <div className="flex flex-col w-full bg-[#FAFAFA] text-[#09090B] min-h-screen selection:bg-teal-100 selection:text-teal-900">
+        <div className="flex flex-col w-full bg-[#FAFAFA] text-[#09090B] min-h-screen selection:bg-amber-100 selection:text-amber-950">
           <Navbar 
             onOpenPortal={() => navigateToPortal('login')}
             onOpenRegister={navigateToRegister} 

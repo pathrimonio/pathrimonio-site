@@ -93,7 +93,7 @@ export default function RolesSection() {
                 <div>
                   {/* Top Bar: Icono + Badge */}
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-10 h-10 rounded-[6px] bg-[#F0FDFA] border border-teal-200/60 flex items-center justify-center text-[#0F766E]">
+                    <div className="w-10 h-10 rounded-[6px] bg-[#FFFBEB] border border-amber-200/80 flex items-center justify-center text-[#D97706]">
                       <Icon size={20} strokeWidth={1.5} />
                     </div>
                     <span className="text-[11px] font-mono font-medium text-[#52525B] bg-[#F4F4F5] px-2.5 py-1 rounded-[4px]">
@@ -116,7 +116,7 @@ export default function RolesSection() {
                 <div className="pt-4 border-t border-[#E4E4E7] flex flex-col gap-1.5">
                   {role.features.map((feat, idx) => (
                     <div key={idx} className="flex items-center gap-2 text-xs text-[#52525B]">
-                      <span className="w-1 h-1 rounded-full bg-[#0F766E]"></span>
+                      <span className="w-1 h-1 rounded-full bg-[#FFC000]"></span>
                       <span>{feat}</span>
                     </div>
                   ))}
@@ -138,7 +138,7 @@ export default function RolesSection() {
           </div>
           <a
             href="#cotizador"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F766E] hover:text-[#115E59] shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D97706] hover:text-[#B45309] shrink-0"
           >
             <span>Configurar mis roles en el cotizador</span>
             <ArrowRight size={13} strokeWidth={1.5} />

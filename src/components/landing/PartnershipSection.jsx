@@ -78,18 +78,18 @@ export default function PartnershipSection() {
           </div>
 
           {/* Columna Socio ($1/día) Destacada */}
-          <div className="bg-[#F0FDFA] border-2 border-[#0F766E] rounded-[10px] p-8 flex flex-col justify-between shadow-sm relative">
-            <div className="absolute -top-3 right-6 bg-[#0F766E] text-white text-[11px] font-mono font-semibold px-3 py-0.5 rounded-full uppercase tracking-wider">
+          <div className="bg-[#FFFBEB] border-2 border-[#FFC000] rounded-[10px] p-8 flex flex-col justify-between shadow-sm relative">
+            <div className="absolute -top-3 right-6 bg-[#FFC000] text-[#09090B] text-[11px] font-mono font-bold px-3 py-0.5 rounded-full uppercase tracking-wider">
               Recomendado para PYMEs
             </div>
 
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-teal-200/60 mb-6">
+              <div className="flex items-center justify-between pb-4 border-b border-amber-200/80 mb-6">
                 <div>
-                  <span className="text-xs font-mono text-[#0F766E] font-medium uppercase tracking-wider block mb-1">Alianza Pathrimonio</span>
+                  <span className="text-xs font-mono text-[#92400E] font-medium uppercase tracking-wider block mb-1">Alianza Pathrimonio</span>
                   <h3 className="text-xl font-bold text-[#09090B]">Programa de Socios</h3>
                 </div>
-                <span className="text-xs font-mono px-2.5 py-1 bg-white text-[#0F766E] border border-teal-200 rounded-[4px] font-medium">
+                <span className="text-xs font-mono px-2.5 py-1 bg-white text-[#92400E] border border-amber-200 rounded-[4px] font-medium">
                   $1 USD / día
                 </span>
               </div>
@@ -99,36 +99,36 @@ export default function PartnershipSection() {
                   <span className="text-3xl font-bold text-[#09090B] font-mono tabular-nums">$30 USD</span>
                   <span className="text-sm text-[#52525B]">/ mes por rol activo</span>
                 </div>
-                <p className="text-xs text-[#0F766E] font-medium">
+                <p className="text-xs text-[#92400E] font-medium">
                   Costo de implementación: <span className="underline font-bold">$0 USD</span> con permanencia de 6 meses
                 </p>
               </div>
 
               <ul className="flex flex-col gap-3.5 text-sm text-[#09090B]">
                 <li className="flex items-start gap-3">
-                  <Check size={16} strokeWidth={2} className="text-[#0F766E] shrink-0 mt-0.5" />
+                  <Check size={16} strokeWidth={2} className="text-[#D97706] shrink-0 mt-0.5" />
                   <span><strong>$0 USD en setup:</strong> Tu sistema puesto en marcha sin descapitalizar tu caja.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <Check size={16} strokeWidth={2} className="text-[#0F766E] shrink-0 mt-0.5" />
+                  <Check size={16} strokeWidth={2} className="text-[#D97706] shrink-0 mt-0.5" />
                   <span><strong>Soporte continuo y mejoras:</strong> Mantenimiento, respaldos y ajustes operativos incluidos.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <Check size={16} strokeWidth={2} className="text-[#0F766E] shrink-0 mt-0.5" />
+                  <Check size={16} strokeWidth={2} className="text-[#D97706] shrink-0 mt-0.5" />
                   <span><strong>Soberanía total:</strong> Exporta tu base de datos SQLite/PostgreSQL en cualquier momento.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <Check size={16} strokeWidth={2} className="text-[#0F766E] shrink-0 mt-0.5" />
+                  <Check size={16} strokeWidth={2} className="text-[#D97706] shrink-0 mt-0.5" />
                   <span><strong>Retorno a la comunidad:</strong> Tu membresía financia proyectos formativos en Pathway.</span>
                 </li>
               </ul>
             </div>
 
-            <div className="pt-6 mt-8 border-t border-teal-200/60 flex items-center justify-between">
-              <span className="text-xs text-[#0F766E] font-mono font-medium">Código abierto y datos propios</span>
+            <div className="pt-6 mt-8 border-t border-amber-200/80 flex items-center justify-between">
+              <span className="text-xs text-[#92400E] font-mono font-medium">Código abierto y datos propios</span>
               <a
                 href="#cotizador"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F766E] hover:text-[#115E59]"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#D97706] hover:text-[#B45309]"
               >
                 <span>Activar tarifa socio</span>
                 <ArrowRight size={13} strokeWidth={1.5} />
@@ -141,7 +141,7 @@ export default function PartnershipSection() {
         <div className="bg-[#FFFFFF] border border-[#E4E4E7] rounded-[10px] p-6 sm:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#E4E4E7]">
             <div>
-              <div className="inline-flex items-center gap-2 text-xs font-mono text-[#0F766E] font-medium mb-1.5">
+              <div className="inline-flex items-center gap-2 text-xs font-mono text-[#92400E] font-medium mb-1.5">
                 <Gift size={14} strokeWidth={1.5} />
                 <span>RECIPROCIDAD COMUNITARIA</span>
               </div>
@@ -163,7 +163,7 @@ export default function PartnershipSection() {
                     onClick={() => setReferralsCount(num)}
                     className={`px-3 py-1 text-xs font-mono font-semibold rounded-[4px] transition-all cursor-pointer ${
                       referralsCount === num
-                        ? 'bg-[#0F766E] text-white shadow-xs'
+                        ? 'bg-[#FFC000] text-[#09090B] shadow-xs'
                         : 'text-[#52525B] hover:text-[#09090B]'
                     }`}
                   >
@@ -186,7 +186,7 @@ export default function PartnershipSection() {
 
             <div className="p-4 rounded-[8px] bg-[#FAFAFA] border border-[#E4E4E7]">
               <span className="text-xs text-[#52525B] block mb-1">Opción A (Meses libres)</span>
-              <div className="text-2xl font-bold text-[#0F766E] font-mono tabular-nums">
+              <div className="text-2xl font-bold text-[#D97706] font-mono tabular-nums">
                 {monthsBonifiedSingleRole > 0 ? `${monthsBonifiedSingleRole} meses` : 'En acumulación'}
               </div>
               <span className="text-[11px] text-[#52525B]">de 1 rol bonificado al 100%</span>
@@ -194,7 +194,7 @@ export default function PartnershipSection() {
 
             <div className="p-4 rounded-[8px] bg-[#FAFAFA] border border-[#E4E4E7]">
               <span className="text-xs text-[#52525B] block mb-1">Opción B (Roles libres)</span>
-              <div className="text-2xl font-bold text-[#0F766E] font-mono tabular-nums">
+              <div className="text-2xl font-bold text-[#D97706] font-mono tabular-nums">
                 {rolesBonifiedSingleMonth > 0 ? `${rolesBonifiedSingleMonth} roles` : 'En acumulación'}
               </div>
               <span className="text-[11px] text-[#52525B]">por 1 mes completo sin costo</span>
