@@ -306,9 +306,11 @@ export default function LoginPage({
         
         {/* Brand Header */}
         <div className="flex flex-col items-center gap-2.5 text-center">
-          <div className="w-13 h-13 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center shadow-lg p-2.5">
-            <img src="/assets/images/logo.png" alt="Pathrimonio" className="w-full h-full object-contain" />
-          </div>
+          <img 
+            src="/assets/images/logo.png" 
+            alt="Pathrimonio" 
+            className="w-[108px] h-[108px] object-contain select-none" 
+          />
           <div>
             <h1 className="font-space text-2xl font-bold text-white tracking-tight">
               PATH<span className="text-primary">RIMONIO</span>
