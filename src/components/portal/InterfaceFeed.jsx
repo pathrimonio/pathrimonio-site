@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import InterfaceCard from './InterfaceCard';
 import { 
   PLATFORM_OPTIONS, 
@@ -27,24 +27,13 @@ export default function InterfaceFeed({
   const [sortBy, setSortBy] = useState('priority'); // 'priority' | 'id' | 'status'
   const [viewMode, setViewMode] = useState('horizontal'); // 'horizontal' | 'stack'
   const [expandedCards, setExpandedCards] = useState({});
-  const scrollContainerRef = React.useRef(null);
+  const scrollContainerRef = useRef(null);
 
   const toggleCardExpanded = (id) => {
     setExpandedCards(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
-  };
-
-  const allExpanded = sortedInterfaces.length > 0 && sortedInterfaces.every(i => expandedCards[i.id]);
-
-  const toggleAllCards = () => {
-    const nextState = !allExpanded;
-    const newMap = {};
-    sortedInterfaces.forEach(i => {
-      newMap[i.id] = nextState;
-    });
-    setExpandedCards(newMap);
   };
 
   const scrollHorizontally = (offset) => {
@@ -143,6 +132,18 @@ export default function InterfaceFeed({
     }
     return b.id.localeCompare(a.id);
   });
+
+  // Global expansion state based on computed sortedInterfaces
+  const allExpanded = sortedInterfaces.length > 0 && sortedInterfaces.every(i => expandedCards[i.id]);
+
+  const toggleAllCards = () => {
+    const nextState = !allExpanded;
+    const newMap = {};
+    sortedInterfaces.forEach(i => {
+      newMap[i.id] = nextState;
+    });
+    setExpandedCards(newMap);
+  };
 
   // Calculate summary counts
   const totalCount = interfaces.length;
