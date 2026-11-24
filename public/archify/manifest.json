@@ -75,5 +75,16 @@
     "sourcePath": "Sistema de Gestión ERP (archify 3.3.0 showcase)",
     "sizeBytes": 940869,
     "isPrimary": true
+  },
+  {
+    "projectId": "pathrimonio-site",
+    "slug": "arquitectura-implementacion",
+    "title": "Arquitectura de Implementación - Pathrimonio Site",
+    "diagramType": "architecture",
+    "publicUrl": "/archify/pathrimonio-site-architecture.html",
+    "generatorVersion": "archify 3.3.0",
+    "sourcePath": "f:\\SITIO_PATHRIMONIO (archify 3.3.0 showcase)",
+    "sizeBytes": 958584,
+    "isPrimary": true
   }
 ]

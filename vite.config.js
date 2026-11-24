@@ -22,7 +22,8 @@ const DEFAULT_ARCHIFY_SOURCES = {
     'public/archify/pathway-architecture.html'
   ],
   'core-hub': ['public/archify/core-hub-architecture.html'],
-  'portal-admin': ['public/archify/portal-admin-architecture.html']
+  'portal-admin': ['public/archify/portal-admin-architecture.html'],
+  'pathrimonio-site': ['public/archify/pathrimonio-site-architecture.html']
 };
 
 function slugifyName(input) {

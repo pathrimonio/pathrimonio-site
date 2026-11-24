@@ -1,3 +1,5 @@
+import { PATHRIMONIO_SITE_STORIES } from './pathrimonioSiteData.js';
+
 export const INITIAL_STORIES = [
   // ── Proyecto: Pathway (App MVP) ──
   {
@@ -162,7 +164,8 @@ export const INITIAL_STORIES = [
     author: "Carlos D.",
     createdAt: "Hoy",
     image: null
-  }
+  },
+  ...PATHRIMONIO_SITE_STORIES
 ];
 
 export const MODULE_OPTIONS = [

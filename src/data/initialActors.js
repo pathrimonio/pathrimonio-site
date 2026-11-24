@@ -3,6 +3,8 @@
 // las áreas del sistema a las que tienen permisos y enlaces para que los trabajadores
 // completen las Historias de Usuario correspondientes.
 
+import { PATHRIMONIO_SITE_ACTORS } from './pathrimonioSiteData.js';
+
 export const PERMISSION_LEVEL_OPTIONS = [
   "Todos",
   "Acceso Total (Admin)",
@@ -305,5 +307,6 @@ export const INITIAL_ACTORS = [
     status: "Activo",
     createdAt: "2026-11-22",
     isPrimaryRole: true
-  }
+  },
+  ...PATHRIMONIO_SITE_ACTORS
 ];

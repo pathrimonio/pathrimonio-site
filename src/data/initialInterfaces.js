@@ -1,4 +1,5 @@
 import { SMATAD_INTERFACES } from './smatadInterfaces.js';
+import { PATHRIMONIO_SITE_INTERFACES } from './pathrimonioSiteData.js';
 
 export const PLATFORM_OPTIONS = [
   "Todas",
@@ -408,5 +409,8 @@ export const INITIAL_INTERFACES = [
   },
 
   // ── Proyecto: SMATAD — Transporte & Asignación Dinámica (smatad) ──
-  ...SMATAD_INTERFACES
+  ...SMATAD_INTERFACES,
+
+  // ── Proyecto: Pathrimonio Site — Portal SDD & Arquitectura (pathrimonio-site) ──
+  ...PATHRIMONIO_SITE_INTERFACES
 ];

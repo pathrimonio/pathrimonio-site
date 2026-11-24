@@ -1,3 +1,5 @@
+import { PATHRIMONIO_SITE_FILES } from './pathrimonioSiteData.js';
+
 // Catálogo Inicial de Archivos y Entregables del Proyecto
 // Permite gestionar documentación técnica, especificaciones PRD, binarios/APKs,
 // diseños Figma, wireframes, scripts SQL y actas de aprobación por software.
@@ -444,5 +446,6 @@ export const INITIAL_FILES = [
     linkedEntity: "US-103 (Reportes de Impacto)",
     downloadUrl: "#download-acta",
     contentPreview: "Audit Report - Certificación de cumplimiento del 100% de desembolsos en cooperativas agrarias."
-  }
+  },
+  ...PATHRIMONIO_SITE_FILES
 ];

@@ -1,4 +1,6 @@
-// Catálogo de Arquitecturas de Software Sintetizadas por la skill Archifly
+import { PATHRIMONIO_SITE_ARCHITECTURE } from './pathrimonioSiteData.js';
+
+// Catálogo de Arquitecturas de Software Sintetizadas por la skill Archify
 // para cada uno de los proyectos activos en Pathrimonio.
 // Principio: Zero-Code Leakage (Firmas abstractas, contratos, topologías C4 y trazabilidad DoD).
 
@@ -734,7 +736,9 @@ export const PROJECT_ARCHITECTURES = {
         'Configurar índices B-Tree en la columna de stock_actual para optimizar consultas de inventario masivas.'
       ]
     }
-  }
+  },
+
+  'pathrimonio-site': PATHRIMONIO_SITE_ARCHITECTURE
 };
 
 export function getProjectArchitecture(projectId = 'pathway') {

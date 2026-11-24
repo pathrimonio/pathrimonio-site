@@ -1,3 +1,5 @@
+import { PATHRIMONIO_SITE_DATA_MODELS } from './pathrimonioSiteData.js';
+
 // Catálogo Inicial de Modelado de Datos y Especificación de Almacenamiento
 // Define motores de datos, tablas, atributos, tipos, restricciones y estrategias de sincronización
 
@@ -809,7 +811,8 @@ export const INITIAL_DATA_MODELS = [
         description: "Validación de token de 6 dígitos fuera de línea."
       }
     ]
-  }
+  },
+  ...PATHRIMONIO_SITE_DATA_MODELS
 ];
 
 // Helper to generate DDL SQL statement for a table

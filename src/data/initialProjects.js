@@ -1,3 +1,5 @@
+import { PATHRIMONIO_SITE_PROJECT } from './pathrimonioSiteData.js';
+
 export const INITIAL_PROJECTS = [
   {
     id: "pathway",
@@ -60,7 +62,8 @@ export const INITIAL_PROJECTS = [
       "Control Operativo, Tiempos & Agentes",
       "Autenticación & Acceso"
     ]
-  }
+  },
+  PATHRIMONIO_SITE_PROJECT
 ];
 
 export const PROJECT_CATEGORIES = [
