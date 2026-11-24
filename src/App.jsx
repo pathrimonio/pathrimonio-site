@@ -31,6 +31,7 @@ import {
 import Navbar from './components/landing/Navbar';
 import Hero from './components/landing/Hero';
 import RolesSection from './components/landing/RolesSection';
+import ArchitectureSection from './components/landing/ArchitectureSection';
 import PartnershipSection from './components/landing/PartnershipSection';
 import ImpactPathwayBento from './components/landing/ImpactPathwayBento';
 import InteractiveEstimator from './components/landing/InteractiveEstimator';
@@ -1212,16 +1213,19 @@ export default function App() {
             {/* Sección 02: Roles y Control */}
             <RolesSection />
 
-            {/* Sección 03: Programa de Socios & Simulador de Créditos */}
+            {/* Sección 03: Arquitectura Sistemática & Soberanía */}
+            <ArchitectureSection />
+
+            {/* Sección 04: Programa de Socios & Simulador de Créditos */}
             <PartnershipSection />
 
-            {/* Sección 04: Impacto y Pathway (Bento Grid) */}
+            {/* Sección 05: Impacto y Pathway (Bento Grid) */}
             <ImpactPathwayBento />
 
-            {/* Sección 05: Cotizador Interactivo (Split-Screen 65/35) */}
+            {/* Sección 06: Cotizador Interactivo (Split-Screen 65/35) */}
             <InteractiveEstimator onOpenContact={() => setIsContactModalOpen(true)} />
 
-            {/* Sección 06: FAQ Minimalista */}
+            {/* Sección 07: FAQ Minimalista */}
             <FAQSection />
           </main>
 

@@ -7,11 +7,11 @@ export const SYSTEM_MODULES = [
   { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US', desc: 'Requerimientos funcionales y criterios de aceptación' },
   { id: 'actors', label: 'Actores & Roles', icon: 'badge', badge: 'ROL', desc: 'Matriz de usuarios del negocio y permisos de acceso' },
   { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX', desc: 'Fichas de interfaces, mockups y puntos interactivos' },
-  { id: 'dataModel', label: 'Modelado de Datos', icon: 'database', badge: 'DB', desc: 'Tablas relacionales, DER y scripts SQL' },
-  { id: 'files', label: 'Archivos del Proyecto', icon: 'folder_open', badge: 'FILES', desc: 'Entregables, diagramas y contratos' },
+  { id: 'dataModel', label: 'Arquitectura de Datos', icon: 'database', badge: 'DB', desc: 'Tablas relacionales, DER y esquemas de arquitectura' },
+  { id: 'files', label: 'Archivos & Manifiestos', icon: 'folder_open', badge: 'FILES', desc: 'Entregables, diagramas y contratos' },
   { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted', badge: 'PLAN', desc: 'Priorización consolidada de historias' },
   { id: 'sprints', label: 'Sprints & Ciclos', icon: 'timelapse', badge: 'AGILE', desc: 'Métricas de velocidad y cadencia de desarrollo' },
-  { id: 'docs', label: 'Documentación', icon: 'article', badge: 'DOCS', desc: 'Estándares de arquitectura y guías técnicas' },
+  { id: 'docs', label: 'Docs de Arquitectura', icon: 'article', badge: 'DOCS', desc: 'Estándares de arquitectura, manifiestos y guías técnicas' },
   { id: 'settings', label: 'Administración & Usuarios', icon: 'admin_panel_settings', badge: 'ADMIN', desc: 'Gestión de colaboradores, roles y permisos de acceso' }
 ];
 

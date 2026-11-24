@@ -43,8 +43,8 @@ export default function Footer({ onOpenContact }) {
                 </a>
               </li>
               <li>
-                <a href="#roles" className="hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors">
-                  Sistemas Offline-First (SQLite)
+                <a href="#arquitectura" className="hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors">
+                  Arquitectura Offline-First (SQLite)
                 </a>
               </li>
               <li>
