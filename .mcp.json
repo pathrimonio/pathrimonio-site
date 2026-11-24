@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "pathrimonio-files": {
+      "command": "node",
+      "args": [
+        "f:\\SITIO_PATHRIMONIO\\mcp\\pathrimonio-mcp-server.mjs"
+      ]
+    }
+  }
+}

@@ -32,7 +32,7 @@ metadata:
 When invoked on a project:
 
 ### Step 1: Ingest Lightweight Manifest
-Read the project metadata, file tree nodes, and abstract method records:
+Read the project metadata, file tree nodes, and abstract method records (including live records synced into Supabase by the **`pathrimonio-files`** MCP server via `sync_modified_file` / `upsert_file_records`):
 - Relative path & file category
 - Symbol ID & Typed Signature (e.g. `public calculateMonthlyTotal(roles: number): PricingSummary`)
 - Visibility (`public`, `private`, `protected`) and modifiers (`async`, `static`)

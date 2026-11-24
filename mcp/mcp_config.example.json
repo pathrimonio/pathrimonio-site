@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "pathrimonio-files": {
+      "command": "node",
+      "args": [
+        "f:\\SITIO_PATHRIMONIO\\mcp\\pathrimonio-mcp-server.mjs"
+      ],
+      "env": {
+        "PATHRIMONIO_SUPABASE_URL": "https://TU-PROYECTO.supabase.co",
+        "PATHRIMONIO_SUPABASE_SERVICE_ROLE_KEY": "eyJ..."
+      }
+    }
+  }
+}

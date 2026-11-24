@@ -9,6 +9,34 @@ import {
   analyzeArchitectureWithAi
 } from '../../services/archiflyAiService';
 
+function inferLayerIdFromPath(path = '', recordType = '') {
+  const p = String(path).toLowerCase();
+  const r = String(recordType).toLowerCase();
+  if (
+    r === 'table' || r === 'view' || r === 'trigger' || r === 'policy' ||
+    p.includes('infra') || p.includes('repo') || p.includes('supabase') ||
+    p.includes('sqlite') || p.includes('adapter') || p.includes('migration') ||
+    p.includes('client') || p.includes('gateway') || p.includes('mcp/')
+  ) {
+    return 'infrastructure';
+  }
+  if (
+    p.includes('domain') || p.includes('entit') || p.includes('polic') ||
+    p.includes('value') || p.includes('model') || r === 'interface' ||
+    r === 'type' || r === 'enum'
+  ) {
+    return 'domain';
+  }
+  if (
+    p.includes('screen') || p.includes('component') || p.includes('view') ||
+    p.includes('page') || p.includes('/ui') || p.includes('modal') ||
+    p.includes('controller') || r === 'component'
+  ) {
+    return 'presentation';
+  }
+  return 'application';
+}
+
 export default function SoftwareArchitectureView({
   activeProject,
   activeProjectId,
@@ -18,6 +46,7 @@ export default function SoftwareArchitectureView({
   interfaces = [],
   dataModels = [],
   treeNodes = [],
+  fileRecords = [],
   onNotify
 }) {
   const [activeSubTab, setActiveSubTab] = useState('layers'); // 'layers' | 'diagram' | 'contracts' | 'traceability' | 'health'
@@ -34,7 +63,7 @@ export default function SoftwareArchitectureView({
   const [showAiModal, setShowAiModal] = useState(false);
   const [tempProvider, setTempProvider] = useState(aiConfig.provider || 'gemini');
   const [tempApiKey, setTempApiKey] = useState(aiConfig.apiKey || '');
-  const [tempModel, setTempModel] = useState(aiConfig.model || 'gemini-2.0-flash');
+  const [tempModel, setTempModel] = useState(aiConfig.model || 'gemini-3.5-flash-lite');
   const [showKeyPassword, setShowKeyPassword] = useState(false);
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [testStatus, setTestStatus] = useState(null); // { success: boolean, message: string }
@@ -73,9 +102,48 @@ export default function SoftwareArchitectureView({
     return AI_PROVIDERS.find(p => p.id === tempProvider) || AI_PROVIDERS[0];
   }, [tempProvider]);
 
-  // Combine static layer components with any custom added contracts
+  // Map real synced Supabase file nodes & fileRecords by layer
+  const nodeById = useMemo(() => new Map(treeNodes.map((n) => [n.id, n])), [treeNodes]);
+
+  // Combine static layer components with live Supabase MCP fileRecords and custom added contracts
   const layersWithCustom = useMemo(() => {
+    const syncedByLayer = new Map();
+    for (const rec of fileRecords) {
+      const node = nodeById.get(rec.nodeId);
+      const filePath = node?.path || '';
+      const fileName = node?.name || 'ArchivoSincronizado';
+      const inferredLayer = rec.metadata?.layer || inferLayerIdFromPath(filePath, rec.recordType);
+
+      if (!syncedByLayer.has(inferredLayer)) syncedByLayer.set(inferredLayer, new Map());
+      const byFile = syncedByLayer.get(inferredLayer);
+      const compKey = filePath || fileName;
+
+      if (!byFile.has(compKey)) {
+        byFile.set(compKey, {
+          name: `${fileName} (MCP)`,
+          path: filePath || fileName,
+          type: inferredLayer === 'presentation' ? 'screen' : inferredLayer === 'application' ? 'service' : inferredLayer === 'domain' ? 'entity' : 'adapter',
+          syncedFromMcp: true,
+          abstractMethods: []
+        });
+      }
+
+      byFile.get(compKey).abstractMethods.push({
+        symbol: rec.name,
+        signature: rec.signature || rec.name,
+        visibility: rec.metadata?.visibility || 'public',
+        isAsync: Boolean(rec.metadata?.isAsync),
+        line: rec.lineNumber || 1,
+        doc: rec.description || `${rec.recordType} sincronizado desde proyecto real`,
+        syncedByMcp: rec.metadata?.syncedBy === 'mcp-agent'
+      });
+    }
+
     return architecture.layers.map(layer => {
+      const mcpComponents = syncedByLayer.has(layer.id)
+        ? Array.from(syncedByLayer.get(layer.id).values())
+        : [];
+
       const extraComponents = customContracts
         .filter(c => c.layerId === layer.id && (!c.projectId || c.projectId === activeProjectId))
         .map(c => ({
@@ -96,10 +164,10 @@ export default function SoftwareArchitectureView({
 
       return {
         ...layer,
-        components: [...layer.components, ...extraComponents]
+        components: [...mcpComponents, ...layer.components, ...extraComponents]
       };
     });
-  }, [architecture, customContracts, activeProjectId]);
+  }, [architecture, customContracts, activeProjectId, fileRecords, nodeById]);
 
   // All abstract methods flattened for contracts tab
   const allAbstractMethods = useMemo(() => {
@@ -152,6 +220,7 @@ export default function SoftwareArchitectureView({
           interfaces,
           dataModels,
           treeNodes,
+          fileRecords,
           aiConfig
         });
 
@@ -349,6 +418,13 @@ export default function SoftwareArchitectureView({
                   <span className="inline-flex items-center px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-[10px]">
                     0% Fuga de Código
                   </span>
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px]"
+                    title="Registros reales de archivos y métodos sincronizados vía MCP"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    MCP Sync: {fileRecords.length} reg.
+                  </span>
                 </div>
                 <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate max-w-2xl">
                   {architecture.architecturePattern} · {architecture.synthesizedBy}
@@ -375,7 +451,7 @@ export default function SoftwareArchitectureView({
                   setShowAiModal(true);
                   setTempApiKey(aiConfig.apiKey || '');
                   setTempProvider(aiConfig.provider || 'gemini');
-                  setTempModel(aiConfig.model || 'gemini-2.0-flash');
+                  setTempModel(aiConfig.model || 'gemini-3.5-flash-lite');
                   setTestStatus(null);
                 }}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border font-space text-xs font-medium transition-colors cursor-pointer ${

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getFileVisualInfo } from '../../data/initialFiles';
 import { formatBytes } from '../../data/projectTree';
 import { getRecordTypeMeta, getRecordTypesForExtension } from '../../data/fileRecordTypes';
+import { supabase } from '../../lib/supabase';
 
 export default function TreeFileDetailModal({
   isOpen = false,
@@ -59,6 +60,41 @@ export default function TreeFileDetailModal({
       });
 
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, node?.id]);
+
+  // Realtime sync while modal is open so MCP agent edits reflect immediately
+  useEffect(() => {
+    if (!isOpen || !node?.id || !supabase) return undefined;
+
+    let refreshTimer = null;
+    const channel = supabase
+      .channel(`file-records-modal:${node.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'file_records',
+          filter: `node_id=eq.${node.id}`
+        },
+        () => {
+          if (refreshTimer) window.clearTimeout(refreshTimer);
+          refreshTimer = window.setTimeout(() => {
+            Promise.resolve(onLoadRecords?.(node.id))
+              .then((rows) => {
+                if (Array.isArray(rows)) setRecords(rows);
+              })
+              .catch(() => {});
+          }, 250);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer);
+      supabase.removeChannel(channel);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, node?.id]);
 
@@ -308,6 +344,14 @@ export default function TreeFileDetailModal({
                           <span className="font-mono text-xs text-white font-semibold break-all">{record.name}</span>
                           {record.lineNumber && (
                             <span className="font-mono text-[10px] text-on-surface-variant">L{record.lineNumber}</span>
+                          )}
+                          {record.metadata?.syncedBy === 'mcp-agent' && (
+                            <span
+                              className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[9px] font-bold"
+                              title="Sincronizado automáticamente por agente MCP"
+                            >
+                              MCP
+                            </span>
                           )}
                         </div>
                         {record.signature && (

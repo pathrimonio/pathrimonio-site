@@ -131,6 +131,14 @@ export default function ProjectTreeView({
           )}
 
           <span className="ml-auto flex items-center gap-2 shrink-0">
+            {!node.isDirectory && node.source === 'mcp-agent' && (
+              <span
+                className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[9px] font-bold"
+                title="Sincronizado vía MCP desde el proyecto real"
+              >
+                MCP
+              </span>
+            )}
             {!node.isDirectory && node.recordCount > 0 && (
               <span className="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary font-mono text-[9px] font-bold">
                 {node.recordCount} reg.
@@ -217,7 +225,16 @@ export default function ProjectTreeView({
             <span className="material-symbols-outlined text-[22px]">account_tree</span>
           </div>
           <div className="min-w-0">
-            <h2 className="font-space text-sm font-bold text-white truncate">Árbol del Proyecto</h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="font-space text-sm font-bold text-white truncate">Árbol del Proyecto</h2>
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[9px] font-bold"
+                title="Cambios hechos por agentes vía MCP se reflejan en tiempo real"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                MCP Realtime
+              </span>
+            </div>
             <p className="font-jakarta text-[11px] text-on-surface-variant truncate">
               {activeProject?.name || 'Proyecto'} · {summary.files} archivos · {summary.folders} carpetas · {summary.totalSizeFormatted} · {summary.recordCount} registros
             </p>
@@ -297,6 +314,11 @@ export default function ProjectTreeView({
                       {node.rootName} / {node.path}
                     </span>
                     <span className="ml-auto flex items-center gap-2 shrink-0">
+                      {node.source === 'mcp-agent' && (
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[9px] font-bold">
+                          MCP
+                        </span>
+                      )}
                       {node.recordCount > 0 && (
                         <span className="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30 text-primary font-mono text-[9px] font-bold">
                           {node.recordCount} reg.

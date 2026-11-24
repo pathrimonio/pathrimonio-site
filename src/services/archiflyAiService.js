@@ -164,6 +164,7 @@ export async function analyzeArchitectureWithAi({
   interfaces = [],
   dataModels = [],
   treeNodes = [],
+  fileRecords = [],
   aiConfig
 }) {
   const fallbackArch = getProjectArchitecture(project?.id || 'pathway');
@@ -179,6 +180,8 @@ export async function analyzeArchitectureWithAi({
 
   const provider = aiConfig?.provider || 'gemini';
   const initialModel = aiConfig?.model || 'gemini-3.5-flash-lite';
+
+  const nodePathById = new Map(treeNodes.map((n) => [n.id, n.path]));
 
   // Preparar payload ligero con Zero-Code Leakage
   const promptPayload = {
@@ -209,8 +212,15 @@ export async function analyzeArchitectureWithAi({
     })),
     treeSummary: {
       totalFiles: treeNodes.filter(n => !n.isDirectory).length,
-      samplePaths: treeNodes.filter(n => !n.isDirectory).slice(0, 20).map(n => n.path)
-    }
+      samplePaths: treeNodes.filter(n => !n.isDirectory).slice(0, 25).map(n => n.path)
+    },
+    syncedAbstractRecords: fileRecords.slice(0, 60).map(r => ({
+      filePath: nodePathById.get(r.nodeId) || '',
+      recordType: r.recordType,
+      name: r.name,
+      signature: r.signature,
+      lineNumber: r.lineNumber
+    }))
   };
 
   const systemInstructions = `

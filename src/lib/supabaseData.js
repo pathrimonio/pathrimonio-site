@@ -228,7 +228,8 @@ const mapProjectTreeNode = (row) => ({
   depth: row.depth,
   recordCount: row.record_count,
   source: row.source,
-  createdAt: row.created_at
+  createdAt: row.created_at,
+  updatedAt: row.updated_at || row.created_at
 });
 
 const mapFileRecord = (row) => ({
@@ -241,7 +242,8 @@ const mapFileRecord = (row) => ({
   description: row.description,
   lineNumber: row.line_number,
   metadata: row.metadata || {},
-  createdAt: row.created_at
+  createdAt: row.created_at,
+  updatedAt: row.updated_at || row.created_at
 });
 
 // ── Read ──────────────────────────────────────────────────────
@@ -573,11 +575,36 @@ export async function fetchFileRecords(nodeId) {
     .from('file_records')
     .select('*')
     .eq('node_id', nodeId)
+    .order('line_number', { ascending: true, nullsFirst: false })
     .order('record_type', { ascending: true })
     .order('name', { ascending: true });
 
   if (error) throw error;
   return data.map(mapFileRecord);
+}
+
+export async function fetchProjectFileRecords(projectId) {
+  const db = requireSupabase();
+  const pageSize = 1000;
+  let from = 0;
+  const rows = [];
+
+  while (true) {
+    const { data, error } = await db
+      .from('file_records')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('line_number', { ascending: true, nullsFirst: false })
+      .order('name', { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return rows.map(mapFileRecord);
 }
 
 export async function addFileRecord(record) {

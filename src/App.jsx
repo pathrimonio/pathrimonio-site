@@ -23,6 +23,7 @@ import {
   fetchProjectTree,
   replaceProjectTree,
   fetchFileRecords,
+  fetchProjectFileRecords,
   addFileRecord,
   deleteFileRecord,
   saveProject,
@@ -262,6 +263,7 @@ export default function App() {
 
   // ── Project file tree (folders + files loaded from a root folder)
   const [treeNodes, setTreeNodes] = useState([]);
+  const [projectFileRecords, setProjectFileRecords] = useState([]);
   const [treeLoading, setTreeLoading] = useState(false);
 
   // ── Role Definitions & Access Matrix
@@ -554,10 +556,12 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
-  // ── Supabase: load the project file tree when the Files tab is active
+  // ── Supabase: load the project file tree & abstract records + subscribe to MCP Realtime updates
   useEffect(() => {
-    if (activePortalTab !== 'files' || activeProjectId === 'all' || !isSupabaseConfigured) {
+    const needsTreeData = activePortalTab === 'files' || activePortalTab === 'architecture';
+    if (!needsTreeData || activeProjectId === 'all' || !isSupabaseConfigured) {
       setTreeNodes([]);
+      setProjectFileRecords([]);
       setTreeLoading(false);
       return undefined;
     }
@@ -565,20 +569,62 @@ export default function App() {
     let cancelled = false;
     setTreeLoading(true);
 
-    fetchProjectTree(activeProjectId)
-      .then((nodes) => {
-        if (!cancelled) setTreeNodes(nodes);
+    const loadTreeAndRecords = () => Promise.all([
+      fetchProjectTree(activeProjectId),
+      fetchProjectFileRecords(activeProjectId)
+    ]);
+
+    loadTreeAndRecords()
+      .then(([nodes, records]) => {
+        if (!cancelled) {
+          setTreeNodes(nodes);
+          setProjectFileRecords(records);
+        }
       })
       .catch((error) => {
         if (cancelled) return;
-        console.error('[Supabase] fetchProjectTree', error);
+        console.error('[Supabase] fetchProjectTree/Records', error);
         notify(`No se pudo cargar el árbol de archivos: ${error.message}`);
       })
       .finally(() => {
         if (!cancelled) setTreeLoading(false);
       });
 
-    return () => { cancelled = true; };
+    // Suscripción Realtime: los cambios hechos desde MCP se reflejan al instante en la web
+    let syncTimer = null;
+    const scheduleLiveRefresh = () => {
+      if (syncTimer) window.clearTimeout(syncTimer);
+      syncTimer = window.setTimeout(() => {
+        loadTreeAndRecords()
+          .then(([nodes, records]) => {
+            if (!cancelled) {
+              setTreeNodes(nodes);
+              setProjectFileRecords(records);
+            }
+          })
+          .catch(() => {});
+      }, 350);
+    };
+
+    const channel = supabase
+      .channel(`project-tree-live:${activeProjectId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'project_tree_nodes', filter: `project_id=eq.${activeProjectId}` },
+        scheduleLiveRefresh
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'file_records', filter: `project_id=eq.${activeProjectId}` },
+        scheduleLiveRefresh
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      if (syncTimer) window.clearTimeout(syncTimer);
+      supabase.removeChannel(channel);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePortalTab, activeProjectId]);
 
@@ -1216,9 +1262,13 @@ export default function App() {
     if (activeProjectId === 'all' || !isSupabaseConfigured || treeLoading) return;
     setTreeLoading(true);
     try {
-      const nodes = await fetchProjectTree(activeProjectId);
+      const [nodes, records] = await Promise.all([
+        fetchProjectTree(activeProjectId),
+        fetchProjectFileRecords(activeProjectId)
+      ]);
       setTreeNodes(nodes);
-      notify('Árbol de archivos actualizado.');
+      setProjectFileRecords(records);
+      notify('Árbol de archivos y registros actualizados.');
     } catch (error) {
       console.error('[Supabase] fetchProjectTree', error);
       notify(`No se pudo actualizar el árbol: ${error.message}`);
@@ -1264,6 +1314,7 @@ export default function App() {
   const handleAddFileRecord = async (payload) => {
     try {
       const record = await addFileRecord(payload);
+      setProjectFileRecords((prev) => [...prev, record]);
       setTreeNodes((prev) => prev.map((node) => (
         node.id === payload.nodeId
           ? { ...node, recordCount: (node.recordCount || 0) + 1 }
@@ -1281,6 +1332,7 @@ export default function App() {
   const handleDeleteFileRecord = async (record) => {
     try {
       await deleteFileRecord(record.id);
+      setProjectFileRecords((prev) => prev.filter((item) => item.id !== record.id));
       setTreeNodes((prev) => prev.map((node) => (
         node.id === record.nodeId
           ? { ...node, recordCount: Math.max((node.recordCount || 0) - 1, 0) }
@@ -1583,6 +1635,7 @@ export default function App() {
                       interfaces={projectInterfaces}
                       dataModels={projectDataModels}
                       treeNodes={treeNodes}
+                      fileRecords={projectFileRecords}
                       onNotify={notify}
                     />
                   )}
