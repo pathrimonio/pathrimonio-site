@@ -5,19 +5,24 @@
 import { getProjectArchitecture } from '../data/initialArchitectures';
 
 export const AI_CONFIG_STORAGE_KEY = 'pathrimonio_archifly_ai_config_v1';
+const getEnvApiKey = () => {
+  const viteEnv = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+  return (viteEnv.VITE_GEMINI_API_KEY || viteEnv.VITE_AI_API_KEY || '').trim();
+};
 
 export const AI_PROVIDERS = [
   {
     id: 'gemini',
-    name: 'Google Gemini API (Recomendado)',
+    name: 'Google Gemini API (Conectado)',
     models: [
-      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Ultrarrápido & Preciso)' },
-      { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Razonamiento Complejo)' },
-      { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Baja Latencia)' }
+      { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite (Recomendado / Activo)' },
+      { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (Alta Precisión)' },
+      { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash' },
+      { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview (Razonamiento Complejo)' }
     ],
-    defaultModel: 'gemini-2.0-flash',
+    defaultModel: 'gemini-3.5-flash-lite',
     endpoint: (model, key) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-    placeholder: 'AIzaSy...'
+    placeholder: 'AQ.Ab8... o AIzaSy...'
   },
   {
     id: 'openai',
@@ -43,24 +48,26 @@ export const AI_PROVIDERS = [
 ];
 
 export function loadArchiflyAiConfig() {
+  const envKey = getEnvApiKey();
   try {
     const raw = localStorage.getItem(AI_CONFIG_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
+      const key = (parsed.apiKey || envKey || '').trim();
       return {
         provider: parsed.provider || 'gemini',
-        model: parsed.model || 'gemini-2.0-flash',
-        apiKey: parsed.apiKey || '',
-        isAiEnabled: Boolean(parsed.isAiEnabled && parsed.apiKey)
+        model: (parsed.model === 'gemini-2.0-flash' || parsed.model === 'gemini-1.5-pro' || !parsed.model)
+          ? 'gemini-3.5-flash-lite'
+          : parsed.model,
+        apiKey: key,
+        isAiEnabled: parsed.isAiEnabled !== undefined ? Boolean(parsed.isAiEnabled && key) : Boolean(key)
       };
     }
   } catch (_) {}
 
-  // Fallback to environment variable if present
-  const envKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_AI_API_KEY || '';
   return {
     provider: 'gemini',
-    model: 'gemini-2.0-flash',
+    model: 'gemini-3.5-flash-lite',
     apiKey: envKey,
     isAiEnabled: Boolean(envKey)
   };
@@ -76,30 +83,45 @@ export function saveArchiflyAiConfig(config) {
 
 // Probar conexión con la API
 export async function testAiConnection({ provider = 'gemini', apiKey, model }) {
-  if (!apiKey || !apiKey.trim()) {
+  const cleanKey = (apiKey || getEnvApiKey()).trim();
+
+  if (!cleanKey) {
     return { success: false, error: 'Por favor ingresa una clave de API válida.' };
   }
 
-  const cleanKey = apiKey.trim();
-
   try {
     if (provider === 'gemini') {
-      const activeModel = model || 'gemini-2.0-flash';
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${cleanKey}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: 'Responde únicamente con la palabra: PONG' }] }]
-        })
-      });
+      const candidateModels = [
+        model || 'gemini-3.5-flash-lite',
+        'gemini-3.5-flash-lite',
+        'gemini-3.5-flash',
+        'gemini-3.8-flash'
+      ];
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson?.error?.message || `HTTP ${res.status}: Error al autenticar con Gemini`);
+      let lastError = null;
+      for (const m of candidateModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${cleanKey}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: 'Responde únicamente con la palabra: PONG' }] }]
+            })
+          });
+
+          if (res.ok) {
+            return { success: true, message: `Conexión exitosa con Google Gemini (${m}). API Key activa y válida.` };
+          }
+
+          const errJson = await res.json().catch(() => ({}));
+          lastError = errJson?.error?.message || `HTTP ${res.status}`;
+        } catch (e) {
+          lastError = e.message;
+        }
       }
 
-      return { success: true, message: `Conexión exitosa con Google Gemini (${activeModel}).` };
+      throw new Error(lastError || 'No se pudo conectar con los modelos de Gemini.');
     }
 
     if (provider === 'openai' || provider === 'deepseek') {
@@ -145,9 +167,9 @@ export async function analyzeArchitectureWithAi({
   aiConfig
 }) {
   const fallbackArch = getProjectArchitecture(project?.id || 'pathway');
+  const cleanKey = (aiConfig?.apiKey || getEnvApiKey()).trim();
 
-  if (!aiConfig?.isAiEnabled || !aiConfig?.apiKey?.trim()) {
-    // Si no hay API key activa, retorna el motor estático offline de archifly
+  if (!cleanKey) {
     return {
       source: 'offline_engine',
       architecture: fallbackArch,
@@ -155,9 +177,8 @@ export async function analyzeArchitectureWithAi({
     };
   }
 
-  const cleanKey = aiConfig.apiKey.trim();
-  const provider = aiConfig.provider || 'gemini';
-  const model = aiConfig.model || 'gemini-2.0-flash';
+  const provider = aiConfig?.provider || 'gemini';
+  const initialModel = aiConfig?.model || 'gemini-3.5-flash-lite';
 
   // Preparar payload ligero con Zero-Code Leakage
   const promptPayload = {
@@ -269,35 +290,59 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
 
   try {
     let rawText = '';
+    let usedModel = initialModel;
 
     if (provider === 'gemini') {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: systemInstructions },
-                { text: `PROYECTO A ANALIZAR:\n${JSON.stringify(promptPayload, null, 2)}` }
-              ]
-            }
-          ],
-          generationConfig: {
-            temperature: 0.2,
-            responseMimeType: 'application/json'
-          }
-        })
-      });
+      const candidateModels = [
+        initialModel,
+        'gemini-3.5-flash-lite',
+        'gemini-3.5-flash',
+        'gemini-3.8-flash'
+      ];
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson?.error?.message || `HTTP ${res.status} al consultar Gemini API`);
+      let lastError = null;
+      let success = false;
+
+      for (const m of candidateModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${cleanKey}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    { text: systemInstructions },
+                    { text: `PROYECTO A ANALIZAR:\n${JSON.stringify(promptPayload, null, 2)}` }
+                  ]
+                }
+              ],
+              generationConfig: {
+                temperature: 0.2,
+                responseMimeType: 'application/json'
+              }
+            })
+          });
+
+          if (res.ok) {
+            const resJson = await res.json();
+            rawText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            usedModel = m;
+            success = true;
+            break;
+          }
+
+          const errJson = await res.json().catch(() => ({}));
+          lastError = errJson?.error?.message || `HTTP ${res.status}`;
+        } catch (e) {
+          lastError = e.message;
+        }
       }
 
-      const resJson = await res.json();
-      rawText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (!success) {
+        throw new Error(lastError || 'Fallo al invocar modelos de Gemini.');
+      }
     } else {
       // OpenAI / DeepSeek
       const endpoint = provider === 'deepseek'
@@ -311,7 +356,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
           'Authorization': `Bearer ${cleanKey}`
         },
         body: JSON.stringify({
-          model,
+          model: initialModel,
           messages: [
             { role: 'system', content: systemInstructions },
             { role: 'user', content: JSON.stringify(promptPayload) }
@@ -336,14 +381,14 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
     return {
       source: 'ai_model',
       provider,
-      model,
+      model: usedModel,
       architecture: {
         ...fallbackArch,
         ...parsed,
-        synthesizedBy: `archifly Engine con ${provider.toUpperCase()} (${model})`,
+        synthesizedBy: `archifly Engine con ${provider.toUpperCase()} (${usedModel})`,
         lastAnalyzed: new Date().toISOString()
       },
-      message: `Arquitectura analizada y sintetizada con éxito mediante ${provider.toUpperCase()} (${model}).`
+      message: `Arquitectura analizada y sintetizada con éxito mediante ${provider.toUpperCase()} (${usedModel}).`
     };
   } catch (err) {
     console.warn('Fallo en análisis con IA, recurriendo a motor estático:', err);
