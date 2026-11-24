@@ -36,6 +36,8 @@ export function getExtension(name = '') {
   const base = String(name).split('/').pop() || '';
   const lower = base.toLowerCase();
   if (lower.startsWith('.env')) return 'env';
+  if (lower === 'dockerfile' || lower.startsWith('dockerfile.')) return 'dockerfile';
+  if (lower === 'makefile' || lower.startsWith('makefile.')) return 'makefile';
   const idx = lower.lastIndexOf('.');
   if (idx <= 0) return '';
   return lower.slice(idx + 1);

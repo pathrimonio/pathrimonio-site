@@ -24,9 +24,14 @@ export const FILE_STATUS_OPTIONS = [
 // Helper to determine file icon and color theme based on format or category
 export function getFileVisualInfo(filename = '', category = '') {
   const lowerName = String(filename || '').toLowerCase();
-  const ext = lowerName.startsWith('.env')
+  const baseName = lowerName.split('/').pop() || lowerName;
+  const ext = baseName.startsWith('.env')
     ? 'env'
-    : (lowerName.split('.').pop() || '').toLowerCase();
+    : baseName === 'dockerfile' || baseName.startsWith('dockerfile.')
+      ? 'dockerfile'
+      : baseName === 'makefile' || baseName.startsWith('makefile.')
+        ? 'makefile'
+        : (baseName.split('.').pop() || '');
 
   switch (ext) {
     case 'apk':

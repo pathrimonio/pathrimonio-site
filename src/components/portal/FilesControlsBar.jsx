@@ -1,36 +1,62 @@
 import React from 'react';
 import confetti from 'canvas-confetti';
+import { formatBytes } from '../../data/projectTree';
+
+function Metric({ icon, iconClass, label, value, title }) {
+  return (
+    <div
+      className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl"
+      title={title}
+    >
+      <span className={`material-symbols-outlined text-[18px] ${iconClass}`}>{icon}</span>
+      <div className="flex flex-col">
+        <span className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider">{label}</span>
+        <span className="font-mono text-xs font-bold text-white">{value}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function FilesControlsBar({
   files = [],
+  treeNodes = [],
+  viewMode = 'tree',
+  onChangeViewMode,
+  projects = [],
+  activeProjectId,
+  onSelectProject,
   activeProject,
   onNotify,
-  onOpenUpload
+  onOpenUpload,
+  onOpenFolderImport,
+  onRefreshTree,
+  onOpenArchitecture
 }) {
+  const isTree = viewMode === 'tree';
+
   const totalFiles = files.length;
+  const totalSizeBytes = files.reduce((acc, file) => acc + (file.sizeBytes || 0), 0);
+  const totalSizeFormatted = formatBytes(totalSizeBytes);
 
-  // Total size calculated
-  const totalSizeBytes = files.reduce((acc, f) => acc + (f.sizeBytes || 0), 0);
-  const totalSizeFormatted = totalSizeBytes > 1024 * 1024 * 1024
-    ? `${(totalSizeBytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
-    : `${(totalSizeBytes / (1024 * 1024)).toFixed(1)} MB`;
-
-  // Official / Approved files count
-  const officialCount = files.filter(f => 
-    (f.status || '').toLowerCase().includes('vigente') || 
-    (f.status || '').toLowerCase().includes('aprobado') ||
-    (f.status || '').toLowerCase().includes('oficial')
+  const officialCount = files.filter((file) =>
+    (file.status || '').toLowerCase().includes('vigente') ||
+    (file.status || '').toLowerCase().includes('aprobado') ||
+    (file.status || '').toLowerCase().includes('oficial')
   ).length;
 
-  // Builds & Releases count (APKs, Releases)
-  const buildsCount = files.filter(f => 
-    (f.category || '').toLowerCase().includes('build') ||
-    (f.format || '').toLowerCase() === 'apk' ||
-    (f.format || '').toLowerCase() === 'aab' ||
-    (f.format || '').toLowerCase() === 'zip'
+  const buildsCount = files.filter((file) =>
+    (file.category || '').toLowerCase().includes('build') ||
+    (file.format || '').toLowerCase() === 'apk' ||
+    (file.format || '').toLowerCase() === 'aab' ||
+    (file.format || '').toLowerCase() === 'zip'
   ).length;
 
-  // Export File Manifest JSON
+  const treeFileCount = treeNodes.filter((node) => !node.isDirectory).length;
+  const treeFolderCount = treeNodes.filter((node) => node.isDirectory).length;
+  const treeSizeBytes = treeNodes.reduce((acc, node) => acc + (Number(node.sizeBytes) || 0), 0);
+  const treeSizeFormatted = formatBytes(treeSizeBytes);
+  const treeRecordCount = treeNodes.reduce((acc, node) => acc + (Number(node.recordCount) || 0), 0);
+
   const handleExportManifest = () => {
     try {
       const manifest = {
@@ -42,16 +68,16 @@ export default function FilesControlsBar({
         files
       };
 
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(manifest, null, 2));
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(manifest, null, 2));
       const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `manifiesto_archivos_${activeProject?.id || 'proyecto'}_${new Date().toISOString().split('T')[0]}.json`);
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `manifiesto_archivos_${activeProject?.id || 'proyecto'}_${new Date().toISOString().split('T')[0]}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
-      onNotify?.("Manifiesto de archivos exportado en formato JSON.");
+      onNotify?.('Manifiesto de archivos exportado en formato JSON.');
     } catch (_) {
-      onNotify?.("Error al exportar el manifiesto de archivos.");
+      onNotify?.('Error al exportar el manifiesto de archivos.');
     }
   };
 
@@ -67,12 +93,12 @@ export default function FilesControlsBar({
   return (
     <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-4 sm:px-6 lg:px-8 py-4">
       <div className="max-w-[1520px] mx-auto flex flex-col gap-y-4">
-        
+
         {/* Top Title & Macro Meta */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-x-3.5 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary font-space shrink-0 shadow-sm">
-              <span className="material-symbols-outlined text-[22px]">folder_open</span>
+              <span className="material-symbols-outlined text-[22px]">{isTree ? 'account_tree' : 'folder_open'}</span>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-x-2.5 flex-wrap">
@@ -80,96 +106,200 @@ export default function FilesControlsBar({
                   Archivos & Entregables del Proyecto — {activeProject ? activeProject.name : 'Pathrimonio'}
                 </h1>
                 <span className="px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-primary font-space text-[11px] font-medium tracking-wide">
-                  Repositorio de Documentación & Builds
+                  {isTree ? 'Árbol del Repositorio' : 'Repositorio de Documentación & Builds'}
                 </span>
               </div>
               <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate max-w-xl">
-                Almacén centralizado de ejecutables (APKs), especificaciones PRD, mockups Figma, contratos y scripts SQL del software.
+                {isTree
+                  ? 'Estructura completa de carpetas y archivos con su extensión, tamaño y registros abstractos por archivo.'
+                  : 'Almacén centralizado de ejecutables (APKs), especificaciones PRD, mockups Figma, contratos y scripts SQL del software.'}
               </p>
             </div>
           </div>
 
           {/* Metrics Pills */}
           <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-            {/* Metric 1: Total Files */}
-            <div className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl">
-              <span className="material-symbols-outlined text-[18px] text-primary">description</span>
-              <div className="flex flex-col">
-                <span className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider">Archivos</span>
-                <span className="font-mono text-xs font-bold text-white">{totalFiles} Items</span>
-              </div>
-            </div>
-
-            {/* Metric 2: Storage Size */}
-            <div className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl">
-              <span className="material-symbols-outlined text-[18px] text-secondary">cloud_done</span>
-              <div className="flex flex-col">
-                <span className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider">Almacenamiento</span>
-                <span className="font-mono text-xs font-bold text-white">{totalSizeFormatted}</span>
-              </div>
-            </div>
-
-            {/* Metric 3: Documentos Oficiales */}
-            <div className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl">
-              <span className="material-symbols-outlined text-[18px] text-emerald-400">verified</span>
-              <div className="flex flex-col">
-                <span className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider">Oficiales / Aprobados</span>
-                <span className="font-mono text-xs font-bold text-white">{officialCount} Docs</span>
-              </div>
-            </div>
-
-            {/* Metric 4: Builds & Releases */}
-            <div className="flex items-center gap-2 bg-surface-container-low border border-outline-variant px-3 py-1.5 rounded-xl">
-              <span className="material-symbols-outlined text-[18px] text-cyan-300">deployed_code</span>
-              <div className="flex flex-col">
-                <span className="font-space text-[10px] text-on-surface-variant uppercase tracking-wider">Entregables & Builds</span>
-                <span className="font-mono text-xs font-bold text-white">{buildsCount} Releases</span>
-              </div>
-            </div>
+            {isTree ? (
+              <>
+                <Metric
+                  icon="description"
+                  iconClass="text-primary"
+                  label="Archivos"
+                  value={`${treeFileCount} Items`}
+                  title="Cantidad de archivos en el árbol"
+                />
+                <Metric
+                  icon="folder"
+                  iconClass="text-secondary"
+                  label="Carpetas"
+                  value={`${treeFolderCount} Dir`}
+                  title="Cantidad de carpetas en el árbol"
+                />
+                <Metric
+                  icon="cloud_done"
+                  iconClass="text-secondary"
+                  label="Almacenamiento"
+                  value={treeSizeFormatted}
+                  title="Tamaño total de los archivos del árbol"
+                />
+                <Metric
+                  icon="data_object"
+                  iconClass="text-cyan-300"
+                  label="Registros"
+                  value={`${treeRecordCount} Reg`}
+                  title="Registros abstractos cargados en los archivos"
+                />
+              </>
+            ) : (
+              <>
+                <Metric
+                  icon="description"
+                  iconClass="text-primary"
+                  label="Archivos"
+                  value={`${totalFiles} Items`}
+                  title="Cantidad de entregables registrados"
+                />
+                <Metric
+                  icon="cloud_done"
+                  iconClass="text-secondary"
+                  label="Almacenamiento"
+                  value={totalSizeFormatted}
+                  title="Tamaño total de los entregables"
+                />
+                <Metric
+                  icon="verified"
+                  iconClass="text-emerald-400"
+                  label="Oficiales / Aprobados"
+                  value={`${officialCount} Docs`}
+                  title="Documentos vigentes o aprobados"
+                />
+                <Metric
+                  icon="deployed_code"
+                  iconClass="text-cyan-300"
+                  label="Entregables & Builds"
+                  value={`${buildsCount} Releases`}
+                  title="Builds, APKs y paquetes de release"
+                />
+              </>
+            )}
           </div>
         </div>
 
         {/* Bottom Actions Row */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-outline-variant/40">
-          <div className="flex items-center gap-2 text-xs text-on-surface-variant">
-            <span className="material-symbols-outlined text-primary text-[16px]">info</span>
-            <span>
-              Los archivos se vinculan con <strong>Historias de Usuario</strong>, <strong>Interfaces</strong> y <strong>Modelos de Datos</strong> para asegurar trazabilidad.
-            </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Project selector */}
+            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
+              <span className="material-symbols-outlined text-primary text-[16px]">folder_managed</span>
+              <label className="text-on-surface-variant text-[11px] font-jakarta">Proyecto:</label>
+              <select
+                value={activeProjectId || 'all'}
+                onChange={(event) => onSelectProject?.(event.target.value)}
+                className="bg-transparent text-white font-space text-[11px] font-semibold focus:outline-none cursor-pointer max-w-[190px] truncate"
+                title="Seleccionar proyecto"
+              >
+                <option value="all" className="bg-surface-container-highest text-white">Todos los Proyectos</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id} className="bg-surface-container-highest text-white">
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* View mode tabs */}
+            <div className="flex items-center bg-surface-container-highest p-1 rounded-xl border border-outline-variant">
+              <button
+                type="button"
+                onClick={() => onChangeViewMode?.('tree')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-space text-[11px] transition-colors ${
+                  isTree ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:text-white'
+                }`}
+                title="Ver el árbol completo de carpetas y archivos"
+              >
+                <span className="material-symbols-outlined text-[15px]">account_tree</span>
+                <span>Árbol del Proyecto</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => onChangeViewMode?.('deliverables')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-space text-[11px] transition-colors ${
+                  !isTree ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant hover:text-white'
+                }`}
+                title="Ver el repositorio de entregables y documentos"
+              >
+                <span className="material-symbols-outlined text-[15px]">folder_open</span>
+                <span>Entregables</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Subir Archivo Modal Trigger */}
-            {onOpenUpload && (
-              <button
-                onClick={onOpenUpload}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98] transition-all"
-                title="Subir o registrar nuevo archivo o entregable"
-              >
-                <span className="material-symbols-outlined text-[16px]">cloud_upload</span>
-                <span>Subir Archivo</span>
-              </button>
+            {isTree ? (
+              <>
+                {onRefreshTree && (
+                  <button
+                    onClick={onRefreshTree}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors"
+                    title="Actualizar el árbol desde Supabase"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">refresh</span>
+                    <span>Actualizar</span>
+                  </button>
+                )}
+                {onOpenFolderImport && (
+                  <button
+                    onClick={onOpenFolderImport}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98] transition-all"
+                    title="Cargar la estructura de una carpeta raíz"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">create_new_folder</span>
+                    <span>Cargar Carpeta Raíz</span>
+                  </button>
+                )}
+                {onOpenArchitecture && (
+                  <button
+                    onClick={onOpenArchitecture}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-space text-xs font-semibold transition-colors"
+                    title="Ver arquitectura del proyecto de software con la skill archifly"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">account_tree</span>
+                    <span>Arquitectura archifly</span>
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                {onOpenUpload && (
+                  <button
+                    onClick={onOpenUpload}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-[0_0_12px_rgba(245,166,35,0.25)] active:scale-[0.98] transition-all"
+                    title="Subir o registrar nuevo archivo o entregable"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">cloud_upload</span>
+                    <span>Subir Archivo</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={handleValidateRepository}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors"
+                  title="Auditar y validar integridad del repositorio de archivos"
+                >
+                  <span className="material-symbols-outlined text-[16px] text-emerald-400">task_alt</span>
+                  <span>Validar Integridad</span>
+                </button>
+
+                <button
+                  onClick={handleExportManifest}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-space text-xs font-semibold transition-colors"
+                  title="Exportar manifiesto completo en formato JSON"
+                >
+                  <span className="material-symbols-outlined text-[16px]">download</span>
+                  <span>Exportar Manifiesto (.json)</span>
+                </button>
+              </>
             )}
-
-            {/* Validar Repositorio */}
-            <button
-              onClick={handleValidateRepository}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors"
-              title="Auditar y validar integridad del repositorio de archivos"
-            >
-              <span className="material-symbols-outlined text-[16px] text-emerald-400">task_alt</span>
-              <span>Validar Integridad</span>
-            </button>
-
-            {/* Exportar Manifiesto JSON */}
-            <button
-              onClick={handleExportManifest}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-space text-xs font-semibold transition-colors"
-              title="Exportar manifiesto completo en formato JSON"
-            >
-              <span className="material-symbols-outlined text-[16px]">download</span>
-              <span>Exportar Manifiesto (.json)</span>
-            </button>
           </div>
         </div>
 

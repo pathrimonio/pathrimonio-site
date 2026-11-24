@@ -7,6 +7,7 @@ export const SYSTEM_MODULES = [
   { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US', desc: 'Requerimientos funcionales y criterios de aceptación' },
   { id: 'actors', label: 'Actores & Roles', icon: 'badge', badge: 'ROL', desc: 'Matriz de usuarios del negocio y permisos de acceso' },
   { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX', desc: 'Fichas de interfaces, mockups y puntos interactivos' },
+  { id: 'architecture', label: 'Arquitectura de Software', icon: 'account_tree', badge: 'ARCH', desc: 'Capas Clean/Hexagonal, contratos abstractos y síntesis con archifly' },
   { id: 'dataModel', label: 'Arquitectura de Datos', icon: 'database', badge: 'DB', desc: 'Tablas relacionales, DER y esquemas de arquitectura' },
   { id: 'files', label: 'Archivos & Manifiestos', icon: 'folder_open', badge: 'FILES', desc: 'Entregables, diagramas y contratos' },
   { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted', badge: 'PLAN', desc: 'Priorización consolidada de historias' },
@@ -19,6 +20,7 @@ export const SYSTEM_ACTIONS = [
   { id: 'canCreateRoles', label: 'Crear y registrar roles del negocio', module: 'actors' },
   { id: 'canCreateStories', label: 'Crear y registrar historias de usuario', module: 'stories' },
   { id: 'canCreateInterfaces', label: 'Crear y registrar interfaces de software', module: 'interfaces' },
+  { id: 'canManageArchitecture', label: 'Analizar y sincronizar arquitectura con archifly', module: 'architecture' },
   { id: 'canManageDataModels', label: 'Modelar tablas y ejecutar scripts SQL', module: 'dataModel' },
   { id: 'canManageFiles', label: 'Subir y administrar archivos del proyecto', module: 'files' },
   { id: 'canManageUsers', label: 'Determinar roles y permisos de acceso de usuarios', module: 'settings' }
@@ -32,11 +34,12 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-primary',
     badgeColor: 'bg-primary/20 text-primary border-primary/40',
     avatarBg: 'bg-primary',
-    allowedTabs: ['stories', 'actors', 'interfaces', 'dataModel', 'files', 'backlog', 'sprints', 'docs', 'settings'],
+    allowedTabs: ['stories', 'actors', 'interfaces', 'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs', 'settings'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
       canCreateInterfaces: true,
+      canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,
       canManageUsers: true
@@ -54,6 +57,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canCreateRoles: true,
       canCreateStories: true,
       canCreateInterfaces: true,
+      canManageArchitecture: false,
       canManageDataModels: false,
       canManageFiles: false,
       canManageUsers: false
@@ -66,11 +70,12 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-emerald-400',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     avatarBg: 'bg-emerald-600',
-    allowedTabs: ['stories', 'actors', 'interfaces', 'backlog', 'sprints', 'docs'],
+    allowedTabs: ['stories', 'actors', 'interfaces', 'architecture', 'backlog', 'sprints', 'docs'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
       canCreateInterfaces: true,
+      canManageArchitecture: true,
       canManageDataModels: false,
       canManageFiles: false,
       canManageUsers: false
@@ -83,11 +88,12 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-purple-400',
     badgeColor: 'bg-purple-500/20 text-purple-400 border-purple-500/40',
     avatarBg: 'bg-purple-500',
-    allowedTabs: ['stories', 'actors', 'interfaces', 'dataModel', 'files', 'docs'],
+    allowedTabs: ['stories', 'actors', 'interfaces', 'architecture', 'dataModel', 'files', 'docs'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
       canCreateInterfaces: true,
+      canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,
       canManageUsers: false
@@ -100,11 +106,12 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-teal-400',
     badgeColor: 'bg-teal-500/20 text-teal-400 border-teal-500/40',
     avatarBg: 'bg-teal-500',
-    allowedTabs: ['stories', 'actors', 'interfaces', 'docs'],
+    allowedTabs: ['stories', 'actors', 'interfaces', 'architecture', 'docs'],
     actions: {
       canCreateRoles: false,
       canCreateStories: false,
       canCreateInterfaces: false,
+      canManageArchitecture: false,
       canManageDataModels: false,
       canManageFiles: false,
       canManageUsers: false
@@ -117,11 +124,31 @@ export function loadRoleDefinitions() {
     const raw = localStorage.getItem(ROLE_PERMISSIONS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Ensure merge with defaults in case new properties were added
-      return {
-        ...DEFAULT_ROLE_DEFINITIONS,
-        ...parsed
-      };
+      const merged = { ...DEFAULT_ROLE_DEFINITIONS };
+      Object.keys(parsed).forEach(roleKey => {
+        const defaultRole = DEFAULT_ROLE_DEFINITIONS[roleKey] || {};
+        const parsedRole = parsed[roleKey] || {};
+        const allowedTabs = Array.isArray(parsedRole.allowedTabs) ? [...parsedRole.allowedTabs] : (defaultRole.allowedTabs || []);
+        // Guarantee 'architecture' is available if role previously had dataModel or docs or is Admin
+        if ((allowedTabs.includes('dataModel') || allowedTabs.includes('docs') || roleKey === 'Admin') && !allowedTabs.includes('architecture')) {
+          const insertIdx = allowedTabs.indexOf('interfaces');
+          if (insertIdx !== -1) {
+            allowedTabs.splice(insertIdx + 1, 0, 'architecture');
+          } else {
+            allowedTabs.push('architecture');
+          }
+        }
+        merged[roleKey] = {
+          ...defaultRole,
+          ...parsedRole,
+          allowedTabs,
+          actions: {
+            ...defaultRole.actions,
+            ...(parsedRole.actions || {})
+          }
+        };
+      });
+      return merged;
     }
   } catch (_) {}
   return DEFAULT_ROLE_DEFINITIONS;

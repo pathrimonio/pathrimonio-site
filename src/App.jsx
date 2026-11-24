@@ -5,6 +5,7 @@ import { INITIAL_PROJECTS } from './data/initialProjects';
 import { INITIAL_DATA_MODELS } from './data/initialDataModels';
 import { INITIAL_ACTORS } from './data/initialActors';
 import { INITIAL_FILES } from './data/initialFiles';
+import { summarizeTree } from './data/projectTree';
 import { mapSupabaseUser, DEMO_USERS } from './auth/authConfig';
 import { supabase, isSupabaseConfigured } from './lib/supabase';
 import {
@@ -19,6 +20,11 @@ import {
   deleteActor,
   saveFile,
   deleteFile,
+  fetchProjectTree,
+  replaceProjectTree,
+  fetchFileRecords,
+  addFileRecord,
+  deleteFileRecord,
   saveProject,
   addInterfaceModule,
   renameInterfaceModule,
@@ -65,6 +71,10 @@ import FilesControlsBar from './components/portal/FilesControlsBar';
 import FileUploader from './components/portal/FileUploader';
 import FileFeed from './components/portal/FileFeed';
 import FileDetailModal from './components/portal/FileDetailModal';
+import ProjectTreeView from './components/portal/ProjectTreeView';
+import FolderImportModal from './components/portal/FolderImportModal';
+import TreeFileDetailModal from './components/portal/TreeFileDetailModal';
+import SoftwareArchitectureView from './components/portal/SoftwareArchitectureView';
 import NewProjectModal from './components/portal/NewProjectModal';
 import InviteProjectMemberModal from './components/portal/InviteProjectMemberModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
@@ -250,6 +260,10 @@ export default function App() {
     return INITIAL_FILES;
   });
 
+  // ── Project file tree (folders + files loaded from a root folder)
+  const [treeNodes, setTreeNodes] = useState([]);
+  const [treeLoading, setTreeLoading] = useState(false);
+
   // ── Role Definitions & Access Matrix
   const [roleDefinitions, setRoleDefinitions] = useState(() => loadRoleDefinitions());
 
@@ -315,6 +329,7 @@ export default function App() {
   const [dataModelSearchQuery, setDataModelSearchQuery] = useState('');
   const [actorSearchQuery, setActorSearchQuery] = useState('');
   const [fileSearchQuery, setFileSearchQuery] = useState('');
+  const [filesViewMode, setFilesViewMode] = useState('tree');
 
   // ── Preselected Role from Collaborator Link or Selection
   const [preselectedRoleForStory, setPreselectedRoleForStory] = useState(null);
@@ -350,6 +365,9 @@ export default function App() {
   const [isCreateActorModalOpen, setIsCreateActorModalOpen] = useState(false);
   const [isCreateTableModalOpen, setIsCreateTableModalOpen] = useState(false);
   const [isCreateFileModalOpen, setIsCreateFileModalOpen] = useState(false);
+  const [isFolderImportOpen, setIsFolderImportOpen] = useState(false);
+  const [selectedTreeNode, setSelectedTreeNode] = useState(null);
+  const [isTreeFileModalOpen, setIsTreeFileModalOpen] = useState(false);
   const [isInviteMemberModalOpen, setIsInviteMemberModalOpen] = useState(false);
 
   // ── Contact modal (landing)
@@ -535,6 +553,34 @@ export default function App() {
 
     return () => { cancelled = true; };
   }, []);
+
+  // ── Supabase: load the project file tree when the Files tab is active
+  useEffect(() => {
+    if (activePortalTab !== 'files' || activeProjectId === 'all' || !isSupabaseConfigured) {
+      setTreeNodes([]);
+      setTreeLoading(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setTreeLoading(true);
+
+    fetchProjectTree(activeProjectId)
+      .then((nodes) => {
+        if (!cancelled) setTreeNodes(nodes);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        console.error('[Supabase] fetchProjectTree', error);
+        notify(`No se pudo cargar el árbol de archivos: ${error.message}`);
+      })
+      .finally(() => {
+        if (!cancelled) setTreeLoading(false);
+      });
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePortalTab, activeProjectId]);
 
   // ── Supabase: fire-and-forget persistence with user feedback
   const persist = (operation, label) => {
@@ -1165,6 +1211,90 @@ export default function App() {
     notify(`Archivo duplicado como "${cloned.name}".`);
   };
 
+  // ── Project tree handlers
+  const handleRefreshProjectTree = async () => {
+    if (activeProjectId === 'all' || !isSupabaseConfigured || treeLoading) return;
+    setTreeLoading(true);
+    try {
+      const nodes = await fetchProjectTree(activeProjectId);
+      setTreeNodes(nodes);
+      notify('Árbol de archivos actualizado.');
+    } catch (error) {
+      console.error('[Supabase] fetchProjectTree', error);
+      notify(`No se pudo actualizar el árbol: ${error.message}`);
+    } finally {
+      setTreeLoading(false);
+    }
+  };
+
+  const handleImportProjectTree = async ({ projectId, rootName, nodes }) => {
+    try {
+      const refreshed = await replaceProjectTree({ projectId, rootName, nodes });
+      const summary = summarizeTree(nodes);
+      setTreeNodes(refreshed);
+      if (projectId !== activeProjectId) {
+        setActiveProjectId(projectId);
+      }
+      notify(`Árbol "${rootName}" importado: ${summary.files} archivos y ${summary.folders} carpetas.`);
+      setIsFolderImportOpen(false);
+      return true;
+    } catch (error) {
+      console.error('[Supabase] replaceProjectTree', error);
+      notify(`No se pudo importar el árbol: ${error.message}`);
+      return false;
+    }
+  };
+
+  const handleSelectTreeNode = (node) => {
+    if (!node || node.isDirectory) return;
+    setSelectedTreeNode(node);
+    setIsTreeFileModalOpen(true);
+  };
+
+  const handleLoadFileRecords = async (nodeId) => {
+    try {
+      return await fetchFileRecords(nodeId);
+    } catch (error) {
+      console.error('[Supabase] fetchFileRecords', error);
+      notify(`No se pudieron cargar los registros: ${error.message}`);
+      return [];
+    }
+  };
+
+  const handleAddFileRecord = async (payload) => {
+    try {
+      const record = await addFileRecord(payload);
+      setTreeNodes((prev) => prev.map((node) => (
+        node.id === payload.nodeId
+          ? { ...node, recordCount: (node.recordCount || 0) + 1 }
+          : node
+      )));
+      notify('Registro abstracto agregado.');
+      return record;
+    } catch (error) {
+      console.error('[Supabase] addFileRecord', error);
+      notify(`No se pudo agregar el registro: ${error.message}`);
+      return null;
+    }
+  };
+
+  const handleDeleteFileRecord = async (record) => {
+    try {
+      await deleteFileRecord(record.id);
+      setTreeNodes((prev) => prev.map((node) => (
+        node.id === record.nodeId
+          ? { ...node, recordCount: Math.max((node.recordCount || 0) - 1, 0) }
+          : node
+      )));
+      notify('Registro abstracto eliminado.');
+      return true;
+    } catch (error) {
+      console.error('[Supabase] deleteFileRecord', error);
+      notify(`No se pudo eliminar el registro: ${error.message}`);
+      return false;
+    }
+  };
+
   // ── Filtered stories for feed
   const filteredStories = projectStories.filter(story => {
     const matchMod = activeModule === 'Todos' || story.module === activeModule;
@@ -1443,6 +1573,19 @@ export default function App() {
                       />
                     </div>
                   )}
+                  {activePortalTab === 'architecture' && (
+                    <SoftwareArchitectureView
+                      activeProject={activeProject}
+                      activeProjectId={activeProjectId}
+                      projects={projects}
+                      onSelectProject={setActiveProjectId}
+                      stories={projectStories}
+                      interfaces={projectInterfaces}
+                      dataModels={projectDataModels}
+                      treeNodes={treeNodes}
+                      onNotify={notify}
+                    />
+                  )}
                   {activePortalTab === 'dataModel' && (
                     <div className="flex flex-col w-full">
                       <DataModelControlsBar
@@ -1486,23 +1629,44 @@ export default function App() {
                     <div className="flex flex-col w-full">
                       <FilesControlsBar
                         files={projectFiles}
+                        treeNodes={treeNodes}
+                        viewMode={filesViewMode}
+                        onChangeViewMode={setFilesViewMode}
+                        projects={projects}
+                        activeProjectId={activeProjectId}
+                        onSelectProject={setActiveProjectId}
                         activeProject={activeProject}
                         onNotify={notify}
                         onOpenUpload={() => setIsCreateFileModalOpen(true)}
+                        onOpenFolderImport={() => setIsFolderImportOpen(true)}
+                        onRefreshTree={handleRefreshProjectTree}
+                        onOpenArchitecture={() => setActivePortalTab('architecture')}
                       />
                       <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                         <div className="w-full flex flex-col gap-y-4">
-                          <FileFeed
-                            files={projectFiles}
-                            onPreviewFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
-                            onEditFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
-                            onDeleteFile={handleDeleteFile}
-                            onDuplicateFile={handleDuplicateFile}
-                            searchQuery={fileSearchQuery}
-                            setSearchQuery={setFileSearchQuery}
-                            onNotify={notify}
-                            onOpenUpload={() => setIsCreateFileModalOpen(true)}
-                          />
+                          {filesViewMode === 'tree' ? (
+                            <ProjectTreeView
+                              nodes={treeNodes}
+                              loading={treeLoading}
+                              activeProject={activeProject}
+                              activeProjectId={activeProjectId}
+                              onSelectFile={handleSelectTreeNode}
+                              onImportFolder={() => setIsFolderImportOpen(true)}
+                              onRefresh={handleRefreshProjectTree}
+                            />
+                          ) : (
+                            <FileFeed
+                              files={projectFiles}
+                              onPreviewFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
+                              onEditFile={(f) => { setSelectedFile(f); setIsFileModalOpen(true); }}
+                              onDeleteFile={handleDeleteFile}
+                              onDuplicateFile={handleDuplicateFile}
+                              searchQuery={fileSearchQuery}
+                              setSearchQuery={setFileSearchQuery}
+                              onNotify={notify}
+                              onOpenUpload={() => setIsCreateFileModalOpen(true)}
+                            />
+                          )}
                         </div>
                       </div>
 
@@ -1512,6 +1676,25 @@ export default function App() {
                         onSaveFile={handleSaveFile}
                         onNotify={notify}
                         activeProjectId={activeProjectId}
+                      />
+
+                      <FolderImportModal
+                        isOpen={isFolderImportOpen}
+                        onClose={() => setIsFolderImportOpen(false)}
+                        projects={projects}
+                        defaultProjectId={activeProjectId}
+                        onImport={handleImportProjectTree}
+                        onNotify={notify}
+                      />
+
+                      <TreeFileDetailModal
+                        isOpen={isTreeFileModalOpen}
+                        node={selectedTreeNode}
+                        onClose={() => { setIsTreeFileModalOpen(false); setSelectedTreeNode(null); }}
+                        onLoadRecords={handleLoadFileRecords}
+                        onAddRecord={handleAddFileRecord}
+                        onDeleteRecord={handleDeleteFileRecord}
+                        onNotify={notify}
                       />
                     </div>
                   )}
