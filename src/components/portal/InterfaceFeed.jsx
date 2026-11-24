@@ -25,7 +25,33 @@ export default function InterfaceFeed({
   const [selectedModule, setSelectedModule] = useState('Todos');
   const [selectedRole, setSelectedRole] = useState('Todos');
   const [sortBy, setSortBy] = useState('priority'); // 'priority' | 'id' | 'status'
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'compact'
+  const [viewMode, setViewMode] = useState('horizontal'); // 'horizontal' | 'stack'
+  const [expandedCards, setExpandedCards] = useState({});
+  const scrollContainerRef = React.useRef(null);
+
+  const toggleCardExpanded = (id) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const allExpanded = sortedInterfaces.length > 0 && sortedInterfaces.every(i => expandedCards[i.id]);
+
+  const toggleAllCards = () => {
+    const nextState = !allExpanded;
+    const newMap = {};
+    sortedInterfaces.forEach(i => {
+      newMap[i.id] = nextState;
+    });
+    setExpandedCards(newMap);
+  };
+
+  const scrollHorizontally = (offset) => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+  };
 
   // If the active module filter is deleted from the catalog, fall back to "Todos".
   useEffect(() => {
@@ -277,16 +303,16 @@ export default function InterfaceFeed({
             {/* Toggle view mode */}
             <div className="flex items-center border border-outline-variant rounded-md overflow-hidden bg-surface-container-lowest">
               <button
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 transition-colors ${viewMode === 'grid' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-white'}`}
-                title="Vista de Tarjetas"
+                onClick={() => setViewMode('horizontal')}
+                className={`p-1.5 transition-colors ${viewMode === 'horizontal' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-white'}`}
+                title="Vista Horizontal (Tarjetas en hilera)"
               >
-                <span className="material-symbols-outlined text-[16px]">grid_view</span>
+                <span className="material-symbols-outlined text-[16px]">view_column</span>
               </button>
               <button
-                onClick={() => setViewMode('compact')}
-                className={`p-1.5 transition-colors ${viewMode === 'compact' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-white'}`}
-                title="Vista Compacta"
+                onClick={() => setViewMode('stack')}
+                className={`p-1.5 transition-colors ${viewMode === 'stack' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-white'}`}
+                title="Vista Apilada (Vertical)"
               >
                 <span className="material-symbols-outlined text-[16px]">view_agenda</span>
               </button>
@@ -321,19 +347,95 @@ export default function InterfaceFeed({
 
       {/* Interface Cards Feed */}
       {sortedInterfaces.length > 0 ? (
-        <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1' : 'grid-cols-1'}`}>
-          {sortedInterfaces.map(item => (
-            <InterfaceCard
-              key={item.id}
-              item={item}
-              onEdit={onEditInterface}
-              onDuplicate={onDuplicateInterface}
-              onDelete={onDeleteInterface}
-              onQuickStatusChange={onQuickStatusChange}
-              onToggleCriterion={onToggleCriterion}
-            />
-          ))}
-        </div>
+        viewMode === 'horizontal' ? (
+          <div className="flex flex-col gap-3">
+            {/* Barra de Navegación del Flujo Horizontal */}
+            <div className="flex items-center justify-between px-1 text-xs font-space text-on-surface-variant">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container border border-outline-variant text-white text-[11px] font-semibold shadow-sm">
+                  <span className="material-symbols-outlined text-[15px] text-primary">view_column</span>
+                  <span>Flujo Horizontal de Interfaces</span>
+                </span>
+                <span className="text-[11px] font-mono text-on-surface-variant">
+                  • {sortedInterfaces.length} {sortedInterfaces.length === 1 ? 'pantalla' : 'pantallas'}
+                </span>
+              </div>
+
+              {/* Botón Extender/Colapsar Todas + Flechas de Desplazamiento */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleAllCards}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant hover:border-primary text-white text-[11px] font-space transition-colors cursor-pointer shadow-sm"
+                  title={allExpanded ? 'Colapsar especificaciones de todas las interfaces' : 'Extender especificaciones de todas las interfaces'}
+                >
+                  <span className="material-symbols-outlined text-[15px] text-primary">
+                    {allExpanded ? 'unfold_less' : 'unfold_more'}
+                  </span>
+                  <span>{allExpanded ? 'Colapsar Todas' : 'Extender Todas'}</span>
+                </button>
+
+                <div className="flex items-center gap-1 border-l border-outline-variant/60 pl-2">
+                  <button
+                    type="button"
+                    onClick={() => scrollHorizontally(-480)}
+                    className="p-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white transition-colors cursor-pointer shadow-sm"
+                    title="Desplazar interfaces a la izquierda"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollHorizontally(480)}
+                    className="p-1 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant text-on-surface-variant hover:text-white transition-colors cursor-pointer shadow-sm"
+                    title="Desplazar interfaces a la derecha"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Contenedor de Fichas con Scroll Horizontal */}
+            <div 
+              ref={scrollContainerRef}
+              className="flex flex-row items-start gap-5 overflow-x-auto pb-6 pt-1 px-1 scroll-smooth snap-x snap-proximity"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              {sortedInterfaces.map(item => (
+                <InterfaceCard
+                  key={item.id}
+                  item={item}
+                  onEdit={onEditInterface}
+                  onDuplicate={onDuplicateInterface}
+                  onDelete={onDeleteInterface}
+                  onQuickStatusChange={onQuickStatusChange}
+                  onToggleCriterion={onToggleCriterion}
+                  isExpanded={expandedCards[item.id] ?? false}
+                  onToggleExpand={() => toggleCardExpanded(item.id)}
+                  layoutMode="horizontal"
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-5">
+            {sortedInterfaces.map(item => (
+              <InterfaceCard
+                key={item.id}
+                item={item}
+                onEdit={onEditInterface}
+                onDuplicate={onDuplicateInterface}
+                onDelete={onDeleteInterface}
+                onQuickStatusChange={onQuickStatusChange}
+                onToggleCriterion={onToggleCriterion}
+                isExpanded={expandedCards[item.id] ?? true}
+                onToggleExpand={() => toggleCardExpanded(item.id)}
+                layoutMode="stack"
+              />
+            ))}
+          </div>
+        )
       ) : (
         /* Empty State */
         <div className="bg-surface-container-low border border-outline-variant rounded-xl p-12 text-center flex flex-col items-center gap-3">

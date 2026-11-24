@@ -9,8 +9,21 @@ export default function InterfaceCard({
   onEdit,
   onDuplicate,
   onDelete,
-  onQuickStatusChange
+  onQuickStatusChange,
+  isExpanded: controlledExpanded,
+  onToggleExpand,
+  layoutMode = 'horizontal'
 }) {
+  const [localExpanded, setLocalExpanded] = useState(false);
+  const isDetailsExpanded = controlledExpanded !== undefined ? controlledExpanded : localExpanded;
+
+  const handleToggleExpand = () => {
+    if (onToggleExpand) {
+      onToggleExpand();
+    } else {
+      setLocalExpanded(prev => !prev);
+    }
+  };
   // Status badge styling helper
   const getStatusBadge = (status) => {
     switch (status) {
@@ -191,10 +204,16 @@ export default function InterfaceCard({
     </div>
   );
 
+  const cardWidthClass = layoutMode === 'horizontal'
+    ? (isDetailsExpanded
+        ? 'w-[880px] lg:w-[980px] xl:w-[1040px] shrink-0 snap-start'
+        : 'w-[360px] sm:w-[420px] shrink-0 snap-start')
+    : 'w-full';
+
   return (
-    <article className="group bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-200 shadow-md hover:shadow-xl">
+    <article className={`group bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-300 shadow-md hover:shadow-xl ${cardWidthClass}`}>
       
-      {/* ── 1. Header: Número y Título de Pantalla + Estado ── */}
+      {/* ── 1. Header: Número y Título de Pantalla + Estado + Extender/Colapsar ── */}
       <div className="flex flex-col gap-3 border-b border-outline-variant/60 pb-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 flex-wrap">
@@ -225,11 +244,32 @@ export default function InterfaceCard({
             )}
           </div>
 
-          {/* Status Pill */}
-          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-space font-semibold ${statusMeta.bg}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}></span>
-            <span className="material-symbols-outlined text-[15px]">{statusMeta.icon}</span>
-            <span>{statusMeta.label}</span>
+          {/* Límite derecho: Status Pill + Botón de Extender/Colapsar */}
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-space font-semibold ${statusMeta.bg}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}></span>
+              <span className="material-symbols-outlined text-[15px]">{statusMeta.icon}</span>
+              <span>{statusMeta.label}</span>
+            </div>
+
+            {/* Botón de Colapsar / Extender hacia derecha e izquierda */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleExpand();
+              }}
+              className="p-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant hover:border-primary text-on-surface-variant hover:text-primary transition-all duration-200 cursor-pointer flex items-center justify-center group/exp shadow-sm"
+              title={isDetailsExpanded ? 'Colapsar especificaciones y datos (hacia la izquierda)' : 'Extender especificación técnica y datos (hacia la derecha)'}
+              aria-label={isDetailsExpanded ? 'Colapsar especificaciones' : 'Extender especificaciones'}
+              aria-expanded={isDetailsExpanded}
+            >
+              <span className={`material-symbols-outlined text-[18px] text-on-surface-variant group-hover/exp:text-primary transition-transform duration-200 ${
+                isDetailsExpanded ? 'rotate-180' : ''
+              }`}>
+                chevron_right
+              </span>
+            </button>
           </div>
         </div>
 
@@ -326,6 +366,47 @@ export default function InterfaceCard({
             )}
           </div>
         );
+
+        // Si las especificaciones están colapsadas (isDetailsExpanded === false):
+        // Se ocultan Cuadro de Especificación Técnica y Datos Utilizados, dejando la vista compacta
+        if (!isDetailsExpanded) {
+          return (
+            <div className="flex flex-col gap-4">
+              {previewBlock}
+              <button
+                type="button"
+                onClick={handleToggleExpand}
+                className="w-full py-2 px-3 rounded-xl bg-surface-container-lowest/80 hover:bg-surface-container border border-outline-variant/60 hover:border-primary/40 text-on-surface-variant hover:text-white transition-all flex items-center justify-between text-xs font-space cursor-pointer group/bar shadow-sm"
+                title="Extender cuadro técnico y datos asociados hacia la derecha"
+              >
+                <span className="flex items-center gap-1.5 text-on-surface-variant group-hover/bar:text-white">
+                  <span className="material-symbols-outlined text-[15px] text-primary">table_chart</span>
+                  <span>Especificación Técnica & Datos {hasDataUsage ? `(${item.dataUsage.length})` : ''}</span>
+                </span>
+                <span className="flex items-center gap-1 text-[11px] font-mono text-primary font-semibold">
+                  <span>Extender</span>
+                  <span className="material-symbols-outlined text-[15px] group-hover/bar:translate-x-0.5 transition-transform">chevron_right</span>
+                </span>
+              </button>
+            </div>
+          );
+        }
+
+        // Si están extendidas (isDetailsExpanded === true):
+        // En flujo horizontal: se distribuye el Mockup a la izquierda y las especificaciones técnicas/datos a la derecha
+        if (layoutMode === 'horizontal') {
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-[minmax(320px,380px)_minmax(0,1fr)] gap-6 items-start">
+              <div className="min-w-0">
+                {previewBlock}
+              </div>
+              <div className="flex flex-col gap-5 min-w-0">
+                {specTableBlock}
+                {dataUsageBlock}
+              </div>
+            </div>
+          );
+        }
 
         if (isPhoneLayout) {
           return (
