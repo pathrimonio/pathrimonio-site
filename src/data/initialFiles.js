@@ -23,7 +23,10 @@ export const FILE_STATUS_OPTIONS = [
 
 // Helper to determine file icon and color theme based on format or category
 export function getFileVisualInfo(filename = '', category = '') {
-  const ext = (filename.split('.').pop() || '').toLowerCase();
+  const lowerName = String(filename || '').toLowerCase();
+  const ext = lowerName.startsWith('.env')
+    ? 'env'
+    : (lowerName.split('.').pop() || '').toLowerCase();
 
   switch (ext) {
     case 'apk':
@@ -99,6 +102,126 @@ export function getFileVisualInfo(filename = '', category = '') {
         colorClass: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
         badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
         label: 'Estructura JSON'
+      };
+    case 'js':
+    case 'jsx':
+    case 'ts':
+    case 'tsx':
+    case 'mjs':
+    case 'cjs':
+      return {
+        icon: 'code',
+        colorClass: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30',
+        badgeColor: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/40',
+        label: 'Código JS / TS'
+      };
+    case 'py':
+      return {
+        icon: 'terminal',
+        colorClass: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
+        badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+        label: 'Python'
+      };
+    case 'java':
+    case 'kt':
+    case 'kts':
+    case 'cs':
+    case 'go':
+    case 'rb':
+    case 'php':
+      return {
+        icon: 'code',
+        colorClass: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30',
+        badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
+        label: 'Código Fuente'
+      };
+    case 'html':
+    case 'htm':
+      return {
+        icon: 'html',
+        colorClass: 'text-orange-400 bg-orange-500/10 border-orange-500/30',
+        badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+        label: 'HTML'
+      };
+    case 'css':
+    case 'scss':
+    case 'sass':
+    case 'less':
+      return {
+        icon: 'css',
+        colorClass: 'text-sky-400 bg-sky-500/10 border-sky-500/30',
+        badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+        label: 'Estilos CSS'
+      };
+    case 'md':
+    case 'mdx':
+      return {
+        icon: 'article',
+        colorClass: 'text-slate-300 bg-slate-500/10 border-slate-500/30',
+        badgeColor: 'bg-slate-500/20 text-slate-200 border-slate-500/40',
+        label: 'Markdown'
+      };
+    case 'yml':
+    case 'yaml':
+      return {
+        icon: 'settings',
+        colorClass: 'text-teal-400 bg-teal-500/10 border-teal-500/30',
+        badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
+        label: 'Configuración YAML'
+      };
+    case 'env':
+      return {
+        icon: 'key',
+        colorClass: 'text-lime-400 bg-lime-500/10 border-lime-500/30',
+        badgeColor: 'bg-lime-500/20 text-lime-300 border-lime-500/40',
+        label: 'Variables de Entorno'
+      };
+    case 'sh':
+    case 'bash':
+    case 'zsh':
+    case 'ps1':
+    case 'bat':
+    case 'cmd':
+      return {
+        icon: 'terminal',
+        colorClass: 'text-green-400 bg-green-500/10 border-green-500/30',
+        badgeColor: 'bg-green-500/20 text-green-300 border-green-500/40',
+        label: 'Script de Terminal'
+      };
+    case 'xml':
+      return {
+        icon: 'code',
+        colorClass: 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+        badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+        label: 'XML'
+      };
+    case 'txt':
+      return {
+        icon: 'description',
+        colorClass: 'text-on-surface-variant bg-surface-container border-outline-variant',
+        badgeColor: 'bg-surface-container-high text-on-surface-variant border-outline-variant',
+        label: 'Texto Plano'
+      };
+    case 'lock':
+      return {
+        icon: 'lock',
+        colorClass: 'text-slate-400 bg-slate-500/10 border-slate-500/30',
+        badgeColor: 'bg-slate-500/20 text-slate-300 border-slate-500/40',
+        label: 'Lockfile'
+      };
+    case 'dockerfile':
+      return {
+        icon: 'deployed_code',
+        colorClass: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
+        badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+        label: 'Dockerfile'
+      };
+    case 'makefile':
+      return {
+        icon: 'build',
+        colorClass: 'text-orange-400 bg-orange-500/10 border-orange-500/30',
+        badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
+        label: 'Makefile'
       };
     default:
       return {

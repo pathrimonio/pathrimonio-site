@@ -215,6 +215,35 @@ const mapFile = (row) => ({
   contentPreview: row.content_preview
 });
 
+const mapProjectTreeNode = (row) => ({
+  id: row.id,
+  projectId: row.project_id,
+  rootName: row.root_name,
+  path: row.path,
+  parentPath: row.parent_path,
+  name: row.name,
+  extension: row.extension,
+  isDirectory: row.is_directory,
+  sizeBytes: row.size_bytes,
+  depth: row.depth,
+  recordCount: row.record_count,
+  source: row.source,
+  createdAt: row.created_at
+});
+
+const mapFileRecord = (row) => ({
+  id: row.id,
+  nodeId: row.node_id,
+  projectId: row.project_id,
+  recordType: row.record_type,
+  name: row.name,
+  signature: row.signature,
+  description: row.description,
+  lineNumber: row.line_number,
+  metadata: row.metadata || {},
+  createdAt: row.created_at
+});
+
 // ── Read ──────────────────────────────────────────────────────
 export async function fetchWorkspace() {
   const db = requireSupabase();
@@ -500,6 +529,81 @@ export async function saveFile(file) {
 export async function deleteFile(id) {
   const db = requireSupabase();
   check(await db.from('files').delete().eq('id', id));
+}
+
+// ── Project tree ──────────────────────────────────────────────
+export async function fetchProjectTree(projectId) {
+  const db = requireSupabase();
+  const pageSize = 1000;
+  let from = 0;
+  const rows = [];
+
+  while (true) {
+    const { data, error } = await db
+      .from('project_tree_nodes')
+      .select('*')
+      .eq('project_id', projectId)
+      .order('root_name', { ascending: true })
+      .order('path', { ascending: true })
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return rows.map(mapProjectTreeNode);
+}
+
+export async function replaceProjectTree({ projectId, rootName, nodes }) {
+  const db = requireSupabase();
+  const { error } = await db.rpc('replace_project_tree', {
+    target_project_id: projectId,
+    target_root_name: rootName,
+    nodes
+  });
+  if (error) throw error;
+  return fetchProjectTree(projectId);
+}
+
+export async function fetchFileRecords(nodeId) {
+  const db = requireSupabase();
+  const { data, error } = await db
+    .from('file_records')
+    .select('*')
+    .eq('node_id', nodeId)
+    .order('record_type', { ascending: true })
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+  return data.map(mapFileRecord);
+}
+
+export async function addFileRecord(record) {
+  const db = requireSupabase();
+  const { data, error } = await db
+    .from('file_records')
+    .insert({
+      node_id: record.nodeId,
+      project_id: record.projectId,
+      record_type: record.recordType,
+      name: record.name,
+      signature: orNull(record.signature),
+      description: orNull(record.description),
+      line_number: record.lineNumber ?? null,
+      metadata: record.metadata || {}
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return mapFileRecord(data);
+}
+
+export async function deleteFileRecord(id) {
+  const db = requireSupabase();
+  check(await db.from('file_records').delete().eq('id', id));
 }
 
 // ── Projects ──────────────────────────────────────────────────
