@@ -7,7 +7,7 @@ export const SYSTEM_MODULES = [
   { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US', desc: 'Requerimientos funcionales y criterios de aceptación' },
   { id: 'actors', label: 'Actores & Roles', icon: 'badge', badge: 'ROL', desc: 'Matriz de usuarios del negocio y permisos de acceso' },
   { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX', desc: 'Fichas de interfaces, mockups y puntos interactivos' },
-  { id: 'architecture', label: 'Arquitectura de Software', icon: 'account_tree', badge: 'ARCH', desc: 'Capas Clean/Hexagonal, contratos abstractos y síntesis con archifly' },
+  { id: 'architecture', label: 'Arquitectura de Software', icon: 'account_tree', badge: 'ARCH', desc: 'Capas Clean/Hexagonal, contratos abstractos y síntesis con archify' },
   { id: 'dataModel', label: 'Arquitectura de Datos', icon: 'database', badge: 'DB', desc: 'Tablas relacionales, DER y esquemas de arquitectura' },
   { id: 'files', label: 'Archivos & Manifiestos', icon: 'folder_open', badge: 'FILES', desc: 'Entregables, diagramas y contratos' },
   { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted', badge: 'PLAN', desc: 'Priorización consolidada de historias' },
@@ -20,7 +20,7 @@ export const SYSTEM_ACTIONS = [
   { id: 'canCreateRoles', label: 'Crear y registrar roles del negocio', module: 'actors' },
   { id: 'canCreateStories', label: 'Crear y registrar historias de usuario', module: 'stories' },
   { id: 'canCreateInterfaces', label: 'Crear y registrar interfaces de software', module: 'interfaces' },
-  { id: 'canManageArchitecture', label: 'Analizar y sincronizar arquitectura con archifly', module: 'architecture' },
+  { id: 'canManageArchitecture', label: 'Analizar y sincronizar arquitectura con archify', module: 'architecture' },
   { id: 'canManageDataModels', label: 'Modelar tablas y ejecutar scripts SQL', module: 'dataModel' },
   { id: 'canManageFiles', label: 'Subir y administrar archivos del proyecto', module: 'files' },
   { id: 'canManageUsers', label: 'Determinar roles y permisos de acceso de usuarios', module: 'settings' }

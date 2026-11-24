@@ -1,0 +1,79 @@
+[
+  {
+    "projectId": "smatad",
+    "slug": "arquitectura-implementacion",
+    "title": "Arquitectura de Implementación - SMATAD",
+    "diagramType": "architecture",
+    "publicUrl": "/archify/smatad-arquitectura-implementacion.html",
+    "generatorVersion": "archify 3.3.0",
+    "sourcePath": "F:\\SMATAD\\arquitectura_implementacion.html",
+    "sizeBytes": 960271,
+    "isPrimary": true
+  },
+  {
+    "projectId": "smatad",
+    "slug": "arquitectura-operativa",
+    "title": "SMATAD · Arquitectura Operativa",
+    "diagramType": "architecture",
+    "publicUrl": "/archify/smatad-architecture.html",
+    "generatorVersion": "archify 3.2.0",
+    "sourcePath": "F:\\SMATAD\\smatad-rn-prototype\\.archify\\architecture-smatad-20261025-201346\\smatad-architecture.html",
+    "sizeBytes": 869454,
+    "isPrimary": false
+  },
+  {
+    "projectId": "smatad",
+    "slug": "gobierno-agentes",
+    "title": "SMATAD · Gobierno y Orquestación",
+    "diagramType": "architecture",
+    "publicUrl": "/archify/smatad-gobierno-agentes.html",
+    "generatorVersion": "archify 3.2.0",
+    "sourcePath": "F:\\SMATAD\\smatad-rn-prototype\\.archify\\architecture-gobierno-agentes-20261026-114442\\smatad-gobierno-agentes.html",
+    "sizeBytes": 842878,
+    "isPrimary": false
+  },
+  {
+    "projectId": "smatad",
+    "slug": "despliegue",
+    "title": "SMATAD · Despliegue Web y Móvil",
+    "diagramType": "architecture",
+    "publicUrl": "/archify/smatad-despliegue.html",
+    "generatorVersion": "archify 3.2.0",
+    "sourcePath": "F:\\SMATAD\\smatad-rn-prototype\\.archify\\architecture-despliegue-20261026-115240\\smatad-despliegue.html",
+    "sizeBytes": 853997,
+    "isPrimary": false
+  },
+  {
+    "projectId": "pathway",
+    "slug": "arquitectura-implementacion",
+    "title": "Arquitectura de Implementación - Pathway",
+    "diagramType": "architecture",
+    "publicUrl": "/archify/pathway-architecture.html",
+    "generatorVersion": "archify 3.3.0",
+    "sourcePath": "F:\\Pathway (archify 3.3.0 showcase)",
+    "sizeBytes": 958538,
+    "isPrimary": true
+  },
+  {
+    "projectId": "core-hub",
+    "slug": "arquitectura-implementacion",
+    "title": "Arquitectura de Implementación - Core Banking & Impact Hub",
+    "diagramType": "architecture",
+    "publicUrl": "/archify/core-hub-architecture.html",
+    "generatorVersion": "archify 3.3.0",
+    "sourcePath": "Core Hub (archify 3.3.0 showcase)",
+    "sizeBytes": 941400,
+    "isPrimary": true
+  },
+  {
+    "projectId": "portal-admin",
+    "slug": "arquitectura-implementacion",
+    "title": "Arquitectura de Implementación - Sistema de Gestión & Ventas (ERP)",
+    "diagramType": "architecture",
+    "publicUrl": "/archify/portal-admin-architecture.html",
+    "generatorVersion": "archify 3.3.0",
+    "sourcePath": "Sistema de Gestión ERP (archify 3.3.0 showcase)",
+    "sizeBytes": 940869,
+    "isPrimary": true
+  }
+]

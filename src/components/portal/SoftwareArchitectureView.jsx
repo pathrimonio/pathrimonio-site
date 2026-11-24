@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { getProjectArchitecture } from '../../data/initialArchitectures';
 import {
@@ -8,6 +8,65 @@ import {
   testAiConnection,
   analyzeArchitectureWithAi
 } from '../../services/archiflyAiService';
+
+function formatArtifactBytes(bytes = 0) {
+  const n = Number(bytes) || 0;
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function prepareArchifySrcDoc(rawHtml, { theme = 'dark', embed = false } = {}) {
+  if (!rawHtml) return '';
+  const safeTheme = theme === 'light' ? 'light' : 'dark';
+  const injectScript = `<script>
+    (function () {
+      try {
+        localStorage.setItem('archify-theme', '${safeTheme}');
+        document.documentElement.setAttribute('data-theme', '${safeTheme}');
+        ${embed
+          ? "document.documentElement.setAttribute('data-embed', 'true');"
+          : "document.documentElement.removeAttribute('data-embed');"}
+      } catch (_) {}
+    })();
+  </script>`;
+  if (/<head[^>]*>/i.test(rawHtml)) {
+    return rawHtml.replace(/<head[^>]*>/i, (m) => `${m}\n${injectScript}`);
+  }
+  return `${injectScript}\n${rawHtml}`;
+}
+
+function parseUploadedArchifyHtml(rawHtml, fileName, projectId) {
+  const titleMatch = rawHtml.match(/<title>(.*?)<\/title>/i);
+  const parsedTitle = titleMatch
+    ? titleMatch[1].replace(/\s*·\s*Diagrama\s*$/i, '').trim()
+    : fileName.replace(/\.html?$/i, '');
+  const genMatch = rawHtml.match(/<meta\s+name="generator"\s+content="([^"]+)"/i);
+  const generatorVersion = genMatch ? genMatch[1].trim() : 'archify 3.3.0';
+  const baseSlug = fileName
+    .toLowerCase()
+    .replace(/\.html?$/i, '')
+    .replace(new RegExp(`^${projectId}-`, 'i'), '')
+    .replace(/_/g, '-')
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'arquitectura-implementacion';
+
+  return {
+    projectId,
+    slug: baseSlug,
+    title: parsedTitle || fileName,
+    diagramType: 'architecture',
+    htmlContent: rawHtml,
+    generatorVersion,
+    sourcePath: fileName,
+    sizeBytes: new TextEncoder().encode(rawHtml).length,
+    updatedAt: new Date().toISOString(),
+    metadata: {
+      isPrimary: true,
+      origin: 'local-file-upload'
+    }
+  };
+}
 
 function inferLayerIdFromPath(path = '', recordType = '') {
   const p = String(path).toLowerCase();
@@ -47,9 +106,22 @@ export default function SoftwareArchitectureView({
   dataModels = [],
   treeNodes = [],
   fileRecords = [],
+  architectureArtifacts = [],
+  archArtifactsLoading = false,
+  onSaveArchitectureArtifact,
+  onRefreshArchitectureArtifacts,
   onNotify
 }) {
-  const [activeSubTab, setActiveSubTab] = useState('layers'); // 'layers' | 'diagram' | 'contracts' | 'traceability' | 'health'
+  const effectiveProjectId = (activeProjectId && activeProjectId !== 'all')
+    ? activeProjectId
+    : (projects[0]?.id || 'pathway');
+
+  const resolvedProject = useMemo(() => {
+    if (activeProject && activeProject.id === effectiveProjectId) return activeProject;
+    return projects.find((p) => p.id === effectiveProjectId) || activeProject || null;
+  }, [activeProject, effectiveProjectId, projects]);
+
+  const [activeSubTab, setActiveSubTab] = useState('archify'); // 'archify' | 'layers' | 'diagram' | 'contracts' | 'traceability' | 'health'
   const [selectedLayerId, setSelectedLayerId] = useState('all');
   const [contractSearchQuery, setContractSearchQuery] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -57,6 +129,104 @@ export default function SoftwareArchitectureView({
   const [showAddContractModal, setShowAddContractModal] = useState(false);
   const [copiedMermaid, setCopiedMermaid] = useState(false);
   const [customContracts, setCustomContracts] = useState([]);
+
+  // Archify HTML Viewer state
+  const [staticManifest, setStaticManifest] = useState([]);
+  const [localSyncedArtifacts, setLocalSyncedArtifacts] = useState([]);
+  const [selectedArtifactSlug, setSelectedArtifactSlug] = useState('');
+  const [archifyTheme, setArchifyTheme] = useState(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    }
+    return 'dark';
+  });
+  const [archifyEmbedMode, setArchifyEmbedMode] = useState(false);
+  const [archifyHeightMode, setArchifyHeightMode] = useState('tall'); // 'tall' | 'expanded'
+  const [localRepoPath, setLocalRepoPath] = useState('');
+  const [showSyncPathBar, setShowSyncPathBar] = useState(false);
+  const htmlUploadInputRef = useRef(null);
+
+  const isLocalhost = typeof window !== 'undefined' &&
+    ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+
+  // Sync Archify diagram theme automatically when Pathrimonio switches Dark/Light mode
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      const nextTheme = root.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      setArchifyTheme(nextTheme);
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
+  // Load static Archify manifest fallback from /archify/manifest.json
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/archify/manifest.json')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((items) => {
+        if (!cancelled && Array.isArray(items)) setStaticManifest(items);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  // Merge artifacts: Localhost/Uploaded > Supabase Realtime > Prebuilt Static Manifest
+  const projectArchArtifacts = useMemo(() => {
+    const bySlug = new Map();
+
+    for (const item of staticManifest) {
+      if (item.projectId !== effectiveProjectId) continue;
+      bySlug.set(item.slug, {
+        ...item,
+        sourceOrigin: 'static-bundle'
+      });
+    }
+
+    for (const item of architectureArtifacts) {
+      if (item.projectId && item.projectId !== effectiveProjectId) continue;
+      const existing = bySlug.get(item.slug);
+      bySlug.set(item.slug, {
+        ...(existing || {}),
+        ...item,
+        sourceOrigin: 'supabase'
+      });
+    }
+
+    for (const item of localSyncedArtifacts) {
+      if (item.projectId !== effectiveProjectId) continue;
+      const existing = bySlug.get(item.slug);
+      bySlug.set(item.slug, {
+        ...(existing || {}),
+        ...item,
+        sourceOrigin: 'localhost'
+      });
+    }
+
+    return Array.from(bySlug.values()).sort((a, b) => {
+      const aPrimary = Boolean(a.metadata?.isPrimary ?? a.isPrimary);
+      const bPrimary = Boolean(b.metadata?.isPrimary ?? b.isPrimary);
+      if (aPrimary !== bPrimary) return aPrimary ? -1 : 1;
+      return String(a.title || '').localeCompare(String(b.title || ''));
+    });
+  }, [staticManifest, architectureArtifacts, localSyncedArtifacts, effectiveProjectId]);
+
+  useEffect(() => {
+    if (projectArchArtifacts.length === 0) {
+      setSelectedArtifactSlug('');
+      return;
+    }
+    const stillExists = projectArchArtifacts.some((a) => a.slug === selectedArtifactSlug);
+    if (!stillExists) {
+      setSelectedArtifactSlug(projectArchArtifacts[0].slug);
+    }
+  }, [projectArchArtifacts, selectedArtifactSlug]);
+
+  const selectedArtifact = useMemo(() => {
+    return projectArchArtifacts.find((a) => a.slug === selectedArtifactSlug) || projectArchArtifacts[0] || null;
+  }, [projectArchArtifacts, selectedArtifactSlug]);
 
   // AI Configuration State
   const [aiConfig, setAiConfig] = useState(() => loadArchiflyAiConfig());
@@ -84,8 +254,8 @@ export default function SoftwareArchitectureView({
 
   // Base architecture for the active project
   const baseArchitecture = useMemo(() => {
-    return getProjectArchitecture(activeProjectId);
-  }, [activeProjectId]);
+    return getProjectArchitecture(effectiveProjectId);
+  }, [effectiveProjectId]);
 
   // Active architecture (AI synthesized or base)
   const architecture = useMemo(() => {
@@ -95,7 +265,7 @@ export default function SoftwareArchitectureView({
   // Reset dynamic architecture when changing project unless same
   useEffect(() => {
     setDynamicArchitecture(null);
-  }, [activeProjectId]);
+  }, [effectiveProjectId]);
 
   // Current active provider metadata
   const currentProviderMeta = useMemo(() => {
@@ -145,7 +315,7 @@ export default function SoftwareArchitectureView({
         : [];
 
       const extraComponents = customContracts
-        .filter(c => c.layerId === layer.id && (!c.projectId || c.projectId === activeProjectId))
+        .filter(c => c.layerId === layer.id && (!c.projectId || c.projectId === effectiveProjectId))
         .map(c => ({
           name: c.componentName || 'CustomComponent',
           path: c.path || `src/${layer.id}/${c.componentName}.ts`,
@@ -167,7 +337,7 @@ export default function SoftwareArchitectureView({
         components: [...mcpComponents, ...layer.components, ...extraComponents]
       };
     });
-  }, [architecture, customContracts, activeProjectId, fileRecords, nodeById]);
+  }, [architecture, customContracts, effectiveProjectId, fileRecords, nodeById]);
 
   // All abstract methods flattened for contracts tab
   const allAbstractMethods = useMemo(() => {
@@ -204,61 +374,190 @@ export default function SoftwareArchitectureView({
     });
   }, [allAbstractMethods, selectedLayerId, contractSearchQuery]);
 
-  // Action: Trigger archifly dynamic analysis (with AI if configured, or offline engine)
-  const handleRunArchifly = async () => {
+  // Action: Sync & render interactive Archify (.html) + refresh live architecture
+  const handleSyncArchify = async (customPathOverride) => {
+    setActiveSubTab('archify');
     setIsAnalyzing(true);
     setAnalysisProgress(15);
 
+    let syncedArtifactsCount = projectArchArtifacts.length;
+    let usedLocalBridge = false;
+
     try {
-      if (aiConfig.isAiEnabled && aiConfig.apiKey?.trim()) {
-        setAnalysisProgress(40);
-        onNotify?.(`Skill archifly: Invocando ${aiConfig.provider.toUpperCase()} (${aiConfig.model}) para análisis de arquitectura...`);
+      const targetRepoPath = (customPathOverride ?? localRepoPath).trim();
 
-        const result = await analyzeArchitectureWithAi({
-          project: activeProject,
-          stories,
-          interfaces,
-          dataModels,
-          treeNodes,
-          fileRecords,
-          aiConfig
-        });
-
-        setAnalysisProgress(85);
-
-        if (result.architecture) {
-          setDynamicArchitecture(result.architecture);
-        }
-
-        setAnalysisProgress(100);
-        setIsAnalyzing(false);
-
-        confetti({
-          particleCount: 130,
-          spread: 85,
-          origin: { y: 0.35 }
-        });
-
-        onNotify?.(result.message || `¡Arquitectura sintetizada con éxito mediante ${aiConfig.provider.toUpperCase()}!`);
-      } else {
-        // Motor estático local offline
-        setTimeout(() => setAnalysisProgress(50), 300);
-        setTimeout(() => setAnalysisProgress(80), 650);
-        setTimeout(() => {
-          setAnalysisProgress(100);
-          setIsAnalyzing(false);
-          confetti({
-            particleCount: 100,
-            spread: 75,
-            origin: { y: 0.35 }
+      // 1) Localhost dev bridge: scan real .archify/*.html / arquitectura_implementacion.html or invoke CLI
+      if (isLocalhost) {
+        setAnalysisProgress(35);
+        try {
+          const resp = await fetch('/api/archify/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              projectId: effectiveProjectId,
+              repoPath: targetRepoPath || undefined
+            })
           });
-          onNotify?.(`¡Skill archifly (Motor Offline) ejecutada con éxito! 4 capas y ${allAbstractMethods.length} contratos auditados.`);
-        }, 950);
+          if (resp.ok) {
+            const payload = await resp.json();
+            if (payload.ok && Array.isArray(payload.artifacts) && payload.artifacts.length > 0) {
+              usedLocalBridge = true;
+              syncedArtifactsCount = payload.artifacts.length;
+              setLocalSyncedArtifacts((prev) => {
+                const others = prev.filter((a) => a.projectId !== effectiveProjectId);
+                return [...payload.artifacts, ...others];
+              });
+              setSelectedArtifactSlug(payload.artifacts[0].slug);
+            }
+          }
+        } catch (_) {
+          // Dev bridge optional; fall through to Supabase + static bundle
+        }
+      }
+
+      setAnalysisProgress(60);
+
+      // 2) Refresh published Archify HTML artifacts from Supabase
+      if (onRefreshArchitectureArtifacts) {
+        try {
+          const fresh = await onRefreshArchitectureArtifacts(effectiveProjectId);
+          if (Array.isArray(fresh) && fresh.length > 0) {
+            syncedArtifactsCount = Math.max(syncedArtifactsCount, fresh.length);
+            if (!usedLocalBridge) {
+              setSelectedArtifactSlug((current) =>
+                fresh.some((a) => a.slug === current) ? current : fresh[0].slug
+              );
+            }
+          }
+        } catch (_) {
+          // Keep local / static bundle artifacts available
+        }
+      }
+
+      // 3) Optional AI enrichment when API key is configured
+      if (aiConfig.isAiEnabled && aiConfig.apiKey?.trim()) {
+        setAnalysisProgress(82);
+        try {
+          const result = await analyzeArchitectureWithAi({
+            project: resolvedProject,
+            stories,
+            interfaces,
+            dataModels,
+            treeNodes,
+            fileRecords,
+            aiConfig
+          });
+          if (result.architecture) {
+            setDynamicArchitecture(result.architecture);
+          }
+        } catch (aiErr) {
+          onNotify?.(`Diagrama Archify listo; nota sobre API IA: ${aiErr.message}`);
+        }
+      }
+
+      setAnalysisProgress(100);
+      setIsAnalyzing(false);
+
+      confetti({
+        particleCount: 110,
+        spread: 80,
+        origin: { y: 0.35 }
+      });
+
+      if (syncedArtifactsCount > 0) {
+        onNotify?.(
+          usedLocalBridge
+            ? `¡Skill archify sincronizada desde tu equipo! Renderizando ${syncedArtifactsCount} diagrama(s) HTML interactivo(s).`
+            : `¡Skill archify conectada! ${syncedArtifactsCount} diagrama(s) HTML interactivo(s) cargado(s) y sincronizado(s).`
+        );
+      } else {
+        onNotify?.('No hay un .html publicado aún para este proyecto. Carga tu arquitectura_implementacion.html local con "Cargar .html".');
       }
     } catch (err) {
       setIsAnalyzing(false);
       setAnalysisProgress(0);
-      onNotify?.(`Error al ejecutar análisis de arquitectura: ${err.message}`);
+      onNotify?.(`Error al sincronizar con archify: ${err.message}`);
+    }
+  };
+
+  // Action: Load local .html generated by Archify (e.g. F:\SMATAD\arquitectura_implementacion.html)
+  const handleLocalHtmlUpload = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      const rawHtml = await file.text();
+      if (!rawHtml || !rawHtml.trim()) {
+        onNotify?.('El archivo HTML seleccionado está vacío.');
+        return;
+      }
+      const parsed = parseUploadedArchifyHtml(rawHtml, file.name, effectiveProjectId);
+
+      setLocalSyncedArtifacts((prev) => {
+        const filtered = prev.filter(
+          (a) => !(a.projectId === parsed.projectId && a.slug === parsed.slug)
+        );
+        return [parsed, ...filtered];
+      });
+      setSelectedArtifactSlug(parsed.slug);
+      setActiveSubTab('archify');
+
+      if (onSaveArchitectureArtifact) {
+        try {
+          await onSaveArchitectureArtifact(parsed);
+          onNotify?.(`"${file.name}" renderizado y guardado en Supabase Realtime para todo el equipo.`);
+          return;
+        } catch (_) {
+          onNotify?.(`"${file.name}" renderizado en modo local (inicia sesión autorizada o usa MCP para persistir en la nube).`);
+          return;
+        }
+      }
+      onNotify?.(`Diagrama "${file.name}" cargado y renderizado en la vista.`);
+    } catch (err) {
+      onNotify?.(`No se pudo leer el archivo HTML: ${err.message}`);
+    }
+  };
+
+  const handleOpenArtifactInNewTab = () => {
+    if (!selectedArtifact) return;
+    if (selectedArtifact.htmlContent) {
+      const html = prepareArchifySrcDoc(selectedArtifact.htmlContent, {
+        theme: archifyTheme,
+        embed: false
+      });
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      return;
+    }
+    if (selectedArtifact.publicUrl) {
+      window.open(`${selectedArtifact.publicUrl}?theme=${archifyTheme}`, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleDownloadArtifactHtml = async () => {
+    if (!selectedArtifact) return;
+    try {
+      let html = selectedArtifact.htmlContent;
+      if (!html && selectedArtifact.publicUrl) {
+        const res = await fetch(selectedArtifact.publicUrl);
+        html = await res.text();
+      }
+      if (!html) return;
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${effectiveProjectId}-${selectedArtifact.slug || 'arquitectura'}.html`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      onNotify?.('Archivo .html de Archify descargado.');
+    } catch (err) {
+      onNotify?.(`No se pudo descargar el HTML: ${err.message}`);
     }
   };
 
@@ -301,7 +600,7 @@ export default function SoftwareArchitectureView({
     setShowAiModal(false);
     onNotify?.(updated.isAiEnabled
       ? `Configuración de IA guardada: ${updated.provider.toUpperCase()} (${updated.model}) activo.`
-      : 'Modo Offline establecido para la skill archifly.');
+      : 'Modo Offline establecido para la skill archify.');
   };
 
   // Action: Export Architecture Snapshot JSON
@@ -398,12 +697,18 @@ export default function SoftwareArchitectureView({
               <div className="min-w-0">
                 <div className="flex items-center gap-x-2.5 flex-wrap">
                   <h1 className="font-space text-lg sm:text-xl text-white font-bold tracking-tight truncate">
-                    Arquitectura de Software — {activeProject ? activeProject.name : 'Pathrimonio'}
+                    Arquitectura de Software — {resolvedProject ? resolvedProject.name : 'Pathrimonio'}
                   </h1>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                    Skill archifly
+                    Skill archify
                   </span>
+                  {projectArchArtifacts.length > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px]">
+                      <span className="material-symbols-outlined text-[13px]">html</span>
+                      {projectArchArtifacts.length} HTML
+                    </span>
+                  )}
                   {aiConfig.isAiEnabled ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px]">
                       <span className="material-symbols-outlined text-[13px]">neurology</span>
@@ -432,18 +737,35 @@ export default function SoftwareArchitectureView({
               </div>
             </div>
 
-            {/* Actions: Run archifly, AI API Config & Export */}
+            {/* Actions: Sync Archify HTML, Load Local HTML, AI API Config & Export */}
             <div className="flex items-center gap-2 flex-wrap">
+              <input
+                ref={htmlUploadInputRef}
+                type="file"
+                accept=".html,.htm"
+                onChange={handleLocalHtmlUpload}
+                className="hidden"
+              />
+
               <button
-                onClick={handleRunArchifly}
+                onClick={() => handleSyncArchify()}
                 disabled={isAnalyzing}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_0_15px_rgba(255,192,0,0.25)] disabled:opacity-50 cursor-pointer"
-                title="Ejecutar análisis estático o generativo con la skill archifly"
+                title="Sincronizar y renderizar el diagrama interactivo .html generado por la skill archify"
               >
                 <span className={`material-symbols-outlined text-[17px] ${isAnalyzing ? 'animate-spin' : ''}`}>
                   {isAnalyzing ? 'sync' : 'auto_awesome'}
                 </span>
-                <span>{isAnalyzing ? `Analizando (${analysisProgress}%)...` : 'Sincronizar con archifly'}</span>
+                <span>{isAnalyzing ? `Sincronizando (${analysisProgress}%)...` : 'Sincronizar con archify'}</span>
+              </button>
+
+              <button
+                onClick={() => htmlUploadInputRef.current?.click()}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors cursor-pointer"
+                title="Cargar un archivo .html generado por archify (ej. arquitectura_implementacion.html)"
+              >
+                <span className="material-symbols-outlined text-[17px] text-primary">upload_file</span>
+                <span>Cargar .html</span>
               </button>
 
               <button
@@ -560,6 +882,18 @@ export default function SoftwareArchitectureView({
           <div className="flex items-center justify-between border-t border-outline-variant/50 pt-2 flex-wrap gap-2">
             <div className="flex flex-wrap items-center gap-1 bg-surface-container-high p-1 rounded-xl border border-outline-variant">
               <button
+                onClick={() => setActiveSubTab('archify')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors cursor-pointer ${
+                  activeSubTab === 'archify'
+                    ? 'bg-primary text-[#09090B] font-bold shadow-sm'
+                    : 'text-on-surface-variant hover:text-white'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">deployed_code</span>
+                <span>Diagrama Interactivo (.html) ({projectArchArtifacts.length})</span>
+              </button>
+
+              <button
                 onClick={() => setActiveSubTab('layers')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors cursor-pointer ${
                   activeSubTab === 'layers'
@@ -625,7 +959,7 @@ export default function SoftwareArchitectureView({
               <span className="material-symbols-outlined text-primary text-[16px]">folder_managed</span>
               <span className="text-on-surface-variant text-[11px] font-jakarta">Proyecto:</span>
               <select
-                value={activeProjectId || 'pathway'}
+                value={effectiveProjectId}
                 onChange={(e) => onSelectProject?.(e.target.value)}
                 className="bg-transparent text-white font-space text-xs font-semibold focus:outline-none cursor-pointer"
               >
@@ -643,7 +977,235 @@ export default function SoftwareArchitectureView({
 
       {/* ── Main View Content Area ── */}
       <main className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
-        
+
+        {/* TAB 0: VISOR INTERACTIVO ARCHIFY (.HTML) */}
+        {activeSubTab === 'archify' && (
+          <div className="flex flex-col gap-3 w-full">
+            {/* Viewer Control Bar */}
+            <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-3 flex flex-col gap-3">
+              <div className="flex items-center justify-between flex-wrap gap-2.5">
+                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                  {projectArchArtifacts.length > 0 ? (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {projectArchArtifacts.map((art) => {
+                        const isSelected = selectedArtifact?.slug === art.slug;
+                        return (
+                          <button
+                            key={art.slug}
+                            onClick={() => setSelectedArtifactSlug(art.slug)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border font-space text-xs transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-primary text-[#09090B] border-primary font-bold shadow-sm'
+                                : 'bg-surface-container border-outline-variant text-white hover:border-primary/40'
+                            }`}
+                            title={art.sourcePath || art.title}
+                          >
+                            <span className="material-symbols-outlined text-[15px]">
+                              {isSelected ? 'visibility' : 'account_tree'}
+                            </span>
+                            <span className="truncate max-w-[260px]">{art.title}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <span className="font-space text-xs text-on-surface-variant flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-amber-400">info</span>
+                      <span>
+                        {archArtifactsLoading
+                          ? 'Buscando artefactos Archify en Supabase...'
+                          : `Sin archivo .html publicado aún para ${resolvedProject?.name || effectiveProjectId}`}
+                      </span>
+                    </span>
+                  )}
+
+                  {selectedArtifact && (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px]">
+                        {selectedArtifact.generatorVersion || 'archify 3.3.0'}
+                      </span>
+                      {Number(selectedArtifact.sizeBytes) > 0 && (
+                        <span className="px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant text-on-surface-variant font-mono text-[10px]">
+                          {formatArtifactBytes(selectedArtifact.sizeBytes)}
+                        </span>
+                      )}
+                      <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-[10px]">
+                        {selectedArtifact.sourceOrigin === 'localhost'
+                          ? 'Localhost Sync'
+                          : selectedArtifact.sourceOrigin === 'supabase'
+                          ? 'Supabase Realtime'
+                          : 'Bundle Web'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    onClick={() => setShowSyncPathBar((v) => !v)}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border font-space text-[11px] font-medium transition-colors cursor-pointer ${
+                      showSyncPathBar
+                        ? 'bg-primary/15 border-primary/40 text-primary'
+                        : 'bg-surface-container-high hover:bg-surface-container-highest border-outline-variant text-white'
+                    }`}
+                    title="Indicar ruta local de repositorio o archivo .html para sincronizar en localhost"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">folder_open</span>
+                    <span>Ruta Local</span>
+                  </button>
+
+                  <button
+                    onClick={() => setArchifyTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-[11px] font-medium transition-colors cursor-pointer"
+                    title="Cambiar tema del diagrama HTML interactivo"
+                  >
+                    <span className="material-symbols-outlined text-[15px] text-primary">
+                      {archifyTheme === 'dark' ? 'dark_mode' : 'light_mode'}
+                    </span>
+                    <span>{archifyTheme === 'dark' ? 'Oscuro' : 'Claro'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setArchifyEmbedMode((v) => !v)}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border font-space text-[11px] font-medium transition-colors cursor-pointer ${
+                      archifyEmbedMode
+                        ? 'bg-primary/15 border-primary/40 text-primary'
+                        : 'bg-surface-container-high hover:bg-surface-container-highest border-outline-variant text-white'
+                    }`}
+                    title="Alternar entre barra de herramientas nativa completa de Archify o vista limpia de lienzo"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">
+                      {archifyEmbedMode ? 'crop_free' : 'tune'}
+                    </span>
+                    <span>{archifyEmbedMode ? 'Solo Lienzo' : 'Controles Archify'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setArchifyHeightMode((m) => (m === 'tall' ? 'expanded' : 'tall'))}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-[11px] font-medium transition-colors cursor-pointer"
+                    title="Expandir altura del visor en pantalla"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">
+                      {archifyHeightMode === 'expanded' ? 'close_fullscreen' : 'open_in_full'}
+                    </span>
+                    <span>{archifyHeightMode === 'expanded' ? 'Compactar' : 'Ampliar'}</span>
+                  </button>
+
+                  {selectedArtifact && (
+                    <>
+                      <button
+                        onClick={handleDownloadArtifactHtml}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-[11px] font-medium transition-colors cursor-pointer"
+                        title="Descargar archivo .html autónomo generado por archify"
+                      >
+                        <span className="material-symbols-outlined text-[15px] text-primary">download</span>
+                        <span>.html</span>
+                      </button>
+
+                      <button
+                        onClick={handleOpenArtifactInNewTab}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-[11px] font-medium transition-colors cursor-pointer"
+                        title="Abrir diagrama HTML en una pestaña independiente a pantalla completa"
+                      >
+                        <span className="material-symbols-outlined text-[15px] text-primary">open_in_new</span>
+                        <span>Nueva Pestaña</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {showSyncPathBar && (
+                <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-outline-variant/60">
+                  <input
+                    type="text"
+                    value={localRepoPath}
+                    onChange={(e) => setLocalRepoPath(e.target.value)}
+                    placeholder="Ruta local del proyecto o .html (ej. F:\SMATAD o F:\SMATAD\arquitectura_implementacion.html)"
+                    className="flex-1 min-w-[240px] bg-surface-container border border-outline-variant rounded-xl px-3 py-1.5 text-white font-mono text-xs focus:outline-none focus:border-primary"
+                  />
+                  <button
+                    onClick={() => handleSyncArchify(localRepoPath)}
+                    disabled={isAnalyzing}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[15px]">sync</span>
+                    <span>{isLocalhost ? 'Leer / Renderizar en Localhost' : 'Sincronizar Vista'}</span>
+                  </button>
+                  <button
+                    onClick={() => htmlUploadInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-high border border-outline-variant text-white font-space text-xs font-medium hover:border-primary/40 transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[15px] text-primary">upload_file</span>
+                    <span>Seleccionar archivo .html</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Interactive Archify .HTML Frame */}
+            {selectedArtifact ? (
+              <div
+                className={`w-full rounded-2xl overflow-hidden border border-outline-variant shadow-xl transition-all ${
+                  archifyTheme === 'dark' ? 'bg-[#09090B]' : 'bg-white'
+                } ${archifyHeightMode === 'expanded' ? 'h-[88vh] min-h-[720px]' : 'h-[76vh] min-h-[600px]'}`}
+              >
+                {selectedArtifact.htmlContent ? (
+                  <iframe
+                    key={`${effectiveProjectId}-${selectedArtifact.slug}-${selectedArtifact.updatedAt || 'live'}-${archifyTheme}-${archifyEmbedMode}`}
+                    title={selectedArtifact.title}
+                    srcDoc={prepareArchifySrcDoc(selectedArtifact.htmlContent, {
+                      theme: archifyTheme,
+                      embed: archifyEmbedMode
+                    })}
+                    className="w-full h-full border-0 block"
+                    sandbox="allow-scripts allow-same-origin allow-downloads allow-popups"
+                  />
+                ) : (
+                  <iframe
+                    key={`${effectiveProjectId}-${selectedArtifact.slug}-static-${archifyTheme}-${archifyEmbedMode}`}
+                    title={selectedArtifact.title}
+                    src={`${selectedArtifact.publicUrl}?theme=${archifyTheme}${archifyEmbedMode ? '&embed=1' : ''}`}
+                    className="w-full h-full border-0 block"
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-8 sm:p-10 flex flex-col items-center justify-center text-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined text-[30px]">account_tree</span>
+                </div>
+                <div className="max-w-xl flex flex-col gap-1.5">
+                  <h3 className="font-space text-base font-bold text-white">
+                    Aún no hay un diagrama .html de Archify para {resolvedProject?.name || effectiveProjectId}
+                  </h3>
+                  <p className="font-jakarta text-xs text-on-surface-variant leading-relaxed">
+                    Haz clic en <strong className="text-white">Sincronizar con archify</strong> para detectar automáticamente tus diagramas en localhost / Supabase, usa la tool MCP{' '}
+                    <code className="px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-mono text-[11px]">publish_archify_html</code>, o carga cualquier archivo generado por{' '}
+                    <code className="px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-mono text-[11px]">archify</code> directamente desde tu disco.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2.5 flex-wrap justify-center">
+                  <button
+                    onClick={() => handleSyncArchify()}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover transition-all cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[17px]">auto_awesome</span>
+                    <span>Sincronizar con archify</span>
+                  </button>
+                  <button
+                    onClick={() => htmlUploadInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-surface-container-high border border-outline-variant text-white font-space text-xs font-semibold hover:border-primary/40 transition-colors cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[17px] text-primary">upload_file</span>
+                    <span>Cargar .html desde PC</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB 1: CAPAS Y ESTRUCTURA CLEAN ARCHITECTURE */}
         {activeSubTab === 'layers' && (
           <div className="flex flex-col gap-6">
@@ -779,7 +1341,7 @@ export default function SoftwareArchitectureView({
               <div>
                 <h2 className="font-space text-lg text-white font-bold">Topología C4 & Flujo de Componentes</h2>
                 <p className="font-jakarta text-xs text-on-surface-variant">
-                  Mapa visual sintetizado por archifly para {activeProject?.name}. Muestra la dirección del flujo de control y las barreras de capa.
+                  Mapa visual sintetizado por archify para {resolvedProject?.name || activeProject?.name}. Muestra la dirección del flujo de control y las barreras de capa.
                 </p>
               </div>
               <button
@@ -1027,7 +1589,7 @@ export default function SoftwareArchitectureView({
                     <tr className="border-b border-outline-variant bg-surface-container text-on-surface-variant font-space text-[10px] uppercase tracking-wider">
                       <th className="py-3 px-4">Historia de Usuario (US)</th>
                       <th className="py-3 px-4">Interfaz UI/UX (Figma/Pantalla)</th>
-                      <th className="py-3 px-4">Método / Contrato (archifly)</th>
+                      <th className="py-3 px-4">Método / Contrato (archify)</th>
                       <th className="py-3 px-4">Modelo de Datos (DB)</th>
                       <th className="py-3 px-4">Criterio de Aceptación (DoD)</th>
                       <th className="py-3 px-4">Estado</th>
@@ -1126,7 +1688,7 @@ export default function SoftwareArchitectureView({
               <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-5 flex flex-col gap-4">
                 <h3 className="font-space text-sm font-bold text-white flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-[18px]">lightbulb</span>
-                  Recomendaciones de la Skill archifly
+                  Recomendaciones de la Skill archify
                 </h3>
 
                 <div className="flex flex-col gap-2.5">
@@ -1294,12 +1856,12 @@ export default function SoftwareArchitectureView({
 
               {/* Mode switch explanation */}
               <div className="p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60 flex flex-col gap-1 text-[11px] text-on-surface-variant">
-                <span className="font-space font-semibold text-white">¿Cómo opera archifly?</span>
+                <span className="font-space font-semibold text-white">¿Cómo opera archify?</span>
                 <p>
-                  • <strong>Con API Key:</strong> archifly envía el resumen ligero del proyecto (historias, interfaces, DER y rutas sin código fuente) a tu modelo de IA para generar un análisis arquitectónico en vivo.
+                  • <strong>Con API Key:</strong> archify envía el resumen ligero del proyecto (historias, interfaces, DER y rutas sin código fuente) a tu modelo de IA para generar un análisis arquitectónico en vivo.
                 </p>
                 <p>
-                  • <strong>Sin API Key (Modo Offline):</strong> archifly utiliza su motor determinista local incorporado, garantizando 100% de operativa sin conexión.
+                  • <strong>Sin API Key (Modo Offline):</strong> archify utiliza su motor determinista local y los archivos <code className="text-primary">.html</code> publicados en Supabase / disco para renderizar diagramas interactivos.
                 </p>
               </div>
 

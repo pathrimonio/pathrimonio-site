@@ -53,7 +53,7 @@ export async function registrarCobro(tx: VentaPayload): Promise<Receipt> {
     badge: 'Privacidad Total',
     icon: EyeOff,
     highlight: 'El código fuente nunca sale de tu máquina',
-    description: 'Separamos la lectura local del visor web. Tu máquina en localhost escanea el árbol y parsea únicamente las firmas de métodos abstractos para interactuar con archifly.',
+    description: 'Separamos la lectura local del visor web. Tu máquina en localhost escanea el árbol y parsea únicamente las firmas de métodos abstractos para interactuar con archify.',
     specs: [
       { label: 'Entorno Local (localhost)', val: 'Escáner AST en memoria (< 150 ms para 1,000 archivos)' },
       { label: 'Entorno Web / Producción', val: 'Visor de firmas ligeras (methods.manifest.json)' },

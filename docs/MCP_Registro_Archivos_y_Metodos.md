@@ -29,6 +29,8 @@ El servidor MCP **nunca sube el cuerpo ni la lógica interna** de los archivos:
 | **`upsert_file_records`** | Inserta o actualiza manualmente métodos o registros en un archivo (opcional `replace_existing_for_file: true`). |
 | **`delete_file_record`** | Elimina un método o registro específico. |
 | **`sync_directory_from_disk`** | Sincronización incremental de un directorio completo respetando `.gitignore` y carpetas ignoradas, opcionalmente extrayendo firmas y podando archivos borrados. |
+| **`list_archify_artifacts`** | Lista los diagramas `.html` generados con la skill **`archify`** publicados para un proyecto en Supabase. |
+| **`publish_archify_html`** | Publica en Supabase un `.html` autónomo generado por `archify` (ej. `F:\SMATAD\arquitectura_implementacion.html`) para renderizarlo en vivo en la subvista **Arquitectura de Software**. |
 
 ---
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { basename, isAbsolute, relative, resolve } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -1032,6 +1032,120 @@ server.registerTool(
         truncated: scan.truncated,
         syncedFilesWithRecords,
         totalRecordsSynced
+      });
+    } catch (error) {
+      return errResult(error);
+    }
+  }
+);
+
+// 11. list_archify_artifacts
+server.registerTool(
+  'list_archify_artifacts',
+  {
+    description:
+      'Lista los diagramas interactivos HTML generados por la skill archify y publicados en Supabase para un proyecto.',
+    inputSchema: {
+      project_id: z.string().min(1).describe('ID del proyecto (ej. "pathway", "smatad", "core-hub", "portal-admin").'),
+      include_html: z.boolean().optional().default(false).describe('Si es true, devuelve también html_content completo.')
+    }
+  },
+  async ({ project_id, include_html }) => {
+    try {
+      const { supabase } = await getSupabaseClient();
+      const columns = include_html
+        ? 'id, project_id, slug, title, diagram_type, generator_version, source_path, size_bytes, metadata, created_at, updated_at, html_content'
+        : 'id, project_id, slug, title, diagram_type, generator_version, source_path, size_bytes, metadata, created_at, updated_at';
+      const { data, error } = await supabase
+        .from('project_architecture_artifacts')
+        .select(columns)
+        .eq('project_id', project_id)
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      return okResult({
+        projectId: project_id,
+        total: (data || []).length,
+        artifacts: data || []
+      });
+    } catch (error) {
+      return errResult(error);
+    }
+  }
+);
+
+// 12. publish_archify_html
+server.registerTool(
+  'publish_archify_html',
+  {
+    description:
+      'Publica un archivo .html generado por la skill archify (ej. arquitectura_implementacion.html o .archify/*.html) en Supabase para que se renderice al instante en la subvista Arquitectura de Software del portal web.',
+    inputSchema: {
+      project_id: z.string().min(1).describe('ID del proyecto destino en Pathrimonio.'),
+      slug: z.string().optional().describe('Identificador único del diagrama dentro del proyecto (por defecto derivado del archivo o "arquitectura-implementacion").'),
+      title: z.string().optional().describe('Título visible del diagrama en el visor web.'),
+      diagram_type: z.enum(['architecture', 'workflow', 'sequence', 'dataflow', 'lifecycle']).optional().default('architecture'),
+      html_file_path: z.string().optional().describe('Ruta absoluta en disco al archivo .html generado por archify.'),
+      html_content: z.string().optional().describe('Contenido HTML completo si no se indica html_file_path.'),
+      is_primary: z.boolean().optional().default(true).describe('Marcar como diagrama principal por defecto al abrir Arquitectura de Software.')
+    }
+  },
+  async ({ project_id, slug, title, diagram_type, html_file_path, html_content, is_primary }) => {
+    try {
+      const { supabase } = await getSupabaseClient();
+      let rawHtml = html_content || '';
+      let resolvedSource = html_file_path || null;
+
+      if (!rawHtml && html_file_path) {
+        const abs = resolve(html_file_path);
+        if (!existsSync(abs)) {
+          throw new Error(`No existe el archivo HTML en disco: ${abs}`);
+        }
+        rawHtml = readFileSync(abs, 'utf8');
+        resolvedSource = abs;
+      }
+
+      if (!rawHtml.trim()) {
+        throw new Error('Debes proporcionar html_file_path o html_content.');
+      }
+
+      const titleMatch = rawHtml.match(/<title>(.*?)<\/title>/i);
+      const parsedTitle = titleMatch
+        ? titleMatch[1].replace(/\s*·\s*Diagrama\s*$/i, '').trim()
+        : '';
+      const genMatch = rawHtml.match(/<meta\s+name="generator"\s+content="([^"]+)"/i);
+      const generatorVersion = genMatch ? genMatch[1].trim() : 'archify 3.3.0';
+
+      const baseSlug = (slug || (resolvedSource ? basename(resolvedSource, '.html') : 'arquitectura-implementacion'))
+        .toLowerCase()
+        .replace(new RegExp(`^${project_id}-`, 'i'), '')
+        .replace(/[^a-z0-9_-]+/g, '-')
+        .replace(/^[-_]+|[-_]+$/g, '') || 'arquitectura-implementacion';
+
+      const sizeBytes = Buffer.byteLength(rawHtml, 'utf8');
+
+      const { data, error } = await supabase
+        .from('project_architecture_artifacts')
+        .upsert({
+          project_id,
+          slug: baseSlug,
+          title: title || parsedTitle || baseSlug,
+          diagram_type: diagram_type || 'architecture',
+          html_content: rawHtml,
+          generator_version: generatorVersion,
+          source_path: resolvedSource,
+          size_bytes: sizeBytes,
+          metadata: {
+            isPrimary: Boolean(is_primary),
+            publishedVia: 'mcp-archify-bridge'
+          }
+        }, { onConflict: 'project_id,slug' })
+        .select('id, project_id, slug, title, diagram_type, generator_version, source_path, size_bytes, updated_at')
+        .single();
+
+      if (error) throw error;
+
+      return okResult({
+        published: data
       });
     } catch (error) {
       return errResult(error);

@@ -66,7 +66,9 @@ export function useSampleHelper(flag: boolean): string {
     'upsert_file_records',
     'delete_file_record',
     'sync_modified_file',
-    'sync_directory_from_disk'
+    'sync_directory_from_disk',
+    'list_archify_artifacts',
+    'publish_archify_html'
   ]) {
     assert(toolNames.includes(expected), `Missing tool: ${expected}`);
   }
@@ -173,6 +175,42 @@ export function useSampleHelper(flag: boolean): string {
     }
   }));
   console.log(`OK cleanup root subtree (deleted=${cleanupRes.deletedCount})`);
+
+  // 6. list_archify_artifacts + publish_archify_html (with clean DB deletion after verify)
+  const sampleHtmlPath = join(tempRepo, 'sample-archify-e2e.html');
+  writeFileSync(
+    sampleHtmlPath,
+    '<!doctype html><html><head><title>E2E Test Archify · Diagrama</title><meta name="generator" content="archify 3.3.0"></head><body><h1>OK</h1></body></html>',
+    'utf8'
+  );
+  const pubRes = parseToolJson(await client.callTool({
+    name: 'publish_archify_html',
+    arguments: {
+      project_id: testProjectId,
+      slug: 'mcp-e2e-test-diagram',
+      html_file_path: sampleHtmlPath,
+      is_primary: false
+    }
+  }));
+  assert(pubRes.published?.slug === 'mcp-e2e-test-diagram', 'Published slug mismatch');
+
+  const listArchRes = parseToolJson(await client.callTool({
+    name: 'list_archify_artifacts',
+    arguments: { project_id: testProjectId }
+  }));
+  assert(
+    listArchRes.artifacts.some((a) => a.slug === 'mcp-e2e-test-diagram'),
+    'Published Archify test artifact missing in list_archify_artifacts'
+  );
+
+  const { getSupabaseClient } = await import('../mcp/supabaseClient.mjs');
+  const { supabase } = await getSupabaseClient();
+  await supabase
+    .from('project_architecture_artifacts')
+    .delete()
+    .eq('project_id', testProjectId)
+    .in('slug', ['mcp-e2e-test-diagram', '__mcp_e2e_test_diagram__']);
+  console.log('OK publish_archify_html + list_archify_artifacts + cleanup');
   console.log('ALL MCP E2E TESTS PASSED');
 } finally {
   await client.close().catch(() => {});

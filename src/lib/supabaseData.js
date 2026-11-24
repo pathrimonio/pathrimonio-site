@@ -704,3 +704,55 @@ export async function removeProjectMember(id) {
   const db = requireSupabase();
   check(await db.from('project_members').delete().eq('id', id));
 }
+
+// ── Archify interactive HTML artifacts ────────────────────────
+function mapArchitectureArtifact(row) {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    slug: row.slug,
+    title: row.title,
+    diagramType: row.diagram_type || 'architecture',
+    htmlContent: row.html_content || '',
+    generatorVersion: row.generator_version || 'archify 3.3.0',
+    sourcePath: row.source_path || '',
+    sizeBytes: Number(row.size_bytes) || 0,
+    metadata: row.metadata || {},
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+export async function fetchProjectArchitectureArtifacts(projectId) {
+  const db = requireSupabase();
+  const { data, error } = await db
+    .from('project_architecture_artifacts')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data || []).map(mapArchitectureArtifact);
+}
+
+export async function upsertProjectArchitectureArtifact(artifact) {
+  const db = requireSupabase();
+  const htmlContent = String(artifact.htmlContent || artifact.html_content || '');
+  const payload = {
+    project_id: artifact.projectId || artifact.project_id,
+    slug: artifact.slug || 'arquitectura-implementacion',
+    title: artifact.title || 'Arquitectura de Implementación · Archify',
+    diagram_type: artifact.diagramType || artifact.diagram_type || 'architecture',
+    html_content: htmlContent,
+    generator_version: artifact.generatorVersion || artifact.generator_version || 'archify 3.3.0',
+    source_path: orNull(artifact.sourcePath || artifact.source_path),
+    size_bytes: Number(artifact.sizeBytes || artifact.size_bytes) || new TextEncoder().encode(htmlContent).length,
+    metadata: artifact.metadata || {}
+  };
+  const { data, error } = await db
+    .from('project_architecture_artifacts')
+    .upsert(payload, { onConflict: 'project_id,slug' })
+    .select()
+    .single();
+  if (error) throw error;
+  return mapArchitectureArtifact(data);
+}

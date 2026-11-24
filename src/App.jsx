@@ -31,7 +31,9 @@ import {
   renameInterfaceModule,
   deleteInterfaceModule,
   addProjectMember,
-  removeProjectMember
+  removeProjectMember,
+  fetchProjectArchitectureArtifacts,
+  upsertProjectArchitectureArtifact
 } from './lib/supabaseData';
 
 // Landing Components (Minimalist Modern SDD)
@@ -265,6 +267,10 @@ export default function App() {
   const [treeNodes, setTreeNodes] = useState([]);
   const [projectFileRecords, setProjectFileRecords] = useState([]);
   const [treeLoading, setTreeLoading] = useState(false);
+
+  // ── Archify interactive HTML artifacts per active project
+  const [architectureArtifacts, setArchitectureArtifacts] = useState([]);
+  const [archArtifactsLoading, setArchArtifactsLoading] = useState(false);
 
   // ── Role Definitions & Access Matrix
   const [roleDefinitions, setRoleDefinitions] = useState(() => loadRoleDefinitions());
@@ -627,6 +633,91 @@ export default function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePortalTab, activeProjectId]);
+
+  const effectiveArchProjectId = activeProjectId === 'all'
+    ? (projects[0]?.id || 'pathway')
+    : activeProjectId;
+
+  useEffect(() => {
+    if (activePortalTab !== 'architecture' || !effectiveArchProjectId || !isSupabaseConfigured) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    setArchArtifactsLoading(true);
+
+    fetchProjectArchitectureArtifacts(effectiveArchProjectId)
+      .then((rows) => {
+        if (!cancelled) setArchitectureArtifacts(rows);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error('[Supabase] fetchProjectArchitectureArtifacts', error);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setArchArtifactsLoading(false);
+      });
+
+    let artTimer = null;
+    const scheduleArchRefresh = () => {
+      if (artTimer) window.clearTimeout(artTimer);
+      artTimer = window.setTimeout(() => {
+        fetchProjectArchitectureArtifacts(effectiveArchProjectId)
+          .then((rows) => {
+            if (!cancelled) setArchitectureArtifacts(rows);
+          })
+          .catch(() => {});
+      }, 300);
+    };
+
+    const archChannel = supabase
+      .channel(`project-archify-live:${effectiveArchProjectId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_architecture_artifacts',
+          filter: `project_id=eq.${effectiveArchProjectId}`
+        },
+        scheduleArchRefresh
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      if (artTimer) window.clearTimeout(artTimer);
+      supabase.removeChannel(archChannel);
+    };
+  }, [activePortalTab, effectiveArchProjectId]);
+
+  const handleRefreshArchitectureArtifacts = async (overrideProjectId) => {
+    const targetId = overrideProjectId || effectiveArchProjectId;
+    if (!targetId || !isSupabaseConfigured) return [];
+    setArchArtifactsLoading(true);
+    try {
+      const rows = await fetchProjectArchitectureArtifacts(targetId);
+      setArchitectureArtifacts(rows);
+      return rows;
+    } finally {
+      setArchArtifactsLoading(false);
+    }
+  };
+
+  const handleSaveArchitectureArtifact = async (artifactPayload) => {
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase no está configurado.');
+    }
+    const saved = await upsertProjectArchitectureArtifact(artifactPayload);
+    setArchitectureArtifacts((prev) => {
+      const rest = prev.filter(
+        (item) => !(item.projectId === saved.projectId && item.slug === saved.slug)
+      );
+      return [saved, ...rest];
+    });
+    return saved;
+  };
 
   // ── Supabase: fire-and-forget persistence with user feedback
   const persist = (operation, label) => {
@@ -1636,6 +1727,10 @@ export default function App() {
                       dataModels={projectDataModels}
                       treeNodes={treeNodes}
                       fileRecords={projectFileRecords}
+                      architectureArtifacts={architectureArtifacts}
+                      archArtifactsLoading={archArtifactsLoading}
+                      onSaveArchitectureArtifact={handleSaveArchitectureArtifact}
+                      onRefreshArchitectureArtifacts={handleRefreshArchitectureArtifacts}
                       onNotify={notify}
                     />
                   )}

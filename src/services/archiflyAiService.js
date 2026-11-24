@@ -174,7 +174,7 @@ export async function analyzeArchitectureWithAi({
     return {
       source: 'offline_engine',
       architecture: fallbackArch,
-      message: 'Arquitectura generada con el Motor Estático Local archifly (Offline-First).'
+      message: 'Arquitectura generada con el Motor Estático Local archify (Offline-First).'
     };
   }
 
@@ -395,7 +395,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
       architecture: {
         ...fallbackArch,
         ...parsed,
-        synthesizedBy: `archifly Engine con ${provider.toUpperCase()} (${usedModel})`,
+        synthesizedBy: `archify Engine con ${provider.toUpperCase()} (${usedModel})`,
         lastAnalyzed: new Date().toISOString()
       },
       message: `Arquitectura analizada y sintetizada con éxito mediante ${provider.toUpperCase()} (${usedModel}).`
@@ -406,7 +406,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
       source: 'offline_fallback',
       error: err.message,
       architecture: fallbackArch,
-      message: `No se pudo conectar con el modelo (${err.message}). Se cargó el motor estático local archifly.`
+      message: `No se pudo conectar con el modelo (${err.message}). Se cargó el motor estático local archify.`
     };
   }
 }
