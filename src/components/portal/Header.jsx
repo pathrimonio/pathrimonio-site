@@ -23,7 +23,7 @@ export default function Header({
     .join('');
 
   return (
-    <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md z-30 border-b border-outline-variant px-4 sm:px-6 flex items-center justify-between gap-4">
+    <header className="fixed top-0 left-0 lg:left-64 right-0 h-14 bg-surface-container-lowest/90 backdrop-blur-md z-30 border-b border-outline-variant px-3 sm:px-4 lg:px-5 flex items-center justify-between gap-4">
       
       {/* Left: Hamburger & Breadcrumb */}
       <div className="flex items-center gap-x-3 min-w-0">

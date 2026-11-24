@@ -88,8 +88,8 @@ export default function DataModelControlsBar({
   };
 
   return (
-    <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-4 sm:px-6 lg:px-8 py-4">
-      <div className="max-w-[1520px] mx-auto flex flex-col gap-y-4">
+    <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-3 sm:px-4 lg:px-5 py-4">
+      <div className="w-full flex flex-col gap-y-4">
         
         {/* Top Title & Macro Meta */}
         <div className="flex flex-wrap items-center justify-between gap-4">

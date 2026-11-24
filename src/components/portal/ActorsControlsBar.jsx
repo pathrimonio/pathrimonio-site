@@ -54,8 +54,8 @@ export default function ActorsControlsBar({
   };
 
   return (
-    <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-4 sm:px-6 lg:px-8 py-4">
-      <div className="max-w-[1520px] mx-auto flex flex-col gap-y-4">
+    <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-3 sm:px-4 lg:px-5 py-4">
+      <div className="w-full flex flex-col gap-y-4">
         
         {/* Top Title & Macro Meta */}
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -72,7 +72,7 @@ export default function ActorsControlsBar({
                   Formalización de Requerimientos
                 </span>
               </div>
-              <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate max-w-xl">
+              <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate">
                 Define quiénes interactúan con el software, sus responsabilidades y permisos por área de negocio antes de formular Historias de Usuario.
               </p>
             </div>

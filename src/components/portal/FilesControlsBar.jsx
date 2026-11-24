@@ -91,8 +91,8 @@ export default function FilesControlsBar({
   };
 
   return (
-    <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-4 sm:px-6 lg:px-8 py-4">
-      <div className="max-w-[1520px] mx-auto flex flex-col gap-y-4">
+    <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-3 sm:px-4 lg:px-5 py-4">
+      <div className="w-full flex flex-col gap-y-4">
 
         {/* Top Title & Macro Meta */}
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -109,7 +109,7 @@ export default function FilesControlsBar({
                   {isTree ? 'Árbol del Repositorio' : 'Repositorio de Documentación & Builds'}
                 </span>
               </div>
-              <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate max-w-xl">
+              <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate">
                 {isTree
                   ? 'Estructura completa de carpetas y archivos con su extensión, tamaño y registros abstractos por archivo.'
                   : 'Almacén centralizado de ejecutables (APKs), especificaciones PRD, mockups Figma, contratos y scripts SQL del software.'}

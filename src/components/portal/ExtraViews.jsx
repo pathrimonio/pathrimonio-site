@@ -2,7 +2,7 @@ import React from 'react';
 
 export function BacklogView({ stories }) {
   return (
-    <div className="flex flex-col gap-6 max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
       <div className="flex flex-col gap-1">
         <h2 className="font-space text-xl text-white font-bold">Product Backlog Consolidado</h2>
         <p className="font-jakarta text-xs text-on-surface-variant">
@@ -71,7 +71,7 @@ export function BacklogView({ stories }) {
 
 export function SprintsView() {
   return (
-    <div className="flex flex-col gap-6 max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
       <div className="flex flex-col gap-1">
         <h2 className="font-space text-xl text-white font-bold">Ciclos y Velocidad de Sprints</h2>
         <p className="font-jakarta text-xs text-on-surface-variant">
@@ -102,7 +102,7 @@ export function SprintsView() {
 
 export function DocsView() {
   return (
-    <div className="flex flex-col gap-6 max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
       <div className="flex flex-col gap-1">
         <h2 className="font-space text-xl text-white font-bold">Documentación &amp; Guías Técnicas</h2>
         <p className="font-jakarta text-xs text-on-surface-variant">
@@ -137,7 +137,7 @@ export function DocsView() {
 
 export function SettingsView() {
   return (
-    <div className="flex flex-col gap-6 max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
       <div className="flex flex-col gap-1">
         <h2 className="font-space text-xl text-white font-bold">Configuración del Workspace</h2>
         <p className="font-jakarta text-xs text-on-surface-variant">
@@ -145,7 +145,7 @@ export function SettingsView() {
         </p>
       </div>
 
-      <div className="p-5 rounded-lg bg-surface-container border border-outline-variant flex flex-col gap-4 max-w-xl">
+      <div className="p-5 rounded-lg bg-surface-container border border-outline-variant flex flex-col gap-4 w-full">
         <div className="flex items-center justify-between pb-3 border-b border-outline-variant">
           <div>
             <p className="font-space text-xs font-bold text-white">Persistencia en LocalStorage</p>

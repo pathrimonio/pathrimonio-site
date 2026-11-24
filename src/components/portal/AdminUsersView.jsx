@@ -157,7 +157,7 @@ export default function AdminUsersView({
   const activeRoleConfig = roleDefinitions[selectedRoleForMatrix] || roleDefinitions['Colaborador'];
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
       {/* Header Superior */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-outline-variant">
         <div>
@@ -170,7 +170,7 @@ export default function AdminUsersView({
               Control de Accesos
             </span>
           </div>
-          <p className="font-jakarta text-xs text-on-surface-variant max-w-2xl">
+          <p className="font-jakarta text-xs text-on-surface-variant">
             Manejo integral de cuentas de usuario, asignación de roles y configuración de la matriz de permisos para cada perfil operativo del sistema.
           </p>
         </div>

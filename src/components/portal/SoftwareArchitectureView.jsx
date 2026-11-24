@@ -386,8 +386,8 @@ export default function SoftwareArchitectureView({
   return (
     <div className="flex flex-col w-full min-h-screen bg-surface-container-lowest">
       {/* ── Sub-header / Controls Bar ── */}
-      <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-4 sm:px-6 lg:px-8 py-5">
-        <div className="max-w-[1520px] mx-auto flex flex-col gap-y-4">
+      <section className="w-full bg-surface-container-lowest border-b border-outline-variant px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
+        <div className="w-full flex flex-col gap-y-4">
           
           {/* Top Row: Title + Project Selector + Actions */}
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -426,7 +426,7 @@ export default function SoftwareArchitectureView({
                     MCP Sync: {fileRecords.length} reg.
                   </span>
                 </div>
-                <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate max-w-2xl">
+                <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate">
                   {architecture.architecturePattern} · {architecture.synthesizedBy}
                 </p>
               </div>
@@ -558,7 +558,7 @@ export default function SoftwareArchitectureView({
 
           {/* Navigation Sub-Tabs */}
           <div className="flex items-center justify-between border-t border-outline-variant/50 pt-2 flex-wrap gap-2">
-            <div className="flex items-center gap-1 bg-surface-container-high p-1 rounded-xl border border-outline-variant">
+            <div className="flex flex-wrap items-center gap-1 bg-surface-container-high p-1 rounded-xl border border-outline-variant">
               <button
                 onClick={() => setActiveSubTab('layers')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors cursor-pointer ${
@@ -642,7 +642,7 @@ export default function SoftwareArchitectureView({
       </section>
 
       {/* ── Main View Content Area ── */}
-      <main className="max-w-[1520px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
         
         {/* TAB 1: CAPAS Y ESTRUCTURA CLEAN ARCHITECTURE */}
         {activeSubTab === 'layers' && (

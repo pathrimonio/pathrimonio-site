@@ -1457,7 +1457,7 @@ export default function App() {
             roleDefinitions={roleDefinitions}
           />
 
-          <div className="lg:pl-64 flex flex-col flex-1 min-w-0">
+          <div className="lg:pl-64 flex flex-col flex-1 min-w-0 w-full">
             <Header
               onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
               user={currentUser}
@@ -1467,7 +1467,7 @@ export default function App() {
               onInvite={activeProjectId !== 'all' && isActionAllowedForRole(currentUser?.role, 'canManageUsers', roleDefinitions) ? () => setIsInviteMemberModalOpen(true) : undefined}
             />
 
-            <main className="w-full pt-14 flex-1">
+            <main className="w-full pt-14 flex-1 min-w-0">
               {!isTabAllowedForRole(currentUser?.role, activePortalTab, roleDefinitions) ? (
                 <div className="flex flex-col items-center justify-center py-20 px-4 text-center max-w-lg mx-auto gap-4">
                   <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
@@ -1510,7 +1510,7 @@ export default function App() {
                         actorsCount={projectActors.length}
                         onOpenCreateModal={() => setIsCreateStoryModalOpen(true)}
                       />
-                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                      <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
                         <div className="w-full flex flex-col gap-y-4">
                           <StoryFeed
                             stories={filteredStories}
@@ -1549,7 +1549,7 @@ export default function App() {
                         onNavigateToStories={() => setActivePortalTab('stories')}
                         onOpenCreateModal={() => setIsCreateActorModalOpen(true)}
                       />
-                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                      <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
                         <div className="w-full flex flex-col gap-y-4">
                           <ActorFeed
                             actors={projectActors}
@@ -1587,7 +1587,7 @@ export default function App() {
                         activeProject={activeProject}
                         onOpenRegisterModal={() => setIsRegisterInterfaceModalOpen(true)}
                       />
-                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                      <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
                         <div className="w-full flex flex-col gap-y-4">
                           <InterfaceFeed
                             interfaces={projectInterfaces}
@@ -1651,7 +1651,7 @@ export default function App() {
                         onOpenSQLModal={() => setIsSQLModalOpen(true)}
                         onOpenCreateModal={() => setIsCreateTableModalOpen(true)}
                       />
-                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                      <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
                         <div className="w-full flex flex-col gap-y-4">
                           <DataModelFeed
                             tables={projectDataModels}
@@ -1699,7 +1699,7 @@ export default function App() {
                           notify(`Abriendo Arquitectura de Software (${activeProject?.name || 'Pathrimonio'})...`);
                         }}
                       />
-                      <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                      <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
                         <div className="w-full flex flex-col gap-y-4">
                           {filesViewMode === 'tree' ? (
                             <ProjectTreeView

@@ -206,8 +206,8 @@ export default function InterfaceCard({
 
   const cardWidthClass = layoutMode === 'horizontal'
     ? (isDetailsExpanded
-        ? 'w-[880px] lg:w-[980px] xl:w-[1040px] shrink-0 snap-start'
-        : 'w-[360px] sm:w-[420px] shrink-0 snap-start')
+        ? 'w-[calc(100vw-1.5rem)] sm:w-[880px] lg:w-[980px] xl:w-[1100px] shrink-0 snap-start'
+        : 'w-[calc(100vw-1.5rem)] sm:w-[420px] shrink-0 snap-start')
     : 'w-full';
 
   return (
