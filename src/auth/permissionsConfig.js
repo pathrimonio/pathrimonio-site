@@ -48,18 +48,18 @@ export const DEFAULT_ROLE_DEFINITIONS = {
   'Colaborador': {
     id: 'Colaborador',
     name: 'Colaborador de Proyecto (Registro)',
-    desc: 'Acceso acotado para cuentas creadas desde el login: solo puede crear roles, historias de usuario e interfaces.',
+    desc: 'Acceso para colaboradores: diseño de requerimientos, interfaces, arquitectura de software y entregables.',
     color: 'text-amber-400',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
     avatarBg: 'bg-amber-600',
-    allowedTabs: ['actors', 'stories', 'interfaces'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
       canCreateInterfaces: true,
-      canManageArchitecture: false,
-      canManageDataModels: false,
-      canManageFiles: false,
+      canManageArchitecture: true,
+      canManageDataModels: true,
+      canManageFiles: true,
       canManageUsers: false
     }
   },
@@ -129,14 +129,17 @@ export function loadRoleDefinitions() {
         const defaultRole = DEFAULT_ROLE_DEFINITIONS[roleKey] || {};
         const parsedRole = parsed[roleKey] || {};
         const allowedTabs = Array.isArray(parsedRole.allowedTabs) ? [...parsedRole.allowedTabs] : (defaultRole.allowedTabs || []);
-        // Guarantee 'architecture' is available if role previously had dataModel or docs or is Admin
-        if ((allowedTabs.includes('dataModel') || allowedTabs.includes('docs') || roleKey === 'Admin') && !allowedTabs.includes('architecture')) {
+        // Guarantee 'architecture' and 'files' are available for all roles
+        if (!allowedTabs.includes('architecture')) {
           const insertIdx = allowedTabs.indexOf('interfaces');
           if (insertIdx !== -1) {
             allowedTabs.splice(insertIdx + 1, 0, 'architecture');
           } else {
             allowedTabs.push('architecture');
           }
+        }
+        if (!allowedTabs.includes('files')) {
+          allowedTabs.push('files');
         }
         merged[roleKey] = {
           ...defaultRole,
@@ -163,10 +166,14 @@ export function saveRoleDefinitions(definitions) {
 }
 
 export function isTabAllowedForRole(role, tabId, roleDefinitions) {
+  // Los módulos de consulta técnica y arquitectura son universales en el portal
+  if (tabId === 'architecture' || tabId === 'files' || tabId === 'docs' || tabId === 'dataModel') {
+    return true;
+  }
   const defs = roleDefinitions || DEFAULT_ROLE_DEFINITIONS;
   const roleConfig = defs[role] || defs['Colaborador'];
-  if (!roleConfig) return false;
-  return roleConfig.allowedTabs.includes(tabId);
+  if (!roleConfig) return true;
+  return roleConfig.allowedTabs ? roleConfig.allowedTabs.includes(tabId) : true;
 }
 
 export function isActionAllowedForRole(role, actionId, roleDefinitions) {

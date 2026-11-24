@@ -1640,7 +1640,11 @@ export default function App() {
                         onOpenUpload={() => setIsCreateFileModalOpen(true)}
                         onOpenFolderImport={() => setIsFolderImportOpen(true)}
                         onRefreshTree={handleRefreshProjectTree}
-                        onOpenArchitecture={() => setActivePortalTab('architecture')}
+                        onOpenArchitecture={() => {
+                          setActivePortalTab('architecture');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                          notify(`Abriendo Arquitectura de Software (${activeProject?.name || 'Pathrimonio'})...`);
+                        }}
                       />
                       <div className="w-full max-w-[1520px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
                         <div className="w-full flex flex-col gap-y-4">

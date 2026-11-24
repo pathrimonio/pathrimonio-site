@@ -260,7 +260,7 @@ export default function FilesControlsBar({
                 {onOpenArchitecture && (
                   <button
                     onClick={onOpenArchitecture}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-space text-xs font-semibold transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-space text-xs font-semibold transition-colors cursor-pointer"
                     title="Ver arquitectura del proyecto de software con la skill archifly"
                   >
                     <span className="material-symbols-outlined text-[16px]">account_tree</span>
@@ -270,6 +270,16 @@ export default function FilesControlsBar({
               </>
             ) : (
               <>
+                {onOpenArchitecture && (
+                  <button
+                    onClick={onOpenArchitecture}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-space text-xs font-semibold transition-colors cursor-pointer"
+                    title="Ver arquitectura del proyecto de software con la skill archifly"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">account_tree</span>
+                    <span>Arquitectura archifly</span>
+                  </button>
+                )}
                 {onOpenUpload && (
                   <button
                     onClick={onOpenUpload}

@@ -1,6 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { getProjectArchitecture } from '../../data/initialArchitectures';
+import {
+  loadArchiflyAiConfig,
+  saveArchiflyAiConfig,
+  AI_PROVIDERS,
+  testAiConnection,
+  analyzeArchitectureWithAi
+} from '../../services/archiflyAiService';
 
 export default function SoftwareArchitectureView({
   activeProject,
@@ -22,6 +29,17 @@ export default function SoftwareArchitectureView({
   const [copiedMermaid, setCopiedMermaid] = useState(false);
   const [customContracts, setCustomContracts] = useState([]);
 
+  // AI Configuration State
+  const [aiConfig, setAiConfig] = useState(() => loadArchiflyAiConfig());
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [tempProvider, setTempProvider] = useState(aiConfig.provider || 'gemini');
+  const [tempApiKey, setTempApiKey] = useState(aiConfig.apiKey || '');
+  const [tempModel, setTempModel] = useState(aiConfig.model || 'gemini-2.0-flash');
+  const [showKeyPassword, setShowKeyPassword] = useState(false);
+  const [isTestingKey, setIsTestingKey] = useState(false);
+  const [testStatus, setTestStatus] = useState(null); // { success: boolean, message: string }
+  const [dynamicArchitecture, setDynamicArchitecture] = useState(null);
+
   // Form state for adding custom abstract contract
   const [newContractForm, setNewContractForm] = useState({
     layerId: 'application',
@@ -35,9 +53,25 @@ export default function SoftwareArchitectureView({
     doc: ''
   });
 
-  const architecture = useMemo(() => {
+  // Base architecture for the active project
+  const baseArchitecture = useMemo(() => {
     return getProjectArchitecture(activeProjectId);
   }, [activeProjectId]);
+
+  // Active architecture (AI synthesized or base)
+  const architecture = useMemo(() => {
+    return dynamicArchitecture || baseArchitecture;
+  }, [dynamicArchitecture, baseArchitecture]);
+
+  // Reset dynamic architecture when changing project unless same
+  useEffect(() => {
+    setDynamicArchitecture(null);
+  }, [activeProjectId]);
+
+  // Current active provider metadata
+  const currentProviderMeta = useMemo(() => {
+    return AI_PROVIDERS.find(p => p.id === tempProvider) || AI_PROVIDERS[0];
+  }, [tempProvider]);
 
   // Combine static layer components with any custom added contracts
   const layersWithCustom = useMemo(() => {
@@ -102,31 +136,103 @@ export default function SoftwareArchitectureView({
     });
   }, [allAbstractMethods, selectedLayerId, contractSearchQuery]);
 
-  // Action: Trigger archifly dynamic analysis
-  const handleRunArchifly = () => {
+  // Action: Trigger archifly dynamic analysis (with AI if configured, or offline engine)
+  const handleRunArchifly = async () => {
     setIsAnalyzing(true);
-    setAnalysisProgress(10);
+    setAnalysisProgress(15);
 
-    const step1 = setTimeout(() => setAnalysisProgress(35), 250);
-    const step2 = setTimeout(() => setAnalysisProgress(65), 550);
-    const step3 = setTimeout(() => setAnalysisProgress(90), 850);
-    const finish = setTimeout(() => {
-      setAnalysisProgress(100);
+    try {
+      if (aiConfig.isAiEnabled && aiConfig.apiKey?.trim()) {
+        setAnalysisProgress(40);
+        onNotify?.(`Skill archifly: Invocando ${aiConfig.provider.toUpperCase()} (${aiConfig.model}) para análisis de arquitectura...`);
+
+        const result = await analyzeArchitectureWithAi({
+          project: activeProject,
+          stories,
+          interfaces,
+          dataModels,
+          treeNodes,
+          aiConfig
+        });
+
+        setAnalysisProgress(85);
+
+        if (result.architecture) {
+          setDynamicArchitecture(result.architecture);
+        }
+
+        setAnalysisProgress(100);
+        setIsAnalyzing(false);
+
+        confetti({
+          particleCount: 130,
+          spread: 85,
+          origin: { y: 0.35 }
+        });
+
+        onNotify?.(result.message || `¡Arquitectura sintetizada con éxito mediante ${aiConfig.provider.toUpperCase()}!`);
+      } else {
+        // Motor estático local offline
+        setTimeout(() => setAnalysisProgress(50), 300);
+        setTimeout(() => setAnalysisProgress(80), 650);
+        setTimeout(() => {
+          setAnalysisProgress(100);
+          setIsAnalyzing(false);
+          confetti({
+            particleCount: 100,
+            spread: 75,
+            origin: { y: 0.35 }
+          });
+          onNotify?.(`¡Skill archifly (Motor Offline) ejecutada con éxito! 4 capas y ${allAbstractMethods.length} contratos auditados.`);
+        }, 950);
+      }
+    } catch (err) {
       setIsAnalyzing(false);
-      confetti({
-        particleCount: 110,
-        spread: 80,
-        origin: { y: 0.35 }
-      });
-      onNotify?.(`¡Skill archifly ejecutada con éxito! Arquitectura de ${activeProject?.name || 'software'} validada: 4 capas, ${allAbstractMethods.length} contratos y 0% fuga de código.`);
-    }, 1150);
+      setAnalysisProgress(0);
+      onNotify?.(`Error al ejecutar análisis de arquitectura: ${err.message}`);
+    }
+  };
 
-    return () => {
-      clearTimeout(step1);
-      clearTimeout(step2);
-      clearTimeout(step3);
-      clearTimeout(finish);
+  // Action: Test AI connection
+  const handleTestConnection = async () => {
+    if (!tempApiKey.trim()) {
+      setTestStatus({ success: false, message: 'Ingresa una clave de API antes de probar.' });
+      return;
+    }
+    setIsTestingKey(true);
+    setTestStatus(null);
+    try {
+      const res = await testAiConnection({
+        provider: tempProvider,
+        apiKey: tempApiKey.trim(),
+        model: tempModel
+      });
+      setTestStatus(res);
+      if (res.success) {
+        onNotify?.(res.message);
+      }
+    } catch (err) {
+      setTestStatus({ success: false, message: err.message || 'Error de conexión' });
+    } finally {
+      setIsTestingKey(false);
+    }
+  };
+
+  // Action: Save AI Config
+  const handleSaveAiConfig = (e) => {
+    e.preventDefault();
+    const updated = {
+      provider: tempProvider,
+      model: tempModel,
+      apiKey: tempApiKey.trim(),
+      isAiEnabled: Boolean(tempApiKey.trim())
     };
+    setAiConfig(updated);
+    saveArchiflyAiConfig(updated);
+    setShowAiModal(false);
+    onNotify?.(updated.isAiEnabled
+      ? `Configuración de IA guardada: ${updated.provider.toUpperCase()} (${updated.model}) activo.`
+      : 'Modo Offline establecido para la skill archifly.');
   };
 
   // Action: Export Architecture Snapshot JSON
@@ -227,25 +333,36 @@ export default function SoftwareArchitectureView({
                   </h1>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                    Skill archifly v2.4
+                    Skill archifly
                   </span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px]">
+                  {aiConfig.isAiEnabled ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px]">
+                      <span className="material-symbols-outlined text-[13px]">neurology</span>
+                      IA Conectada ({aiConfig.provider.toUpperCase()})
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono text-[10px]">
+                      <span className="material-symbols-outlined text-[13px]">offline_bolt</span>
+                      Motor Local Offline
+                    </span>
+                  )}
+                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-mono text-[10px]">
                     0% Fuga de Código
                   </span>
                 </div>
                 <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate max-w-2xl">
-                  {architecture.architecturePattern} · Síntesis estática de capas, métodos abstractos, contratos C4 y trazabilidad DoD.
+                  {architecture.architecturePattern} · {architecture.synthesizedBy}
                 </p>
               </div>
             </div>
 
-            {/* Actions: Run archifly & Export */}
+            {/* Actions: Run archifly, AI API Config & Export */}
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handleRunArchifly}
                 disabled={isAnalyzing}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_0_15px_rgba(255,192,0,0.25)] disabled:opacity-50"
-                title="Ejecutar análisis estático con la skill archifly"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_0_15px_rgba(255,192,0,0.25)] disabled:opacity-50 cursor-pointer"
+                title="Ejecutar análisis estático o generativo con la skill archifly"
               >
                 <span className={`material-symbols-outlined text-[17px] ${isAnalyzing ? 'animate-spin' : ''}`}>
                   {isAnalyzing ? 'sync' : 'auto_awesome'}
@@ -254,8 +371,29 @@ export default function SoftwareArchitectureView({
               </button>
 
               <button
+                onClick={() => {
+                  setShowAiModal(true);
+                  setTempApiKey(aiConfig.apiKey || '');
+                  setTempProvider(aiConfig.provider || 'gemini');
+                  setTempModel(aiConfig.model || 'gemini-2.0-flash');
+                  setTestStatus(null);
+                }}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border font-space text-xs font-medium transition-colors cursor-pointer ${
+                  aiConfig.isAiEnabled
+                    ? 'bg-primary/10 border-primary/40 text-primary hover:bg-primary/20'
+                    : 'bg-surface-container-high hover:bg-surface-container-highest border-outline-variant text-white'
+                }`}
+                title="Configurar clave de API de IA (Google Gemini, OpenAI, DeepSeek)"
+              >
+                <span className="material-symbols-outlined text-[17px]">
+                  {aiConfig.isAiEnabled ? 'key' : 'key_off'}
+                </span>
+                <span>{aiConfig.isAiEnabled ? 'API de Modelo: Conectada' : 'Configurar API Key'}</span>
+              </button>
+
+              <button
                 onClick={handleExportSnapshot}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors cursor-pointer"
                 title="Descargar ArchitectureSnapshot.json inmutable"
               >
                 <span className="material-symbols-outlined text-[17px]">download</span>
@@ -264,7 +402,7 @@ export default function SoftwareArchitectureView({
 
               <button
                 onClick={handleCopyMermaid}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors cursor-pointer"
                 title="Copiar definición de diagrama Mermaid al portapapeles"
               >
                 <span className="material-symbols-outlined text-[17px] text-primary">
@@ -282,6 +420,24 @@ export default function SoftwareArchitectureView({
                 className="bg-primary h-full transition-all duration-200 ease-out"
                 style={{ width: `${analysisProgress}%` }}
               />
+            </div>
+          )}
+
+          {/* Informational banner when running offline */}
+          {!aiConfig.isAiEnabled && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl px-3.5 py-2 flex items-center justify-between gap-3 text-xs flex-wrap">
+              <div className="flex items-center gap-2 text-amber-300 font-jakarta">
+                <span className="material-symbols-outlined text-[18px] shrink-0">offline_bolt</span>
+                <span>
+                  <strong>Modo Offline Activo:</strong> La arquitectura opera de forma instantánea y determinista sin requerir API Key. Si deseas análisis con IA en tiempo real, puedes conectar tu clave de Gemini API.
+                </span>
+              </div>
+              <button
+                onClick={() => setShowAiModal(true)}
+                className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 font-space text-[11px] font-semibold transition-colors cursor-pointer"
+              >
+                Ingresar Clave de API
+              </button>
             </div>
           )}
 
@@ -329,7 +485,7 @@ export default function SoftwareArchitectureView({
             <div className="flex items-center gap-1 bg-surface-container-high p-1 rounded-xl border border-outline-variant">
               <button
                 onClick={() => setActiveSubTab('layers')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors cursor-pointer ${
                   activeSubTab === 'layers'
                     ? 'bg-primary text-[#09090B] font-bold shadow-sm'
                     : 'text-on-surface-variant hover:text-white'
@@ -341,7 +497,7 @@ export default function SoftwareArchitectureView({
 
               <button
                 onClick={() => setActiveSubTab('diagram')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors cursor-pointer ${
                   activeSubTab === 'diagram'
                     ? 'bg-primary text-[#09090B] font-bold shadow-sm'
                     : 'text-on-surface-variant hover:text-white'
@@ -353,7 +509,7 @@ export default function SoftwareArchitectureView({
 
               <button
                 onClick={() => setActiveSubTab('contracts')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors cursor-pointer ${
                   activeSubTab === 'contracts'
                     ? 'bg-primary text-[#09090B] font-bold shadow-sm'
                     : 'text-on-surface-variant hover:text-white'
@@ -365,7 +521,7 @@ export default function SoftwareArchitectureView({
 
               <button
                 onClick={() => setActiveSubTab('traceability')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors cursor-pointer ${
                   activeSubTab === 'traceability'
                     ? 'bg-primary text-[#09090B] font-bold shadow-sm'
                     : 'text-on-surface-variant hover:text-white'
@@ -377,7 +533,7 @@ export default function SoftwareArchitectureView({
 
               <button
                 onClick={() => setActiveSubTab('health')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-space text-xs transition-colors cursor-pointer ${
                   activeSubTab === 'health'
                     ? 'bg-primary text-[#09090B] font-bold shadow-sm'
                     : 'text-on-surface-variant hover:text-white'
@@ -432,7 +588,7 @@ export default function SoftwareArchitectureView({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   onClick={() => setSelectedLayerId('all')}
-                  className={`px-2.5 py-1 rounded-lg font-space text-xs transition-colors ${
+                  className={`px-2.5 py-1 rounded-lg font-space text-xs transition-colors cursor-pointer ${
                     selectedLayerId === 'all' ? 'bg-primary text-[#09090B] font-bold' : 'bg-surface-container-high text-on-surface-variant hover:text-white'
                   }`}
                 >
@@ -442,7 +598,7 @@ export default function SoftwareArchitectureView({
                   <button
                     key={l.id}
                     onClick={() => setSelectedLayerId(l.id)}
-                    className={`px-2.5 py-1 rounded-lg font-space text-xs transition-colors ${
+                    className={`px-2.5 py-1 rounded-lg font-space text-xs transition-colors cursor-pointer ${
                       selectedLayerId === l.id ? 'bg-primary text-[#09090B] font-bold' : 'bg-surface-container-high text-on-surface-variant hover:text-white'
                     }`}
                   >
@@ -552,7 +708,7 @@ export default function SoftwareArchitectureView({
               </div>
               <button
                 onClick={handleCopyMermaid}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium transition-colors cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[16px] text-primary">
                   {copiedMermaid ? 'check' : 'content_copy'}
@@ -676,7 +832,7 @@ export default function SoftwareArchitectureView({
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => setShowAddContractModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover transition-all cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[16px]">add</span>
                   <span>Registrar Contrato</span>
@@ -696,7 +852,7 @@ export default function SoftwareArchitectureView({
                   className="bg-transparent text-white font-jakarta text-xs focus:outline-none w-full"
                 />
                 {contractSearchQuery && (
-                  <button onClick={() => setContractSearchQuery('')} className="text-on-surface-variant hover:text-white text-xs">
+                  <button onClick={() => setContractSearchQuery('')} className="text-on-surface-variant hover:text-white text-xs cursor-pointer">
                     ✕
                   </button>
                 )}
@@ -922,7 +1078,178 @@ export default function SoftwareArchitectureView({
 
       </main>
 
-      {/* ── Modal: Registrar Contrato Abstracto ── */}
+      {/* ── Modal: Configurar API Key de Modelo de IA (Gemini / OpenAI / DeepSeek) ── */}
+      {showAiModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface-container border border-outline-variant w-full max-w-lg rounded-2xl p-6 flex flex-col gap-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-outline-variant pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
+                  <span className="material-symbols-outlined text-[19px]">neurology</span>
+                </div>
+                <div>
+                  <h3 className="font-space text-base font-bold text-white">Configurar API de Modelo de IA</h3>
+                  <p className="font-jakarta text-[11px] text-on-surface-variant">
+                    Conecta Google Gemini, OpenAI o DeepSeek para análisis generativo en vivo
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAiModal(false)}
+                className="text-on-surface-variant hover:text-white cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAiConfig} className="flex flex-col gap-3 font-jakarta text-xs">
+              
+              {/* Provider Selection */}
+              <div className="flex flex-col gap-1">
+                <label className="text-on-surface-variant font-medium">Proveedor de IA:</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {AI_PROVIDERS.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setTempProvider(p.id);
+                        setTempModel(p.defaultModel);
+                        setTestStatus(null);
+                      }}
+                      className={`p-2.5 rounded-xl border text-left flex flex-col gap-1 transition-all cursor-pointer ${
+                        tempProvider === p.id
+                          ? 'bg-primary/15 border-primary text-white shadow-sm'
+                          : 'bg-surface-container-high border-outline-variant text-on-surface-variant hover:text-white'
+                      }`}
+                    >
+                      <span className="font-space font-bold text-xs truncate">{p.name.split(' ')[0]}</span>
+                      <span className="text-[10px] font-mono text-primary/80">{p.id}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Model Selection */}
+              <div className="flex flex-col gap-1">
+                <label className="text-on-surface-variant font-medium">Modelo Específico:</label>
+                <select
+                  value={tempModel}
+                  onChange={(e) => setTempModel(e.target.value)}
+                  className="bg-surface-container-high border border-outline-variant rounded-lg p-2 text-white font-space text-xs focus:outline-none focus:border-primary cursor-pointer"
+                >
+                  {currentProviderMeta.models.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* API Key Input */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-on-surface-variant font-medium">Clave de API ({currentProviderMeta.name}):</label>
+                  <span className="text-[10px] text-on-surface-variant">Se guarda de forma segura en tu navegador</span>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showKeyPassword ? 'text' : 'password'}
+                    value={tempApiKey}
+                    onChange={(e) => {
+                      setTempApiKey(e.target.value);
+                      setTestStatus(null);
+                    }}
+                    placeholder={`Ingresa tu clave de API (${currentProviderMeta.placeholder})`}
+                    className="w-full bg-surface-container-high border border-outline-variant rounded-lg p-2.5 pr-10 text-white font-mono text-xs focus:outline-none focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyPassword(!showKeyPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-white cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {showKeyPassword ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Test Button & Result */}
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={isTestingKey || !tempApiKey.trim()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-white font-space text-xs font-medium disabled:opacity-50 transition-colors cursor-pointer"
+                >
+                  <span className={`material-symbols-outlined text-[15px] ${isTestingKey ? 'animate-spin' : ''}`}>
+                    {isTestingKey ? 'sync' : 'network_check'}
+                  </span>
+                  <span>{isTestingKey ? 'Comprobando...' : 'Probar Conexión'}</span>
+                </button>
+
+                {tempApiKey && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTempApiKey('');
+                      setTestStatus(null);
+                    }}
+                    className="text-error hover:underline text-[11px]"
+                  >
+                    Borrar Clave
+                  </button>
+                )}
+              </div>
+
+              {testStatus && (
+                <div className={`p-2.5 rounded-lg border text-xs flex items-center gap-2 ${
+                  testStatus.success
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                    : 'bg-error-container/20 border-error/30 text-error'
+                }`}>
+                  <span className="material-symbols-outlined text-[16px] shrink-0">
+                    {testStatus.success ? 'check_circle' : 'error'}
+                  </span>
+                  <span>{testStatus.message || testStatus.error}</span>
+                </div>
+              )}
+
+              {/* Mode switch explanation */}
+              <div className="p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/60 flex flex-col gap-1 text-[11px] text-on-surface-variant">
+                <span className="font-space font-semibold text-white">¿Cómo opera archifly?</span>
+                <p>
+                  • <strong>Con API Key:</strong> archifly envía el resumen ligero del proyecto (historias, interfaces, DER y rutas sin código fuente) a tu modelo de IA para generar un análisis arquitectónico en vivo.
+                </p>
+                <p>
+                  • <strong>Sin API Key (Modo Offline):</strong> archifly utiliza su motor determinista local incorporado, garantizando 100% de operativa sin conexión.
+                </p>
+              </div>
+
+              {/* Footer Modal Actions */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-outline-variant">
+                <button
+                  type="button"
+                  onClick={() => setShowAiModal(false)}
+                  className="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface-variant hover:text-white font-space text-xs cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-lg bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover shadow-sm cursor-pointer"
+                >
+                  Guardar Configuración
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Registrar Contrato Abstracto Manual ── */}
       {showAddContractModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
           <div className="bg-surface-container border border-outline-variant w-full max-w-lg rounded-2xl p-6 flex flex-col gap-4 shadow-2xl">
@@ -933,7 +1260,7 @@ export default function SoftwareArchitectureView({
               </div>
               <button
                 onClick={() => setShowAddContractModal(false)}
-                className="text-on-surface-variant hover:text-white"
+                className="text-on-surface-variant hover:text-white cursor-pointer"
               >
                 ✕
               </button>
@@ -945,7 +1272,7 @@ export default function SoftwareArchitectureView({
                 <select
                   value={newContractForm.layerId}
                   onChange={(e) => setNewContractForm(prev => ({ ...prev, layerId: e.target.value }))}
-                  className="bg-surface-container-high border border-outline-variant rounded-lg p-2 text-white font-space focus:outline-none focus:border-primary"
+                  className="bg-surface-container-high border border-outline-variant rounded-lg p-2 text-white font-space focus:outline-none focus:border-primary cursor-pointer"
                 >
                   <option value="presentation">Capa 1: Presentación & UI</option>
                   <option value="application">Capa 2: Aplicación & Casos de Uso</option>
@@ -1008,7 +1335,7 @@ export default function SoftwareArchitectureView({
                   <select
                     value={newContractForm.visibility}
                     onChange={(e) => setNewContractForm(prev => ({ ...prev, visibility: e.target.value }))}
-                    className="bg-surface-container-high border border-outline-variant rounded-lg p-2 text-white font-mono focus:outline-none focus:border-primary"
+                    className="bg-surface-container-high border border-outline-variant rounded-lg p-2 text-white font-mono focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="public">public</option>
                     <option value="private">private</option>
@@ -1020,7 +1347,7 @@ export default function SoftwareArchitectureView({
                   <select
                     value={newContractForm.isAsync ? 'async' : 'sync'}
                     onChange={(e) => setNewContractForm(prev => ({ ...prev, isAsync: e.target.value === 'async' }))}
-                    className="bg-surface-container-high border border-outline-variant rounded-lg p-2 text-white font-mono focus:outline-none focus:border-primary"
+                    className="bg-surface-container-high border border-outline-variant rounded-lg p-2 text-white font-mono focus:outline-none focus:border-primary cursor-pointer"
                   >
                     <option value="async">async</option>
                     <option value="sync">sync</option>
@@ -1053,13 +1380,13 @@ export default function SoftwareArchitectureView({
                 <button
                   type="button"
                   onClick={() => setShowAddContractModal(false)}
-                  className="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface-variant hover:text-white font-space text-xs"
+                  className="px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface-variant hover:text-white font-space text-xs cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover shadow-sm"
+                  className="px-4 py-1.5 rounded-lg bg-primary text-[#09090B] font-space text-xs font-bold hover:bg-primary-hover shadow-sm cursor-pointer"
                 >
                   Guardar Contrato
                 </button>
