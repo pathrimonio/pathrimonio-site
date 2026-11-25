@@ -43,6 +43,7 @@ import RolesSection from './components/landing/RolesSection';
 import ArchitectureSection from './components/landing/ArchitectureSection';
 import PartnershipSection from './components/landing/PartnershipSection';
 import ImpactPathwayBento from './components/landing/ImpactPathwayBento';
+import FormalIAWorkspace from './components/landing/formalia/FormalIAWorkspace';
 import InteractiveEstimator from './components/landing/InteractiveEstimator';
 import FAQSection from './components/landing/FAQSection';
 import Footer from './components/landing/Footer';
@@ -149,6 +150,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState(() =>
     window.location.hash === '#portal' ? 'portal' : 'landing'
   );
+  const [preloadedFormaliaData, setPreloadedFormaliaData] = useState(null);
 
   // ── Auth state (Supabase Auth)
   const [currentUser, setCurrentUser] = useState(null);
@@ -1497,8 +1499,19 @@ export default function App() {
             {/* Sección 05: Impacto y Pathway (Bento Grid) */}
             <ImpactPathwayBento />
 
+            {/* Sección 05B: FormalIA (Motor Conversacional + Carriles Vivos) */}
+            <FormalIAWorkspace
+              onPreloadQuote={(data) => {
+                setPreloadedFormaliaData(data);
+                notify('Configuración de roles y canales precargada desde FormalIA.');
+              }}
+            />
+
             {/* Sección 06: Cotizador Interactivo (Split-Screen 65/35) */}
-            <InteractiveEstimator onOpenContact={() => setIsContactModalOpen(true)} />
+            <InteractiveEstimator
+              onOpenContact={() => setIsContactModalOpen(true)}
+              preloadedFormaliaData={preloadedFormaliaData}
+            />
 
             {/* Sección 07: FAQ Minimalista */}
             <FAQSection />

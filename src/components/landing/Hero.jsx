@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, CheckCircle2, Shield, Laptop, Database } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Shield, Database, Sparkles } from 'lucide-react';
 
 export default function Hero({ onOpenPortal }) {
   return (
@@ -23,20 +23,21 @@ export default function Hero({ onOpenPortal }) {
             Sin licencias prohibitivas ni candados técnicos: garantizamos arquitectura offline-first, acompañamiento humano y soberanía total de datos para tu negocio o comunidad.
           </p>
 
-          {/* Máximo 2 Botones */}
+          {/* Rutas Complementarias: Directa vs FormalIA (SDD 2.1) */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto mb-12">
             <a
               href="#cotizador"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] text-[#09090B] text-sm font-semibold transition-colors shadow-sm cursor-pointer"
             >
-              <span>Cotizar Sistema ($1/día)</span>
+              <span>Cotizar mis roles ahora</span>
               <ArrowRight size={15} strokeWidth={1.5} />
             </a>
             <a
-              href="#socios"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFFFFF] dark:bg-[#111113] hover:bg-[#F4F4F5] dark:hover:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#D4D4D8] dark:hover:border-[#3F3F46] text-[#09090B] dark:text-[#F4F4F5] text-sm font-medium transition-colors cursor-pointer"
+              href="#formalia"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFFFFF] dark:bg-[#111113] hover:bg-[#FFFBEB] dark:hover:bg-amber-500/10 border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#FFC000] text-[#09090B] dark:text-[#F4F4F5] text-sm font-medium transition-colors cursor-pointer"
             >
-              <span>Ver Programa de Socios</span>
+              <Sparkles size={15} strokeWidth={1.75} className="text-[#9A6700] dark:text-[#FFC000]" />
+              <span>Mapea tu negocio gratis con FormalIA</span>
             </a>
           </div>
 

@@ -1,0 +1,311 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Sparkles,
+  MessageSquare,
+  GitBranch,
+  Maximize2,
+  Minimize2
+} from 'lucide-react';
+import {
+  createInitialProcessGraph,
+  SDD_EXAMPLE_LOGISTICS_GRAPH
+} from '../../../lib/formalia/schema';
+import {
+  startFormaliaSession,
+  sendFormaliaMessage,
+  convertFormaliaToQuote,
+  loadLocalFormaliaSession,
+  saveLocalFormaliaSession,
+  clearLocalFormaliaSession,
+  createWelcomeMessage
+} from '../../../services/formaliaService';
+import FormalIAChatPanel from './FormalIAChatPanel';
+import FormalIACanvasPanel from './FormalIACanvasPanel';
+
+export default function FormalIAWorkspace({ onPreloadQuote }) {
+  const [session, setSession] = useState(() => {
+    const saved = loadLocalFormaliaSession();
+    if (saved) return saved;
+    const initGraph = createInitialProcessGraph();
+    return {
+      session_id: initGraph.session_id,
+      process_graph: initGraph,
+      messages: [createWelcomeMessage()],
+      turns_count: 0,
+      max_turns: 15
+    };
+  });
+
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [mobileTab, setMobileTab] = useState('chat'); // 'chat' | 'diagram'
+  const [diagramUpdatedBadge, setDiagramUpdatedBadge] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Sincronizar sesión inicial con backend API si no existía en localStorage
+  useEffect(() => {
+    const saved = loadLocalFormaliaSession();
+    if (!saved) {
+      startFormaliaSession().then((newSess) => {
+        setSession(newSess);
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    saveLocalFormaliaSession(session);
+  }, [session]);
+
+  const handleSendMessage = async (text) => {
+    setErrorMsg('');
+    const userMsg = {
+      id: `msg_${Date.now()}_u`,
+      role: 'user',
+      content: text,
+      timestamp: new Date().toISOString()
+    };
+
+    setSession((prev) => ({
+      ...prev,
+      messages: [...prev.messages, userMsg]
+    }));
+
+    setIsExtracting(true);
+    try {
+      const res = await sendFormaliaMessage({
+        sessionId: session.session_id,
+        message: text,
+        currentGraph: session.process_graph,
+        turnsCount: session.turns_count
+      });
+
+      const assistantMsg = {
+        id: `msg_${Date.now()}_a`,
+        role: 'assistant',
+        content: res.assistant_message,
+        quick_replies: res.quick_replies,
+        graph_patch: res.graph_patch,
+        phase: res.phase,
+        timestamp: new Date().toISOString()
+      };
+
+      setSession((prev) => ({
+        ...prev,
+        process_graph: res.process_graph,
+        turns_count: res.turns_count,
+        messages: [...prev.messages, assistantMsg]
+      }));
+
+      // En móvil (< 768px), encender indicador visual de diagrama actualizado
+      setDiagramUpdatedBadge(true);
+    } catch (err) {
+      setErrorMsg(err.message || 'Ocurrió un error al procesar tu mensaje.');
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleResetSession = async () => {
+    clearLocalFormaliaSession();
+    setErrorMsg('');
+    setDiagramUpdatedBadge(false);
+    const fresh = await startFormaliaSession();
+    setSession(fresh);
+  };
+
+  const handleLoadExample = () => {
+    const exampleGraph = structuredClone(SDD_EXAMPLE_LOGISTICS_GRAPH);
+    const exampleMessages = [
+      createWelcomeMessage(),
+      {
+        id: 'msg_demo_u1',
+        role: 'user',
+        content:
+          'Somos Transportes del Norte SAC. El cliente pide cotización por WhatsApp, Recepción/Ventas anota la orden en Excel y pasa a Caja. Caja valida RUC/DNI y emite comprobante; luego Almacén verifica en cuaderno y Despacho entrega con foto.',
+        timestamp: new Date().toISOString()
+      },
+      {
+        id: 'msg_demo_a1',
+        role: 'assistant',
+        content:
+          'Detectamos 4 roles internos ($4/día como Socio), 5 pasos y 2 cuellos de botella manuales (Excel y cuaderno). ¿Deseas ver tu cotización estimada?',
+        quick_replies: [
+          'Agregar aprobación de Gerencia antes del despacho',
+          'Cotizar este sistema ahora en Pathrimonio'
+        ],
+        graph_patch: [
+          { op: 'add_role', actor: exampleGraph.actors[0] },
+          { op: 'add_role', actor: exampleGraph.actors[1] },
+          { op: 'add_role', actor: exampleGraph.actors[2] },
+          { op: 'add_role', actor: exampleGraph.actors[3] },
+          { op: 'add_role', actor: exampleGraph.actors[4] },
+          ...exampleGraph.steps.map((s) => ({ op: 'add_step', step: s }))
+        ],
+        phase: '5_synthesis',
+        timestamp: new Date().toISOString()
+      }
+    ];
+
+    setSession({
+      session_id: exampleGraph.session_id,
+      process_graph: exampleGraph,
+      messages: exampleMessages,
+      turns_count: 1,
+      max_turns: 15
+    });
+    setDiagramUpdatedBadge(true);
+    setErrorMsg('');
+  };
+
+  const handleApplyToQuote = async (graph) => {
+    const targetGraph = graph || session.process_graph;
+    const preloadedConfig = await convertFormaliaToQuote({
+      sessionId: session.session_id,
+      graph: targetGraph
+    });
+
+    setIsExpanded(false);
+    onPreloadQuote?.({
+      ...preloadedConfig,
+      process_graph: targetGraph,
+      preloadedAt: Date.now()
+    });
+
+    // Desplazar suavemente hacia el Cotizador
+    const el = document.getElementById('cotizador');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const stepsCount = session.process_graph?.steps?.length || 0;
+
+  return (
+    <section
+      id="formalia"
+      className="w-full py-20 lg:py-24 bg-[#FAFAFA] dark:bg-[#09090B] border-b border-[#E4E4E7] dark:border-[#27272A] transition-colors"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Encabezado de Sección */}
+        <div className="max-w-3xl mx-auto text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] text-xs font-medium mb-4">
+            <Sparkles size={13} />
+            <span>Módulo Conversacional FormalIA · Gratis y sin registro</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-3">
+            Mapea tu negocio en carriles vivos antes de cotizar
+          </h2>
+          <p className="text-sm sm:text-base text-[#52525B] dark:text-[#A1A1AA] leading-relaxed">
+            Cuéntale a FormalIA cómo trabaja tu equipo hoy. Al instante obtienes tu diagrama de roles, cuellos de botella en PNG/PDF y tu sistema precargado a <strong className="text-[#09090B] dark:text-[#F4F4F5]">$1 USD/día por rol</strong>.
+          </p>
+        </div>
+
+        {/* Contenedor Split-Screen (O Fullscreen expandible) */}
+        <div
+          className={
+            isExpanded
+              ? 'fixed inset-0 z-[70] bg-[#FAFAFA] dark:bg-[#09090B] p-2 sm:p-4 flex flex-col'
+              : 'relative rounded-[16px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#111113] shadow-lg overflow-hidden flex flex-col'
+          }
+        >
+          {/* Barra superior del Studio Split-Screen */}
+          <div className="px-4 py-2.5 border-b border-[#E4E4E7] dark:border-[#27272A] bg-[#F4F4F5]/70 dark:bg-[#18181B] flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#FFC000]" />
+              <span className="font-mono text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+                FormalIA Studio
+              </span>
+              <span className="hidden sm:inline font-mono text-[11px] text-[#71717A]">
+                · Sesión {session.session_id}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#111113] text-[11px] font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] cursor-pointer"
+              title={isExpanded ? 'Contraer espacio de trabajo' : 'Expandir a pantalla completa'}
+            >
+              {isExpanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+              <span>{isExpanded ? 'Contraer' : 'Pantalla completa'}</span>
+            </button>
+          </div>
+
+          {/* Pestañas Móviles (< 768px — SDD Criterio 5) */}
+          <div className="grid grid-cols-2 md:hidden border-b border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#111113]">
+            <button
+              type="button"
+              onClick={() => setMobileTab('chat')}
+              className={`py-2.5 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
+                mobileTab === 'chat'
+                  ? 'border-[#FFC000] text-[#09090B] dark:text-[#F4F4F5] bg-[#FFFBEB]/40 dark:bg-amber-500/5'
+                  : 'border-transparent text-[#71717A] dark:text-[#A1A1AA]'
+              }`}
+            >
+              <MessageSquare size={14} />
+              <span>Chat FormalIA</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileTab('diagram');
+                setDiagramUpdatedBadge(false);
+              }}
+              className={`relative py-2.5 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
+                mobileTab === 'diagram'
+                  ? 'border-[#FFC000] text-[#09090B] dark:text-[#F4F4F5] bg-[#FFFBEB]/40 dark:bg-amber-500/5'
+                  : 'border-transparent text-[#71717A] dark:text-[#A1A1AA]'
+              }`}
+            >
+              <GitBranch size={14} />
+              <span>Ver mi Diagrama ({stepsCount} pasos)</span>
+              {diagramUpdatedBadge && mobileTab !== 'diagram' && (
+                <span className="w-2 h-2 rounded-full bg-[#FFC000] animate-ping" />
+              )}
+            </button>
+          </div>
+
+          {/* Split-Screen 40% Izquierda / 60% Derecha en Desktop */}
+          <div className={`flex flex-col md:flex-row ${isExpanded ? 'flex-1 min-h-0' : 'md:h-[650px]'}`}>
+            
+            {/* Panel Izquierdo (40%) */}
+            <div
+              className={`w-full md:w-[40%] h-full ${
+                mobileTab === 'chat' ? 'block' : 'hidden md:block'
+              }`}
+            >
+              <FormalIAChatPanel
+                messages={session.messages}
+                completenessScore={session.process_graph?.completeness_score || 0}
+                currentPhase={session.process_graph?.phase || '1_context'}
+                turnsCount={session.turns_count || 0}
+                maxTurns={session.max_turns || 15}
+                isExtracting={isExtracting}
+                errorMessage={errorMsg}
+                onSendMessage={handleSendMessage}
+                onResetSession={handleResetSession}
+                onLoadExample={handleLoadExample}
+              />
+            </div>
+
+            {/* Panel Derecho (60%) */}
+            <div
+              className={`w-full md:w-[60%] h-full ${
+                mobileTab === 'diagram' ? 'block' : 'hidden md:block'
+              }`}
+            >
+              <FormalIACanvasPanel
+                graph={session.process_graph}
+                isExtracting={isExtracting}
+                onApplyToQuote={handleApplyToQuote}
+              />
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+}

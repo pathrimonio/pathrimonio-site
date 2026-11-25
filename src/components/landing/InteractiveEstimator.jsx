@@ -46,11 +46,12 @@ import {
   generateQuoteId,
   formatWhatsAppMessage
 } from '../../data/pricingRules';
+import { submitQuoteWithFormaliaHandoff } from '../../services/formaliaService';
 
 const STORAGE_KEY = 'pathrimonio_quote_wizard_v2';
 const PATHRIMONIO_WHATSAPP_NUMBER = '51950293223';
 
-export default function InteractiveEstimator({ onOpenContact }) {
+export default function InteractiveEstimator({ onOpenContact, preloadedFormaliaData = null }) {
   // ── 1. Estado inicial
   const [quoteState, setQuoteState] = useState(() => {
     try {
@@ -99,6 +100,29 @@ export default function InteractiveEstimator({ onOpenContact }) {
   const [copySuccess, setCopySuccess] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
+  const [isPreloadedFromFormalia, setIsPreloadedFromFormalia] = useState(false);
+
+  // Precarga automática determinista cuando el usuario viene desde FormalIA (SDD Sección 5)
+  useEffect(() => {
+    if (!preloadedFormaliaData || !preloadedFormaliaData.configuration) return;
+    setQuoteState((prev) => ({
+      ...prev,
+      currentStep: 2,
+      business_discovery: {
+        ...prev.business_discovery,
+        ...(preloadedFormaliaData.business_discovery || {})
+      },
+      configuration: {
+        ...prev.configuration,
+        ...(preloadedFormaliaData.configuration || {})
+      },
+      commitment_plan: preloadedFormaliaData.commitment_plan || prev.commitment_plan
+    }));
+    setActiveStep(2);
+    setTarifaSocio(true);
+    setIsPreloadedFromFormalia(true);
+    setSuccessQuote(null);
+  }, [preloadedFormaliaData?.preloadedAt]);
 
   useEffect(() => {
     try {
@@ -242,6 +266,7 @@ export default function InteractiveEstimator({ onOpenContact }) {
     const quoteId = generateQuoteId();
     const payload = {
       quote_id: quoteId,
+      formalia_session_id: preloadedFormaliaData?.formalia_session_id || null,
       timestamp: new Date().toISOString(),
       business_discovery: quoteState.business_discovery,
       configuration: {
@@ -264,6 +289,9 @@ export default function InteractiveEstimator({ onOpenContact }) {
       },
       lead_contact: quoteState.lead_contact
     };
+
+    // Handoff asíncrono Preventa -> Desarrollo (POST /api/v1/quotes)
+    submitQuoteWithFormaliaHandoff(payload, preloadedFormaliaData?.process_graph).catch(() => {});
 
     setSuccessQuote(payload);
     try {
@@ -295,8 +323,6 @@ export default function InteractiveEstimator({ onOpenContact }) {
         {/* Encabezado */}
         <div className="max-w-2xl mb-12">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#F4F4F5] dark:bg-[#18181B] text-[#52525B] dark:text-[#A1A1AA] text-xs font-mono mb-3">
-            <span>SECCIÓN 05</span>
-            <span>/</span>
             <span className="text-[#09090B] dark:text-[#F4F4F5] font-semibold">COTIZADOR INTERACTIVO</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-4">
@@ -306,6 +332,38 @@ export default function InteractiveEstimator({ onOpenContact }) {
             Transparencia radical: calcula el valor exacto de tu software a <strong className="text-[#09090B] dark:text-[#F4F4F5]">$1 USD al día por rol</strong> y recibe una propuesta formal en minutos.
           </p>
         </div>
+
+        {/* Banner Ruta Guiada o Precarga desde FormalIA (SDD Sección 2.1 y 5) */}
+        {isPreloadedFromFormalia ? (
+          <div className="mb-6 p-3.5 rounded-[10px] bg-[#FFFBEB] dark:bg-amber-500/10 border border-[#FFC000] flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-xs text-[#09090B] dark:text-[#F4F4F5]">
+              <Sparkles size={16} className="text-[#9A6700] dark:text-[#FFC000] shrink-0" />
+              <span>
+                <strong>Configuración precargada desde tu mapa en FormalIA.</strong> Puedes ajustar cualquier rol o módulo libremente.
+              </span>
+            </div>
+            <a
+              href="#formalia"
+              className="text-xs font-medium text-[#9A6700] dark:text-[#FFC000] hover:underline whitespace-nowrap"
+            >
+              Volver a editar en FormalIA →
+            </a>
+          </div>
+        ) : (
+          <div className="mb-6 p-3.5 rounded-[10px] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-xs text-[#52525B] dark:text-[#A1A1AA]">
+              <Sparkles size={15} className="text-[#9A6700] dark:text-[#FFC000] shrink-0" />
+              <span>¿No estás seguro de qué roles o módulos necesitas? Deja que <strong className="text-[#09090B] dark:text-[#F4F4F5]">FormalIA</strong> mapee tu operación y llene esto por ti.</span>
+            </div>
+            <a
+              href="#formalia"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] text-xs font-semibold hover:border-[#FFC000] transition-colors whitespace-nowrap"
+            >
+              <span>Mapea tu negocio gratis con FormalIA</span>
+              <ArrowRight size={13} />
+            </a>
+          </div>
+        )}
 
         {/* Indicador de Progreso Minimalista (4 Pasos) */}
         <div className="mb-10 bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] rounded-[8px] p-2 sm:p-3">

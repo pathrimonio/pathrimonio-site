@@ -17,8 +17,6 @@ export default function ImpactPathwayBento() {
         {/* Encabezado */}
         <div className="max-w-2xl mb-14">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#F4F4F5] dark:bg-[#18181B] text-[#52525B] dark:text-[#A1A1AA] text-xs font-mono mb-3">
-            <span>SECCIÓN 04</span>
-            <span>/</span>
             <span className="text-[#09090B] dark:text-[#F4F4F5] font-semibold">IMPACTO Y PATHWAY</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-4">

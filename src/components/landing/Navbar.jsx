@@ -7,8 +7,8 @@ export default function Navbar({ onOpenPortal, onOpenRegister, theme, onToggleTh
   const navLinks = [
     { name: 'Roles & Control', href: '#roles' },
     { name: 'Arquitectura', href: '#arquitectura' },
-    { name: 'Programa de Socios', href: '#socios' },
-    { name: 'Impacto & Pathway', href: '#impacto' },
+    { name: 'Socios', href: '#socios' },
+    { name: 'FormalIA', href: '#formalia' },
     { name: 'Cotizador', href: '#cotizador' },
     { name: 'FAQ', href: '#faq' },
   ];
