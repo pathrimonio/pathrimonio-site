@@ -1,0 +1,16 @@
+node_modules
+dist
+.git
+.vercel
+.agents
+.env
+.env.local
+.env*.local
+Credenciales
+docs
+stitch_pathrimonio_social_software_portal
+scripts
+mcp
+run-local.cmd
+run-local.ps1
+*.log
