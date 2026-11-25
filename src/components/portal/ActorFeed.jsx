@@ -84,8 +84,8 @@ export default function ActorFeed({
       {/* ── Search & Filter Controls ── */}
       <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-4 flex flex-wrap items-center gap-3 shadow-sm">
         
-        {/* Search Bar */}
-        <div className="relative flex-1 min-w-[260px]">
+        {/* Search Bar (Adaptive Width) */}
+        <div className="relative flex-1 min-w-[240px] sm:min-w-[280px] lg:min-w-[320px] w-full sm:w-auto">
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
             search
           </span>
@@ -94,7 +94,7 @@ export default function ActorFeed({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar por rol (ej. Administrador, Cajero), área de negocio (ej. Ventas), o colaborador..."
-            className="w-full bg-surface-container-highest border border-outline-variant rounded-xl pl-10 pr-4 py-2 text-xs font-jakarta text-white placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
+            className="w-full bg-surface-container-highest border border-outline-variant rounded-xl pl-10 pr-9 py-2 text-xs font-jakarta text-white placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
           />
           {searchQuery && (
             <button
@@ -106,17 +106,17 @@ export default function ActorFeed({
           )}
         </div>
 
-        {/* Dropdown Filters */}
-        <div className="flex flex-wrap items-center gap-3 text-xs font-space">
-          <div className="flex items-center gap-2 flex-wrap">
+        {/* Dropdown Filters & Actions (Adaptive Width) */}
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs font-space w-full sm:w-auto flex-1 sm:flex-initial justify-between sm:justify-start">
+          <div className="flex items-center gap-2 flex-wrap flex-1 sm:flex-initial w-full sm:w-auto">
             
             {/* Category Filter */}
-            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
-              <span className="material-symbols-outlined text-primary text-[16px]">category</span>
+            <div className="flex-1 sm:flex-initial min-w-[130px] sm:min-w-[145px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
+              <span className="material-symbols-outlined text-primary text-[16px] shrink-0">category</span>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
+                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate"
               >
                 {ACTOR_CATEGORY_OPTIONS.map((cat) => (
                   <option key={cat} value={cat} className="bg-surface-container-highest text-white">
@@ -127,12 +127,12 @@ export default function ActorFeed({
             </div>
 
             {/* Permission Level Filter */}
-            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
-              <span className="material-symbols-outlined text-secondary text-[16px]">shield</span>
+            <div className="flex-1 sm:flex-initial min-w-[130px] sm:min-w-[145px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
+              <span className="material-symbols-outlined text-secondary text-[16px] shrink-0">shield</span>
               <select
                 value={selectedPermission}
                 onChange={(e) => setSelectedPermission(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
+                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate"
               >
                 {PERMISSION_LEVEL_OPTIONS.map((lvl) => (
                   <option key={lvl} value={lvl} className="bg-surface-container-highest text-white">
@@ -150,22 +150,22 @@ export default function ActorFeed({
                   setSelectedPermission('Todos');
                   setSearchQuery('');
                 }}
-                className="text-xs text-primary hover:underline flex items-center gap-1 py-1 px-2"
+                className="text-xs text-primary hover:underline flex items-center gap-1 py-1 px-2 whitespace-nowrap cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[14px]">filter_alt_off</span>
-                Limpiar filtros
+                <span>Limpiar</span>
               </button>
             )}
           </div>
 
-          {/* Sort By */}
-          <div className="flex items-center gap-2 ml-auto flex-wrap">
-            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
-              <span className="material-symbols-outlined text-on-surface-variant text-[16px]">sort</span>
+          {/* Sort By & Button */}
+          <div className="flex items-center gap-2 flex-wrap flex-1 sm:flex-initial sm:ml-auto w-full sm:w-auto justify-end">
+            <div className="flex-1 sm:flex-initial min-w-[120px] sm:min-w-[130px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
+              <span className="material-symbols-outlined text-on-surface-variant text-[16px] shrink-0">sort</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
+                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate"
               >
                 <option value="name" className="bg-surface-container-highest text-white">Alfabético</option>
                 <option value="stories" className="bg-surface-container-highest text-white">HU Vinculadas</option>
@@ -176,7 +176,7 @@ export default function ActorFeed({
             {onOpenCreateModal && (
               <button
                 onClick={onOpenCreateModal}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all whitespace-nowrap cursor-pointer active:scale-[0.98]"
                 title="Registrar nuevo rol o actor del negocio"
               >
                 <span className="material-symbols-outlined text-[16px]">person_add</span>
