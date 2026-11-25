@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function ActorCard({
   actor,
@@ -11,6 +12,47 @@ export default function ActorCard({
   onNotify
 }) {
   const [copiedLink, setCopiedLink] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareCoords, setShareCoords] = useState({ top: 0, left: 12, width: 320 });
+  const shareTriggerRef = useRef(null);
+  const sharePopoverRef = useRef(null);
+
+  const updateSharePosition = () => {
+    const el = shareTriggerRef.current;
+    if (!el || typeof window === 'undefined') return;
+    const rect = el.getBoundingClientRect();
+    const width = Math.min(320, window.innerWidth - 24);
+    const left = Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12));
+    setShareCoords({ top: Math.max(12, rect.top - 8), left, width });
+  };
+
+  useEffect(() => {
+    if (!shareOpen) return undefined;
+    updateSharePosition();
+    const handleViewportChange = () => updateSharePosition();
+    const handlePointerDown = (event) => {
+      if (
+        shareTriggerRef.current?.contains(event.target) ||
+        sharePopoverRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setShareOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setShareOpen(false);
+    };
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('scroll', handleViewportChange, true);
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener('scroll', handleViewportChange, true);
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [shareOpen]);
 
   // Helper for avatar colors
   const getColorClasses = (color) => {
@@ -65,7 +107,7 @@ export default function ActorCard({
   };
 
   return (
-    <article className="group w-1/4 shrink-0 bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-200 shadow-md hover:shadow-xl">
+    <article className="group w-1/4 min-w-[280px] max-w-[360px] shrink-0 bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-200 shadow-md hover:shadow-xl">
       
       {/* ── 1. Header: Avatar, Nombre de Rol & Nivel de Permiso ── */}
       <div className="flex flex-col gap-3.5 border-b border-outline-variant/60 pb-4">
@@ -149,35 +191,6 @@ export default function ActorCard({
         </div>
       </div>
 
-      {/* ── 4. Collaborator Assignment & Shareable Link ── */}
-      <div className="bg-surface-container-low border border-outline-variant rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-7 h-7 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center text-on-surface-variant shrink-0">
-            <span className="material-symbols-outlined text-[15px]">badge</span>
-          </div>
-          <div className="min-w-0">
-            <span className="font-space text-white font-medium block truncate text-[11px]">
-              {actor.assignedWorkerName || 'Colaborador Asignado'}
-            </span>
-            <span className="font-mono text-[10px] text-on-surface-variant truncate block">
-              {actor.assignedWorker || 'Sin asignar'}
-            </span>
-          </div>
-        </div>
-
-        {/* Copy Shareable link button */}
-        <button
-          onClick={handleCopyCollaboratorLink}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant hover:border-primary/50 text-xs font-space text-white transition-colors shadow-sm ml-auto"
-          title="Copiar enlace directo para que el trabajador responsable complete sus HUs"
-        >
-          <span className="material-symbols-outlined text-[15px] text-cyan-400">
-            {copiedLink ? 'check' : 'share'}
-          </span>
-          <span>{copiedLink ? '¡Enlace Copiado!' : 'Compartir con Trabajador'}</span>
-        </button>
-      </div>
-
       {/* ── 5. Actions Footer ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-outline-variant/60 text-xs">
         <div className="flex items-center gap-2">
@@ -193,6 +206,60 @@ export default function ActorCard({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {/* Share popover trigger */}
+          <button
+            ref={shareTriggerRef}
+            onClick={() => setShareOpen((prev) => !prev)}
+            className={`p-1.5 rounded-lg bg-surface-container border border-outline-variant transition-colors ${
+              shareOpen
+                ? 'text-cyan-400 border-cyan-400/50'
+                : 'text-on-surface-variant hover:bg-surface-container-high hover:text-white'
+            }`}
+            title="Compartir con Trabajador"
+          >
+            <span className="material-symbols-outlined text-[16px]">share</span>
+          </button>
+
+          {shareOpen && typeof document !== 'undefined' && createPortal(
+            <div
+              ref={sharePopoverRef}
+              style={{
+                position: 'fixed',
+                top: shareCoords.top,
+                left: shareCoords.left,
+                width: shareCoords.width,
+                transform: 'translateY(-100%)',
+                zIndex: 9999
+              }}
+              className="bg-surface-container-low border border-outline-variant rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-[0_16px_40px_rgba(0,0,0,0.65)]"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center text-on-surface-variant shrink-0">
+                  <span className="material-symbols-outlined text-[15px]">badge</span>
+                </div>
+                <div className="min-w-0">
+                  <span className="font-space text-white font-medium block truncate text-[11px]">
+                    {actor.assignedWorkerName || 'Colaborador Asignado'}
+                  </span>
+                  <span className="font-mono text-[10px] text-on-surface-variant truncate block">
+                    {actor.assignedWorker || 'Sin asignar'}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={handleCopyCollaboratorLink}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant hover:border-primary/50 text-xs font-space text-white transition-colors shadow-sm ml-auto"
+                title="Copiar enlace directo para que el trabajador responsable complete sus HUs"
+              >
+                <span className="material-symbols-outlined text-[15px] text-cyan-400">
+                  {copiedLink ? 'check' : 'share'}
+                </span>
+                <span>{copiedLink ? '¡Enlace Copiado!' : 'Compartir con Trabajador'}</span>
+              </button>
+            </div>,
+            document.body
+          )}
+
           {/* Duplicate */}
           <button
             onClick={() => onDuplicate?.(actor)}

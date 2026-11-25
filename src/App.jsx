@@ -1635,12 +1635,8 @@ export default function App() {
                       <ActorsControlsBar
                         actors={projectActors}
                         stories={projectStories}
-                        activeProject={activeProject}
                         projectUsers={projectUsers}
                         onManageUsers={activeProjectId !== 'all' && isActionAllowedForRole(currentUser?.role, 'canManageUsers', roleDefinitions) ? () => setIsInviteMemberModalOpen(true) : undefined}
-                        onNotify={notify}
-                        onNavigateToStories={() => setActivePortalTab('stories')}
-                        onOpenCreateModal={() => setIsCreateActorModalOpen(true)}
                       />
                       <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
                         <div className="w-full flex flex-col gap-y-4">

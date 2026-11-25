@@ -82,10 +82,10 @@ export default function ActorFeed({
     <div className="flex flex-col gap-5 w-full">
       
       {/* ── Search & Filter Controls ── */}
-      <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-4 flex flex-col gap-4 shadow-sm">
+      <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-4 flex flex-wrap items-center gap-3 shadow-sm">
         
         {/* Search Bar */}
-        <div className="relative">
+        <div className="relative flex-1 min-w-[260px]">
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
             search
           </span>
@@ -107,13 +107,12 @@ export default function ActorFeed({
         </div>
 
         {/* Dropdown Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-space">
+        <div className="flex flex-wrap items-center gap-3 text-xs font-space">
           <div className="flex items-center gap-2 flex-wrap">
             
             {/* Category Filter */}
             <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
               <span className="material-symbols-outlined text-primary text-[16px]">category</span>
-              <label className="text-on-surface-variant text-[11px]">Categoría:</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
@@ -130,7 +129,6 @@ export default function ActorFeed({
             {/* Permission Level Filter */}
             <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
               <span className="material-symbols-outlined text-secondary text-[16px]">shield</span>
-              <label className="text-on-surface-variant text-[11px]">Permiso:</label>
               <select
                 value={selectedPermission}
                 onChange={(e) => setSelectedPermission(e.target.value)}
@@ -164,7 +162,6 @@ export default function ActorFeed({
           <div className="flex items-center gap-2 ml-auto flex-wrap">
             <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
               <span className="material-symbols-outlined text-on-surface-variant text-[16px]">sort</span>
-              <label className="text-on-surface-variant text-[11px]">Ordenar:</label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
@@ -183,7 +180,7 @@ export default function ActorFeed({
                 title="Registrar nuevo rol o actor del negocio"
               >
                 <span className="material-symbols-outlined text-[16px]">person_add</span>
-                <span>Nuevo Actor</span>
+                <span>Registrar</span>
               </button>
             )}
           </div>
