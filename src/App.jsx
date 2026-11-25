@@ -511,7 +511,7 @@ export default function App() {
       const isAllowed = isTabAllowedForRole(userRole, activePortalTab, roleDefinitions);
       if (!isAllowed) {
         const allowed = roleDefinitions[userRole]?.allowedTabs || ['actors', 'stories', 'interfaces'];
-        const fallbackTab = allowed.includes('stories') ? 'stories' : allowed[0];
+        const fallbackTab = allowed.includes('actors') ? 'actors' : (allowed.includes('stories') ? 'stories' : allowed[0]);
         setActivePortalTab(fallbackTab);
       }
     }
@@ -736,6 +736,7 @@ export default function App() {
       window.location.hash = '#portal';
       setLoginMode('login');
     }
+    setActivePortalTab('actors');
     setCurrentView('portal');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -752,6 +753,7 @@ export default function App() {
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
     setShowLogin(false);
+    setActivePortalTab('actors');
 
     if (user.initialProjectName && (!user.initialProject || !projects.some(p => p.id === user.initialProject))) {
       const slug = (user.initialProject || user.initialProjectName)
