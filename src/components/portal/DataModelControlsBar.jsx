@@ -1,6 +1,7 @@
 import React from 'react';
 import confetti from 'canvas-confetti';
 import { generateTableDDL, generatePlantUML, generateFullProjectSQL } from '../../data/initialDataModels';
+import SectionInfoPopover from './SectionInfoPopover';
 
 export default function DataModelControlsBar({
   tables = [],
@@ -98,17 +99,18 @@ export default function DataModelControlsBar({
               <span className="material-symbols-outlined text-[22px]">database</span>
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-x-2.5 flex-wrap">
+              <div className="flex items-center gap-x-2 flex-wrap">
                 <h1 className="font-space text-base sm:text-lg text-white font-semibold tracking-tight truncate">
                   Modelado de Datos
                 </h1>
+                <SectionInfoPopover
+                  title="Modelado de Datos"
+                  description="Diccionario de datos: Definición de tablas, atributos, tipos, llaves foráneas y motores de persistencia."
+                />
                 <span className="px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-primary font-space text-[11px] font-medium tracking-wide">
                   {activeProject?.category || 'Arquitectura & Almacenamiento'}
                 </span>
               </div>
-              <p className="font-jakarta text-xs text-on-surface-variant mt-0.5">
-                Diccionario de datos: Definición de tablas, atributos, tipos, llaves foráneas y motores de persistencia
-              </p>
             </div>
           </div>
 

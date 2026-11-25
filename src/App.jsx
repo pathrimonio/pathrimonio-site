@@ -158,7 +158,7 @@ export default function App() {
   const [loginMode, setLoginMode] = useState('login');
 
   // ── Portal nav
-  const [activePortalTab, setActivePortalTab] = useState('stories');
+  const [activePortalTab, setActivePortalTab] = useState('actors');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Projects (Multi-software)

@@ -5,6 +5,7 @@ import {
   DEFAULT_ROLE_DEFINITIONS,
   saveRoleDefinitions 
 } from '../../auth/permissionsConfig';
+import SectionInfoPopover from './SectionInfoPopover';
 
 export default function AdminUsersView({
   currentUser,
@@ -161,18 +162,19 @@ export default function AdminUsersView({
       {/* Header Superior */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-outline-variant">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-[22px]">admin_panel_settings</span>
             <h1 className="font-space text-xl sm:text-2xl text-white font-bold tracking-tight">
               Administración de Pathrimonio
             </h1>
+            <SectionInfoPopover
+              title="Administración de Pathrimonio"
+              description="Manejo integral de cuentas de usuario, asignación de roles y configuración de la matriz de permisos para cada perfil operativo del sistema."
+            />
             <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/40">
               Control de Accesos
             </span>
           </div>
-          <p className="font-jakarta text-xs text-on-surface-variant">
-            Manejo integral de cuentas de usuario, asignación de roles y configuración de la matriz de permisos para cada perfil operativo del sistema.
-          </p>
         </div>
 
         {/* Tab Switcher */}

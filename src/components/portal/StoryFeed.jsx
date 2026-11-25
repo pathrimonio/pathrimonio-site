@@ -147,7 +147,7 @@ export default function StoryFeed({
                     </span>
                   </td>
                   <td className="p-3 max-w-xs">
-                    <p className="text-white truncate font-medium">As a {story.role}</p>
+                    <p className="text-white truncate font-medium">Como {story.role}</p>
                     <p className="text-on-surface-variant truncate">{story.action}</p>
                   </td>
                   <td className="p-3 font-mono text-[11px] text-on-surface-variant">
@@ -232,15 +232,15 @@ export default function StoryFeed({
                 {/* Story Body with Emphasized Formula */}
                 <div className="font-jakarta text-xs leading-relaxed flex flex-col gap-y-1">
                   <p>
-                    <strong className="text-primary font-space font-semibold tracking-wide mr-1.5">As an / As a</strong>
+                    <strong className="text-primary font-space font-semibold tracking-wide mr-1.5">Como</strong>
                     <span className="text-white font-medium">{story.role},</span>
                   </p>
                   <p>
-                    <strong className="text-primary font-space font-semibold tracking-wide mr-1.5">I want to</strong>
+                    <strong className="text-primary font-space font-semibold tracking-wide mr-1.5">Quiero</strong>
                     <span className="text-on-surface">{story.action},</span>
                   </p>
                   <p>
-                    <strong className="text-primary font-space font-semibold tracking-wide mr-1.5">So that</strong>
+                    <strong className="text-primary font-space font-semibold tracking-wide mr-1.5">Para que</strong>
                     <span className="text-on-surface-variant">{story.benefit}</span>
                   </p>
                 </div>

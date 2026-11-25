@@ -1,6 +1,7 @@
 import React from 'react';
 import confetti from 'canvas-confetti';
 import { formatBytes } from '../../data/projectTree';
+import SectionInfoPopover from './SectionInfoPopover';
 
 function Metric({ icon, iconClass, label, value, title }) {
   return (
@@ -101,19 +102,20 @@ export default function FilesControlsBar({
               <span className="material-symbols-outlined text-[22px]">{isTree ? 'account_tree' : 'folder_open'}</span>
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-x-2.5 flex-wrap">
+              <div className="flex items-center gap-x-2 flex-wrap">
                 <h1 className="font-space text-base sm:text-lg text-white font-semibold tracking-tight truncate">
                   Archivos & Entregables del Proyecto
                 </h1>
+                <SectionInfoPopover
+                  title="Archivos & Entregables del Proyecto"
+                  description={isTree
+                    ? 'Estructura completa de carpetas y archivos con su extensión, tamaño y registros abstractos por archivo.'
+                    : 'Almacén centralizado de ejecutables (APKs), especificaciones PRD, mockups Figma, contratos y scripts SQL del software.'}
+                />
                 <span className="px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-primary font-space text-[11px] font-medium tracking-wide">
                   {isTree ? 'Árbol del Repositorio' : 'Repositorio de Documentación & Builds'}
                 </span>
               </div>
-              <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate">
-                {isTree
-                  ? 'Estructura completa de carpetas y archivos con su extensión, tamaño y registros abstractos por archivo.'
-                  : 'Almacén centralizado de ejecutables (APKs), especificaciones PRD, mockups Figma, contratos y scripts SQL del software.'}
-              </p>
             </div>
           </div>
 

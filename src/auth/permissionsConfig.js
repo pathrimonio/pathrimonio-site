@@ -34,7 +34,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-primary',
     badgeColor: 'bg-primary/20 text-primary border-primary/40',
     avatarBg: 'bg-primary',
-    allowedTabs: ['stories', 'actors', 'interfaces', 'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs', 'settings'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs', 'settings'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
@@ -70,7 +70,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-emerald-400',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     avatarBg: 'bg-emerald-600',
-    allowedTabs: ['stories', 'actors', 'interfaces', 'architecture', 'backlog', 'sprints', 'docs'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'backlog', 'sprints', 'docs'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
@@ -88,7 +88,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-purple-400',
     badgeColor: 'bg-purple-500/20 text-purple-400 border-purple-500/40',
     avatarBg: 'bg-purple-500',
-    allowedTabs: ['stories', 'actors', 'interfaces', 'architecture', 'dataModel', 'files', 'docs'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'dataModel', 'files', 'docs'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
@@ -106,7 +106,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-teal-400',
     badgeColor: 'bg-teal-500/20 text-teal-400 border-teal-500/40',
     avatarBg: 'bg-teal-500',
-    allowedTabs: ['stories', 'actors', 'interfaces', 'architecture', 'docs'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'docs'],
     actions: {
       canCreateRoles: false,
       canCreateStories: false,

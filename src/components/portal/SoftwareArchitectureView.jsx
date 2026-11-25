@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
+import SectionInfoPopover from './SectionInfoPopover';
 import { getProjectArchitecture } from '../../data/initialArchitectures';
 import {
   loadArchiflyAiConfig,
@@ -695,10 +696,14 @@ export default function SoftwareArchitectureView({
                 <span className="material-symbols-outlined text-[24px]">account_tree</span>
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-x-2.5 flex-wrap">
+                <div className="flex items-center gap-x-2 flex-wrap">
                   <h1 className="font-space text-lg sm:text-xl text-white font-bold tracking-tight truncate">
                     Arquitectura de Software
                   </h1>
+                  <SectionInfoPopover
+                    title="Arquitectura de Software"
+                    description={`${architecture.architecturePattern} · ${architecture.synthesizedBy}`}
+                  />
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
                     Skill archify
@@ -731,9 +736,6 @@ export default function SoftwareArchitectureView({
                     MCP Sync: {fileRecords.length} reg.
                   </span>
                 </div>
-                <p className="font-jakarta text-xs text-on-surface-variant mt-0.5 truncate">
-                  {architecture.architecturePattern} · {architecture.synthesizedBy}
-                </p>
               </div>
             </div>
 

@@ -221,7 +221,7 @@ export default function StoryBuilder({
           <div className="flex items-center justify-between">
             <label className="font-space text-xs text-white flex items-center gap-x-1.5">
               <span className="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30 font-space text-[10px] text-primary font-bold">1</span>
-              <span className="font-medium">As a... (Como...)</span>
+              <span className="font-medium">Como...</span>
             </label>
             
             <div className="flex items-center gap-2">
@@ -346,7 +346,7 @@ export default function StoryBuilder({
           <div className="flex items-center justify-between">
             <label className="font-space text-xs text-white flex items-center gap-x-1.5">
               <span className="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30 font-space text-[10px] text-primary font-bold">2</span>
-              <span className="font-medium">I want to... (Quiero...)</span>
+              <span className="font-medium">Quiero...</span>
             </label>
             <span className="font-space text-[10px] text-on-surface-variant">Funcionalidad</span>
           </div>
@@ -364,7 +364,7 @@ export default function StoryBuilder({
           <div className="flex items-center justify-between">
             <label className="font-space text-xs text-white flex items-center gap-x-1.5">
               <span className="px-1.5 py-0.5 rounded bg-primary/10 border border-primary/30 font-space text-[10px] text-primary font-bold">3</span>
-              <span className="font-medium">So that... (Para que...)</span>
+              <span className="font-medium">Para que...</span>
             </label>
             <span className="font-space text-[10px] text-on-surface-variant">Valor de negocio</span>
           </div>

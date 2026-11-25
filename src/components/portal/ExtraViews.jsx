@@ -1,13 +1,15 @@
 import React from 'react';
+import SectionInfoPopover from './SectionInfoPopover';
 
 export function BacklogView({ stories }) {
   return (
     <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
-      <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
         <h2 className="font-space text-xl text-white font-bold">Product Backlog Consolidado</h2>
-        <p className="font-jakarta text-xs text-on-surface-variant">
-          Visión unificada de requerimientos pendientes por ciclo de iteración y arquitectura.
-        </p>
+        <SectionInfoPopover
+          title="Product Backlog Consolidado"
+          description="Visión unificada de requerimientos pendientes por ciclo de iteración y arquitectura."
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -25,7 +27,7 @@ export function BacklogView({ stories }) {
                   <span className="text-primary font-mono font-bold">{s.id}</span>
                   <span className="text-[10px] text-on-surface-variant">{s.module}</span>
                 </div>
-                <p className="text-white truncate font-medium">As a {s.role}</p>
+                <p className="text-white truncate font-medium">Como {s.role}</p>
               </div>
             ))}
           </div>
@@ -72,11 +74,12 @@ export function BacklogView({ stories }) {
 export function SprintsView() {
   return (
     <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
-      <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
         <h2 className="font-space text-xl text-white font-bold">Ciclos y Velocidad de Sprints</h2>
-        <p className="font-jakarta text-xs text-on-surface-variant">
-          Histórico de cadencia de entrega de valor para comunidades y métricas de despliegue.
-        </p>
+        <SectionInfoPopover
+          title="Ciclos y Velocidad de Sprints"
+          description="Histórico de cadencia de entrega de valor para comunidades y métricas de despliegue."
+        />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -103,11 +106,12 @@ export function SprintsView() {
 export function DocsView() {
   return (
     <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
-      <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
         <h2 className="font-space text-xl text-white font-bold">Documentación &amp; Guías Técnicas</h2>
-        <p className="font-jakarta text-xs text-on-surface-variant">
-          Estándares de arquitectura, principios Systematic Vanguard y manuales de usuario.
-        </p>
+        <SectionInfoPopover
+          title="Documentación & Guías Técnicas"
+          description="Estándares de arquitectura, principios Systematic Vanguard y manuales de usuario."
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -138,11 +142,12 @@ export function DocsView() {
 export function SettingsView() {
   return (
     <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
-      <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
         <h2 className="font-space text-xl text-white font-bold">Configuración del Workspace</h2>
-        <p className="font-jakarta text-xs text-on-surface-variant">
-          Preferencias de sincronización, almacenamiento local y perfiles de analista.
-        </p>
+        <SectionInfoPopover
+          title="Configuración del Workspace"
+          description="Preferencias de sincronización, almacenamiento local y perfiles de analista."
+        />
       </div>
 
       <div className="p-5 rounded-lg bg-surface-container border border-outline-variant flex flex-col gap-4 w-full">

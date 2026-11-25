@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
+import SectionInfoPopover from './SectionInfoPopover';
 
 export default function InterfaceControlsBar({ 
   interfaces = [],
@@ -69,17 +70,18 @@ export default function InterfaceControlsBar({
               </span>
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-x-2.5 flex-wrap">
+              <div className="flex items-center gap-x-2 flex-wrap">
                 <h1 className="font-space text-base sm:text-lg text-white font-semibold tracking-tight truncate">
                   Interfaces de Software
                 </h1>
+                <SectionInfoPopover
+                  title="Interfaces de Software"
+                  description="Fichas de pantalla: Imagen de la interfaz y cuadro formal de especificación con Objetivo, Contenido, Reglas y Detalles."
+                />
                 <span className="px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-primary font-space text-[11px] font-medium tracking-wide">
                   {activeProject?.category || 'UI/UX Specs'}
                 </span>
               </div>
-              <p className="font-jakarta text-xs text-on-surface-variant mt-0.5">
-                Fichas de pantalla: Imagen de la interfaz y cuadro formal de especificación con Objetivo, Contenido, Reglas y Detalles
-              </p>
             </div>
           </div>
 
