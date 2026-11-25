@@ -84,9 +84,9 @@ function isBottleneckText(text) {
 
 function splitClauses(message) {
   return message
-    .split(/(?:\.|;|\by luego\b|\bdespu[eé]s\b|\bfinalmente\b|\by\b(?=\s+(?:el|la|en|se|pasa|env[ií]a|valida|cobra|registra|despacha|prepara|verifica|emite)))/i)
+    .split(/(?:\.|;|,(?=\s+[A-Za-zÁÉÍÓÚÑ])|\by luego\b|\bdespu[eé]s\b|\bfinalmente\b|\by\b(?=\s+(?:[A-ZÁÉÍÓÚÑ]|el\b|la\b|en\b|se\b|pasa\b|env[ií]a\b|valida\b|cobra\b|registra\b|despacha\b|prepara\b|verifica\b|emite\b)))/)
     .map((s) => s.trim())
-    .filter((s) => s.length >= 6);
+    .filter((s) => s.length >= 6 && !/^(?:hola,?\s*)?(?:mi\s+)?(?:empresa\s+(?:es|se llama)?|negocio\s+(?:es|se llama)?|somos|nos llamamos)\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ0-9\s&]{2,35}$/i.test(s));
 }
 
 function computeCompleteness(graph, additionalSteps = 0, additionalActors = 0) {
@@ -124,7 +124,7 @@ export function runDeterministicProcessExtractor(userMessage, currentGraph, turn
     }
   }
 
-  const companyMatch = text.match(/(?:empresa|negocio|somos|llamamos|en)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ0-9\s&.]{2,32})/);
+  const companyMatch = text.match(/(?:[Ee]mpresa\s+(?:es|se llama)?|[Nn]egocio\s+(?:es|se llama)?|[Ss]omos|[Nn]os llamamos)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ0-9\s&]{2,35}?)(?=[.,;]|$)/);
   const processMatch = text.match(/(?:proceso de|manejo de|desorden en|flujo de)\s+([a-záéíóúñA-ZÁÉÍÓÚÑ\s]{4,40})/);
 
   if (detectedIndustry || companyMatch || processMatch) {
