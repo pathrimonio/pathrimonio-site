@@ -7,6 +7,14 @@ export default async function handler(req, res) {
   }
 
   const payload = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+  if (payload.privacy_policy_accepted !== true) {
+    return res.status(400).json({
+      error: 'Debes aceptar la Política de Privacidad para enviar tu cotización.'
+    });
+  }
+
+  const acceptedAt = payload.accepted_at || new Date().toISOString();
+  const privacyVersion = payload.privacy_policy_version || '2026-11';
   const formaliaSessionId = payload.formalia_session_id || null;
   let engineering_handoff = payload.engineering_handoff || null;
 
@@ -20,6 +28,9 @@ export default async function handler(req, res) {
 
   const savedQuote = await saveQuoteWithHandoff({
     ...payload,
+    privacy_policy_accepted: true,
+    privacy_policy_version: privacyVersion,
+    accepted_at: acceptedAt,
     formalia_session_id: formaliaSessionId,
     engineering_handoff,
     received_at: new Date().toISOString()
@@ -29,6 +40,9 @@ export default async function handler(req, res) {
     status: 'ok',
     quote_id: savedQuote.quote_id,
     formalia_session_id: formaliaSessionId,
+    privacy_policy_accepted: true,
+    privacy_policy_version: privacyVersion,
+    accepted_at: acceptedAt,
     handoff_generated: Boolean(engineering_handoff),
     engineering_handoff
   });

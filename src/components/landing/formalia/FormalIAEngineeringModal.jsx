@@ -30,7 +30,12 @@ export default function FormalIAEngineeringModal({ isOpen, onClose, graph }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Paquete Técnico FormalIA"
+      className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+    >
       <div className="w-full max-w-4xl max-h-[88vh] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] rounded-[16px] shadow-2xl flex flex-col overflow-hidden">
         
         {/* Header */}

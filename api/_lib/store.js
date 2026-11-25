@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 // Memoria por instancia serverless para resiliencia en frío / sin Supabase configurado
 const memorySessions = new Map();
 const memoryQuotes = new Map();
+const memoryComplaints = new Map();
 const ipRateLimits = new Map();
 
 const MAX_TURNS_PER_SESSION = 15;
@@ -96,6 +97,9 @@ export async function saveQuoteWithHandoff(quotePayload) {
         pricing_summary: quotePayload.pricing_summary || {},
         lead_contact: quotePayload.lead_contact || {},
         engineering_handoff: quotePayload.engineering_handoff || null,
+        privacy_policy_accepted: Boolean(quotePayload.privacy_policy_accepted),
+        privacy_policy_version: quotePayload.privacy_policy_version || '2026-11',
+        accepted_at: quotePayload.accepted_at || new Date().toISOString(),
         status: 'nuevo_lead'
       });
       if (quotePayload.formalia_session_id) {
@@ -107,6 +111,37 @@ export async function saveQuoteWithHandoff(quotePayload) {
     } catch (_) {}
   }
   return quotePayload;
+}
+
+export async function saveComplaintRecord(complaintPayload) {
+  memoryComplaints.set(complaintPayload.complaint_code, complaintPayload);
+  const sb = getSupabaseServerClient();
+  if (sb) {
+    try {
+      await sb.from('complaints').upsert({
+        complaint_code: complaintPayload.complaint_code,
+        record_type: complaintPayload.record_type || 'Reclamo',
+        consumer_name: complaintPayload.consumer_name,
+        document_type: complaintPayload.document_type || 'DNI',
+        document_number: complaintPayload.document_number,
+        address: complaintPayload.address || '',
+        phone: complaintPayload.phone || '',
+        email: complaintPayload.email,
+        is_minor: Boolean(complaintPayload.is_minor),
+        guardian_name: complaintPayload.guardian_name || null,
+        service_type: complaintPayload.service_type || 'Servicio de Software / Membresía',
+        claimed_amount: complaintPayload.claimed_amount || null,
+        service_description: complaintPayload.service_description || '',
+        detail: complaintPayload.detail,
+        consumer_request: complaintPayload.consumer_request,
+        privacy_policy_accepted: Boolean(complaintPayload.privacy_policy_accepted),
+        privacy_policy_version: complaintPayload.privacy_policy_version || '2026-11',
+        accepted_at: complaintPayload.accepted_at || new Date().toISOString(),
+        status: 'registrado'
+      });
+    } catch (_) {}
+  }
+  return complaintPayload;
 }
 
 export { MAX_TURNS_PER_SESSION };

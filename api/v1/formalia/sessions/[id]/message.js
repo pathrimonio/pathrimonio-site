@@ -1,6 +1,6 @@
-import { applyGraphPatches, createInitialProcessGraph } from '../../../../src/lib/formalia/schema.js';
-import { extractProcessTurn } from '../../../../src/lib/formalia/extractorEngine.js';
-import { getSession, saveSession, MAX_TURNS_PER_SESSION } from '../../../_lib/store.js';
+import { applyGraphPatches, createInitialProcessGraph } from '../../../../../src/lib/formalia/schema.js';
+import { extractProcessTurn } from '../../../../../src/lib/formalia/extractorEngine.js';
+import { getSession, saveSession, MAX_TURNS_PER_SESSION } from '../../../../_lib/store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

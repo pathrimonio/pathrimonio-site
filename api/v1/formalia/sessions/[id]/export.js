@@ -1,5 +1,5 @@
-import { graphToPlantUML } from '../../../../src/lib/formalia/compilers.js';
-import { getSession } from '../../../_lib/store.js';
+import { graphToPlantUML } from '../../../../../src/lib/formalia/compilers.js';
+import { getSession } from '../../../../_lib/store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
