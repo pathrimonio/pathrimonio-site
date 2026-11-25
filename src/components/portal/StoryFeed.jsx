@@ -40,10 +40,10 @@ export default function StoryFeed({
     <div className="flex flex-col gap-y-4">
       
       {/* Feed Controls Header */}
-      <div className="bg-surface-container-low border border-outline-variant rounded-lg p-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-        <div className="flex items-center gap-x-3 flex-1 min-w-[200px]">
-          <div className="flex items-center gap-x-2 bg-surface-container-lowest border border-outline-variant px-3 py-1 rounded w-full max-w-xs focus-within:border-primary transition-colors">
-            <span className="material-symbols-outlined text-on-surface-variant text-[16px]">search</span>
+      <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 shadow-sm">
+        <div className="flex items-center gap-x-2.5 sm:gap-x-3 flex-1 min-w-[240px] sm:min-w-[280px] w-full sm:w-auto">
+          <div className="relative flex-1 flex items-center gap-x-2 bg-surface-container-lowest border border-outline-variant px-3 py-1.5 rounded-xl focus-within:border-primary transition-colors">
+            <span className="material-symbols-outlined text-primary text-[18px]">search</span>
             <input 
               type="text"
               value={searchQuery}
@@ -51,19 +51,27 @@ export default function StoryFeed({
               placeholder="Buscar historias por rol o criterio..."
               className="bg-transparent text-xs font-jakarta text-white placeholder-on-surface-variant/70 focus:outline-none w-full"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-on-surface-variant hover:text-white"
+              >
+                <span className="material-symbols-outlined text-[14px]">close</span>
+              </button>
+            )}
           </div>
-          <span className="px-2 py-0.5 rounded bg-surface-container border border-outline-variant font-space text-[10px] text-on-surface-variant font-mono hidden sm:inline-block">
+          <span className="px-2.5 py-1 rounded-xl bg-surface-container border border-outline-variant font-space text-[10px] text-on-surface-variant font-mono hidden sm:inline-block shrink-0">
             {sortedStories.length} mostradas
           </span>
         </div>
 
-        <div className="flex items-center gap-x-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:ml-auto w-full sm:w-auto justify-between sm:justify-end">
           {/* Sorting */}
-          <div className="flex items-center gap-x-1 text-on-surface-variant font-space text-xs">
+          <div className="flex items-center gap-1.5 bg-surface-container-lowest border border-outline-variant px-2.5 py-1 rounded-xl text-on-surface-variant font-space text-xs">
             <span>Ordenar:</span>
             <button 
               onClick={() => setSortBy(sortBy === 'priority' ? 'id' : 'priority')}
-              className="font-medium text-white flex items-center gap-x-0.5 hover:text-primary transition-colors"
+              className="font-medium text-white flex items-center gap-x-0.5 hover:text-primary transition-colors cursor-pointer"
             >
               <span>{sortBy === 'priority' ? 'Prioridad' : 'Código ID'}</span>
               <span className="material-symbols-outlined text-[14px] text-primary">swap_vert</span>
@@ -71,17 +79,17 @@ export default function StoryFeed({
           </div>
 
           {/* View Layout Toggle */}
-          <div className="flex items-center p-0.5 bg-surface-container-lowest border border-outline-variant rounded">
+          <div className="flex items-center p-0.5 bg-surface-container-lowest border border-outline-variant rounded-xl shrink-0">
             <button 
               onClick={() => setViewMode('cards')}
-              className={`p-1 rounded transition-colors ${viewMode === 'cards' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-white'}`}
+              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'cards' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-white'}`}
               title="Vista de Tarjetas"
             >
               <span className="material-symbols-outlined text-[16px]">view_agenda</span>
             </button>
             <button 
               onClick={() => setViewMode('compact')}
-              className={`p-1 rounded transition-colors ${viewMode === 'compact' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-white'}`}
+              className={`p-1.5 rounded-lg transition-colors ${viewMode === 'compact' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-white'}`}
               title="Vista Compacta"
             >
               <span className="material-symbols-outlined text-[16px]">table_rows</span>
@@ -92,11 +100,11 @@ export default function StoryFeed({
           {onOpenCreateModal && (
             <button
               onClick={onOpenCreateModal}
-              className="h-8 px-3 rounded-lg bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all whitespace-nowrap cursor-pointer active:scale-[0.98] shrink-0"
               title="Crear nueva Historia de Usuario"
             >
               <span className="material-symbols-outlined text-[16px]">add_circle</span>
-              <span className="hidden sm:inline">Nueva Historia</span>
+              <span>Nueva Historia</span>
             </button>
           )}
         </div>

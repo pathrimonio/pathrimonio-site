@@ -160,8 +160,8 @@ export default function InterfaceFeed({
         
         {/* Row 1: Search and Quick Badges */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Search box */}
-          <div className="flex items-center gap-2 bg-surface-container-lowest border border-outline-variant px-3 py-1.5 rounded-lg w-full sm:max-w-md focus-within:border-primary transition-colors">
+          {/* Search box (Adaptive Width) */}
+          <div className="relative flex-1 min-w-[240px] sm:min-w-[280px] lg:min-w-[320px] w-full sm:w-auto flex items-center gap-2 bg-surface-container-lowest border border-outline-variant px-3 py-1.5 rounded-xl focus-within:border-primary transition-colors">
             <span className="material-symbols-outlined text-primary text-[18px]">search</span>
             <input
               type="text"
@@ -181,38 +181,38 @@ export default function InterfaceFeed({
           </div>
 
           {/* Actions & Quick Stats */}
-          <div className="flex items-center gap-2 flex-wrap text-xs font-space ml-auto">
+          <div className="flex items-center gap-2 flex-wrap text-xs font-space sm:ml-auto w-full sm:w-auto justify-between sm:justify-end">
             {onOpenRegisterModal && (
               <button
                 type="button"
                 onClick={onOpenRegisterModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-on-primary font-space text-xs font-bold transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-on-primary font-space text-xs font-bold transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98] cursor-pointer shrink-0"
               >
                 <span className="material-symbols-outlined text-[16px]">add_circle</span>
                 <span>Registrar Interfaz</span>
               </button>
             )}
 
-            <div className="px-2.5 py-1 rounded-lg bg-surface-container border border-outline-variant flex items-center gap-1.5 text-white">
+            <div className="px-2.5 py-1 rounded-xl bg-surface-container border border-outline-variant flex items-center gap-1.5 text-white shrink-0">
               <span className="text-on-surface-variant">Total:</span>
               <span className="font-mono font-bold text-primary">{totalCount}</span>
             </div>
 
-            <div className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-1.5 text-emerald-400">
+            <div className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-1.5 text-emerald-400 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span>Aprobadas:</span>
+              <span className="hidden xs:inline">Aprobadas:</span>
               <span className="font-mono font-bold">{approvedCount}</span>
               <span className="text-[10px] opacity-80 font-mono">({approvalRate}%)</span>
             </div>
 
-            <div className="px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center gap-1.5 text-sky-400">
+            <div className="px-2.5 py-1 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center gap-1.5 text-sky-400 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-              <span>En Revisión:</span>
+              <span className="hidden xs:inline">Revisión:</span>
               <span className="font-mono font-bold">{reviewCount}</span>
             </div>
 
-            <div className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-1.5 text-amber-400">
-              <span>Borrador:</span>
+            <div className="px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-1.5 text-amber-400 shrink-0">
+              <span className="hidden xs:inline">Borrador:</span>
               <span className="font-mono font-bold">{draftCount}</span>
             </div>
           </div>
@@ -220,84 +220,81 @@ export default function InterfaceFeed({
 
         {/* Row 2: Selectors (Platform, Status, Module, Business Role, Sort) */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-outline-variant/60">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
             {/* Business Role Filter */}
-            <div className="flex items-center gap-1 text-xs text-on-surface-variant">
-              <span className="font-space text-[11px] hidden sm:inline flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px] text-primary">badge</span>
-                <span>Rol:</span>
-              </span>
+            <div className="flex-1 sm:flex-initial min-w-[130px] sm:min-w-[145px] flex items-center gap-1 text-xs text-on-surface-variant bg-surface-container-lowest border border-outline-variant px-2.5 py-1 rounded-xl focus-within:border-primary transition-colors overflow-hidden">
+              <span className="material-symbols-outlined text-[15px] text-primary shrink-0">badge</span>
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className={`h-8 px-2 bg-surface-container-lowest border rounded-md text-xs font-jakarta focus:border-primary focus:outline-none max-w-[190px] truncate ${
+                className={`w-full min-w-0 max-w-full bg-transparent text-xs font-jakarta focus:outline-none cursor-pointer truncate ${
                   selectedRole !== 'Todos'
-                    ? 'border-primary text-primary font-bold bg-primary/10'
-                    : 'border-outline-variant text-white'
+                    ? 'text-primary font-bold'
+                    : 'text-white'
                 }`}
               >
-                <option value="Todos">Todos los Roles ({allRoleOptions.length})</option>
+                <option value="Todos" className="bg-surface-container-highest text-white">Todos los Roles ({allRoleOptions.length})</option>
                 {allRoleOptions.map(r => (
-                  <option key={r} value={r}>{r}</option>
+                  <option key={r} value={r} className="bg-surface-container-highest text-white">{r}</option>
                 ))}
               </select>
             </div>
 
             {/* Platform Filter */}
-            <div className="flex items-center gap-1 text-xs text-on-surface-variant">
-              <span className="font-space text-[11px] hidden sm:inline">Plataforma:</span>
+            <div className="flex-1 sm:flex-initial min-w-[110px] sm:min-w-[125px] flex items-center gap-1 text-xs text-on-surface-variant bg-surface-container-lowest border border-outline-variant px-2.5 py-1 rounded-xl focus-within:border-primary transition-colors overflow-hidden">
+              <span className="material-symbols-outlined text-[15px] text-cyan-400 shrink-0">devices</span>
               <select
                 value={selectedPlatform}
                 onChange={(e) => setSelectedPlatform(e.target.value)}
-                className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-md text-xs font-jakarta text-white focus:border-primary focus:outline-none"
+                className="w-full min-w-0 max-w-full bg-transparent text-xs font-jakarta text-white focus:outline-none cursor-pointer truncate"
               >
                 {PLATFORM_OPTIONS.map(plat => (
-                  <option key={plat} value={plat}>{plat}</option>
+                  <option key={plat} value={plat} className="bg-surface-container-highest text-white">{plat}</option>
                 ))}
               </select>
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center gap-1 text-xs text-on-surface-variant">
-              <span className="font-space text-[11px] hidden sm:inline">Estado:</span>
+            <div className="flex-1 sm:flex-initial min-w-[110px] sm:min-w-[125px] flex items-center gap-1 text-xs text-on-surface-variant bg-surface-container-lowest border border-outline-variant px-2.5 py-1 rounded-xl focus-within:border-primary transition-colors overflow-hidden">
+              <span className="material-symbols-outlined text-[15px] text-emerald-400 shrink-0">verified</span>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-md text-xs font-jakarta text-white focus:border-primary focus:outline-none"
+                className="w-full min-w-0 max-w-full bg-transparent text-xs font-jakarta text-white focus:outline-none cursor-pointer truncate"
               >
                 {INTERFACE_STATUS_OPTIONS.map(st => (
-                  <option key={st} value={st}>{st}</option>
+                  <option key={st} value={st} className="bg-surface-container-highest text-white">{st}</option>
                 ))}
               </select>
             </div>
 
             {/* Module Filter */}
-            <div className="flex items-center gap-1 text-xs text-on-surface-variant">
-              <span className="font-space text-[11px] hidden sm:inline">Módulo del Software:</span>
+            <div className="flex-1 sm:flex-initial min-w-[125px] sm:min-w-[140px] flex items-center gap-1 text-xs text-on-surface-variant bg-surface-container-lowest border border-outline-variant px-2.5 py-1 rounded-xl focus-within:border-primary transition-colors overflow-hidden">
+              <span className="material-symbols-outlined text-[15px] text-tertiary shrink-0">view_quilt</span>
               <select
                 value={selectedModule}
                 onChange={(e) => setSelectedModule(e.target.value)}
-                className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-md text-xs font-jakarta text-white focus:border-primary focus:outline-none max-w-[160px] truncate"
+                className="w-full min-w-0 max-w-full bg-transparent text-xs font-jakarta text-white focus:outline-none cursor-pointer truncate"
               >
                 {['Todos', ...modules].map(mod => (
-                  <option key={mod} value={mod}>{mod}</option>
+                  <option key={mod} value={mod} className="bg-surface-container-highest text-white">{mod}</option>
                 ))}
               </select>
             </div>
           </div>
 
           {/* Sort & View Mode */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-xs text-on-surface-variant font-space">
-              <span className="hidden sm:inline">Ordenar:</span>
+          <div className="flex items-center gap-2 sm:ml-auto shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex-1 sm:flex-initial min-w-[115px] sm:min-w-[125px] flex items-center gap-1 text-xs text-on-surface-variant font-space bg-surface-container-lowest border border-outline-variant px-2.5 py-1 rounded-xl focus-within:border-primary transition-colors overflow-hidden">
+              <span className="material-symbols-outlined text-[15px] text-on-surface-variant shrink-0">sort</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="h-8 px-2 bg-surface-container-lowest border border-outline-variant rounded-md text-xs font-space text-white focus:border-primary focus:outline-none"
+                className="w-full min-w-0 max-w-full bg-transparent text-xs font-space text-white focus:outline-none cursor-pointer truncate"
               >
-                <option value="priority">Prioridad</option>
-                <option value="status">Estado</option>
-                <option value="id">Código ID</option>
+                <option value="priority" className="bg-surface-container-highest text-white">Prioridad</option>
+                <option value="status" className="bg-surface-container-highest text-white">Estado</option>
+                <option value="id" className="bg-surface-container-highest text-white">Código ID</option>
               </select>
             </div>
 

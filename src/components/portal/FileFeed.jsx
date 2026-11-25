@@ -72,10 +72,11 @@ export default function FileFeed({
     <div className="flex flex-col gap-5 w-full">
       
       {/* ── Search & Filter Controls ── */}
-      <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-4 flex flex-col gap-4 shadow-sm">
+      {/* ── Search & Filter Controls ── */}
+      <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center gap-2.5 sm:gap-3 shadow-sm">
         
-        {/* Search Bar & View Mode Toggle */}
-        <div className="flex items-center gap-3">
+        {/* Search Bar & View Mode Toggle (Adaptive Width) */}
+        <div className="flex items-center gap-2.5 flex-1 min-w-[240px] sm:min-w-[280px] lg:min-w-[320px] w-full">
           <div className="relative flex-1">
             <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
               search
@@ -85,7 +86,7 @@ export default function FileFeed({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por nombre (ej. Pathway, APK, PRD), tag, vinculación o autor..."
-              className="w-full bg-surface-container-highest border border-outline-variant rounded-xl pl-10 pr-4 py-2 text-xs font-jakarta text-white placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
+              className="w-full bg-surface-container-highest border border-outline-variant rounded-xl pl-10 pr-9 py-2 text-xs font-jakarta text-white placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
             />
             {searchQuery && (
               <button
@@ -126,18 +127,17 @@ export default function FileFeed({
           </div>
         </div>
 
-        {/* Dropdown Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-space">
-          <div className="flex items-center gap-2 flex-wrap">
+        {/* Dropdown Filters & Actions (Adaptive Width Group) */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-xs font-space w-full lg:w-auto shrink-0 justify-between sm:justify-start">
+          <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
             
             {/* Category Filter */}
-            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
-              <span className="material-symbols-outlined text-primary text-[16px]">category</span>
-              <label className="text-on-surface-variant text-[11px]">Categoría:</label>
+            <div className="w-full min-w-0 sm:w-auto sm:min-w-[135px] flex items-center gap-1.5 bg-surface-container-highest px-2.5 sm:px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors overflow-hidden">
+              <span className="material-symbols-outlined text-primary text-[16px] shrink-0">category</span>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none cursor-pointer max-w-[170px] truncate"
+                className="w-full min-w-0 max-w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
               >
                 {FILE_CATEGORY_OPTIONS.map((cat) => (
                   <option key={cat} value={cat} className="bg-surface-container-highest text-white">
@@ -148,13 +148,12 @@ export default function FileFeed({
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
-              <span className="material-symbols-outlined text-secondary text-[16px]">verified</span>
-              <label className="text-on-surface-variant text-[11px]">Estado:</label>
+            <div className="w-full min-w-0 sm:w-auto sm:min-w-[125px] flex items-center gap-1.5 bg-surface-container-highest px-2.5 sm:px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors overflow-hidden">
+              <span className="material-symbols-outlined text-secondary text-[16px] shrink-0">verified</span>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
+                className="w-full min-w-0 max-w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
               >
                 {FILE_STATUS_OPTIONS.map((st) => (
                   <option key={st} value={st} className="bg-surface-container-highest text-white">
@@ -165,13 +164,12 @@ export default function FileFeed({
             </div>
 
             {/* Format Filter */}
-            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
-              <span className="material-symbols-outlined text-cyan-300 text-[16px]">extension</span>
-              <label className="text-on-surface-variant text-[11px]">Formato:</label>
+            <div className="col-span-2 sm:col-span-1 w-full min-w-0 sm:w-auto sm:min-w-[120px] flex items-center gap-1.5 bg-surface-container-highest px-2.5 sm:px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors overflow-hidden">
+              <span className="material-symbols-outlined text-cyan-300 text-[16px] shrink-0">extension</span>
               <select
                 value={selectedFormat}
                 onChange={(e) => setSelectedFormat(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
+                className="w-full min-w-0 max-w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
               >
                 {availableFormats.map((fmt) => (
                   <option key={fmt} value={fmt} className="bg-surface-container-highest text-white">
@@ -190,23 +188,23 @@ export default function FileFeed({
                   setSelectedFormat('Todos');
                   setSearchQuery('');
                 }}
-                className="text-xs text-primary hover:underline flex items-center gap-1 py-1 px-2"
+                className="text-xs text-primary hover:underline flex items-center gap-1 py-1 px-1.5 whitespace-nowrap cursor-pointer shrink-0"
+                title="Limpiar filtros activos"
               >
                 <span className="material-symbols-outlined text-[14px]">filter_alt_off</span>
-                Limpiar filtros
+                <span className="hidden sm:inline">Limpiar</span>
               </button>
             )}
           </div>
 
-          {/* Sort By */}
-          <div className="flex items-center gap-2 ml-auto flex-wrap">
-            <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant">
-              <span className="material-symbols-outlined text-on-surface-variant text-[16px]">sort</span>
-              <label className="text-on-surface-variant text-[11px]">Ordenar:</label>
+          {/* Sort By & Upload Button */}
+          <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+            <div className="flex-1 sm:flex-initial min-w-0 sm:min-w-[130px] flex items-center gap-1.5 bg-surface-container-highest px-2.5 sm:px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors overflow-hidden">
+              <span className="material-symbols-outlined text-on-surface-variant text-[16px] shrink-0">sort</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none cursor-pointer"
+                className="w-full min-w-0 max-w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
               >
                 <option value="date" className="bg-surface-container-highest text-white">Fecha de Subida</option>
                 <option value="name" className="bg-surface-container-highest text-white">Alfabético</option>
@@ -218,7 +216,7 @@ export default function FileFeed({
             {onOpenUpload && (
               <button
                 onClick={onOpenUpload}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all whitespace-nowrap cursor-pointer active:scale-[0.98] shrink-0"
                 title="Subir o registrar nuevo archivo o entregable"
               >
                 <span className="material-symbols-outlined text-[16px]">cloud_upload</span>

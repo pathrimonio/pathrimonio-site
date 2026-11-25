@@ -1480,10 +1480,10 @@ export default function SoftwareArchitectureView({
               </div>
             </div>
 
-            {/* Filters Row */}
-            <div className="flex items-center justify-between gap-3 flex-wrap bg-surface-container-low p-3 rounded-xl border border-outline-variant">
-              <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-                <span className="material-symbols-outlined text-on-surface-variant text-[18px]">search</span>
+            {/* Filters Row (Adaptive Width) */}
+            <div className="flex items-center justify-between gap-2.5 sm:gap-3 flex-wrap bg-surface-container-low p-3.5 sm:p-4 rounded-2xl border border-outline-variant shadow-sm">
+              <div className="relative flex items-center gap-2 flex-1 min-w-[240px] sm:min-w-[280px] w-full sm:w-auto bg-surface-container-highest border border-outline-variant rounded-xl px-3 py-1.5 focus-within:border-primary transition-colors">
+                <span className="material-symbols-outlined text-primary text-[18px] shrink-0">search</span>
                 <input
                   type="text"
                   value={contractSearchQuery}
@@ -1498,16 +1498,17 @@ export default function SoftwareArchitectureView({
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[11px] font-jakarta text-on-surface-variant">Filtrar Capa:</span>
+              <div className="flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant sm:ml-auto w-full sm:w-auto min-w-0 sm:min-w-[180px] overflow-hidden">
+                <span className="material-symbols-outlined text-primary text-[16px] shrink-0">layers</span>
+                <span className="text-[11px] font-jakarta text-on-surface-variant shrink-0">Capa:</span>
                 <select
                   value={selectedLayerId}
                   onChange={(e) => setSelectedLayerId(e.target.value)}
-                  className="bg-surface-container-high text-white font-space text-xs rounded-lg px-2 py-1 border border-outline-variant focus:outline-none cursor-pointer"
+                  className="w-full min-w-0 max-w-full bg-transparent text-white font-space text-xs focus:outline-none cursor-pointer truncate"
                 >
-                  <option value="all">Todas las Capas</option>
+                  <option value="all" className="bg-surface-container-highest text-white">Todas las Capas</option>
                   {layersWithCustom.map(l => (
-                    <option key={l.id} value={l.id}>{l.name}</option>
+                    <option key={l.id} value={l.id} className="bg-surface-container-highest text-white">{l.name}</option>
                   ))}
                 </select>
               </div>

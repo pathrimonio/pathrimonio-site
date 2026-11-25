@@ -215,12 +215,12 @@ export default function AdminUsersView({
       ══════════════════════════════════════════ */}
       {activeAdminTab === 'users' && (
         <div className="flex flex-col gap-5">
-          {/* Controls Bar: Search, Filters, Add Button */}
-          <div className="p-4 rounded-lg bg-surface-container border border-outline-variant flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto flex-1">
-              {/* Buscador */}
-              <div className="relative w-full sm:w-72">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px]">
+          {/* Controls Bar: Search, Filters, Add Button (Adaptive Width) */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-surface-container-low border border-outline-variant flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 w-full lg:w-auto flex-1">
+              {/* Buscador (Adaptive Width) */}
+              <div className="relative flex-1 min-w-[240px] sm:min-w-[280px] w-full">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[18px]">
                   search
                 </span>
                 <input
@@ -228,21 +228,29 @@ export default function AdminUsersView({
                   value={searchUser}
                   onChange={(e) => setSearchUser(e.target.value)}
                   placeholder="Buscar por nombre, email o entidad..."
-                  className="w-full h-9 bg-surface-container-lowest border border-outline-variant rounded-lg pl-8 pr-3 font-jakarta text-xs text-white focus:outline-none focus:border-primary placeholder-on-surface-variant/50"
+                  className="w-full bg-surface-container-highest border border-outline-variant rounded-xl pl-10 pr-9 py-2 font-jakarta text-xs text-white focus:outline-none focus:border-primary placeholder-on-surface-variant/50 transition-colors"
                 />
+                {searchUser && (
+                  <button
+                    onClick={() => setSearchUser('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-white"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">close</span>
+                  </button>
+                )}
               </div>
 
               {/* Filtro por Rol */}
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="font-space text-xs text-on-surface-variant shrink-0">Filtrar rol:</span>
+              <div className="w-full sm:w-auto min-w-0 sm:min-w-[180px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant focus-within:border-primary transition-colors overflow-hidden">
+                <span className="material-symbols-outlined text-primary text-[16px] shrink-0">badge</span>
                 <select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
-                  className="h-9 bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 font-space text-xs text-white focus:outline-none focus:border-primary"
+                  className="w-full min-w-0 max-w-full bg-transparent font-space text-xs text-white focus:outline-none cursor-pointer truncate"
                 >
-                  <option value="Todos">Todos los roles ({portalUsers.length})</option>
+                  <option value="Todos" className="bg-surface-container-highest text-white">Todos los roles ({portalUsers.length})</option>
                   {availableRoles.map(r => (
-                    <option key={r} value={r}>{r}</option>
+                    <option key={r} value={r} className="bg-surface-container-highest text-white">{r}</option>
                   ))}
                 </select>
               </div>
@@ -252,7 +260,7 @@ export default function AdminUsersView({
             <button
               type="button"
               onClick={() => setIsAddUserModalOpen(true)}
-              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity shrink-0"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all whitespace-nowrap cursor-pointer active:scale-[0.98] shrink-0 sm:ml-auto"
             >
               <span className="material-symbols-outlined text-[16px]">person_add</span>
               <span>Registrar / Asignar Usuario</span>
