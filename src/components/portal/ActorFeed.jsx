@@ -82,10 +82,10 @@ export default function ActorFeed({
     <div className="flex flex-col gap-5 w-full">
       
       {/* ── Search & Filter Controls ── */}
-      <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-4 flex flex-wrap items-center gap-3 shadow-sm">
+      <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center gap-2.5 sm:gap-3 shadow-sm">
         
         {/* Search Bar (Adaptive Width) */}
-        <div className="relative flex-1 min-w-[240px] sm:min-w-[280px] lg:min-w-[320px] w-full sm:w-auto">
+        <div className="relative flex-1 min-w-[240px] sm:min-w-[260px] lg:min-w-[300px] w-full">
           <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
             search
           </span>
@@ -106,17 +106,19 @@ export default function ActorFeed({
           )}
         </div>
 
-        {/* Dropdown Filters & Actions (Adaptive Width) */}
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 text-xs font-space w-full sm:w-auto flex-1 sm:flex-initial justify-between sm:justify-start">
-          <div className="flex items-center gap-2 flex-wrap flex-1 sm:flex-initial w-full sm:w-auto">
+        {/* Dropdown Filters & Actions (Adaptive Width Group) */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-xs font-space w-full lg:w-auto shrink-0 justify-between sm:justify-start">
+          
+          {/* Category & Permission Filters (2-column on mobile, inline flex on desktop) */}
+          <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
             
             {/* Category Filter */}
-            <div className="flex-1 sm:flex-initial min-w-[130px] sm:min-w-[145px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
+            <div className="min-w-0 sm:min-w-[140px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
               <span className="material-symbols-outlined text-primary text-[16px] shrink-0">category</span>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate"
+                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
               >
                 {ACTOR_CATEGORY_OPTIONS.map((cat) => (
                   <option key={cat} value={cat} className="bg-surface-container-highest text-white">
@@ -127,18 +129,36 @@ export default function ActorFeed({
             </div>
 
             {/* Permission Level Filter */}
-            <div className="flex-1 sm:flex-initial min-w-[130px] sm:min-w-[145px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
+            <div className="min-w-0 sm:min-w-[140px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
               <span className="material-symbols-outlined text-secondary text-[16px] shrink-0">shield</span>
               <select
                 value={selectedPermission}
                 onChange={(e) => setSelectedPermission(e.target.value)}
-                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate"
+                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
               >
                 {PERMISSION_LEVEL_OPTIONS.map((lvl) => (
                   <option key={lvl} value={lvl} className="bg-surface-container-highest text-white">
                     {lvl}
                   </option>
                 ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Sort By, Reset & Action Button */}
+          <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+            
+            {/* Sort Filter */}
+            <div className="flex-1 sm:flex-initial min-w-0 sm:min-w-[130px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
+              <span className="material-symbols-outlined text-on-surface-variant text-[16px] shrink-0">sort</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
+              >
+                <option value="name" className="bg-surface-container-highest text-white">Alfabético</option>
+                <option value="stories" className="bg-surface-container-highest text-white">HU Vinculadas</option>
+                <option value="permission" className="bg-surface-container-highest text-white">Nivel de Permiso</option>
               </select>
             </div>
 
@@ -150,33 +170,19 @@ export default function ActorFeed({
                   setSelectedPermission('Todos');
                   setSearchQuery('');
                 }}
-                className="text-xs text-primary hover:underline flex items-center gap-1 py-1 px-2 whitespace-nowrap cursor-pointer"
+                className="text-xs text-primary hover:underline flex items-center gap-1 py-1 px-1.5 whitespace-nowrap cursor-pointer shrink-0"
+                title="Limpiar filtros activos"
               >
                 <span className="material-symbols-outlined text-[14px]">filter_alt_off</span>
-                <span>Limpiar</span>
+                <span className="hidden sm:inline">Limpiar</span>
               </button>
             )}
-          </div>
 
-          {/* Sort By & Button */}
-          <div className="flex items-center gap-2 flex-wrap flex-1 sm:flex-initial sm:ml-auto w-full sm:w-auto justify-end">
-            <div className="flex-1 sm:flex-initial min-w-[120px] sm:min-w-[130px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
-              <span className="material-symbols-outlined text-on-surface-variant text-[16px] shrink-0">sort</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate"
-              >
-                <option value="name" className="bg-surface-container-highest text-white">Alfabético</option>
-                <option value="stories" className="bg-surface-container-highest text-white">HU Vinculadas</option>
-                <option value="permission" className="bg-surface-container-highest text-white">Nivel de Permiso</option>
-              </select>
-            </div>
-
+            {/* Registrar Button */}
             {onOpenCreateModal && (
               <button
                 onClick={onOpenCreateModal}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all whitespace-nowrap cursor-pointer active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-on-primary hover:bg-[#e09419] font-space text-xs font-semibold shadow-sm transition-all whitespace-nowrap cursor-pointer active:scale-[0.98] shrink-0"
                 title="Registrar nuevo rol o actor del negocio"
               >
                 <span className="material-symbols-outlined text-[16px]">person_add</span>
