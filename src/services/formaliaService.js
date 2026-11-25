@@ -31,17 +31,28 @@ export function createWelcomeMessage() {
   };
 }
 
+function normalizeBrandingInSession(sess) {
+  if (!sess) return sess;
+  return {
+    ...sess,
+    messages: (sess.messages || []).map((m) => ({
+      ...m,
+      content: typeof m.content === 'string' ? m.content.replace(/FormalIA/g, 'FORMALIA') : m.content
+    }))
+  };
+}
+
 export function loadLocalFormaliaSession() {
   try {
     const raw = localStorage.getItem(FORMALIA_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.session_id && parsed.process_graph) {
-        return {
+        return normalizeBrandingInSession({
           versions: [],
           generated_files: [],
           ...parsed
-        };
+        });
       }
     }
   } catch (_) {}
@@ -53,7 +64,7 @@ export function loadLocalFormaliaArchive() {
     const raw = localStorage.getItem(FORMALIA_ARCHIVE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) return parsed.map(normalizeBrandingInSession);
     }
   } catch (_) {}
   return [];
