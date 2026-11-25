@@ -697,7 +697,7 @@ export default function SoftwareArchitectureView({
               <div className="min-w-0">
                 <div className="flex items-center gap-x-2.5 flex-wrap">
                   <h1 className="font-space text-lg sm:text-xl text-white font-bold tracking-tight truncate">
-                    Arquitectura de Software — {resolvedProject ? resolvedProject.name : 'Pathrimonio'}
+                    Arquitectura de Software
                   </h1>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary font-space text-[10px] font-semibold uppercase tracking-wider">
                     <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>

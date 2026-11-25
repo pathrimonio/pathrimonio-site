@@ -66,7 +66,7 @@ export default function ActorsControlsBar({
             <div className="min-w-0">
               <div className="flex items-center gap-x-2.5 flex-wrap">
                 <h1 className="font-space text-base sm:text-lg text-white font-semibold tracking-tight truncate">
-                  Actores & Roles del Negocio — {activeProject ? activeProject.name : 'Pathrimonio'}
+                  Actores & Roles del Negocio
                 </h1>
                 <span className="px-2 py-0.5 rounded bg-surface-container border border-outline-variant text-primary font-space text-[11px] font-medium tracking-wide">
                   Formalización de Requerimientos

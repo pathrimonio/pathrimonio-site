@@ -65,7 +65,7 @@ export default function ActorCard({
   };
 
   return (
-    <article className="group bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-200 shadow-md hover:shadow-xl">
+    <article className="group w-1/4 shrink-0 bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-200 shadow-md hover:shadow-xl">
       
       {/* ── 1. Header: Avatar, Nombre de Rol & Nivel de Permiso ── */}
       <div className="flex flex-wrap items-start justify-between gap-3 border-b border-outline-variant/60 pb-4">

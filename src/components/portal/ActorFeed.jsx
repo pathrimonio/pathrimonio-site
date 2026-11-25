@@ -218,7 +218,7 @@ export default function ActorFeed({
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-row gap-4 overflow-x-auto pb-2">
           {sortedActors.map((actor) => (
             <ActorCard
               key={actor.id}
