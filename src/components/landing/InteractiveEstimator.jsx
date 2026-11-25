@@ -47,60 +47,67 @@ import {
   formatWhatsAppMessage
 } from '../../data/pricingRules';
 import { submitQuoteWithFormaliaHandoff } from '../../services/formaliaService';
+import { PRIVACY_POLICY_VERSION } from '../../config/siteConfig';
 
 const STORAGE_KEY = 'pathrimonio_quote_wizard_v2';
 const PATHRIMONIO_WHATSAPP_NUMBER = '51950293223';
 
-export default function InteractiveEstimator({ onOpenContact, preloadedFormaliaData = null }) {
-  // ── 1. Estado inicial
-  const [quoteState, setQuoteState] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.business_discovery && parsed.configuration) {
-          return parsed;
-        }
-      }
-    } catch (_) {}
+const DEFAULT_QUOTE_STATE = {
+  currentStep: 1,
+  business_discovery: {
+    company_name: '',
+    industry: 'logistica_transporte',
+    current_method: 'excel_y_whatsapp',
+    custom_method_detail: '',
+    main_pain_point: 'desorden_en_despachos_y_caja',
+    custom_pain_detail: ''
+  },
+  configuration: {
+    admin_roles: [
+      { role: 'gerencia', count: 1 },
+      { role: 'almacen', count: 1 },
+      { role: 'despacho', count: 1 }
+    ],
+    end_customers_tier: 'hasta_100_base',
+    interfaces: ['web_operativa', 'portal_clientes'],
+    data_and_apis: ['historial_ilimitado'],
+    custom_requirements_note: ''
+  },
+  commitment_plan: 'semestral_setup_gratis',
+  lead_contact: {
+    name: '',
+    whatsapp: '',
+    email: ''
+  }
+};
 
-    return {
-      currentStep: 1,
-      business_discovery: {
-        company_name: '',
-        industry: 'logistica_transporte',
-        current_method: 'excel_y_whatsapp',
-        custom_method_detail: '',
-        main_pain_point: 'desorden_en_despachos_y_caja',
-        custom_pain_detail: ''
-      },
-      configuration: {
-        admin_roles: [
-          { role: 'gerencia', count: 1 },
-          { role: 'almacen', count: 1 },
-          { role: 'despacho', count: 1 }
-        ],
-        end_customers_tier: 'hasta_100_base',
-        interfaces: ['web_operativa', 'portal_clientes'],
-        data_and_apis: ['historial_ilimitado'],
-        custom_requirements_note: ''
-      },
-      commitment_plan: 'semestral_setup_gratis',
-      lead_contact: {
-        name: '',
-        whatsapp: '',
-        email: ''
-      }
-    };
-  });
+export default function InteractiveEstimator({ onOpenContact, onNavigate, preloadedFormaliaData = null }) {
+  // ── 1. Estado inicial determinista (SSR-safe; hidrata borrador tras montar)
+  const [quoteState, setQuoteState] = useState(DEFAULT_QUOTE_STATE);
+  const [draftHydrated, setDraftHydrated] = useState(false);
 
-  const [activeStep, setActiveStep] = useState(quoteState.currentStep || 1);
+  const [activeStep, setActiveStep] = useState(1);
   const [tarifaSocio, setTarifaSocio] = useState(true);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [successQuote, setSuccessQuote] = useState(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
   const [isPreloadedFromFormalia, setIsPreloadedFromFormalia] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.business_discovery && parsed.configuration) {
+          setQuoteState(parsed);
+          if (parsed.currentStep) setActiveStep(parsed.currentStep);
+        }
+      }
+    } catch (_) {}
+    setDraftHydrated(true);
+  }, []);
 
   // Precarga automática determinista cuando el usuario viene desde FormalIA (SDD Sección 5)
   useEffect(() => {
@@ -125,10 +132,11 @@ export default function InteractiveEstimator({ onOpenContact, preloadedFormaliaD
   }, [preloadedFormaliaData?.preloadedAt]);
 
   useEffect(() => {
+    if (!draftHydrated) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...quoteState, currentStep: activeStep }));
     } catch (_) {}
-  }, [quoteState, activeStep]);
+  }, [quoteState, activeStep, draftHydrated]);
 
   // ── 2. Cálculo de Precios reactivo
   const pricing = useMemo(() => {
@@ -262,12 +270,20 @@ export default function InteractiveEstimator({ onOpenContact, preloadedFormaliaD
       setValidationError('Por favor ingresa tu número de WhatsApp.');
       return;
     }
+    if (!privacyAccepted) {
+      setValidationError('Debes leer y aceptar la Política de Privacidad para recibir tu cotización.');
+      return;
+    }
 
+    const acceptedAt = new Date().toISOString();
     const quoteId = generateQuoteId();
     const payload = {
       quote_id: quoteId,
       formalia_session_id: preloadedFormaliaData?.formalia_session_id || null,
-      timestamp: new Date().toISOString(),
+      timestamp: acceptedAt,
+      privacy_policy_accepted: true,
+      privacy_policy_version: PRIVACY_POLICY_VERSION,
+      accepted_at: acceptedAt,
       business_discovery: quoteState.business_discovery,
       configuration: {
         admin_roles: quoteState.configuration.admin_roles,
@@ -889,7 +905,54 @@ export default function InteractiveEstimator({ onOpenContact, preloadedFormaliaD
                       className="w-full bg-[#FFFFFF] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] focus:border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[#09090B] dark:text-[#F4F4F5]"
                     />
                   </div>
+
+                  {/* Checkbox obligatorio Política de Privacidad (SDD Pilar 1) */}
+                  <div className="pt-2">
+                    <label className="flex items-start gap-2.5 text-xs text-[#09090B] dark:text-[#F4F4F5] cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        id="quote-privacy-checkbox"
+                        checked={privacyAccepted}
+                        onChange={(e) => {
+                          setPrivacyAccepted(e.target.checked);
+                          if (e.target.checked && validationError) setValidationError('');
+                        }}
+                        required
+                        className="w-4 h-4 mt-0.5 rounded border-[#D4D4D8] dark:border-[#3F3F46] accent-[#FFC000] shrink-0 cursor-pointer"
+                      />
+                      <span className="leading-relaxed">
+                        He leído y acepto la{' '}
+                        <a
+                          href="/legal/privacidad"
+                          onClick={(e) => {
+                            if (onNavigate) {
+                              e.preventDefault();
+                              onNavigate('/legal/privacidad');
+                            }
+                          }}
+                          className="text-[#9A6700] dark:text-[#FFC000] font-semibold underline underline-offset-2"
+                        >
+                          Política de Privacidad
+                        </a>{' '}
+                        para recibir mi cotización.
+                      </span>
+                    </label>
+                  </div>
                 </div>
+
+                {successQuote && (
+                  <div className="p-4 rounded-[8px] border border-emerald-500/40 bg-emerald-50/70 dark:bg-emerald-500/10 flex items-start gap-3 text-xs">
+                    <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-[#09090B] dark:text-[#F4F4F5] block">
+                        Cotización {successQuote.quote_id} generada y consentimiento registrado (v.{successQuote.privacy_policy_version}).
+                      </strong>
+                      <span className="text-[#52525B] dark:text-[#A1A1AA]">
+                        Si no se abrió WhatsApp automáticamente, puedes volver a pulsar el botón de envío.
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Botones de Navegación */}
                 <div className="pt-4 border-t border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between">
@@ -903,7 +966,8 @@ export default function InteractiveEstimator({ onOpenContact, preloadedFormaliaD
                   </button>
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    disabled={!privacyAccepted}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] disabled:opacity-45 disabled:cursor-not-allowed text-[#09090B] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                   >
                     <MessageSquare size={14} strokeWidth={1.5} />
                     <span>Enviar Cotización por WhatsApp</span>
@@ -1040,7 +1104,8 @@ export default function InteractiveEstimator({ onOpenContact, preloadedFormaliaD
               <button
                 type="button"
                 onClick={handleFinalSubmit}
-                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer text-center"
+                disabled={!privacyAccepted}
+                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] disabled:opacity-45 disabled:cursor-not-allowed text-[#09090B] text-xs font-semibold transition-colors cursor-pointer text-center"
               >
                 Enviar a WhatsApp Ahora
               </button>

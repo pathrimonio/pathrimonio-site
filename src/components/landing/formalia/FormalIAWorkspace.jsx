@@ -22,19 +22,30 @@ import {
 import FormalIAChatPanel from './FormalIAChatPanel';
 import FormalIACanvasPanel from './FormalIACanvasPanel';
 
+const INITIAL_SSR_GRAPH = createInitialProcessGraph('FIA-2026-INIT');
+const INITIAL_SSR_WELCOME = {
+  id: 'msg_welcome_init',
+  role: 'assistant',
+  content:
+    'Hola, soy FormalIA. Cuéntame en tus propias palabras: ¿qué proceso de tu negocio te genera hoy más desorden? (Ej. Ventas, Despachos, Pedidos)',
+  quick_replies: [
+    'Recibimos pedidos por WhatsApp, anotamos en Excel y despachamos en ruta',
+    'Comercio / Bodega: ventas en caja, control de stock e inventario manual',
+    'Restaurante / Delivery: comandas, cocina y entregas con demora'
+  ],
+  phase: '1_context',
+  timestamp: '2026-11-25T00:00:00.000Z'
+};
+
 export default function FormalIAWorkspace({ onPreloadQuote }) {
-  const [session, setSession] = useState(() => {
-    const saved = loadLocalFormaliaSession();
-    if (saved) return saved;
-    const initGraph = createInitialProcessGraph();
-    return {
-      session_id: initGraph.session_id,
-      process_graph: initGraph,
-      messages: [createWelcomeMessage()],
-      turns_count: 0,
-      max_turns: 15
-    };
+  const [session, setSession] = useState({
+    session_id: INITIAL_SSR_GRAPH.session_id,
+    process_graph: INITIAL_SSR_GRAPH,
+    messages: [INITIAL_SSR_WELCOME],
+    turns_count: 0,
+    max_turns: 15
   });
+  const [clientHydrated, setClientHydrated] = useState(false);
 
   const [isExtracting, setIsExtracting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -42,10 +53,13 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
   const [diagramUpdatedBadge, setDiagramUpdatedBadge] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Sincronizar sesión inicial con backend API si no existía en localStorage
+  // Hidrata sesión desde localStorage o inicia sesión remota tras montaje en cliente (SSR-safe)
   useEffect(() => {
+    setClientHydrated(true);
     const saved = loadLocalFormaliaSession();
-    if (!saved) {
+    if (saved) {
+      setSession(saved);
+    } else {
       startFormaliaSession().then((newSess) => {
         setSession(newSess);
       });
@@ -53,8 +67,9 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
   }, []);
 
   useEffect(() => {
+    if (!clientHydrated || session.session_id === 'FIA-2026-INIT') return;
     saveLocalFormaliaSession(session);
-  }, [session]);
+  }, [session, clientHydrated]);
 
   const handleSendMessage = async (text) => {
     setErrorMsg('');

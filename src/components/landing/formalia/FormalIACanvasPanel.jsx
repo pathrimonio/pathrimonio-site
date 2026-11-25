@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -167,7 +167,12 @@ export default function FormalIACanvasPanel({
   const [activeView, setActiveView] = useState('swimlanes'); // 'swimlanes' | 'macro' | 'bottlenecks'
   const [isExporting, setIsExporting] = useState(false);
   const [isEngineeringOpen, setIsEngineeringOpen] = useState(false);
+  const [isClientMounted, setIsClientMounted] = useState(false);
   const canvasCaptureRef = useRef(null);
+
+  useEffect(() => {
+    setIsClientMounted(true);
+  }, []);
 
   const actors = graph?.actors || [];
   const steps = graph?.steps || [];
@@ -339,7 +344,7 @@ export default function FormalIACanvasPanel({
                 Elige una respuesta rápida en el panel izquierdo o describe tu operación. Cada rol detectado abrirá su propio carril con sus pasos y traspasos.
               </p>
             </div>
-          ) : (
+          ) : isClientMounted ? (
             <div className="w-full h-[460px] lg:h-[520px]">
               <ReactFlow
                 nodes={flowNodes}
@@ -354,6 +359,12 @@ export default function FormalIACanvasPanel({
                 <Background gap={20} size={1} color="#D4D4D8" />
                 <Controls showInteractive={false} />
               </ReactFlow>
+            </div>
+          ) : (
+            <div className="h-full min-h-[400px] flex flex-col items-center justify-center p-8 text-center">
+              <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+                Carriles mapeados: {actors.map((a) => a.name).join(', ')} ({steps.length} pasos)
+              </p>
             </div>
           )
         )}

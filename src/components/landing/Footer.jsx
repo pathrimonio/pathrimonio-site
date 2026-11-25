@@ -1,7 +1,17 @@
 import React from 'react';
-import { ExternalLink, Heart } from 'lucide-react';
+import { ExternalLink, SlidersHorizontal, BookOpenCheck } from 'lucide-react';
+import { useConsent } from '../../context/ConsentContext';
 
-export default function Footer({ onOpenContact }) {
+export default function Footer({ onOpenContact, onNavigate }) {
+  const { openPreferencesModal } = useConsent();
+
+  const handleLinkClick = (path) => (e) => {
+    if (onNavigate) {
+      e.preventDefault();
+      onNavigate(path);
+    }
+  };
+
   return (
     <footer className="w-full bg-[#FFFFFF] dark:bg-[#09090B] border-t border-[#E4E4E7] dark:border-[#27272A] py-16 transition-colors">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
@@ -129,8 +139,52 @@ export default function Footer({ onOpenContact }) {
           </div>
         </div>
 
+        {/* Barra Legal & Privacidad (SDD Pilar 1) */}
+        <div className="pt-6 pb-4 border-b border-[#E4E4E7] dark:border-[#27272A] flex flex-wrap items-center justify-between gap-4 text-xs text-[#52525B] dark:text-[#A1A1AA]">
+          <nav aria-label="Enlaces legales" className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <a
+              href="/legal/aviso-legal"
+              onClick={handleLinkClick('/legal/aviso-legal')}
+              className="hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors"
+            >
+              Aviso Legal y Términos
+            </a>
+            <a
+              href="/legal/privacidad"
+              onClick={handleLinkClick('/legal/privacidad')}
+              className="hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors"
+            >
+              Política de Privacidad
+            </a>
+            <a
+              href="/legal/cookies"
+              onClick={handleLinkClick('/legal/cookies')}
+              className="hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors"
+            >
+              Política de Cookies
+            </a>
+            <a
+              href="/legal/libro-reclamaciones"
+              onClick={handleLinkClick('/legal/libro-reclamaciones')}
+              className="inline-flex items-center gap-1.5 text-[#09090B] dark:text-[#F4F4F5] font-medium hover:text-[#9A6700] dark:hover:text-[#FFC000] transition-colors"
+            >
+              <BookOpenCheck size={13} strokeWidth={1.75} className="text-[#9A6700] dark:text-[#FFC000]" />
+              <span>Libro de Reclamaciones</span>
+            </a>
+          </nav>
+
+          <button
+            type="button"
+            onClick={openPreferencesModal}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#F4F4F5] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#D4D4D8] dark:hover:border-[#3F3F46] text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] transition-colors cursor-pointer"
+          >
+            <SlidersHorizontal size={12} strokeWidth={1.75} />
+            <span>Configurar cookies</span>
+          </button>
+        </div>
+
         {/* Barra Inferior */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#A1A1AA] dark:text-[#71717A]">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#A1A1AA] dark:text-[#71717A]">
           <div className="flex items-center gap-2">
             <span>© 2026 Pathrimonio Company. Todos los derechos reservados.</span>
           </div>

@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-ssr
 .git
 .vercel
 .agents
@@ -9,7 +10,10 @@ dist
 Credenciales
 docs
 stitch_pathrimonio_social_software_portal
-scripts
+scripts/deploy-supabase.mjs
+scripts/generate-supabase-seed.mjs
+scripts/seed-*
+scripts/test-*
 mcp
 run-local.cmd
 run-local.ps1

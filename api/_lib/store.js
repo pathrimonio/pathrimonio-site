@@ -89,7 +89,7 @@ export async function saveQuoteWithHandoff(quotePayload) {
   const sb = getSupabaseServerClient();
   if (sb) {
     try {
-      await sb.from('quotes').upsert({
+      const { error } = await sb.from('quotes').insert({
         quote_id: quotePayload.quote_id,
         formalia_session_id: quotePayload.formalia_session_id || null,
         business_discovery: quotePayload.business_discovery || {},
@@ -102,7 +102,7 @@ export async function saveQuoteWithHandoff(quotePayload) {
         accepted_at: quotePayload.accepted_at || new Date().toISOString(),
         status: 'nuevo_lead'
       });
-      if (quotePayload.formalia_session_id) {
+      if (!error && quotePayload.formalia_session_id) {
         await sb
           .from('formalia_sessions')
           .update({ linked_quote_id: quotePayload.quote_id })
@@ -118,7 +118,7 @@ export async function saveComplaintRecord(complaintPayload) {
   const sb = getSupabaseServerClient();
   if (sb) {
     try {
-      await sb.from('complaints').upsert({
+      await sb.from('complaints').insert({
         complaint_code: complaintPayload.complaint_code,
         record_type: complaintPayload.record_type || 'Reclamo',
         consumer_name: complaintPayload.consumer_name,

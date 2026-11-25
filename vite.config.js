@@ -249,8 +249,69 @@ function archifyLocalDevPlugin() {
   };
 }
 
+function seoLocalPlugin() {
+  const registerMiddlewares = (middlewares, rootDir, isPreview) => {
+    middlewares.use('/robots.txt', async (req, res) => {
+      const { default: robotsHandler } = await import('./api/robots.js');
+      const wrappedRes = {
+        statusCode: 200,
+        setHeader: (k, v) => res.setHeader(k, v),
+        status(code) {
+          res.statusCode = code;
+          return this;
+        },
+        send(body) {
+          res.end(body);
+          return this;
+        }
+      };
+      return robotsHandler(req, wrappedRes);
+    });
+
+    middlewares.use('/sitemap.xml', async (req, res) => {
+      const { default: sitemapHandler } = await import('./api/sitemap.js');
+      const wrappedRes = {
+        statusCode: 200,
+        setHeader: (k, v) => res.setHeader(k, v),
+        status(code) {
+          res.statusCode = code;
+          return this;
+        },
+        send(body) {
+          res.end(body);
+          return this;
+        }
+      };
+      return sitemapHandler(req, wrappedRes);
+    });
+
+    if (isPreview) {
+      middlewares.use((req, _res, next) => {
+        const rawUrl = (req.url || '/').split('?')[0];
+        if (rawUrl.startsWith('/legal/') && !rawUrl.endsWith('.html')) {
+          const candidateHtml = resolve(rootDir, 'dist', `${rawUrl.replace(/^\/+/, '')}.html`);
+          if (existsSync(candidateHtml)) {
+            req.url = `${rawUrl}.html`;
+          }
+        }
+        next();
+      });
+    }
+  };
+
+  return {
+    name: 'pathrimonio-seo-local',
+    configureServer(server) {
+      registerMiddlewares(server.middlewares, server.config.root, false);
+    },
+    configurePreviewServer(server) {
+      registerMiddlewares(server.middlewares, server.config.root, true);
+    }
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), archifyLocalDevPlugin()],
+  plugins: [react(), archifyLocalDevPlugin(), seoLocalPlugin()],
   server: {
     port: 3000,
     open: false

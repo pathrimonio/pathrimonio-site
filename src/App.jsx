@@ -48,6 +48,12 @@ import InteractiveEstimator from './components/landing/InteractiveEstimator';
 import FAQSection from './components/landing/FAQSection';
 import Footer from './components/landing/Footer';
 import ContactModal from './components/landing/ContactModal';
+import LegalPageRouter, { isLegalPathname } from './components/legal/LegalPageRouter';
+import { ConsentProvider } from './context/ConsentContext';
+import ConsentTrackers from './components/consent/ConsentTrackers';
+import CookieBanner from './components/consent/CookieBanner';
+import CookiePreferencesModal from './components/consent/CookiePreferencesModal';
+import { getSeoForPath, normalizePathname } from './config/siteConfig';
 
 // Portal Components
 import LoginPage from './components/portal/LoginPage';
@@ -114,20 +120,42 @@ function PortalLoader({ message }) {
   );
 }
 
-export default function App() {
-  // ── Theme state: 'light' | 'dark'
-  const [theme, setTheme] = useState(() => {
-    try {
-      const savedTheme = localStorage.getItem('pathrimonio_theme');
-      if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme;
-      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
-    } catch (_) {}
-    return 'light';
-  });
+export default function App({ initialPath = '/' }) {
+  return (
+    <ConsentProvider>
+      <ConsentTrackers />
+      <AppContent initialPath={initialPath} />
+    </ConsentProvider>
+  );
+}
+
+function AppContent({ initialPath = '/' }) {
+  const initialCleanPath = normalizePathname(initialPath);
+
+  // ── Theme state: determinista en SSR, sincronizado tras montaje para evitar hydration mismatch
+  const [theme, setTheme] = useState('light');
+  const [themeHydrated, setThemeHydrated] = useState(false);
 
   useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('pathrimonio_theme');
+      const prefersDark =
+        typeof window !== 'undefined' &&
+        window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const resolved =
+        savedTheme === 'dark' || savedTheme === 'light'
+          ? savedTheme
+          : prefersDark
+            ? 'dark'
+            : 'light';
+      setTheme(resolved);
+    } catch (_) {}
+    setThemeHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!themeHydrated) return;
     try {
       localStorage.setItem('pathrimonio_theme', theme);
       if (theme === 'dark') {
@@ -140,15 +168,16 @@ export default function App() {
         document.documentElement.style.colorScheme = 'light';
       }
     } catch (_) {}
-  }, [theme]);
+  }, [theme, themeHydrated]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // ── View state: 'landing' | 'portal'
+  // ── Path & View state: 'landing' | 'legal' | 'portal'
+  const [currentPath, setCurrentPath] = useState(initialCleanPath);
   const [currentView, setCurrentView] = useState(() =>
-    window.location.hash === '#portal' ? 'portal' : 'landing'
+    isLegalPathname(initialCleanPath) ? 'legal' : 'landing'
   );
   const [preloadedFormaliaData, setPreloadedFormaliaData] = useState(null);
 
@@ -457,14 +486,27 @@ export default function App() {
     };
   }, []);
 
-  // Sync URL hash & query parameters for deep linking
+  // Sync URL pathname, hash & query parameters for deep linking (SSR/SPA clean URLs + #portal)
   useEffect(() => {
-    const handleHash = () => {
+    const syncSeoHead = (pathname) => {
+      const seo = getSeoForPath(pathname);
+      if (typeof document !== 'undefined') {
+        document.title = seo.title;
+        const descTag = document.querySelector('meta[name="description"]');
+        if (descTag) descTag.setAttribute('content', seo.description);
+        const canonicalTag = document.querySelector('link[rel="canonical"]');
+        if (canonicalTag) canonicalTag.setAttribute('href', seo.canonical);
+      }
+    };
+
+    const handleRouteSync = () => {
       const hash = window.location.hash || '';
+      const cleanPath = normalizePathname(window.location.pathname || '/');
+      setCurrentPath(cleanPath);
+
       if (hash.startsWith('#portal')) {
         setCurrentView('portal');
 
-        // Parse query params after #portal?
         const qIndex = hash.indexOf('?');
         if (qIndex !== -1) {
           const queryString = hash.slice(qIndex + 1);
@@ -484,17 +526,26 @@ export default function App() {
           if (roleParam) {
             setPreselectedRoleForStory(decodeURIComponent(roleParam));
           }
-          if (projectParam && projects.some(p => p.id === projectParam)) {
+          if (projectParam && projects.some((p) => p.id === projectParam)) {
             setActiveProjectId(projectParam);
           }
         }
+      } else if (isLegalPathname(cleanPath)) {
+        setCurrentView('legal');
+        syncSeoHead(cleanPath);
       } else {
         setCurrentView('landing');
+        syncSeoHead('/');
       }
     };
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
+
+    handleRouteSync();
+    window.addEventListener('hashchange', handleRouteSync);
+    window.addEventListener('popstate', handleRouteSync);
+    return () => {
+      window.removeEventListener('hashchange', handleRouteSync);
+      window.removeEventListener('popstate', handleRouteSync);
+    };
   }, [projects]);
 
   // Show login gate when user enters portal without a session
@@ -730,7 +781,47 @@ export default function App() {
     });
   };
 
+  const navigateToPath = (target) => {
+    if (typeof window === 'undefined') return;
+    const [rawPath, rawHash] = String(target || '/').split('#');
+    const cleanPath = normalizePathname(rawPath || '/');
+    const nextUrl = rawHash ? `${cleanPath}#${rawHash}` : cleanPath;
+
+    window.history.pushState({}, '', nextUrl);
+    setCurrentPath(cleanPath);
+
+    if (isLegalPathname(cleanPath)) {
+      setCurrentView('legal');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setCurrentView('landing');
+      if (rawHash) {
+        window.setTimeout(() => {
+          const targetEl = document.getElementById(rawHash);
+          if (targetEl) {
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }, 40);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    const seo = getSeoForPath(cleanPath);
+    document.title = seo.title;
+    const descTag = document.querySelector('meta[name="description"]');
+    if (descTag) descTag.setAttribute('content', seo.description);
+    const canonicalTag = document.querySelector('link[rel="canonical"]');
+    if (canonicalTag) canonicalTag.setAttribute('href', seo.canonical);
+  };
+
   const navigateToPortal = (initialAction = 'login') => {
+    if (window.location.pathname !== '/') {
+      window.history.replaceState({}, '', '/');
+      setCurrentPath('/');
+    }
     if (initialAction === 'register') {
       window.location.hash = '#portal?mode=register';
       setLoginMode('register');
@@ -746,7 +837,8 @@ export default function App() {
   const navigateToRegister = () => navigateToPortal('register');
 
   const navigateToHome = () => {
-    window.location.hash = '#home';
+    window.history.pushState({}, '', '/');
+    setCurrentPath('/');
     setCurrentView('landing');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -1507,9 +1599,10 @@ export default function App() {
               }}
             />
 
-            {/* Sección 06: Cotizador Interactivo (Split-Screen 65/35) */}
+          {/* Sección 06: Cotizador Interactivo (Split-Screen 65/35) */}
             <InteractiveEstimator
               onOpenContact={() => setIsContactModalOpen(true)}
+              onNavigate={navigateToPath}
               preloadedFormaliaData={preloadedFormaliaData}
             />
 
@@ -1518,9 +1611,27 @@ export default function App() {
           </main>
 
           {/* Sección 07: Footer */}
-          <Footer onOpenContact={() => setIsContactModalOpen(true)} />
-          <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} />
+          <Footer onOpenContact={() => setIsContactModalOpen(true)} onNavigate={navigateToPath} />
+          <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} onNavigate={navigateToPath} />
         </div>
+      )}
+
+      {/* ══════════════════════════════════════════
+          VIEW: LEGAL DOCUMENTS (/legal/* — SSG + SPA)
+      ══════════════════════════════════════════ */}
+      {currentView === 'legal' && (
+        <>
+          <LegalPageRouter
+            pathname={currentPath}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            onNavigate={navigateToPath}
+            onOpenPortal={() => navigateToPortal('login')}
+            onOpenRegister={navigateToRegister}
+            onOpenContact={() => setIsContactModalOpen(true)}
+          />
+          <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} onNavigate={navigateToPath} />
+        </>
       )}
 
       {/* ══════════════════════════════════════════
@@ -1960,6 +2071,13 @@ export default function App() {
             onRemove={handleRemoveProjectMember}
           />
         </div>
+      )}
+      {/* ── Banner y Modal de Consentimiento Real de Cookies (en vistas públicas) ── */}
+      {(currentView === 'landing' || currentView === 'legal') && (
+        <>
+          <CookieBanner onNavigate={navigateToPath} />
+          <CookiePreferencesModal onNavigate={navigateToPath} />
+        </>
       )}
     </div>
   );

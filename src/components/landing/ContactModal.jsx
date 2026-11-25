@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
+import { PRIVACY_POLICY_VERSION } from '../../config/siteConfig';
 
-export default function ContactModal({ isOpen, onClose }) {
+export default function ContactModal({ isOpen, onClose, onNavigate }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -9,6 +10,7 @@ export default function ContactModal({ isOpen, onClose }) {
     projectType: 'Inclusión Financiera y Crédito Comunitario',
     details: ''
   });
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -16,6 +18,7 @@ export default function ContactModal({ isOpen, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!privacyAccepted) return;
     setLoading(true);
 
     setTimeout(() => {
@@ -130,6 +133,33 @@ export default function ContactModal({ isOpen, onClose }) {
               ></textarea>
             </div>
 
+            <label className="flex items-start gap-2 text-[11px] font-jakarta text-on-surface-variant cursor-pointer pt-1">
+              <input
+                type="checkbox"
+                checked={privacyAccepted}
+                onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                required
+                className="w-4 h-4 mt-0.5 accent-[#FFC000] shrink-0 cursor-pointer"
+              />
+              <span>
+                He leído y acepto la{' '}
+                <a
+                  href="/legal/privacidad"
+                  onClick={(e) => {
+                    if (onNavigate) {
+                      e.preventDefault();
+                      onClose?.();
+                      onNavigate('/legal/privacidad');
+                    }
+                  }}
+                  className="text-primary font-semibold underline underline-offset-2"
+                >
+                  Política de Privacidad
+                </a>{' '}
+                para recibir respuesta a mi consulta técnica (v.{PRIVACY_POLICY_VERSION}).
+              </span>
+            </label>
+
             <div className="flex items-center justify-between pt-2">
               <span className="font-jakarta text-[11px] text-on-surface-variant flex items-center gap-1">
                 <span className="material-symbols-outlined text-primary text-[14px]">lock</span>
@@ -146,8 +176,8 @@ export default function ContactModal({ isOpen, onClose }) {
                 </button>
                 <button 
                   type="submit"
-                  disabled={loading}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider shadow-glow-amber hover:shadow-glow-amber-lg transition-all"
+                  disabled={loading || !privacyAccepted}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-primary text-on-primary font-space text-xs font-bold uppercase tracking-wider shadow-glow-amber hover:shadow-glow-amber-lg transition-all disabled:opacity-45 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? (
                     <span>Procesando...</span>

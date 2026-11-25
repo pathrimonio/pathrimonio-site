@@ -1,23 +1,47 @@
 import React, { useState } from 'react';
 import { Menu, X, ArrowRight, Sun, Moon } from 'lucide-react';
 
-export default function Navbar({ onOpenPortal, onOpenRegister, theme, onToggleTheme }) {
+export default function Navbar({
+  onOpenPortal,
+  onOpenRegister,
+  theme,
+  onToggleTheme,
+  onNavigate,
+  isSubpage = false
+}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Roles & Control', href: '#roles' },
-    { name: 'Arquitectura', href: '#arquitectura' },
-    { name: 'Socios', href: '#socios' },
-    { name: 'FormalIA', href: '#formalia' },
-    { name: 'Cotizador', href: '#cotizador' },
-    { name: 'FAQ', href: '#faq' },
+    { name: 'Roles & Control', href: isSubpage ? '/#roles' : '#roles' },
+    { name: 'Arquitectura', href: isSubpage ? '/#arquitectura' : '#arquitectura' },
+    { name: 'Socios', href: isSubpage ? '/#socios' : '#socios' },
+    { name: 'FormalIA', href: isSubpage ? '/#formalia' : '#formalia' },
+    { name: 'Cotizador', href: isSubpage ? '/#cotizador' : '#cotizador' },
+    { name: 'FAQ', href: isSubpage ? '/#faq' : '#faq' },
   ];
+
+  const handleNavClick = (href) => (e) => {
+    setMobileMenuOpen(false);
+    if (isSubpage && onNavigate && href.startsWith('/')) {
+      e.preventDefault();
+      onNavigate(href);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#FFFFFF]/90 dark:bg-[#09090B]/90 backdrop-blur-md border-b border-[#E4E4E7] dark:border-[#27272A] transition-colors">
       <div className="max-w-6xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
-        <a href="#" className="flex items-center gap-2.5 text-[#09090B] dark:text-[#F4F4F5] font-semibold tracking-tight text-lg group">
+        <a
+          href="/"
+          onClick={(e) => {
+            if (isSubpage && onNavigate) {
+              e.preventDefault();
+              onNavigate('/');
+            }
+          }}
+          className="flex items-center gap-2.5 text-[#09090B] dark:text-[#F4F4F5] font-semibold tracking-tight text-lg group"
+        >
           <img
             src="/assets/images/icono_202609011609.jpg"
             alt="Pathrimonio"
@@ -35,6 +59,7 @@ export default function Navbar({ onOpenPortal, onOpenRegister, theme, onToggleTh
             <a
               key={link.name}
               href={link.href}
+              onClick={handleNavClick(link.href)}
               className="text-sm font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors"
             >
               {link.name}
@@ -66,7 +91,8 @@ export default function Navbar({ onOpenPortal, onOpenRegister, theme, onToggleTh
             Portal Operativo
           </button>
           <a
-            href="#cotizador"
+            href={isSubpage ? '/#cotizador' : '#cotizador'}
+            onClick={handleNavClick(isSubpage ? '/#cotizador' : '#cotizador')}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#09090B] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] rounded-[6px] transition-colors shadow-sm cursor-pointer"
           >
             <span>Cotizar ($1/día)</span>
@@ -105,7 +131,7 @@ export default function Navbar({ onOpenPortal, onOpenRegister, theme, onToggleTh
             <a
               key={link.name}
               href={link.href}
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={handleNavClick(link.href)}
               className="text-sm font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] py-1.5 transition-colors"
             >
               {link.name}
@@ -145,8 +171,8 @@ export default function Navbar({ onOpenPortal, onOpenRegister, theme, onToggleTh
               Crear Cuenta Colaborador
             </button>
             <a
-              href="#cotizador"
-              onClick={() => setMobileMenuOpen(false)}
+              href={isSubpage ? '/#cotizador' : '#cotizador'}
+              onClick={handleNavClick(isSubpage ? '/#cotizador' : '#cotizador')}
               className="w-full text-center py-2 text-xs font-semibold text-[#09090B] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] rounded-[6px]"
             >
               Cotizar Sistema a Medida
