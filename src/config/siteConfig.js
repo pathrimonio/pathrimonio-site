@@ -46,7 +46,7 @@ export const LEGAL_ROUTES = [
     shortTitle: 'Privacidad',
     metaTitle: 'Política de Privacidad y Datos | Pathrimonio Company',
     metaDescription:
-      'Tratamiento de datos personales en el Cotizador y sesiones anónimas en FormalIA, expiración a 7 días y ejercicio de derechos ARCO bajo la Ley N.º 29733.'
+      'Tratamiento de datos personales en el Cotizador y sesiones anónimas en FORMALIA, expiración a 7 días y ejercicio de derechos ARCO bajo la Ley N.º 29733.'
   },
   {
     path: '/legal/cookies',
@@ -72,7 +72,7 @@ export const HOME_SEO = {
   path: '/',
   metaTitle: 'Pathrimonio — Software a Medida para la Economía Real',
   metaDescription:
-    'Software operativo a medida desde $1 USD/día por rol. Arquitectura offline-first SQLite, mapeo con FormalIA y soberanía total de datos para PYMEs.',
+    'Software operativo a medida desde $1 USD/día por rol. Arquitectura offline-first SQLite, mapeo con FORMALIA y soberanía total de datos para PYMEs.',
   ogImage: `${SITE_URL}/assets/images/icono_202609011609.jpg`
 };
 
@@ -110,7 +110,7 @@ export const COOKIE_INVENTORY = [
     storageType: 'localStorage',
     category: 'Necesarias / Técnicas',
     categoryId: 'necessary',
-    purpose: 'Guarda la sesión conversacional anónima actual en FormalIA y el grafo de procesos mapeado.',
+    purpose: 'Guarda la sesión conversacional anónima actual en FORMALIA y el grafo de procesos mapeado.',
     duration: 'Hasta finalizar sesión o limpieza (7 días en servidor)'
   },
   {
@@ -119,7 +119,7 @@ export const COOKIE_INVENTORY = [
     storageType: 'Cookie técnica anti-bot',
     category: 'Necesarias / Técnicas',
     categoryId: 'necessary',
-    purpose: 'Protege formularios públicos (Cotizador / FormalIA) contra abuso automatizado y bots maliciosos.',
+    purpose: 'Protege formularios públicos (Cotizador / FORMALIA) contra abuso automatizado y bots maliciosos.',
     duration: 'Sesión / máx. 30 minutos'
   },
   {

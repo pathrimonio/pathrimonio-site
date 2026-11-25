@@ -51,6 +51,8 @@ export async function getSession(sessionId) {
           session_id: data.session_id,
           process_graph: data.process_graph,
           messages: data.messages || [],
+          versions: data.versions || [],
+          generated_files: data.generated_files || [],
           turns_count: data.turns_count || 0,
           completeness_score: data.completeness_score || 0,
           linked_quote_id: data.linked_quote_id || null,
@@ -74,6 +76,8 @@ export async function saveSession(record) {
         session_id: record.session_id,
         process_graph: record.process_graph,
         messages: record.messages || [],
+        versions: record.versions || [],
+        generated_files: record.generated_files || [],
         turns_count: record.turns_count || 0,
         completeness_score: record.completeness_score || 0,
         linked_quote_id: record.linked_quote_id || null,
@@ -82,6 +86,70 @@ export async function saveSession(record) {
     } catch (_) {}
   }
   return record;
+}
+
+export async function saveArtifactVersion(artifact) {
+  const session = await getSession(artifact.session_id);
+  if (session) {
+    const nextFiles = [
+      ...(session.generated_files || []).filter((f) => f.id !== artifact.id),
+      artifact
+    ];
+    session.generated_files = nextFiles;
+    await saveSession(session);
+  }
+  const sb = getSupabaseServerClient();
+  if (sb) {
+    try {
+      await sb.from('formalia_artifact_versions').upsert({
+        id: artifact.id,
+        session_id: artifact.session_id,
+        version_number: artifact.version_number || 1,
+        version_label: artifact.version_label || `v${artifact.version_number || 1}`,
+        artifact_kind: artifact.artifact_kind || 'snapshot',
+        file_name: artifact.file_name,
+        mime_type: artifact.mime_type || 'text/plain',
+        content_text: artifact.content_text || null,
+        data_url: artifact.data_url || null,
+        size_bytes: artifact.size_bytes || 0,
+        change_summary: artifact.change_summary || '',
+        chat_turns_at: artifact.chat_turns_at || 0
+      });
+    } catch (_) {}
+  }
+  return artifact;
+}
+
+export async function listFormaliaSessionsArchive() {
+  const sb = getSupabaseServerClient();
+  if (sb) {
+    try {
+      const { data: sessions } = await sb
+        .from('formalia_sessions')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(50);
+
+      const { data: artifacts } = await sb
+        .from('formalia_artifact_versions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      if (sessions && sessions.length > 0) {
+        const artifactsBySession = new Map();
+        (artifacts || []).forEach((a) => {
+          if (!artifactsBySession.has(a.session_id)) artifactsBySession.set(a.session_id, []);
+          artifactsBySession.get(a.session_id).push(a);
+        });
+        return sessions.map((s) => ({
+          ...s,
+          generated_files: artifactsBySession.get(s.session_id) || s.generated_files || []
+        }));
+      }
+    } catch (_) {}
+  }
+  return Array.from(memorySessions.values());
 }
 
 export async function saveQuoteWithHandoff(quotePayload) {

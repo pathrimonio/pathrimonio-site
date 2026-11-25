@@ -40,7 +40,7 @@ export function graphToPlantUML(graph) {
   if (steps.length === 0) {
     lines.push(`|Inicio|`);
     lines.push(`start`);
-    lines.push(`:Describe tu proceso en FormalIA para generar los carriles;`);
+    lines.push(`:Describe tu proceso en FORMALIA para generar los carriles;`);
     lines.push(`stop`);
     lines.push(`@enduml`);
     return lines.join('\n');
@@ -116,7 +116,7 @@ export function graphToPlantUML(graph) {
     if (step.is_manual_bottleneck) {
       const tip = step.automation_opportunity
         ? `Cuello de botella manual — Oportunidad: ${sanitizeLabel(step.automation_opportunity)}`
-        : 'Cuello de botella manual detectado por FormalIA';
+        : 'Cuello de botella manual detectado por FORMALIA';
       lines.push(`note right`);
       lines.push(`  ${tip}`);
       lines.push(`end note`);
@@ -280,7 +280,7 @@ export function mapProcessToQuoteConfig(graph) {
     .join('\n');
 
   const custom_requirements_note = [
-    `Proceso mapeado en FormalIA: "${ctx.process_name || 'Operación Principal'}" (${steps.length} pasos, ${actors.length} actores).`,
+    `Proceso mapeado en FORMALIA: "${ctx.process_name || 'Operación Principal'}" (${steps.length} pasos, ${actors.length} actores).`,
     bottlenecks.length > 0
       ? `Cuellos de botella detectados:\n${bottleneckDetails}`
       : 'Sin cuellos de botella críticos marcados manualmente.',

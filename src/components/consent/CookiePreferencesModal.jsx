@@ -107,7 +107,7 @@ export default function CookiePreferencesModal({ onNavigate }) {
                   </span>
                 </div>
                 <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed mt-1">
-                  Imprescindibles para recordar tu tema claro/oscuro (<code className="font-mono">pathrimonio_theme</code>), conservar el borrador del Cotizador y FormalIA, y guardar esta elección.
+                  Imprescindibles para recordar tu tema claro/oscuro (<code className="font-mono">pathrimonio_theme</code>), conservar el borrador del Cotizador y FORMALIA, y guardar esta elección.
                 </p>
               </div>
             </div>

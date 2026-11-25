@@ -25,7 +25,8 @@ import {
   Database,
   CheckCircle2,
   Loader2,
-  Sparkles
+  Sparkles,
+  History
 } from 'lucide-react';
 import { exportDiagramAsPNG, exportDiagramAsPDF } from '../../../lib/formalia/diagramExport';
 import FormalIAEngineeringModal from './FormalIAEngineeringModal';
@@ -161,12 +162,18 @@ const NODE_TYPES = {
 
 export default function FormalIACanvasPanel({
   graph,
+  messages = [],
+  versions = [],
+  generatedFiles = [],
   isExtracting = false,
-  onApplyToQuote
+  onApplyToQuote,
+  onRecordArtifact,
+  onRestoreVersion
 }) {
   const [activeView, setActiveView] = useState('swimlanes'); // 'swimlanes' | 'macro' | 'bottlenecks'
   const [isExporting, setIsExporting] = useState(false);
   const [isEngineeringOpen, setIsEngineeringOpen] = useState(false);
+  const [modalInitialTab, setModalInitialTab] = useState('plantuml');
   const [isClientMounted, setIsClientMounted] = useState(false);
   const canvasCaptureRef = useRef(null);
 
@@ -258,10 +265,26 @@ export default function FormalIACanvasPanel({
     [actors]
   );
 
+  const currentVersionLabel = versions.length > 0 ? versions[versions.length - 1].version_label : 'v1';
+  const currentVersionNum = versions.length > 0 ? versions[versions.length - 1].version_number : 1;
+
   const handleExportPNG = async () => {
     try {
       setIsExporting(true);
-      await exportDiagramAsPNG(canvasCaptureRef.current, graph);
+      const fileMeta = await exportDiagramAsPNG(canvasCaptureRef.current, graph, currentVersionLabel);
+      onRecordArtifact?.({
+        id: `${graph.session_id}_png_${currentVersionLabel}_${Date.now()}`,
+        session_id: graph.session_id,
+        version_number: currentVersionNum,
+        version_label: currentVersionLabel,
+        artifact_kind: 'png',
+        file_name: fileMeta.fileName,
+        mime_type: fileMeta.mimeType,
+        data_url: fileMeta.dataUrl,
+        size_bytes: fileMeta.sizeBytes,
+        change_summary: `Diagrama exportado en PNG (${activeView})`,
+        chat_turns_at: messages.filter((m) => m.role === 'user').length
+      });
     } finally {
       setIsExporting(false);
     }
@@ -270,7 +293,20 @@ export default function FormalIACanvasPanel({
   const handleExportPDF = async () => {
     try {
       setIsExporting(true);
-      await exportDiagramAsPDF(canvasCaptureRef.current, graph);
+      const fileMeta = await exportDiagramAsPDF(canvasCaptureRef.current, graph, currentVersionLabel);
+      onRecordArtifact?.({
+        id: `${graph.session_id}_pdf_${currentVersionLabel}_${Date.now()}`,
+        session_id: graph.session_id,
+        version_number: currentVersionNum,
+        version_label: currentVersionLabel,
+        artifact_kind: 'pdf',
+        file_name: fileMeta.fileName,
+        mime_type: fileMeta.mimeType,
+        data_url: fileMeta.dataUrl,
+        size_bytes: fileMeta.sizeBytes,
+        change_summary: `Documento PDF generado desde FORMALIA (${activeView})`,
+        chat_turns_at: messages.filter((m) => m.role === 'user').length
+      });
     } finally {
       setIsExporting(false);
     }
@@ -603,12 +639,28 @@ export default function FormalIACanvasPanel({
           <button
             type="button"
             disabled={steps.length === 0}
-            onClick={() => setIsEngineeringOpen(true)}
+            onClick={() => {
+              setModalInitialTab('plantuml');
+              setIsEngineeringOpen(true);
+            }}
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FAFAFA] dark:bg-[#18181B] hover:border-[#FFC000] text-[11px] font-medium text-[#09090B] dark:text-[#F4F4F5] transition-colors cursor-pointer disabled:opacity-40"
             title="Inspeccionar PlantUML (.puml), Historias de Usuario y JSON canónico"
           >
             <Code2 size={13} className="text-[#9A6700] dark:text-[#FFC000]" />
             <span>.puml & Handoff</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setModalInitialTab('versions');
+              setIsEngineeringOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FAFAFA] dark:bg-[#18181B] hover:border-[#FFC000] text-[11px] font-medium text-[#09090B] dark:text-[#F4F4F5] transition-colors cursor-pointer"
+            title="Ver chat recopilado, archivos generados y versiones"
+          >
+            <History size={13} className="text-[#9A6700] dark:text-[#FFC000]" />
+            <span>Chat & Versiones ({versions.length} · {generatedFiles.length})</span>
           </button>
         </div>
 
@@ -626,11 +678,17 @@ export default function FormalIACanvasPanel({
         </button>
       </div>
 
-      {/* Modal de Handoff Ingeniería (.puml / HUs / RBAC / JSON) */}
+      {/* Modal de Handoff Ingeniería, Chat y Versiones FORMALIA */}
       <FormalIAEngineeringModal
         isOpen={isEngineeringOpen}
         onClose={() => setIsEngineeringOpen(false)}
         graph={graph}
+        messages={messages}
+        versions={versions}
+        generatedFiles={generatedFiles}
+        initialTab={modalInitialTab}
+        onRecordArtifact={onRecordArtifact}
+        onRestoreVersion={onRestoreVersion}
       />
     </div>
   );

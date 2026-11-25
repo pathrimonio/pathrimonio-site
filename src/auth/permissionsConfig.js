@@ -10,6 +10,7 @@ export const SYSTEM_MODULES = [
   { id: 'architecture', label: 'Arquitectura de Software', icon: 'account_tree', badge: 'ARCH', desc: 'Capas Clean/Hexagonal, contratos abstractos y síntesis con archify' },
   { id: 'dataModel', label: 'Arquitectura de Datos', icon: 'database', badge: 'DB', desc: 'Tablas relacionales, DER y esquemas de arquitectura' },
   { id: 'files', label: 'Archivos & Manifiestos', icon: 'folder_open', badge: 'FILES', desc: 'Entregables, diagramas y contratos' },
+  { id: 'formalia', label: 'FORMALIA (Chats & Archivos)', icon: 'auto_awesome', badge: 'IA', desc: 'Chats recopilados, archivos generados (.puml, PNG, PDF) y versiones' },
   { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted', badge: 'PLAN', desc: 'Priorización consolidada de historias' },
   { id: 'sprints', label: 'Sprints & Ciclos', icon: 'timelapse', badge: 'AGILE', desc: 'Métricas de velocidad y cadencia de desarrollo' },
   { id: 'docs', label: 'Docs de Arquitectura', icon: 'article', badge: 'DOCS', desc: 'Estándares de arquitectura, manifiestos y guías técnicas' },
@@ -34,7 +35,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-primary',
     badgeColor: 'bg-primary/20 text-primary border-primary/40',
     avatarBg: 'bg-primary',
-    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs', 'settings'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'dataModel', 'files', 'formalia', 'backlog', 'sprints', 'docs', 'settings'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
@@ -52,7 +53,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-amber-400',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
     avatarBg: 'bg-amber-600',
-    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'dataModel', 'files', 'formalia', 'backlog', 'sprints', 'docs'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
@@ -70,7 +71,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-emerald-400',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     avatarBg: 'bg-emerald-600',
-    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'backlog', 'sprints', 'docs'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'formalia', 'backlog', 'sprints', 'docs'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
@@ -88,7 +89,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-purple-400',
     badgeColor: 'bg-purple-500/20 text-purple-400 border-purple-500/40',
     avatarBg: 'bg-purple-500',
-    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'dataModel', 'files', 'docs'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'architecture', 'dataModel', 'files', 'formalia', 'docs'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,

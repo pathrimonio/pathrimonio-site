@@ -2,9 +2,10 @@ import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
 /**
- * Exportación visual del lienzo FormalIA en PNG y PDF con marca discreta de Pathrimonio.
+ * Exportación visual del lienzo FORMALIA en PNG y PDF con marca discreta de Pathrimonio.
+ * Devuelve metadatos del archivo generado para recopilarlo en el historial de versiones.
  */
-export async function exportDiagramAsPNG(element, graph) {
+export async function exportDiagramAsPNG(element, graph, versionLabel = 'v1') {
   if (!element) throw new Error('Elemento del lienzo no disponible');
   const dataUrl = await toPng(element, {
     quality: 1,
@@ -18,14 +19,22 @@ export async function exportDiagramAsPNG(element, graph) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
+  const fileName = `FORMALIA-${slug || 'diagrama'}-${graph?.session_id || 'export'}-${versionLabel}.png`;
   const link = document.createElement('a');
-  link.download = `FormalIA-${slug || 'diagrama'}-${graph?.session_id || 'export'}.png`;
+  link.download = fileName;
   link.href = dataUrl;
   link.click();
-  return dataUrl;
+
+  const approxBytes = Math.round((dataUrl.length * 3) / 4);
+  return {
+    fileName,
+    mimeType: 'image/png',
+    dataUrl,
+    sizeBytes: approxBytes
+  };
 }
 
-export async function exportDiagramAsPDF(element, graph) {
+export async function exportDiagramAsPDF(element, graph, versionLabel = 'v1') {
   if (!element) throw new Error('Elemento del lienzo no disponible');
   const dataUrl = await toPng(element, {
     quality: 0.98,
@@ -43,7 +52,7 @@ export async function exportDiagramAsPDF(element, graph) {
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
-  // Header Pathrimonio FormalIA
+  // Header Pathrimonio FORMALIA
   pdf.setFillColor(9, 9, 11);
   pdf.rect(0, 0, pageWidth, 20, 'F');
   pdf.setFillColor(255, 192, 0);
@@ -51,7 +60,7 @@ export async function exportDiagramAsPDF(element, graph) {
 
   pdf.setTextColor(255, 192, 0);
   pdf.setFontSize(12);
-  pdf.text('Pathrimonio FormalIA', 12, 9);
+  pdf.text('Pathrimonio FORMALIA', 12, 9);
 
   pdf.setTextColor(244, 244, 245);
   pdf.setFontSize(10);
@@ -61,7 +70,7 @@ export async function exportDiagramAsPDF(element, graph) {
   pdf.setTextColor(161, 161, 170);
   pdf.setFontSize(8.5);
   pdf.text(
-    `Sesión: ${graph?.session_id || 'FIA'} | Roles: ${graph?.actors?.length || 0} | Pasos: ${graph?.steps?.length || 0}`,
+    `Sesión: ${graph?.session_id || 'FIA'} (${versionLabel}) | Roles: ${graph?.actors?.length || 0} | Pasos: ${graph?.steps?.length || 0}`,
     pageWidth - 12,
     12,
     { align: 'right' }
@@ -82,7 +91,7 @@ export async function exportDiagramAsPDF(element, graph) {
   pdf.setTextColor(113, 113, 122);
   pdf.setFontSize(8);
   pdf.text(
-    'Generado gratuitamente con FormalIA by Pathrimonio Company — www.pathrimonio.site ($1 USD/día por rol)',
+    `Generado gratuitamente con FORMALIA by Pathrimonio Company — www.pathrimonio.site ($1 USD/día por rol) · ${versionLabel}`,
     12,
     pageHeight - 5
   );
@@ -92,5 +101,15 @@ export async function exportDiagramAsPDF(element, graph) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
-  pdf.save(`FormalIA-${slug || 'diagrama'}-${graph?.session_id || 'export'}.pdf`);
+  const fileName = `FORMALIA-${slug || 'diagrama'}-${graph?.session_id || 'export'}-${versionLabel}.pdf`;
+  pdf.save(fileName);
+
+  const pdfDataUri = pdf.output('datauristring');
+  const approxBytes = Math.round((pdfDataUri.length * 3) / 4);
+  return {
+    fileName,
+    mimeType: 'application/pdf',
+    dataUrl: dataUrl, // preview image thumbnail
+    sizeBytes: approxBytes
+  };
 }

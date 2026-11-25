@@ -349,33 +349,33 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
           </p>
         </div>
 
-        {/* Banner Ruta Guiada o Precarga desde FormalIA (SDD Sección 2.1 y 5) */}
+        {/* Banner Ruta Guiada o Precarga desde FORMALIA (SDD Sección 2.1 y 5) */}
         {isPreloadedFromFormalia ? (
           <div className="mb-6 p-3.5 rounded-[10px] bg-[#FFFBEB] dark:bg-amber-500/10 border border-[#FFC000] flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 text-xs text-[#09090B] dark:text-[#F4F4F5]">
               <Sparkles size={16} className="text-[#9A6700] dark:text-[#FFC000] shrink-0" />
               <span>
-                <strong>Configuración precargada desde tu mapa en FormalIA.</strong> Puedes ajustar cualquier rol o módulo libremente.
+                <strong>Configuración precargada desde tu mapa en FORMALIA.</strong> Puedes ajustar cualquier rol o módulo libremente.
               </span>
             </div>
             <a
               href="#formalia"
               className="text-xs font-medium text-[#9A6700] dark:text-[#FFC000] hover:underline whitespace-nowrap"
             >
-              Volver a editar en FormalIA →
+              Volver a editar en FORMALIA →
             </a>
           </div>
         ) : (
           <div className="mb-6 p-3.5 rounded-[10px] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 text-xs text-[#52525B] dark:text-[#A1A1AA]">
               <Sparkles size={15} className="text-[#9A6700] dark:text-[#FFC000] shrink-0" />
-              <span>¿No estás seguro de qué roles o módulos necesitas? Deja que <strong className="text-[#09090B] dark:text-[#F4F4F5]">FormalIA</strong> mapee tu operación y llene esto por ti.</span>
+              <span>¿No estás seguro de qué roles o módulos necesitas? Deja que <strong className="text-[#09090B] dark:text-[#F4F4F5]">FORMALIA</strong> mapee tu operación y llene esto por ti.</span>
             </div>
             <a
               href="#formalia"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] text-xs font-semibold hover:border-[#FFC000] transition-colors whitespace-nowrap"
             >
-              <span>Mapea tu negocio gratis con FormalIA</span>
+              <span>Mapea tu negocio gratis con FORMALIA</span>
               <ArrowRight size={13} />
             </a>
           </div>

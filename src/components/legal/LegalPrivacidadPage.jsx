@@ -61,13 +61,13 @@ export default function LegalPrivacidadPage({
 
           <div className="p-4 rounded-[8px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
             <h3 className="text-sm font-bold text-[var(--text-primary)] mb-1.5">
-              B. Sesiones Anónimas en FormalIA (Expiración Automática a los 7 Días)
+              B. Sesiones Anónimas en FORMALIA (Expiración Automática a los 7 Días)
             </h3>
             <p>
-              El módulo conversacional <strong>FormalIA</strong> opera sin exigir registro ni cuentas personales. Al interactuar en el lienzo, se crea un identificador técnico aleatorio (<code className="font-mono text-xs">FIA-2026-XXXX</code>) y se guarda temporalmente la transcripción del flujo y grafo de roles para mantener la continuidad de tu mapa.
+              El módulo conversacional <strong>FORMALIA</strong> opera sin exigir registro ni cuentas personales. Al interactuar en el lienzo, se crea un identificador técnico aleatorio (<code className="font-mono text-xs">FIA-2026-XXXX</code>) y se guarda temporalmente la transcripción del flujo y grafo de roles para mantener la continuidad de tu mapa.
             </p>
             <p className="text-xs text-[var(--text-secondary)] mt-1.5">
-              <strong>Retención estricta:</strong> Toda sesión anónima de FormalIA que no sea vinculada voluntariamente a una cotización formal <strong>expira y se depura automáticamente a los 7 días calendario</strong> desde su creación (<code className="font-mono">expires_at</code>). Recomendamos no introducir datos personales sensibles o contraseñas dentro del chat de diagnóstico operativo.
+              <strong>Retención estricta:</strong> Toda sesión anónima de FORMALIA que no sea vinculada voluntariamente a una cotización formal <strong>expira y se depura automáticamente a los 7 días calendario</strong> desde su creación (<code className="font-mono">expires_at</code>). Recomendamos no introducir datos personales sensibles o contraseñas dentro del chat de diagnóstico operativo.
             </p>
           </div>
 

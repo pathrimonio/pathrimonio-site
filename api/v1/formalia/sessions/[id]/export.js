@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const session = await getSession(id);
 
   if (!session || !session.process_graph) {
-    return res.status(404).json({ error: 'Sesión FormalIA no encontrada' });
+    return res.status(404).json({ error: 'Sesión FORMALIA no encontrada' });
   }
 
   if (format === 'puml') {

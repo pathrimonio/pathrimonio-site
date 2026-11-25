@@ -1,6 +1,7 @@
 import { applyGraphPatches, createInitialProcessGraph } from '../../../../../src/lib/formalia/schema.js';
 import { extractProcessTurn } from '../../../../../src/lib/formalia/extractorEngine.js';
-import { getSession, saveSession, MAX_TURNS_PER_SESSION } from '../../../../_lib/store.js';
+import { graphToPlantUML } from '../../../../../src/lib/formalia/compilers.js';
+import { getSession, saveSession, saveArtifactVersion, MAX_TURNS_PER_SESSION } from '../../../../_lib/store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -67,7 +68,39 @@ export default async function handler(req, res) {
     assistantMsg
   ];
 
+  const versionNumber = (session.versions?.length || 0) + 1;
+  const versionLabel = `v${versionNumber}`;
+  const pumlCode = graphToPlantUML(updatedGraph);
+  const versionSnapshot = {
+    version_number: versionNumber,
+    version_label: versionLabel,
+    created_at: new Date().toISOString(),
+    turns_count: nextTurn,
+    completeness_score: updatedGraph.completeness_score,
+    actors_count: updatedGraph.actors?.length || 0,
+    steps_count: updatedGraph.steps?.length || 0,
+    change_summary: userMessage.slice(0, 110),
+    process_graph: updatedGraph,
+    plantuml: pumlCode
+  };
+
+  session.versions = [...(session.versions || []), versionSnapshot];
   await saveSession(session);
+
+  await saveArtifactVersion({
+    id: `${id}_puml_${versionLabel}`,
+    session_id: id,
+    version_number: versionNumber,
+    version_label: versionLabel,
+    artifact_kind: 'puml',
+    file_name: `FORMALIA-${id}-${versionLabel}.puml`,
+    mime_type: 'text/plain',
+    content_text: pumlCode,
+    size_bytes: Buffer.byteLength(pumlCode, 'utf8'),
+    change_summary: `Turno ${nextTurn}: ${userMessage.slice(0, 80)}`,
+    chat_turns_at: nextTurn,
+    created_at: versionSnapshot.created_at
+  });
 
   return res.status(200).json({
     session_id: id,
@@ -79,6 +112,8 @@ export default async function handler(req, res) {
     turns_count: nextTurn,
     max_turns: MAX_TURNS_PER_SESSION,
     process_graph: updatedGraph,
+    version: versionSnapshot,
+    versions: session.versions,
     engine_source: extraction.engine_source
   });
 }

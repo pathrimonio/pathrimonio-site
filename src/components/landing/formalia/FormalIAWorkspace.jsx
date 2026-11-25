@@ -17,7 +17,9 @@ import {
   loadLocalFormaliaSession,
   saveLocalFormaliaSession,
   clearLocalFormaliaSession,
-  createWelcomeMessage
+  createWelcomeMessage,
+  buildVersionSnapshot,
+  registerGeneratedArtifact
 } from '../../../services/formaliaService';
 import FormalIAChatPanel from './FormalIAChatPanel';
 import FormalIACanvasPanel from './FormalIACanvasPanel';
@@ -27,7 +29,7 @@ const INITIAL_SSR_WELCOME = {
   id: 'msg_welcome_init',
   role: 'assistant',
   content:
-    'Hola, soy FormalIA. Cuéntame en tus propias palabras: ¿qué proceso de tu negocio te genera hoy más desorden? (Ej. Ventas, Despachos, Pedidos)',
+    'Hola, soy FORMALIA. Cuéntame en tus propias palabras: ¿qué proceso de tu negocio te genera hoy más desorden? (Ej. Ventas, Despachos, Pedidos)',
   quick_replies: [
     'Recibimos pedidos por WhatsApp, anotamos en Excel y despachamos en ruta',
     'Comercio / Bodega: ventas en caja, control de stock e inventario manual',
@@ -42,6 +44,8 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
     session_id: INITIAL_SSR_GRAPH.session_id,
     process_graph: INITIAL_SSR_GRAPH,
     messages: [INITIAL_SSR_WELCOME],
+    versions: [],
+    generated_files: [],
     turns_count: 0,
     max_turns: 15
   });
@@ -58,7 +62,11 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
     setClientHydrated(true);
     const saved = loadLocalFormaliaSession();
     if (saved) {
-      setSession(saved);
+      setSession({
+        versions: [],
+        generated_files: [],
+        ...saved
+      });
     } else {
       startFormaliaSession().then((newSess) => {
         setSession(newSess);
@@ -91,7 +99,9 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
         sessionId: session.session_id,
         message: text,
         currentGraph: session.process_graph,
-        turnsCount: session.turns_count
+        turnsCount: session.turns_count,
+        existingVersions: session.versions || [],
+        existingFiles: session.generated_files || []
       });
 
       const assistantMsg = {
@@ -108,10 +118,11 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
         ...prev,
         process_graph: res.process_graph,
         turns_count: res.turns_count,
+        versions: res.versions || prev.versions || [],
+        generated_files: res.generated_files || prev.generated_files || [],
         messages: [...prev.messages, assistantMsg]
       }));
 
-      // En móvil (< 768px), encender indicador visual de diagrama actualizado
       setDiagramUpdatedBadge(true);
     } catch (err) {
       setErrorMsg(err.message || 'Ocurrió un error al procesar tu mensaje.');
@@ -161,15 +172,56 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
       }
     ];
 
+    const { snapshot, pumlArtifact } = buildVersionSnapshot(
+      exampleGraph,
+      [],
+      'Ejemplo SDD cargado: Transportes del Norte SAC (5 roles, 5 pasos)',
+      1
+    );
+
     setSession({
       session_id: exampleGraph.session_id,
       process_graph: exampleGraph,
       messages: exampleMessages,
+      versions: [snapshot],
+      generated_files: [pumlArtifact],
       turns_count: 1,
       max_turns: 15
     });
+    registerGeneratedArtifact(pumlArtifact).catch(() => {});
     setDiagramUpdatedBadge(true);
     setErrorMsg('');
+  };
+
+  const handleRecordArtifact = (artifact) => {
+    setSession((prev) => ({
+      ...prev,
+      generated_files: [
+        ...(prev.generated_files || []).filter((f) => f.id !== artifact.id),
+        artifact
+      ]
+    }));
+    registerGeneratedArtifact(artifact).catch(() => {});
+  };
+
+  const handleRestoreVersion = (versionObj) => {
+    if (!versionObj?.process_graph) return;
+    const restoredGraph = structuredClone(versionObj.process_graph);
+    const restoreNote = {
+      id: `msg_${Date.now()}_restore`,
+      role: 'assistant',
+      content: `Versión ${versionObj.version_label} restaurada en el lienzo (${restoredGraph.actors?.length || 0} roles, ${restoredGraph.steps?.length || 0} pasos).`,
+      quick_replies: ['Continuar editando desde aquí', 'Cotizar este sistema en Pathrimonio'],
+      phase: restoredGraph.phase || '5_synthesis',
+      timestamp: new Date().toISOString()
+    };
+
+    setSession((prev) => ({
+      ...prev,
+      process_graph: restoredGraph,
+      messages: [...prev.messages, restoreNote]
+    }));
+    setDiagramUpdatedBadge(true);
   };
 
   const handleApplyToQuote = async (graph) => {
@@ -186,7 +238,6 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
       preloadedAt: Date.now()
     });
 
-    // Desplazar suavemente hacia el Cotizador
     const el = document.getElementById('cotizador');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -194,6 +245,10 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
   };
 
   const stepsCount = session.process_graph?.steps?.length || 0;
+  const currentVersionLabel =
+    session.versions?.length > 0
+      ? session.versions[session.versions.length - 1].version_label
+      : 'v0';
 
   return (
     <section
@@ -206,13 +261,13 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
         <div className="max-w-3xl mx-auto text-center mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] text-xs font-medium mb-4">
             <Sparkles size={13} />
-            <span>Módulo Conversacional FormalIA · Gratis y sin registro</span>
+            <span>Módulo Conversacional FORMALIA · Gratis y sin registro</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-3">
             Mapea tu negocio en carriles vivos antes de cotizar
           </h2>
           <p className="text-sm sm:text-base text-[#52525B] dark:text-[#A1A1AA] leading-relaxed">
-            Cuéntale a FormalIA cómo trabaja tu equipo hoy. Al instante obtienes tu diagrama de roles, cuellos de botella en PNG/PDF y tu sistema precargado a <strong className="text-[#09090B] dark:text-[#F4F4F5]">$1 USD/día por rol</strong>.
+            Cuéntale a FORMALIA cómo trabaja tu equipo hoy. Al instante obtienes tu diagrama de roles, cuellos de botella en PNG/PDF, historial versionado y tu sistema precargado a <strong className="text-[#09090B] dark:text-[#F4F4F5]">$1 USD/día por rol</strong>.
           </p>
         </div>
 
@@ -226,14 +281,19 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
         >
           {/* Barra superior del Studio Split-Screen */}
           <div className="px-4 py-2.5 border-b border-[#E4E4E7] dark:border-[#27272A] bg-[#F4F4F5]/70 dark:bg-[#18181B] flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="w-2 h-2 rounded-full bg-[#FFC000]" />
               <span className="font-mono text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5]">
-                FormalIA Studio
+                FORMALIA Studio
               </span>
               <span className="hidden sm:inline font-mono text-[11px] text-[#71717A]">
                 · Sesión {session.session_id}
               </span>
+              {session.versions?.length > 0 && (
+                <span className="px-1.5 py-0.5 rounded bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 font-mono text-[10px] font-semibold text-[#9A6700] dark:text-[#FFC000]">
+                  {currentVersionLabel} · {session.generated_files?.length || 0} archivos
+                </span>
+              )}
             </div>
 
             <button
@@ -259,7 +319,7 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
               }`}
             >
               <MessageSquare size={14} />
-              <span>Chat FormalIA</span>
+              <span>Chat FORMALIA</span>
             </button>
             <button
               type="button"
@@ -274,7 +334,7 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
               }`}
             >
               <GitBranch size={14} />
-              <span>Ver mi Diagrama ({stepsCount} pasos)</span>
+              <span>{`Ver mi Diagrama (${stepsCount} pasos)`}</span>
               {diagramUpdatedBadge && mobileTab !== 'diagram' && (
                 <span className="w-2 h-2 rounded-full bg-[#FFC000] animate-ping" />
               )}
@@ -312,8 +372,13 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
             >
               <FormalIACanvasPanel
                 graph={session.process_graph}
+                messages={session.messages}
+                versions={session.versions || []}
+                generatedFiles={session.generated_files || []}
                 isExtracting={isExtracting}
                 onApplyToQuote={handleApplyToQuote}
+                onRecordArtifact={handleRecordArtifact}
+                onRestoreVersion={handleRestoreVersion}
               />
             </div>
 

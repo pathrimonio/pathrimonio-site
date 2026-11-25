@@ -34,7 +34,7 @@ export default function LegalAvisoPage({
           1. Identidad del Titular y Datos de Contacto
         </h2>
         <p>
-          El presente sitio web (<span className="font-mono text-xs text-[var(--text-primary)]">{LEGAL_ENTITY.website}</span>), su simulador conversacional FormalIA, el Cotizador Interactivo y el Portal Operativo SDD son administrados por <strong className="text-[var(--text-primary)]">{LEGAL_ENTITY.brandName}</strong>.
+          El presente sitio web (<span className="font-mono text-xs text-[var(--text-primary)]">{LEGAL_ENTITY.website}</span>), su simulador conversacional FORMALIA, el Cotizador Interactivo y el Portal Operativo SDD son administrados por <strong className="text-[var(--text-primary)]">{LEGAL_ENTITY.brandName}</strong>.
         </p>
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
           <div className="p-3 rounded-[6px] bg-[var(--bg-subtle)] border border-[var(--border-subtle)]">
@@ -98,10 +98,10 @@ export default function LegalAvisoPage({
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">
-          4. Uso Aceptable de Herramientas Públicas (FormalIA y Cotizador)
+          4. Uso Aceptable de Herramientas Públicas (FORMALIA y Cotizador)
         </h2>
         <p>
-          Las herramientas públicas de diagnóstico (<strong className="text-[var(--text-primary)]">FormalIA</strong> y <strong className="text-[var(--text-primary)]">Cotizador Interactivo</strong>) tienen carácter informativo, de preventa y especificación preliminar. Los resultados estimados están sujetos a confirmación técnica formal en caso de integraciones de hardware propietario o módulos a medida fuera del alcance estándar.
+          Las herramientas públicas de diagnóstico (<strong className="text-[var(--text-primary)]">FORMALIA</strong> y <strong className="text-[var(--text-primary)]">Cotizador Interactivo</strong>) tienen carácter informativo, de preventa y especificación preliminar. Los resultados estimados están sujetos a confirmación técnica formal en caso de integraciones de hardware propietario o módulos a medida fuera del alcance estándar.
         </p>
         <p>
           Queda estrictamente prohibido utilizar bots automatizados, inyección de tráfico malicioso o intentos de extracción masiva contra las rutas públicas y APIs (<code className="font-mono text-xs">/api/v1/*</code>). Nos reservamos el derecho de aplicar límites de frecuencia por IP y verificaciones anti-spam técnicas.

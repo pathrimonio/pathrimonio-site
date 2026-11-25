@@ -21,6 +21,7 @@ export default function Sidebar({
     { id: 'architecture', label: 'Arquitectura de Software', icon: 'account_tree', badge: 'ARCH' },
     { id: 'dataModel', label: 'Arquitectura de Datos', icon: 'database', badge: 'DB' },
     { id: 'files', label: 'Archivos & Manifiestos', icon: 'folder_open', badge: 'FILES' },
+    { id: 'formalia', label: 'FORMALIA (Chats & Archivos)', icon: 'auto_awesome', badge: 'IA' },
     { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted' },
     { id: 'sprints', label: 'Sprints & Ciclos', icon: 'timelapse' },
     { id: 'docs', label: 'Docs de Arquitectura', icon: 'article', badge: 'DOCS' },

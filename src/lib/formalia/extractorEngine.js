@@ -1,7 +1,7 @@
 import { ExtractorResponseSchema } from './schema.js';
 
 const SYSTEM_PROMPT = `
-Eres FormalIA, el entrevistador técnico y arquitecto de procesos de Pathrimonio Company.
+Eres FORMALIA, el entrevistador técnico y arquitecto de procesos de Pathrimonio Company.
 Tu misión es entrevistar al usuario en español claro y cotidiano para mapear su proceso de negocio en un modelo canónico incremental (ProcessGraphJSON).
 
 REGLAS ESTRICTAS:

@@ -37,7 +37,7 @@ export default function Hero({ onOpenPortal }) {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFFFFF] dark:bg-[#111113] hover:bg-[#FFFBEB] dark:hover:bg-amber-500/10 border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#FFC000] text-[#09090B] dark:text-[#F4F4F5] text-sm font-medium transition-colors cursor-pointer"
             >
               <Sparkles size={15} strokeWidth={1.75} className="text-[#9A6700] dark:text-[#FFC000]" />
-              <span>Mapea tu negocio gratis con FormalIA</span>
+              <span>Mapea tu negocio gratis con FORMALIA</span>
             </a>
           </div>
 

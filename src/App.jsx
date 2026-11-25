@@ -88,6 +88,7 @@ import SoftwareArchitectureView from './components/portal/SoftwareArchitectureVi
 import NewProjectModal from './components/portal/NewProjectModal';
 import InviteProjectMemberModal from './components/portal/InviteProjectMemberModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
+import FormalIAPortalView from './components/portal/FormalIAPortalView';
 import AdminUsersView from './components/portal/AdminUsersView';
 import { 
   loadRoleDefinitions, 
@@ -1591,11 +1592,11 @@ function AppContent({ initialPath = '/' }) {
             {/* Sección 05: Impacto y Pathway (Bento Grid) */}
             <ImpactPathwayBento />
 
-            {/* Sección 05B: FormalIA (Motor Conversacional + Carriles Vivos) */}
+            {/* Sección 05B: FORMALIA (Motor Conversacional + Carriles Vivos) */}
             <FormalIAWorkspace
               onPreloadQuote={(data) => {
                 setPreloadedFormaliaData(data);
-                notify('Configuración de roles y canales precargada desde FormalIA.');
+                notify('Configuración de roles y canales precargada desde FORMALIA.');
               }}
             />
 
@@ -1971,6 +1972,13 @@ function AppContent({ initialPath = '/' }) {
                         onNotify={notify}
                       />
                     </div>
+                  )}
+                  {activePortalTab === 'formalia' && (
+                    <FormalIAPortalView
+                      activeProjectId={activeProjectId}
+                      onSaveToProjectFiles={handleSaveFile}
+                      onNotify={notify}
+                    />
                   )}
                   {activePortalTab === 'backlog'   && <BacklogView stories={projectStories} />}
                   {activePortalTab === 'sprints'   && <SprintsView />}

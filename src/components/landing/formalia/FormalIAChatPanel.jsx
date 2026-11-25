@@ -85,7 +85,7 @@ export default function FormalIAChatPanel({
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5] tracking-tight truncate">
-                  Entrevistador FormalIA
+                  Entrevistador FORMALIA
                 </h3>
                 <span className="px-1.5 py-0.5 rounded bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] font-mono text-[10px] font-medium">
                   {turnsCount}/{maxTurns} turnos
@@ -229,7 +229,7 @@ export default function FormalIAChatPanel({
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000] animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000] animate-bounce" style={{ animationDelay: '300ms' }} />
               </span>
-              <span>FormalIA está actualizando carriles y roles...</span>
+              <span>FORMALIA está actualizando carriles y roles...</span>
             </div>
           </div>
         )}
@@ -281,7 +281,7 @@ export default function FormalIAChatPanel({
           <button
             type="submit"
             disabled={!inputText.trim() || isExtracting || isLimitReached}
-            aria-label="Enviar mensaje a FormalIA"
+            aria-label="Enviar mensaje a FORMALIA"
             className="h-10 px-4 rounded-[8px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             <Send size={14} />

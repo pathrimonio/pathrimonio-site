@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   const greeting = {
     id: `msg_${Date.now()}`,
     role: 'assistant',
-    content: 'Hola, soy FormalIA. Cuéntame en tus propias palabras: ¿qué proceso de tu negocio te genera hoy más desorden? (Ej. Ventas, Despachos, Pedidos)',
+    content: 'Hola, soy FORMALIA. Cuéntame en tus propias palabras: ¿qué proceso de tu negocio te genera hoy más desorden? (Ej. Ventas, Despachos, Pedidos)',
     quick_replies: [
       'Recibimos pedidos por WhatsApp, anotamos en Excel y despachamos en ruta',
       'Comercio / Bodega: ventas en caja, control de stock e inventario manual',
