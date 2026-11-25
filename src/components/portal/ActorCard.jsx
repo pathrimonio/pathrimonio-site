@@ -68,46 +68,48 @@ export default function ActorCard({
     <article className="group w-1/4 shrink-0 bg-surface-container-low border border-outline-variant rounded-2xl p-6 flex flex-col gap-5 hover:border-primary/50 transition-all duration-200 shadow-md hover:shadow-xl">
       
       {/* ── 1. Header: Avatar, Nombre de Rol & Nivel de Permiso ── */}
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-outline-variant/60 pb-4">
-        <div className="flex items-center gap-3.5 min-w-0">
+      <div className="flex flex-col gap-3.5 border-b border-outline-variant/60 pb-4">
+        {/* Fila superior: Ícono y Nivel de Permiso */}
+        <div className="flex items-center justify-between gap-3">
           <div className={`w-12 h-12 rounded-xl border flex items-center justify-center font-space font-bold shrink-0 shadow-inner ${colorStyles.bg}`}>
             <span className="material-symbols-outlined text-[26px]">
               {actor.avatarIcon || 'person'}
             </span>
           </div>
 
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-space text-base sm:text-lg font-bold text-white group-hover:text-primary transition-colors tracking-tight truncate">
-                {actor.name}
-              </h3>
-              {actor.isPrimaryRole && (
-                <span className="px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/40 font-space text-[10px] font-bold uppercase tracking-wider">
-                  Rol Principal
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 mt-1 flex-wrap text-xs">
-              <span className="font-space text-[11px] text-on-surface-variant font-medium">
-                {actor.category}
-              </span>
-              <span className="text-on-surface-variant/40">•</span>
-              <span className="font-mono text-[11px] text-primary">
-                {linkedStoriesCount} {linkedStoriesCount === 1 ? 'Historia' : 'Historias'}
-              </span>
-              <span className="text-on-surface-variant/40">•</span>
-              <span className="font-mono text-[11px] text-emerald-400">
-                {linkedInterfacesCount} {linkedInterfacesCount === 1 ? 'Interfaz' : 'Interfaces'}
-              </span>
-            </div>
+          {/* Permission Level Badge */}
+          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-space font-semibold ${colorStyles.badge}`}>
+            <span className="material-symbols-outlined text-[15px]">security</span>
+            <span>{actor.permissionLevel}</span>
           </div>
         </div>
 
-        {/* Permission Level Badge */}
-        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-space font-semibold ${colorStyles.badge}`}>
-          <span className="material-symbols-outlined text-[15px]">security</span>
-          <span>{actor.permissionLevel}</span>
+        {/* Fila inferior: Nombre de Rol y Metadatos */}
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-space text-base sm:text-lg font-bold text-white group-hover:text-primary transition-colors tracking-tight truncate">
+              {actor.name}
+            </h3>
+            {actor.isPrimaryRole && (
+              <span className="px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/40 font-space text-[10px] font-bold uppercase tracking-wider">
+                Rol Principal
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 mt-1 flex-wrap text-xs">
+            <span className="font-space text-[11px] text-on-surface-variant font-medium">
+              {actor.category}
+            </span>
+            <span className="text-on-surface-variant/40">•</span>
+            <span className="font-mono text-[11px] text-primary">
+              {linkedStoriesCount} {linkedStoriesCount === 1 ? 'Historia' : 'Historias'}
+            </span>
+            <span className="text-on-surface-variant/40">•</span>
+            <span className="font-mono text-[11px] text-emerald-400">
+              {linkedInterfacesCount} {linkedInterfacesCount === 1 ? 'Interfaz' : 'Interfaces'}
+            </span>
+          </div>
         </div>
       </div>
 
