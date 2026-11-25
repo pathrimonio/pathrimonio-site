@@ -113,12 +113,12 @@ export default function ActorFeed({
           <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
             
             {/* Category Filter */}
-            <div className="min-w-0 sm:min-w-[140px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
+            <div className="w-full min-w-0 sm:w-auto sm:min-w-[140px] flex items-center gap-1.5 bg-surface-container-highest px-2.5 sm:px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors overflow-hidden">
               <span className="material-symbols-outlined text-primary text-[16px] shrink-0">category</span>
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
+                className="w-full min-w-0 max-w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
               >
                 {ACTOR_CATEGORY_OPTIONS.map((cat) => (
                   <option key={cat} value={cat} className="bg-surface-container-highest text-white">
@@ -129,12 +129,12 @@ export default function ActorFeed({
             </div>
 
             {/* Permission Level Filter */}
-            <div className="min-w-0 sm:min-w-[140px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
+            <div className="w-full min-w-0 sm:w-auto sm:min-w-[140px] flex items-center gap-1.5 bg-surface-container-highest px-2.5 sm:px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors overflow-hidden">
               <span className="material-symbols-outlined text-secondary text-[16px] shrink-0">shield</span>
               <select
                 value={selectedPermission}
                 onChange={(e) => setSelectedPermission(e.target.value)}
-                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
+                className="w-full min-w-0 max-w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
               >
                 {PERMISSION_LEVEL_OPTIONS.map((lvl) => (
                   <option key={lvl} value={lvl} className="bg-surface-container-highest text-white">
@@ -149,12 +149,12 @@ export default function ActorFeed({
           <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
             
             {/* Sort Filter */}
-            <div className="flex-1 sm:flex-initial min-w-0 sm:min-w-[130px] flex items-center gap-1.5 bg-surface-container-highest px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors">
+            <div className="flex-1 sm:flex-initial min-w-0 sm:min-w-[130px] flex items-center gap-1.5 bg-surface-container-highest px-2.5 sm:px-3 py-1.5 rounded-xl border border-outline-variant hover:border-outline focus-within:border-primary transition-colors overflow-hidden">
               <span className="material-symbols-outlined text-on-surface-variant text-[16px] shrink-0">sort</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
+                className="w-full min-w-0 max-w-full bg-transparent text-white font-medium focus:outline-none cursor-pointer truncate text-xs"
               >
                 <option value="name" className="bg-surface-container-highest text-white">Alfabético</option>
                 <option value="stories" className="bg-surface-container-highest text-white">HU Vinculadas</option>
