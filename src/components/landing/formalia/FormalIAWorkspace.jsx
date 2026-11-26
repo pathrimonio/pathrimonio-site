@@ -408,7 +408,7 @@ export default function FormalIAWorkspace({
           </div>
 
           {/* Split-Screen 40% Izquierda / 60% Derecha en Desktop */}
-          <div className={`flex flex-col md:flex-row ${isExpanded ? 'flex-1 min-h-0' : 'md:h-[650px]'}`}>
+          <div className={`flex flex-col md:flex-row ${isExpanded ? 'flex-1 min-h-0' : 'md:h-[680px]'}`}>
             
             {/* Panel Izquierdo (40%) */}
             <div

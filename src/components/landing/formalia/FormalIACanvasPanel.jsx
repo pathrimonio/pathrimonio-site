@@ -370,7 +370,7 @@ export default function FormalIACanvasPanel({
       {/* ── Lienzo Central Vivo (Instantánea < 100ms entre vistas) ── */}
       <div
         ref={canvasCaptureRef}
-        className="relative flex-1 min-h-[420px] lg:min-h-[480px] overflow-hidden bg-[var(--bg-page)]"
+        className="relative flex-1 min-h-[360px] md:min-h-0 overflow-hidden bg-[var(--bg-page)]"
       >
         {/* Overlay suave durante actualización LLM sin parpadeos */}
         {isExtracting && (
@@ -414,7 +414,7 @@ export default function FormalIACanvasPanel({
               )}
             </div>
           ) : isClientMounted ? (
-            <div className="w-full h-[460px] lg:h-[520px]">
+            <div className="w-full h-[460px] md:h-full">
               <ReactFlow
                 nodes={flowNodes}
                 edges={flowEdges}
