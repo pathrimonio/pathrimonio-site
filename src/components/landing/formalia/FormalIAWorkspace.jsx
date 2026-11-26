@@ -66,10 +66,15 @@ export default function FormalIAWorkspace({
     setClientHydrated(true);
     const saved = loadLocalFormaliaSession();
     if (saved) {
+      const normalizedMessages =
+        (saved.turns_count || 0) === 0 && (saved.messages || []).length <= 1
+          ? [createWelcomeMessage()]
+          : saved.messages;
       setSession({
         versions: [],
         generated_files: [],
-        ...saved
+        ...saved,
+        messages: normalizedMessages
       });
     } else {
       startFormaliaSession().then((newSess) => {
@@ -140,6 +145,15 @@ export default function FormalIAWorkspace({
     clearLocalFormaliaSession();
     setErrorMsg('');
     setDiagramUpdatedBadge(false);
+    setSession({
+      session_id: 'FIA-2026-INIT',
+      process_graph: createInitialProcessGraph('FIA-2026-INIT'),
+      messages: [createWelcomeMessage()],
+      versions: [],
+      generated_files: [],
+      turns_count: 0,
+      max_turns: 15
+    });
     const fresh = await startFormaliaSession();
     setSession(fresh);
   };

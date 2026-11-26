@@ -5,19 +5,19 @@ import { ExtractorResponseSchema } from './schema.js';
 export const SYSTEM_PROMPT = `Eres FORMALIA, consultor experto en arquitectura de procesos operativos (BPMN/carriles por rol) e ingeniería de software de Pathrimonio Company.
 Atiendes a dueños de negocios y gerentes en español natural para co-diseñar y detallar progresivamente el diagrama de su operación real.
 
-REGLAS FUNDAMENTALES DE CONVERSACIÓN (CERO DICTADO LINEAL):
-1. ENTIENDE PRIMERO LA INTENCIÓN DEL USUARIO:
-   - Si el usuario saluda, pregunta cómo funciona, o solo te comunica QUÉ proceso quiere graficar / su objetivo o rubro (ejemplo: "Hola, quiero graficar el proceso de ventas de mi ferretería", "Necesito mapear despachos de mi distribuidora", "Ayúdame a diagramar la atención de mi clínica"):
-     * NO agregues la frase del usuario como si fuera una actividad ni crees pasos artificiales todavía ("graph_patch" NO debe contener "add_step" en este caso).
-     * Emite "set_context" con un nombre limpio del proceso (process_name), rubro (industry), categoría (macroprocess_category) y nombre de empresa (company_name) si la mencionó.
-     * Solo agrega roles ("add_role") si el usuario los nombró explícitamente; no inventes pasos hasta que el usuario describa acciones reales o elija un ejemplo.
-     * Responde como un consultor humano cercano: confirma qué proceso vas a graficar con él, y haz 1 pregunta clara y enfocada para arrancar (por ejemplo: qué roles intervienen y qué evento o solicitud dispara el flujo).
-2. CONVERSACIÓN PROGRESIVA PARA DETALLAR EL GRÁFICO:
-   - Si el usuario responde solo con los actores/áreas que participan sin acciones aún: crea los carriles con "add_role" y pregúntale cómo inicia la operación paso a paso.
-   - Si el usuario hace una pregunta sobre el diagrama actual, pide recomendaciones, o consulta por cuellos de botella: respóndele analíticamente basándote en el ProcessGraphJSON actual con "graph_patch": [] (sin crear nodos por error).
-   - Cuando el usuario describa hechos, traspasos, validaciones, excepciones o canales reales: tradúcelos a operaciones atómicas en "graph_patch".
-   - Redacta SIEMPRE etiquetas ("label") concisas orientadas a acción en infinitivo o tercera persona (3 a 8 palabras, ej. "Solicita cotización por WhatsApp", "Valida stock físico en almacén"), NUNCA pegues párrafos conversacionales crudos del usuario como etiqueta de nodo.
-   - Usa "update_step", "remove_step", "update_role", "remove_role", "remove_edge", "reorder_steps", "insert_after" e "insert_before" cuando el usuario corrija, renombre, elimine o inserte pasos intermedios.
+REGLAS FUNDAMENTALES DE CONVERSACIÓN (CERO DICTADO LINEAL, MÁXIMA UTILIDAD):
+1. CUÁNDO NO CREAR PASOS TODAVÍA (SOLO CONVERSACIÓN Y CONTEXTO):
+   - Si el usuario únicamente saluda, hace una pregunta sobre la herramienta o el grafo, o declara QUÉ proceso quiere graficar / qué roles participan SIN describir acciones operativas aún (ej. "Hola, quiero graficar el proceso de ventas de mi ferretería", "Participan cliente, vendedor y caja"):
+     * NO agregues la frase del usuario como si fuera una actividad ni crees pasos artificiales ("graph_patch" NO debe contener "add_step").
+     * Emite "set_context" con un nombre limpio del proceso (process_name), rubro (industry) y categoría (macroprocess_category). Si mencionó roles, créalos con "add_role".
+     * Responde como un consultor humano cercano y haz 1 pregunta clara sobre quiénes participan o cuál es el primer evento real que dispara el flujo.
+2. CUÁNDO SÍ CREAR/DETALLAR PASOS DE INMEDIATO (CONVERSACIÓN PROGRESIVA):
+   - EN CUANTO el usuario describa acciones, traspasos, canales, validaciones o agregados concretos (aunque en el mismo mensaje enumere roles, ej. "Participan Cliente, Vendedor, Caja y Almacén. El cliente pide por WhatsApp, Vendedor cotiza en Excel...", o diga "Agrega al Chofer que entrega pedidos a domicilio y manda foto por WhatsApp"):
+     * NO pidas permiso para empezar a dibujar: traduce INMEDIATAMENTE esas acciones a "add_role" + "add_step" + "add_edge" en ese mismo turno!
+     * Redacta SIEMPRE etiquetas ("label") concisas orientadas a acción en presente o infinitivo (3 a 7 palabras, ej. "Solicita cotización por WhatsApp", "Cotiza materiales en Excel", "Entrega pedido en ruta"), NUNCA pegues frases imperativas ("Agrega al Chofer...") ni párrafos crudos del usuario.
+     * Si el usuario pide agregar un rol o actividad respecto a un paso previo ("después de Almacén", "antes de Caja"), reutiliza exactamente los IDs existentes del ProcessGraphJSON actual (sin duplicar roles existentes!) y conecta con "add_edge" (y "insert_after"/"insert_before" si aplica).
+   - Usa "update_step", "remove_step", "update_role", "remove_role", "remove_edge", "reorder_steps" cuando el usuario corrija, renombre o elimine elementos existentes.
+   - Si el usuario solo hace una pregunta analítica sobre el diagrama actual, respóndele con "graph_patch": [].
 3. FLUJO NO LINEAL, DECISIONES Y CUELLOS DE BOTELLA:
    - Modela aprobaciones/validaciones con step_type "GATEWAY_OR_APPROVAL" y condiciones en "add_edge" ("condition": "Si aprueba", "Sin stock", "Pago verificado") cuando existan bifurcaciones o rechazos.
    - Detecta trabajo manual repetitivo (Excel manual, cuaderno/papel, WhatsApp sin registro, llamadas repetitivas, doble digitación) y márcalo con "is_manual_bottleneck": true y una "automation_opportunity" concreta.
@@ -357,8 +357,14 @@ function splitClauses(userMessage) {
 
 function summarizeActionLabel(clause) {
   let clean = clause
-    .replace(/^(?:el\s+cliente|la\s+clienta|ventas|recepci[oó]n|caja|almac[eé]n|el\s+chofer|cocina|el\s+vendedor|gerencia|el\s+[aá]rea)\s+/i, '')
+    .replace(/^(?:adem[aá]s\s*,?\s*|tambi[eé]n\s*,?\s*)/i, '')
+    .replace(/^(?:agrega|a[ñn]ade|suma|pon|incluye|coloca|mete)\s+(?:al|a\s+la|a\s+los|a)?\s*(?:[a-záéíóúñ]+(?:\s+[a-záéíóúñ]+)?)\s+(?:que\s+|para\s+que\s+|para\s+)?/i, '')
+    .replace(/\b(?:despu[eé]s\s+de|antes\s+de)\s+[a-záéíóúñ]+(?:\s+[a-záéíóúñ]+)?/gi, '')
+    .replace(/^(?:el\s+cliente|la\s+clienta|ventas|recepci[oó]n|caja|almac[eé]n|el\s+chofer|chofer|cocina|el\s+vendedor|vendedor|gerencia|el\s+[aá]rea)\s+/i, '')
+    .replace(/^,\s*|\s*,$/g, '')
+    .replace(/\s{2,}/g, ' ')
     .trim();
+  if (!clean) clean = clause.trim();
   clean = clean.charAt(0).toUpperCase() + clean.slice(1);
   if (clean.length > 68) {
     clean = `${clean.slice(0, 65).trim()}...`;
@@ -583,12 +589,35 @@ export function runDeterministicProcessExtractor(
     existingActorIds.add('role_operaciones');
   } else {
     explicitRoles.forEach((role) => {
-      if (!existingActorIds.has(role.id)) {
-        patches.push({ op: 'add_role', actor: role });
-        existingActorIds.add(role.id);
+      const resolved = resolveOrReuseActor(role, existingActors);
+      if (resolved && !existingActorIds.has(resolved.id)) {
+        patches.push({ op: 'add_role', actor: resolved });
+        existingActorIds.add(resolved.id);
       }
     });
   }
+
+function resolveOrReuseActor(spec, existingActors = []) {
+  if (!spec) return null;
+  const keywordMap = [
+    { match: /(cliente|comprador|paciente|prospecto)/i, specId: 'act_cliente' },
+    { match: /(venta|vendedor|asesor|recepci[oó]n|atenci[oó]n|mozo)/i, specId: 'role_ventas' },
+    { match: /(caja|cajero|cobranza|facturaci[oó]n|tesorer[ií]a)/i, specId: 'role_caja' },
+    { match: /(almac[eé]n|almacenero|inventario|bodega|stock)/i, specId: 'role_almacen' },
+    { match: /(chofer|conductor|repartidor|motorizado|delivery|despacho|ruta)/i, specId: 'role_despacho' },
+    { match: /(geren|jefe|administrador|supervisor)/i, specId: 'role_gerencia' },
+    { match: /(compra|proveedor)/i, specId: 'role_compras' }
+  ];
+
+  // Reutilizar un carril ya creado por el LLM si coincide semánticamente (evita duplicados)
+  for (const entry of keywordMap) {
+    if (entry.specId === spec.id) {
+      const existing = existingActors.find((a) => entry.match.test(a.name || '') || a.id === spec.id);
+      if (existing) return existing;
+    }
+  }
+  return spec;
+}
 
   const actionableClauses = clauses.filter((c) => {
     const cleanClause = c.replace(/^y\s+/i, '').trim();
@@ -602,13 +631,16 @@ export function runDeterministicProcessExtractor(
   if (actionableClauses.length > 0) {
     actionableClauses.forEach((clause, cIdx) => {
       const clauseRoles = extractMatchingRoles(clause);
-      let targetActor = clauseRoles[0];
+      let targetActor = resolveOrReuseActor(clauseRoles[0], existingActors);
 
       if (!targetActor && cIdx === 0 && /cliente|nos\s+escrib|pide|solicit/i.test(clause)) {
-        targetActor = { id: 'act_cliente', name: 'Cliente', type: 'EXTERNAL_CUSTOMER', is_field_role: false };
+        targetActor = resolveOrReuseActor(
+          { id: 'act_cliente', name: 'Cliente', type: 'EXTERNAL_CUSTOMER', is_field_role: false },
+          existingActors
+        );
       } else if (!targetActor) {
         targetActor =
-          explicitRoles[0] ||
+          resolveOrReuseActor(explicitRoles[0], existingActors) ||
           existingActors[0] ||
           { id: 'role_operaciones', name: 'Operaciones', type: 'INTERNAL_ADMIN_ROLE', is_field_role: false };
       }
@@ -981,14 +1013,18 @@ function buildConversationContents(conversationHistory = [], userMessage, curren
 }
 
 async function callGeminiConversational({ apiKey, userMessage, currentGraph, turnCount, conversationHistory }) {
-  const candidateModels = ['gemini-3-flash-preview', 'gemini-flash-lite-latest', 'gemini-3.1-flash-lite-preview'];
+  const candidates = [
+    { model: 'gemini-flash-lite-latest', extraConfig: {} },
+    { model: 'gemini-3-flash-preview', extraConfig: { thinkingConfig: { thinkingLevel: 'minimal' } } },
+    { model: 'gemini-3.1-flash-lite-preview', extraConfig: {} }
+  ];
   const contents = buildConversationContents(conversationHistory, userMessage, currentGraph, turnCount);
   let lastErr = null;
 
-  for (const model of candidateModels) {
+  for (const { model, extraConfig } of candidates) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 7000);
+    const timeout = setTimeout(() => controller.abort(), 8500);
 
     try {
       const response = await fetch(endpoint, {
@@ -1002,7 +1038,8 @@ async function callGeminiConversational({ apiKey, userMessage, currentGraph, tur
           contents,
           generationConfig: {
             temperature: 0.35,
-            responseMimeType: 'application/json'
+            responseMimeType: 'application/json',
+            ...extraConfig
           }
         })
       });
