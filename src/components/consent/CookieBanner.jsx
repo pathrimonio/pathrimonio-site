@@ -48,7 +48,7 @@ export default function CookieBanner({ onNavigate }) {
         <button
           type="button"
           onClick={acceptAll}
-          className="flex-1 inline-flex items-center justify-center px-3.5 py-2 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
+          className="flex-1 inline-flex items-center justify-center px-3.5 py-2 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap"
         >
           Aceptar todas
         </button>

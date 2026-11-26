@@ -334,26 +334,27 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
   };
 
   return (
-    <section id="cotizador" className="w-full py-20 lg:py-28 bg-[#FAFAFA] dark:bg-[#09090B] border-b border-[#E4E4E7] dark:border-[#27272A] transition-colors">
+    <section id="cotizador" className="w-full py-20 lg:py-28 bg-[var(--bg-page)] border-b border-[var(--border-subtle)] transition-colors">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
         {/* Encabezado */}
         <div className="max-w-2xl mb-12">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#F4F4F5] dark:bg-[#18181B] text-[#52525B] dark:text-[#A1A1AA] text-xs font-mono mb-3">
-            <span className="text-[#09090B] dark:text-[#F4F4F5] font-semibold">COTIZADOR INTERACTIVO</span>
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-mono mb-3">
+            <span className="font-semibold">COTIZADOR INTERACTIVO</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] tracking-[-0.02em] mb-4">
             Diseña tu sistema operativo sin sorpresas.
           </h2>
-          <p className="text-base text-[#52525B] dark:text-[#A1A1AA] leading-relaxed">
-            Transparencia radical: calcula el valor exacto de tu software a <strong className="text-[#09090B] dark:text-[#F4F4F5]">$1 USD al día por rol</strong> y recibe una propuesta formal en minutos.
+          <p className="text-base text-[var(--text-secondary)] leading-relaxed">
+            Transparencia radical: calcula el valor exacto de tu software a{' '}
+            <strong className="text-[var(--text-primary)]">$1 USD al día por rol</strong> y recibe una propuesta formal en minutos.
           </p>
         </div>
 
         {/* Banner Ruta Guiada o Precarga desde FORMALIA (SDD Sección 2.1 y 5) */}
         {isPreloadedFromFormalia ? (
-          <div className="mb-6 p-3.5 rounded-[10px] bg-[#FFFBEB] dark:bg-amber-500/10 border border-[#FFC000] flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 text-xs text-[#09090B] dark:text-[#F4F4F5]">
-              <Sparkles size={16} className="text-[#9A6700] dark:text-[#FFC000] shrink-0" />
+          <div className="mb-6 p-3.5 rounded-[10px] bg-[var(--accent-soft)] border border-[#FFC93C] flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-xs text-[var(--text-primary)]">
+              <Sparkles size={16} className="text-[var(--accent-text)] shrink-0" />
               <span>
                 <strong>Configuración precargada desde tu mapa en FORMALIA.</strong> Puedes ajustar cualquier rol o módulo libremente.
               </span>
@@ -366,16 +367,19 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                   onNavigate('/formalia');
                 }
               }}
-              className="text-xs font-medium text-[#9A6700] dark:text-[#FFC000] hover:underline whitespace-nowrap"
+              className="text-xs font-medium text-[var(--accent-text)] hover:underline whitespace-nowrap"
             >
               Volver a editar en FORMALIA →
             </a>
           </div>
         ) : (
-          <div className="mb-6 p-3.5 rounded-[10px] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 text-xs text-[#52525B] dark:text-[#A1A1AA]">
-              <Sparkles size={15} className="text-[#9A6700] dark:text-[#FFC000] shrink-0" />
-              <span>¿No estás seguro de qué roles o módulos necesitas? Deja que <strong className="text-[#09090B] dark:text-[#F4F4F5]">FORMALIA</strong> mapee tu operación y llene esto por ti.</span>
+          <div className="mb-6 p-3.5 rounded-[10px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-xs text-[var(--text-secondary)]">
+              <Sparkles size={15} className="text-[var(--accent-text)] shrink-0" />
+              <span>
+                ¿No estás seguro de qué roles o módulos necesitas? Deja que{' '}
+                <strong className="text-[var(--text-primary)]">FORMALIA</strong> mapee tu operación y llene esto por ti.
+              </span>
             </div>
             <a
               href="/formalia"
@@ -385,7 +389,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                   onNavigate('/formalia');
                 }
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] text-xs font-semibold hover:border-[#FFC000] transition-colors whitespace-nowrap"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[var(--bg-silver)] hover:bg-[var(--bg-silver-hover)] border border-[var(--border-silver)] text-[var(--text-on-silver)] text-xs font-semibold transition-colors whitespace-nowrap"
             >
               <span>Mapea tu negocio gratis con FORMALIA</span>
               <ArrowRight size={13} />
@@ -394,7 +398,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
         )}
 
         {/* Indicador de Progreso Minimalista (4 Pasos) */}
-        <div className="mb-10 bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] rounded-[8px] p-2 sm:p-3">
+        <div className="mb-10 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[8px] p-2 sm:p-3">
           <div className="grid grid-cols-4 gap-2">
             {[
               { num: 1, label: 'Tu Negocio' },
@@ -411,14 +415,18 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                   onClick={() => goToStep(step.num)}
                   className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2 px-2 rounded-[6px] text-xs transition-colors cursor-pointer ${
                     isActive
-                      ? 'bg-[#FFC000] text-[#09090B] font-semibold'
+                      ? 'bg-[#FFC93C] text-[#2B2D31] font-semibold'
                       : isPast
-                      ? 'bg-[#FFFBEB] dark:bg-amber-500/10 text-[#9A6700] dark:text-[#FFC000] dark:text-[#FFC000] font-medium'
-                      : 'text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5]'
+                      ? 'bg-[var(--bg-subtle)] border border-[#FFC93C]/40 text-[var(--text-primary)] font-medium'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
                   <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-mono shrink-0 ${
-                    isActive ? 'bg-white dark:bg-[#18181B] text-[#9A6700] dark:text-[#FFC000] dark:text-[#FFC000] font-bold' : isPast ? 'bg-[#FFC000] text-[#09090B]' : 'bg-[#E4E4E7] dark:bg-[#27272A] text-[#52525B] dark:text-[#A1A1AA]'
+                    isActive
+                      ? 'bg-[#2B2D31] text-[#FFC93C] font-bold'
+                      : isPast
+                      ? 'bg-[#FFC93C] text-[#2B2D31] font-bold'
+                      : 'bg-[var(--bg-page)] border border-[var(--border-subtle)] text-[var(--text-muted)]'
                   }`}>
                     {step.num}
                   </span>
@@ -431,27 +439,27 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
 
         {/* Alerta de Validación */}
         {validationError && (
-          <div className="mb-6 p-4 rounded-[6px] bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2">
-            <AlertTriangle size={16} strokeWidth={1.5} className="shrink-0 text-red-600" />
+          <div className="mb-6 p-4 rounded-[6px] bg-red-500/15 border border-red-400/40 text-[var(--text-primary)] text-xs flex items-center gap-2">
+            <AlertTriangle size={16} strokeWidth={1.75} className="shrink-0 text-red-400" />
             <span>{validationError}</span>
           </div>
         )}
 
-        {/* Split-Screen: 65% Izquierda (Wizard) / 35% Derecha (Sticky Summary) */}
+        {/* Split-Screen: 65% Izquierda (Wizard Gray) / 35% Derecha (Sticky Summary Silver) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Columna Izquierda: 65% (8/12 cols) */}
-          <div className="lg:col-span-8 bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] rounded-[10px] p-6 sm:p-8">
+          <div className="lg:col-span-8 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[10px] p-6 sm:p-8">
             {/* PASO 1: TU NEGOCIO */}
             {activeStep === 1 && (
               <div className="flex flex-col gap-8">
                 <div>
-                  <h3 className="text-xl font-bold text-[#09090B] dark:text-[#F4F4F5] mb-1">1. Contexto de tu Negocio</h3>
-                  <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">Indícanos tu rubro para pre-configurar los módulos ideales.</p>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">1. Contexto de tu Negocio</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">Indícanos tu rubro para pre-configurar los módulos ideales.</p>
                 </div>
 
                 {/* Nombre de la empresa */}
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-2">
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-2">
                     Nombre de tu empresa, cooperativa o colectivo (opcional)
                   </label>
                   <input
@@ -459,13 +467,13 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                     value={quoteState.business_discovery.company_name}
                     onChange={(e) => handleUpdateDiscovery('company_name', e.target.value)}
                     placeholder="Ej. Distribuidora Santa María SAC"
-                    className="w-full bg-[#FFFFFF] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] focus:border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2.5 text-sm text-[#09090B] dark:text-[#F4F4F5] placeholder:text-[#A1A1AA] dark:placeholder:text-[#71717A]"
+                    className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[#FFC93C] focus:outline-hidden rounded-[6px] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                   />
                 </div>
 
                 {/* Selector de Rubro */}
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-2.5">
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-2.5">
                     ¿Cuál es tu rubro u operación principal?
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -478,20 +486,20 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                           onClick={() => handleUpdateDiscovery('industry', ind.id)}
                           className={`p-3.5 rounded-[6px] border cursor-pointer transition-all flex items-start gap-3 ${
                             isSelected
-                              ? 'bg-[#FFFBEB] dark:bg-amber-500/10 border-[#FFC000]'
-                              : 'bg-[#FFFFFF] dark:bg-[#18181B] border-[#E4E4E7] dark:border-[#27272A] hover:border-[#D4D4D8] dark:hover:border-[#3F3F46]'
+                              ? 'bg-[var(--bg-subtle)] border-[#FFC93C]'
+                              : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                           }`}
                         >
                           <div className={`w-8 h-8 rounded-[4px] flex items-center justify-center shrink-0 ${
-                            isSelected ? 'bg-[#FFC000] text-[#09090B]' : 'bg-[#F4F4F5] dark:bg-[#27272A] text-[#52525B] dark:text-[#A1A1AA]'
+                            isSelected ? 'bg-[#FFC93C] text-[#2B2D31]' : 'bg-[var(--bg-subtle)] text-[var(--text-secondary)]'
                           }`}>
-                            <IconComp size={16} strokeWidth={1.5} />
+                            <IconComp size={16} strokeWidth={1.6} />
                           </div>
                           <div>
-                            <span className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] leading-tight mb-0.5">
+                            <span className="block text-xs font-semibold text-[var(--text-primary)] leading-tight mb-0.5">
                               {ind.name}
                             </span>
-                            <span className="text-[11px] text-[#52525B] dark:text-[#A1A1AA] leading-tight block">
+                            <span className="text-[11px] text-[var(--text-secondary)] leading-tight block">
                               {ind.tagline}
                             </span>
                           </div>
@@ -503,7 +511,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
 
                 {/* Método Actual con opción de Otro */}
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-2.5">
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-2.5">
                     ¿Cómo registran la información hoy?
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -515,12 +523,12 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                           onClick={() => handleUpdateDiscovery('current_method', m.id)}
                           className={`p-3.5 rounded-[6px] border cursor-pointer transition-all ${
                             isSelected
-                              ? 'bg-[#FFFBEB] dark:bg-amber-500/10 border-[#FFC000]'
-                              : 'bg-[#FFFFFF] dark:bg-[#18181B] border-[#E4E4E7] dark:border-[#27272A] hover:border-[#D4D4D8] dark:hover:border-[#3F3F46]'
+                              ? 'bg-[var(--bg-subtle)] border-[#FFC93C]'
+                              : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                           }`}
                         >
-                          <span className="block text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-1">{m.name}</span>
-                          <span className="text-[11px] text-[#52525B] dark:text-[#A1A1AA] leading-tight block">{m.desc}</span>
+                          <span className="block text-xs font-semibold text-[var(--text-primary)] mb-1">{m.name}</span>
+                          <span className="text-[11px] text-[var(--text-secondary)] leading-tight block">{m.desc}</span>
                         </div>
                       );
                     })}
@@ -533,7 +541,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                         value={quoteState.business_discovery.custom_method_detail}
                         onChange={(e) => handleUpdateDiscovery('custom_method_detail', e.target.value)}
                         placeholder="Especifica tu herramienta o método actual..."
-                        className="w-full bg-[#FFFFFF] dark:bg-[#18181B] border border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                        className="w-full bg-[var(--bg-page)] border border-[#FFC93C] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                       />
                     </div>
                   )}
@@ -541,7 +549,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
 
                 {/* Cuello de Botella con opción de Otro */}
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-2.5">
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-2.5">
                     ¿Cuál es el dolor operativo más urgente a resolver?
                   </label>
                   <div className="flex flex-col gap-2">
@@ -553,18 +561,18 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                           onClick={() => handleUpdateDiscovery('main_pain_point', p.id)}
                           className={`p-3 rounded-[6px] border cursor-pointer transition-all flex items-center justify-between ${
                             isSelected
-                              ? 'bg-[#FFFBEB] dark:bg-amber-500/10 border-[#FFC000]'
-                              : 'bg-[#FFFFFF] dark:bg-[#18181B] border-[#E4E4E7] dark:border-[#27272A] hover:border-[#D4D4D8] dark:hover:border-[#3F3F46]'
+                              ? 'bg-[var(--bg-subtle)] border-[#FFC93C]'
+                              : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-[#FFC000]' : 'bg-[#D4D4D8]'}`}></span>
+                            <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-[#FFC93C]' : 'bg-[var(--border-strong)]'}`}></span>
                             <div>
-                              <span className="text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] block">{p.name}</span>
-                              <span className="text-[11px] text-[#52525B] dark:text-[#A1A1AA]">{p.desc}</span>
+                              <span className="text-xs font-semibold text-[var(--text-primary)] block">{p.name}</span>
+                              <span className="text-[11px] text-[var(--text-secondary)]">{p.desc}</span>
                             </div>
                           </div>
-                          {isSelected && <Check size={14} strokeWidth={2} className="text-[#9A6700] dark:text-[#FFC000]" />}
+                          {isSelected && <Check size={14} strokeWidth={2.25} className="text-[var(--accent-text)]" />}
                         </div>
                       );
                     })}
@@ -577,21 +585,21 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                         value={quoteState.business_discovery.custom_pain_detail}
                         onChange={(e) => handleUpdateDiscovery('custom_pain_detail', e.target.value)}
                         placeholder="Describe el desafío principal de tu operación..."
-                        className="w-full bg-[#FFFFFF] dark:bg-[#18181B] border border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                        className="w-full bg-[var(--bg-page)] border border-[#FFC93C] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                       />
                     </div>
                   )}
                 </div>
 
                 {/* Botón Siguiente */}
-                <div className="pt-4 border-t border-[#E4E4E7] dark:border-[#27272A] flex justify-end">
+                <div className="pt-4 border-t border-[var(--border-subtle)] flex justify-end">
                   <button
                     type="button"
                     onClick={() => goToStep(2)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold transition-colors cursor-pointer"
                   >
                     <span>Continuar a Roles</span>
-                    <ArrowRight size={14} strokeWidth={1.5} />
+                    <ArrowRight size={14} strokeWidth={1.75} />
                   </button>
                 </div>
               </div>
@@ -602,14 +610,14 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
               <div className="flex flex-col gap-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold text-[#09090B] dark:text-[#F4F4F5] mb-1">2. Roles de tu Equipo</h3>
-                    <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
-                      Costo base: <strong className="text-[#09090B] font-mono">$1 USD/día ($30/mes)</strong> por rol administrativo activo.
+                    <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">2. Roles de tu Equipo</h3>
+                    <p className="text-xs text-[var(--text-secondary)]">
+                      Costo base: <strong className="text-[var(--text-primary)] font-mono">$1 USD/día ($30/mes)</strong> por rol administrativo activo.
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs text-[#52525B] dark:text-[#A1A1AA] block">Total Roles</span>
-                    <span className="text-xl font-bold font-mono tabular-nums text-[#9A6700] dark:text-[#FFC000]">
+                    <span className="text-xs text-[var(--text-secondary)] block">Total Roles</span>
+                    <span className="text-xl font-bold font-mono tabular-nums text-[var(--accent-text)]">
                       {pricing.totalAdminUsers}
                     </span>
                   </div>
@@ -627,18 +635,18 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                         key={role.id}
                         className={`p-4 rounded-[8px] border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                           isSelected
-                            ? 'bg-[#FFFBEB] dark:bg-amber-500/10 border-[#FFC000]'
-                            : 'bg-[#FFFFFF] dark:bg-[#18181B] border-[#E4E4E7] dark:border-[#27272A]'
+                            ? 'bg-[var(--bg-subtle)] border-[#FFC93C]'
+                            : 'bg-[var(--bg-page)] border-[var(--border-subtle)]'
                         }`}
                       >
                         <div className="max-w-md">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold text-[#09090B] dark:text-[#F4F4F5]">{role.name}</span>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-[4px] bg-[#F4F4F5] dark:bg-[#27272A] text-[#52525B] dark:text-[#A1A1AA]">
+                            <span className="text-xs font-bold text-[var(--text-primary)]">{role.name}</span>
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-[4px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">
                               $30/mes
                             </span>
                           </div>
-                          <p className="text-[11px] text-[#52525B] dark:text-[#A1A1AA] leading-relaxed">{role.desc}</p>
+                          <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">{role.desc}</p>
                         </div>
 
                         {/* Contador */}
@@ -647,17 +655,17 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                             type="button"
                             onClick={() => handleRoleCountChange(role.id, -1)}
                             disabled={count === 0}
-                            className="w-8 h-8 rounded-[4px] border border-[#E4E4E7] dark:border-[#27272A] bg-white dark:bg-[#18181B] hover:bg-[#F4F4F5] dark:hover:bg-[#27272A] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-[#09090B] dark:text-[#F4F4F5] transition-colors cursor-pointer"
+                            className="w-8 h-8 rounded-[4px] border border-[var(--border-strong)] bg-[var(--bg-page)] hover:bg-[var(--bg-subtle)] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-[var(--text-primary)] transition-colors cursor-pointer"
                           >
                             <Minus size={13} strokeWidth={2} />
                           </button>
-                          <span className="w-8 text-center font-mono font-bold text-sm text-[#09090B] dark:text-[#F4F4F5] tabular-nums">
+                          <span className="w-8 text-center font-mono font-bold text-sm text-[var(--text-primary)] tabular-nums">
                             {count}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleRoleCountChange(role.id, 1)}
-                            className="w-8 h-8 rounded-[4px] border border-[#FFC000] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] flex items-center justify-center text-[#09090B] transition-colors cursor-pointer"
+                            className="w-8 h-8 rounded-[4px] border border-[#FFC93C] bg-[#FFC93C] hover:bg-[#FFD561] flex items-center justify-center text-[#2B2D31] transition-colors cursor-pointer"
                           >
                             <Plus size={13} strokeWidth={2} />
                           </button>
@@ -668,11 +676,11 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                 </div>
 
                 {/* Botones de Navegación */}
-                <div className="pt-4 border-t border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between">
+                <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() => goToStep(1)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] hover:bg-[#F4F4F5] dark:hover:bg-[#18181B] transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[6px] border border-[var(--border-strong)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer"
                   >
                     <ArrowLeft size={14} strokeWidth={1.5} />
                     <span>Atrás</span>
@@ -680,10 +688,10 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                   <button
                     type="button"
                     onClick={() => goToStep(3)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold transition-colors cursor-pointer"
                   >
                     <span>Continuar a Canales</span>
-                    <ArrowRight size={14} strokeWidth={1.5} />
+                    <ArrowRight size={14} strokeWidth={1.75} />
                   </button>
                 </div>
               </div>
@@ -693,13 +701,13 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
             {activeStep === 3 && (
               <div className="flex flex-col gap-8">
                 <div>
-                  <h3 className="text-xl font-bold text-[#09090B] dark:text-[#F4F4F5] mb-1">3. Canales e Interfaces</h3>
-                  <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">Define los puntos de contacto con tus clientes y almacenamiento de datos.</p>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">3. Canales e Interfaces</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">Define los puntos de contacto con tus clientes y almacenamiento de datos.</p>
                 </div>
 
                 {/* Clientes Finales */}
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-2.5">
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-2.5">
                     Volumen mensual de clientes finales activos
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -711,17 +719,17 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                           onClick={() => setQuoteState(p => ({ ...p, configuration: { ...p.configuration, end_customers_tier: tier.id } }))}
                           className={`p-3.5 rounded-[6px] border cursor-pointer transition-all ${
                             isSelected
-                              ? 'bg-[#FFFBEB] dark:bg-amber-500/10 border-[#FFC000]'
-                              : 'bg-[#FFFFFF] dark:bg-[#18181B] border-[#E4E4E7] dark:border-[#27272A] hover:border-[#D4D4D8] dark:hover:border-[#3F3F46]'
+                              ? 'bg-[var(--bg-subtle)] border-[#FFC93C]'
+                              : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold text-[#09090B] dark:text-[#F4F4F5]">{tier.name}</span>
-                            <span className="text-xs font-mono font-bold text-[#9A6700] dark:text-[#FFC000] tabular-nums">
+                            <span className="text-xs font-bold text-[var(--text-primary)]">{tier.name}</span>
+                            <span className="text-xs font-mono font-bold text-[var(--accent-text)] tabular-nums">
                               {tier.monthlyPrice === 0 ? 'Incluido' : `+$${tier.monthlyPrice}/mes`}
                             </span>
                           </div>
-                          <span className="text-[11px] text-[#52525B] dark:text-[#A1A1AA]">{tier.desc}</span>
+                          <span className="text-[11px] text-[var(--text-secondary)]">{tier.desc}</span>
                         </div>
                       );
                     })}
@@ -730,7 +738,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
 
                 {/* Interfaces Adicionales */}
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-2.5">
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-2.5">
                     Interfaces adicionales de interacción
                   </label>
                   <div className="flex flex-col gap-2.5">
@@ -743,27 +751,27 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                           onClick={() => handleToggleInterface(opt.id)}
                           className={`p-3.5 rounded-[6px] border transition-all flex items-center justify-between cursor-pointer ${
                             isChecked
-                              ? 'bg-[#FFFBEB] border-[#FFC000]'
-                              : 'bg-[#FFFFFF] border-[#E4E4E7] hover:border-[#D4D4D8]'
+                              ? 'bg-[var(--bg-subtle)] border-[#FFC93C]'
+                              : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                           }`}
                         >
                           <div>
                             <div className="flex items-center gap-2 mb-0.5">
-                              <span className="text-xs font-bold text-[#09090B] dark:text-[#F4F4F5]">{opt.name}</span>
+                              <span className="text-xs font-bold text-[var(--text-primary)]">{opt.name}</span>
                               {isRequired && (
-                                <span className="text-[10px] font-mono px-1.5 py-0.2 bg-amber-100 text-amber-900 rounded">
+                                <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent-border)] rounded">
                                   Base Obligatoria
                                 </span>
                               )}
                             </div>
-                            <p className="text-[11px] text-[#52525B] dark:text-[#A1A1AA]">{opt.desc}</p>
+                            <p className="text-[11px] text-[var(--text-secondary)]">{opt.desc}</p>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-xs font-mono font-bold text-[#9A6700] dark:text-[#FFC000] tabular-nums">
+                            <span className="text-xs font-mono font-bold text-[var(--accent-text)] tabular-nums">
                               {opt.monthlyPrice === 0 ? '$0' : `+$${opt.monthlyPrice}/mes`}
                             </span>
                             <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center ${
-                              isChecked ? 'bg-[#FFC000] border-[#FFC000] text-[#09090B]' : 'border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B]'
+                              isChecked ? 'bg-[#FFC93C] border-[#FFC93C] text-[#2B2D31]' : 'border-[var(--border-strong)] bg-[var(--bg-page)]'
                             }`}>
                               {isChecked && <Check size={11} strokeWidth={2.5} />}
                             </div>
@@ -776,7 +784,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
 
                 {/* Paquetes de Datos & APIs */}
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-2.5">
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-2.5">
                     Historial extendido e integraciones
                   </label>
                   <div className="flex flex-col gap-2.5">
@@ -788,20 +796,20 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                           onClick={() => handleToggleDataPackage(pkg.id)}
                           className={`p-3.5 rounded-[6px] border transition-all flex items-center justify-between cursor-pointer ${
                             isChecked
-                              ? 'bg-[#FFFBEB] border-[#FFC000]'
-                              : 'bg-[#FFFFFF] border-[#E4E4E7] hover:border-[#D4D4D8]'
+                              ? 'bg-[var(--bg-subtle)] border-[#FFC93C]'
+                              : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                           }`}
                         >
                           <div>
-                            <span className="text-xs font-bold text-[#09090B] dark:text-[#F4F4F5] block mb-0.5">{pkg.name}</span>
-                            <p className="text-[11px] text-[#52525B] dark:text-[#A1A1AA]">{pkg.desc}</p>
+                            <span className="text-xs font-bold text-[var(--text-primary)] block mb-0.5">{pkg.name}</span>
+                            <p className="text-[11px] text-[var(--text-secondary)]">{pkg.desc}</p>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-xs font-mono font-bold text-[#9A6700] dark:text-[#FFC000] tabular-nums">
+                            <span className="text-xs font-mono font-bold text-[var(--accent-text)] tabular-nums">
                               {pkg.monthlyPrice === 0 ? '$0' : `+$${pkg.monthlyPrice}/mes`}
                             </span>
                             <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center ${
-                              isChecked ? 'bg-[#FFC000] border-[#FFC000] text-[#09090B]' : 'border-[#D4D4D8] dark:border-[#3F3F46] bg-white dark:bg-[#18181B]'
+                              isChecked ? 'bg-[#FFC93C] border-[#FFC93C] text-[#2B2D31]' : 'border-[var(--border-strong)] bg-[var(--bg-page)]'
                             }`}>
                               {isChecked && <Check size={11} strokeWidth={2.5} />}
                             </div>
@@ -813,11 +821,11 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                 </div>
 
                 {/* Botones de Navegación */}
-                <div className="pt-4 border-t border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between">
+                <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() => goToStep(2)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] hover:bg-[#F4F4F5] dark:hover:bg-[#18181B] transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[6px] border border-[var(--border-strong)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer"
                   >
                     <ArrowLeft size={14} strokeWidth={1.5} />
                     <span>Atrás</span>
@@ -825,10 +833,10 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                   <button
                     type="button"
                     onClick={() => goToStep(4)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold transition-colors cursor-pointer"
                   >
                     <span>Continuar a Modalidad</span>
-                    <ArrowRight size={14} strokeWidth={1.5} />
+                    <ArrowRight size={14} strokeWidth={1.75} />
                   </button>
                 </div>
               </div>
@@ -838,13 +846,13 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
             {activeStep === 4 && (
               <form onSubmit={handleFinalSubmit} className="flex flex-col gap-8">
                 <div>
-                  <h3 className="text-xl font-bold text-[#09090B] dark:text-[#F4F4F5] mb-1">4. Modalidad y Datos de Envío</h3>
-                  <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">Elige tu tipo de compromiso y recibe tu propuesta técnica.</p>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">4. Modalidad y Datos de Envío</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">Elige tu tipo de compromiso y recibe tu propuesta técnica.</p>
                 </div>
 
                 {/* Modalidad de Compromiso */}
                 <div>
-                  <label className="block text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] mb-2.5">
+                  <label className="block text-xs font-medium text-[var(--text-primary)] mb-2.5">
                     Plan de permanencia y costo de implementación
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -857,20 +865,20 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                           onClick={() => setQuoteState(p => ({ ...p, commitment_plan: mode.id }))}
                           className={`p-4 rounded-[8px] border transition-all cursor-pointer relative ${
                             isSelected
-                              ? 'bg-[#FFFBEB] dark:bg-amber-500/10 border-2 border-[#FFC000]'
-                              : 'bg-[#FFFFFF] dark:bg-[#18181B] border-[#E4E4E7] dark:border-[#27272A] hover:border-[#D4D4D8] dark:hover:border-[#3F3F46]'
+                              ? 'bg-[var(--bg-subtle)] border-2 border-[#FFC93C]'
+                              : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                           }`}
                         >
                           {isRecommended && (
-                            <span className="absolute -top-2.5 right-3 bg-[#FFC000] text-[#09090B] text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full">
+                            <span className="absolute -top-2.5 right-3 bg-[#FFC93C] text-[#2B2D31] text-[10px] font-mono font-bold px-2 py-0.5 rounded-full">
                               $0 SETUP
                             </span>
                           )}
-                          <span className="block text-xs font-bold text-[#09090B] dark:text-[#F4F4F5] mb-1">{mode.name}</span>
-                          <span className="text-xs font-mono font-bold text-[#9A6700] dark:text-[#FFC000] block mb-2 tabular-nums">
+                          <span className="block text-xs font-bold text-[var(--text-primary)] mb-1">{mode.name}</span>
+                          <span className="text-xs font-mono font-bold text-[var(--accent-text)] block mb-2 tabular-nums">
                             {mode.setupPrice === 0 ? 'Setup: $0 USD' : `Setup: $${mode.setupPrice} USD (pago único)`}
                           </span>
-                          <p className="text-[11px] text-[#52525B] dark:text-[#A1A1AA] leading-relaxed">{mode.desc}</p>
+                          <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">{mode.desc}</p>
                         </div>
                       );
                     })}
@@ -878,49 +886,49 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                 </div>
 
                 {/* Datos de Contacto */}
-                <div className="pt-4 border-t border-[#E4E4E7] dark:border-[#27272A] flex flex-col gap-4">
-                  <span className="text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5]">¿A quién enviamos la cotización?</span>
+                <div className="pt-4 border-t border-[var(--border-subtle)] flex flex-col gap-4">
+                  <span className="text-xs font-semibold text-[var(--text-primary)]">¿A quién enviamos la cotización?</span>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[11px] text-[#52525B] dark:text-[#A1A1AA] mb-1">Tu nombre completo *</label>
+                      <label className="block text-[11px] text-[var(--text-secondary)] mb-1">Tu nombre completo *</label>
                       <input
                         type="text"
                         required
                         value={quoteState.lead_contact.name}
                         onChange={(e) => setQuoteState(p => ({ ...p, lead_contact: { ...p.lead_contact, name: e.target.value } }))}
                         placeholder="Ej. Juan Pérez"
-                        className="w-full bg-[#FFFFFF] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] focus:border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                        className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[#FFC93C] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] text-[#52525B] dark:text-[#A1A1AA] mb-1">WhatsApp de contacto *</label>
+                      <label className="block text-[11px] text-[var(--text-secondary)] mb-1">WhatsApp de contacto *</label>
                       <input
                         type="tel"
                         required
                         value={quoteState.lead_contact.whatsapp}
                         onChange={(e) => setQuoteState(p => ({ ...p, lead_contact: { ...p.lead_contact, whatsapp: e.target.value } }))}
                         placeholder="Ej. +51 987 654 321"
-                        className="w-full bg-[#FFFFFF] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] focus:border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                        className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[#FFC93C] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-[#52525B] dark:text-[#A1A1AA] mb-1">Correo electrónico (opcional)</label>
+                    <label className="block text-[11px] text-[var(--text-secondary)] mb-1">Correo electrónico (opcional)</label>
                     <input
                       type="email"
                       value={quoteState.lead_contact.email}
                       onChange={(e) => setQuoteState(p => ({ ...p, lead_contact: { ...p.lead_contact, email: e.target.value } }))}
                       placeholder="nombre@empresa.com"
-                      className="w-full bg-[#FFFFFF] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] focus:border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                      className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[#FFC93C] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                     />
                   </div>
 
                   {/* Checkbox obligatorio Política de Privacidad (SDD Pilar 1) */}
                   <div className="pt-2">
-                    <label className="flex items-start gap-2.5 text-xs text-[#09090B] dark:text-[#F4F4F5] cursor-pointer select-none">
+                    <label className="flex items-start gap-2.5 text-xs text-[var(--text-primary)] cursor-pointer select-none">
                       <input
                         type="checkbox"
                         id="quote-privacy-checkbox"
@@ -930,7 +938,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                           if (e.target.checked && validationError) setValidationError('');
                         }}
                         required
-                        className="w-4 h-4 mt-0.5 rounded border-[#D4D4D8] dark:border-[#3F3F46] accent-[#FFC000] shrink-0 cursor-pointer"
+                        className="w-4 h-4 mt-0.5 rounded border-[var(--border-strong)] accent-[#FFC93C] shrink-0 cursor-pointer"
                       />
                       <span className="leading-relaxed">
                         He leído y acepto la{' '}
@@ -942,7 +950,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                               onNavigate('/legal/privacidad');
                             }
                           }}
-                          className="text-[#9A6700] dark:text-[#FFC000] font-semibold underline underline-offset-2"
+                          className="text-[var(--accent-text)] font-semibold underline decoration-[#FFC93C] underline-offset-2"
                         >
                           Política de Privacidad
                         </a>{' '}
@@ -953,13 +961,13 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                 </div>
 
                 {successQuote && (
-                  <div className="p-4 rounded-[8px] border border-emerald-500/40 bg-emerald-50/70 dark:bg-emerald-500/10 flex items-start gap-3 text-xs">
-                    <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <div className="p-4 rounded-[8px] border border-emerald-500/40 bg-emerald-500/15 flex items-start gap-3 text-xs">
+                    <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
                     <div>
-                      <strong className="text-[#09090B] dark:text-[#F4F4F5] block">
+                      <strong className="text-[var(--text-primary)] block">
                         Cotización {successQuote.quote_id} generada y consentimiento registrado (v.{successQuote.privacy_policy_version}).
                       </strong>
-                      <span className="text-[#52525B] dark:text-[#A1A1AA]">
+                      <span className="text-[var(--text-secondary)]">
                         Si no se abrió WhatsApp automáticamente, puedes volver a pulsar el botón de envío.
                       </span>
                     </div>
@@ -967,11 +975,11 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                 )}
 
                 {/* Botones de Navegación */}
-                <div className="pt-4 border-t border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between">
+                <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() => goToStep(3)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] text-xs font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] hover:bg-[#F4F4F5] dark:hover:bg-[#18181B] transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[6px] border border-[var(--border-strong)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors cursor-pointer"
                   >
                     <ArrowLeft size={14} strokeWidth={1.5} />
                     <span>Atrás</span>
@@ -979,9 +987,9 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                   <button
                     type="submit"
                     disabled={!privacyAccepted}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] disabled:opacity-45 disabled:cursor-not-allowed text-[#09090B] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] disabled:opacity-45 disabled:cursor-not-allowed text-[#2B2D31] text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
                   >
-                    <MessageSquare size={14} strokeWidth={1.5} />
+                    <MessageSquare size={14} strokeWidth={1.75} />
                     <span>Enviar Cotización por WhatsApp</span>
                   </button>
                 </div>
@@ -989,39 +997,45 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
             )}
           </div>
 
-          {/* Columna Derecha: 35% (4/12 cols) - Sticky Summary */}
-          <div className="lg:col-span-4 sticky top-20 bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] rounded-[10px] p-6 flex flex-col gap-6">
+          {/* Columna Derecha: 35% (4/12 cols) - Sticky Summary en Silver #D9DADC */}
+          <div className="lg:col-span-4 sticky top-20 bg-[var(--bg-silver)] border border-[var(--border-silver)] text-[var(--text-on-silver)] rounded-[10px] p-6 flex flex-col gap-6">
             {/* Header del Resumen + Switch Tarifa Socio */}
-            <div className="pb-4 border-b border-[#E4E4E7] dark:border-[#27272A]">
+            <div className="pb-4 border-b border-[var(--border-silver)]">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-mono font-bold text-[#09090B] dark:text-[#F4F4F5] uppercase tracking-wider">
+                <span className="text-xs font-mono font-bold text-[var(--text-on-silver)] uppercase tracking-wider">
                   Resumen en Tiempo Real
                 </span>
                 <button
                   type="button"
                   onClick={handleReset}
                   title="Reiniciar cotizador"
-                  className="text-[#A1A1AA] dark:text-[#71717A] hover:text-[#09090B] dark:hover:text-[#F4F4F5] p-1 transition-colors"
+                  className="text-[var(--text-secondary-on-silver)] hover:text-[var(--text-on-silver)] p-1 transition-colors cursor-pointer"
                 >
-                  <RotateCcw size={13} strokeWidth={1.5} />
+                  <RotateCcw size={13} strokeWidth={1.75} />
                 </button>
               </div>
 
               {/* Switch Tarifa Socio */}
-              <div className="p-2.5 rounded-[6px] bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/30 flex items-center justify-between">
+              <div className="p-2.5 rounded-[6px] bg-[#2B2D31]/10 border border-[var(--border-silver)] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="tarifaSocioSwitch"
                     checked={tarifaSocio}
                     onChange={(e) => setTarifaSocio(e.target.checked)}
-                    className="w-4 h-4 text-[#9A6700] dark:text-[#FFC000] rounded border-zinc-300 focus:ring-amber-400 cursor-pointer accent-[#FFC000]"
+                    className="w-4 h-4 rounded cursor-pointer accent-[#2B2D31]"
                   />
-                  <label htmlFor="tarifaSocioSwitch" className="text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] cursor-pointer">
+                  <label htmlFor="tarifaSocioSwitch" className="text-xs font-semibold text-[var(--text-on-silver)] cursor-pointer">
                     Tarifa Socio ($1/día)
                   </label>
                 </div>
-                <span className="text-[10px] font-mono font-semibold text-[#9A6700] dark:text-[#FFC000] bg-white dark:bg-[#18181B] px-2 py-0.5 rounded border border-amber-200 dark:border-amber-500/30">
+                <span
+                  className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                    tarifaSocio
+                      ? 'bg-[#2B2D31] text-[#FFC93C]'
+                      : 'bg-[var(--bg-page)]/20 text-[var(--text-on-silver)]'
+                  }`}
+                >
                   {tarifaSocio ? 'ACTIVA' : 'INACTIVA'}
                 </span>
               </div>
@@ -1030,85 +1044,91 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
             {/* Precios Principales (Tabular Nums - Cero CLS) */}
             <div>
               <div className="flex items-baseline justify-between mb-1">
-                <span className="text-xs text-[#52525B] dark:text-[#A1A1AA]">Mensualidad Total</span>
+                <span className="text-xs text-[var(--text-secondary-on-silver)] font-medium">Mensualidad Total</span>
                 {!tarifaSocio && (
-                  <span className="text-xs font-mono text-[#A1A1AA] line-through">
+                  <span className="text-xs font-mono text-[var(--text-secondary-on-silver)] line-through">
                     ${(pricing.monthlyTotal * 0.45).toFixed(0)} USD
                   </span>
                 )}
                 {tarifaSocio && (
-                  <span className="text-xs font-mono text-[#A1A1AA] line-through">
+                  <span className="text-xs font-mono text-[var(--text-secondary-on-silver)] line-through">
                     ${(pricing.totalAdminUsers * 90) + (pricing.monthlyCustomersExtra + pricing.monthlyInterfaces + pricing.monthlyDataAndApis)} USD
                   </span>
                 )}
               </div>
 
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-bold font-mono tabular-nums text-[#09090B] dark:text-[#F4F4F5]">
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-3xl font-bold font-mono tabular-nums text-[var(--text-on-silver)]">
                   ${pricing.monthlyTotal} USD
                 </span>
-                <span className="text-xs text-[#52525B] dark:text-[#A1A1AA]">/ mes</span>
+                <span className="text-xs text-[var(--text-secondary-on-silver)]">/ mes</span>
               </div>
 
-              <div className="text-xs text-[#9A6700] dark:text-[#FFC000] font-mono tabular-nums font-semibold">
+              <div className="inline-flex items-center px-2 py-0.5 rounded bg-[#2B2D31] text-[#FFC93C] text-xs font-mono tabular-nums font-semibold">
                 ≈ ${pricing.dailyEquivalent} USD al día
               </div>
             </div>
 
             {/* Setup Fee */}
-            <div className="p-3 rounded-[6px] bg-[#FAFAFA] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between text-xs">
-              <span className="text-[#52525B] dark:text-[#A1A1AA]">Implementación (Setup):</span>
+            <div className="p-3 rounded-[6px] bg-[#2B2D31] text-[#D9DADC] border border-[#2B2D31]/20 flex items-center justify-between text-xs">
+              <span className="text-[#B8BAC0]">Implementación (Setup):</span>
               <div className="flex items-center gap-2 font-mono tabular-nums">
                 {pricing.setupFeeSavings > 0 && (
-                  <span className="text-[#A1A1AA] line-through">$500 USD</span>
+                  <span className="text-[#9699A1] line-through">$500 USD</span>
                 )}
-                <span className={`font-bold ${pricing.setupFee === 0 ? 'text-[#9A6700] dark:text-[#FFC000]' : 'text-[#09090B] dark:text-[#F4F4F5]'}`}>
+                <span className={`font-bold ${pricing.setupFee === 0 ? 'text-[#FFC93C]' : 'text-[#D9DADC]'}`}>
                   ${pricing.setupFee} USD
                 </span>
               </div>
             </div>
 
             {/* Desglose de Configuración */}
-            <div className="pt-2 flex flex-col gap-2 text-xs text-[#52525B] dark:text-[#A1A1AA]">
+            <div className="pt-2 flex flex-col gap-2 text-xs text-[var(--text-secondary-on-silver)]">
               <div className="flex justify-between">
                 <span>Roles administrativos ({pricing.totalAdminUsers}):</span>
-                <span className="font-mono tabular-nums text-[#09090B] dark:text-[#F4F4F5] font-medium">
+                <span className="font-mono tabular-nums text-[var(--text-on-silver)] font-semibold">
                   ${pricing.monthlyRolesBase} USD
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Clientes e infraestructura:</span>
-                <span className="font-mono tabular-nums text-[#09090B] dark:text-[#F4F4F5] font-medium">
+                <span className="font-mono tabular-nums text-[var(--text-on-silver)] font-semibold">
                   ${pricing.monthlyCustomersExtra + pricing.monthlyInterfaces + pricing.monthlyDataAndApis} USD
                 </span>
               </div>
             </div>
 
             {/* Caja Discreta de Beneficios Incluidos */}
-            <div className="pt-4 border-t border-[#E4E4E7] dark:border-[#27272A] flex flex-col gap-2">
-              <span className="text-[11px] font-mono font-semibold text-[#09090B] dark:text-[#F4F4F5] uppercase tracking-wider">
+            <div className="pt-4 border-t border-[var(--border-silver)] flex flex-col gap-2">
+              <span className="text-[11px] font-mono font-bold text-[var(--text-on-silver)] uppercase tracking-wider">
                 Garantías de la Alianza
               </span>
-              <div className="flex items-center gap-2 text-xs text-[#52525B] dark:text-[#A1A1AA]">
-                <Check size={13} strokeWidth={2} className="text-[#9A6700] dark:text-[#FFC000]" />
+              <div className="flex items-center gap-2 text-xs text-[var(--text-secondary-on-silver)]">
+                <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC93C] flex items-center justify-center shrink-0">
+                  <Check size={10} strokeWidth={2.5} />
+                </span>
                 <span>Base de datos 100% propia (SQLite/Postgres)</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#52525B] dark:text-[#A1A1AA]">
-                <Check size={13} strokeWidth={2} className="text-[#9A6700] dark:text-[#FFC000]" />
+              <div className="flex items-center gap-2 text-xs text-[var(--text-secondary-on-silver)]">
+                <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC93C] flex items-center justify-center shrink-0">
+                  <Check size={10} strokeWidth={2.5} />
+                </span>
                 <span>Arquitectura Offline-First sin cortes</span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#52525B] dark:text-[#A1A1AA]">
-                <Check size={13} strokeWidth={2} className="text-[#9A6700] dark:text-[#FFC000]" />
+              <div className="flex items-center gap-2 text-xs text-[var(--text-secondary-on-silver)]">
+                <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC93C] flex items-center justify-center shrink-0">
+                  <Check size={10} strokeWidth={2.5} />
+                </span>
                 <span>Soporte continuo y sin costo por hora</span>
               </div>
             </div>
 
-            {/* Botón de Acción en el Resumen */}
+            {/* Botón de Acción Principal (10% Yellow #FFC93C Call-to-Click) */}
             {activeStep < 4 ? (
               <button
                 type="button"
                 onClick={() => goToStep(4)}
-                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer text-center"
+                className="w-full py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] border border-[#2B2D31]/15 text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer text-center shadow-xs"
               >
                 Completar y Enviar Cotización
               </button>
@@ -1117,7 +1137,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                 type="button"
                 onClick={handleFinalSubmit}
                 disabled={!privacyAccepted}
-                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] disabled:opacity-45 disabled:cursor-not-allowed text-[#09090B] text-xs font-semibold transition-colors cursor-pointer text-center"
+                className="w-full py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] disabled:opacity-45 disabled:cursor-not-allowed border border-[#2B2D31]/15 text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer text-center shadow-xs"
               >
                 Enviar a WhatsApp Ahora
               </button>

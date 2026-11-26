@@ -58,7 +58,7 @@ export default function LegalCookiesPage({
         <button
           type="button"
           onClick={openPreferencesModal}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] text-[#09090B] text-xs font-semibold transition-colors cursor-pointer shrink-0"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold transition-colors cursor-pointer shrink-0"
         >
           <SlidersHorizontal size={14} strokeWidth={1.75} />
           <span>Configurar cookies</span>

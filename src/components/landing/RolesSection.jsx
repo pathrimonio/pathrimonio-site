@@ -1,10 +1,10 @@
 import React from 'react';
-import { 
-  Building2, 
-  Receipt, 
-  Package, 
-  ShoppingCart, 
-  Truck, 
+import {
+  Building2,
+  Receipt,
+  Package,
+  ShoppingCart,
+  Truck,
   MessageSquare,
   ShieldAlert,
   ArrowRight
@@ -63,58 +63,62 @@ const ROLES = [
 
 export default function RolesSection() {
   return (
-    <section id="roles" className="w-full py-20 lg:py-28 bg-[#FFFFFF] dark:bg-[#09090B] border-b border-[#E4E4E7] dark:border-[#27272A] transition-colors">
+    <section
+      id="roles"
+      className="w-full py-20 lg:py-28 bg-[var(--bg-silver)] text-[var(--text-on-silver)] border-b border-[var(--border-silver)] transition-colors"
+    >
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
-        {/* Encabezado de Sección */}
+        {/* Encabezado de Sección (Sobre Silver #D9DADC -> Tinta #2B2D31) */}
         <div className="max-w-2xl mb-14">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#F4F4F5] dark:bg-[#18181B] text-[#52525B] dark:text-[#A1A1AA] text-xs font-mono mb-3">
-            <span className="text-[#09090B] dark:text-[#F4F4F5] font-semibold">ROLES Y CONTROL</span>
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#2B2D31] text-[#D9DADC] text-xs font-mono mb-3">
+            <span className="font-semibold">ROLES Y CONTROL</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-on-silver)] tracking-[-0.02em] mb-4">
             Cada colaborador con la pantalla exacta que necesita.
           </h2>
-          <p className="text-base text-[#52525B] dark:text-[#A1A1AA] leading-relaxed">
-            Elimina el desorden operativo limitando lo que cada perfil puede ver, editar y autorizar. 
-            El costo es de <span className="font-semibold text-[#09090B] dark:text-[#F4F4F5]">$1 USD al día por rol activo</span>, con auditoría criptográfica de cambios.
+          <p className="text-base text-[var(--text-secondary-on-silver)] leading-relaxed">
+            Elimina el desorden operativo limitando lo que cada perfil puede ver, editar y autorizar.
+            El costo es de{' '}
+            <span className="font-semibold text-[var(--text-on-silver)]">$1 USD al día por rol activo</span>, con auditoría criptográfica de cambios.
           </p>
         </div>
 
-        {/* Grid de 3 Columnas */}
+        {/* Grid de 3 Columnas: Tarjetas Gray #2B2D31 sobre lienzo Silver #D9DADC */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {ROLES.map((role) => {
             const Icon = role.icon;
             return (
               <div
                 key={role.id}
-                className="card-minimal p-6 flex flex-col justify-between group hover:border-[#D4D4D8] dark:hover:border-[#3F3F46]"
+                className="card-on-silver p-6 flex flex-col justify-between group"
               >
                 <div>
                   {/* Top Bar: Icono + Badge */}
                   <div className="flex items-center justify-between mb-5">
-                    <div className="w-10 h-10 rounded-[6px] bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/30 flex items-center justify-center text-[#9A6700] dark:text-[#FFC000]">
-                      <Icon size={20} strokeWidth={1.5} />
+                    <div className="w-10 h-10 rounded-[6px] bg-[#363940] border border-[#FFC93C]/40 flex items-center justify-center text-[#FFC93C]">
+                      <Icon size={20} strokeWidth={1.6} />
                     </div>
-                    <span className="text-[11px] font-mono font-medium text-[#52525B] dark:text-[#A1A1AA] bg-[#F4F4F5] dark:bg-[#18181B] px-2.5 py-1 rounded-[4px]">
+                    <span className="text-[11px] font-mono font-medium text-[#D9DADC] bg-[#363940] border border-[#D9DADC]/15 px-2.5 py-1 rounded-[4px]">
                       {role.badge}
                     </span>
                   </div>
 
                   {/* Nombre del Rol */}
-                  <h3 className="text-lg font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-2 tracking-tight">
+                  <h3 className="text-lg font-semibold text-[#D9DADC] mb-2 tracking-tight">
                     {role.title}
                   </h3>
 
-                  {/* Descripción (2 líneas) */}
-                  <p className="text-sm text-[#52525B] dark:text-[#A1A1AA] leading-relaxed mb-5">
+                  {/* Descripción */}
+                  <p className="text-sm text-[#B8BAC0] leading-relaxed mb-5">
                     {role.description}
                   </p>
                 </div>
 
-                {/* Sub-lista de permisos discretos */}
-                <div className="pt-4 border-t border-[#E4E4E7] dark:border-[#27272A] flex flex-col gap-1.5">
+                {/* Sub-lista de permisos */}
+                <div className="pt-4 border-t border-[#D9DADC]/15 flex flex-col gap-1.5">
                   {role.features.map((feat, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs text-[#52525B] dark:text-[#A1A1AA]">
-                      <span className="w-1 h-1 rounded-full bg-[#FFC000]"></span>
+                    <div key={idx} className="flex items-center gap-2 text-xs text-[#B8BAC0]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFC93C]"></span>
                       <span>{feat}</span>
                     </div>
                   ))}
@@ -124,22 +128,22 @@ export default function RolesSection() {
           })}
         </div>
 
-        {/* Callout de Auditoría */}
-        <div className="mt-8 p-4 rounded-[8px] bg-[#FAFAFA] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* Callout de Auditoría (Bloque Gray #2B2D31 con botón CTA Yellow #FFC93C) */}
+        <div className="mt-8 p-4 sm:p-5 rounded-[8px] bg-[#2B2D31] text-[#D9DADC] border border-[#2B2D31]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-[6px] bg-amber-50 dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/30 flex items-center justify-center text-amber-700 dark:text-[#FFC000] shrink-0">
-              <ShieldAlert size={16} strokeWidth={1.5} />
+            <div className="w-8 h-8 rounded-[6px] bg-[#363940] border border-[#FFC93C]/40 flex items-center justify-center text-[#FFC93C] shrink-0">
+              <ShieldAlert size={16} strokeWidth={1.6} />
             </div>
-            <p className="text-xs sm:text-sm text-[#52525B] dark:text-[#A1A1AA]">
-              <strong className="text-[#09090B] dark:text-[#F4F4F5] font-medium">Control antifraude incluido:</strong> Ningún usuario puede borrar cobros o modificar inventario sin dejar registro visible para la Gerencia.
+            <p className="text-xs sm:text-sm text-[#B8BAC0]">
+              <strong className="text-[#D9DADC] font-medium">Control antifraude incluido:</strong> Ningún usuario puede borrar cobros o modificar inventario sin dejar registro visible para la Gerencia.
             </p>
           </div>
           <a
             href="#cotizador"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9A6700] dark:text-[#FFC000] hover:text-[#B45309] dark:hover:text-amber-300 shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-xs font-semibold text-[#2B2D31] shrink-0 transition-colors"
           >
-            <span>Configurar mis roles en el cotizador</span>
-            <ArrowRight size={13} strokeWidth={1.5} />
+            <span>Configurar mis roles</span>
+            <ArrowRight size={13} strokeWidth={1.75} />
           </a>
         </div>
       </div>

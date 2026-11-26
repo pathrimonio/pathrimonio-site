@@ -170,7 +170,7 @@ export default function LegalLibroReclamacionesPage({
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-semibold cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold cursor-pointer"
             >
               <Printer size={14} />
               <span>Imprimir / Guardar PDF</span>
@@ -210,7 +210,7 @@ export default function LegalLibroReclamacionesPage({
                   value={formState.consumer_name}
                   onChange={(e) => setFormState({ ...formState, consumer_name: e.target.value })}
                   placeholder="Ej. María Mendoza Quispe"
-                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                 />
               </div>
 
@@ -221,7 +221,7 @@ export default function LegalLibroReclamacionesPage({
                 <select
                   value={formState.document_type}
                   onChange={(e) => setFormState({ ...formState, document_type: e.target.value })}
-                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                 >
                   <option value="DNI">DNI</option>
                   <option value="CE">Carné de Extranjería</option>
@@ -240,7 +240,7 @@ export default function LegalLibroReclamacionesPage({
                   value={formState.document_number}
                   onChange={(e) => setFormState({ ...formState, document_number: e.target.value })}
                   placeholder="Ej. 72345678"
-                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                 />
               </div>
 
@@ -254,7 +254,7 @@ export default function LegalLibroReclamacionesPage({
                   value={formState.email}
                   onChange={(e) => setFormState({ ...formState, email: e.target.value })}
                   placeholder="correo@ejemplo.com"
-                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                 />
               </div>
 
@@ -267,7 +267,7 @@ export default function LegalLibroReclamacionesPage({
                   value={formState.phone}
                   onChange={(e) => setFormState({ ...formState, phone: e.target.value })}
                   placeholder="+51 999 888 777"
-                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                 />
               </div>
 
@@ -280,7 +280,7 @@ export default function LegalLibroReclamacionesPage({
                   value={formState.address}
                   onChange={(e) => setFormState({ ...formState, address: e.target.value })}
                   placeholder="Dirección completa, distrito, provincia"
-                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                 />
               </div>
 
@@ -290,7 +290,7 @@ export default function LegalLibroReclamacionesPage({
                     type="checkbox"
                     checked={formState.is_minor}
                     onChange={(e) => setFormState({ ...formState, is_minor: e.target.checked })}
-                    className="w-4 h-4 accent-[#FFC000]"
+                    className="w-4 h-4 accent-[#FFC93C]"
                   />
                   <span>Soy menor de edad</span>
                 </label>
@@ -300,7 +300,7 @@ export default function LegalLibroReclamacionesPage({
                     value={formState.guardian_name}
                     onChange={(e) => setFormState({ ...formState, guardian_name: e.target.value })}
                     placeholder="Nombre completo del padre, madre o apoderado"
-                    className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                    className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                   />
                 )}
               </div>
@@ -318,7 +318,7 @@ export default function LegalLibroReclamacionesPage({
                 <select
                   value={formState.service_type}
                   onChange={(e) => setFormState({ ...formState, service_type: e.target.value })}
-                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                 >
                   <option value="Servicio de Software / Membresía Programa de Socios">Servicio — Software / Programa de Socios</option>
                   <option value="Consultoría Técnica / Implementación">Servicio — Consultoría Técnica</option>
@@ -334,7 +334,7 @@ export default function LegalLibroReclamacionesPage({
                   value={formState.claimed_amount}
                   onChange={(e) => setFormState({ ...formState, claimed_amount: e.target.value })}
                   placeholder="Ej. $30.00 USD / S/ 110.00"
-                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -346,7 +346,7 @@ export default function LegalLibroReclamacionesPage({
                   value={formState.service_description}
                   onChange={(e) => setFormState({ ...formState, service_description: e.target.value })}
                   placeholder="Ej. Activación de 2 roles operativos (Caja y Almacén)"
-                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                  className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] px-3 py-2 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
                 />
               </div>
             </div>
@@ -373,7 +373,7 @@ export default function LegalLibroReclamacionesPage({
                   key={opt.id}
                   className={`p-3 rounded-[8px] border cursor-pointer flex items-start gap-2.5 text-xs ${
                     formState.record_type === opt.id
-                      ? 'bg-[var(--accent-soft)] border-[#FFC000]'
+                      ? 'bg-[var(--accent-soft)] border-[#FFC93C]'
                       : 'bg-[var(--bg-page)] border-[var(--border-subtle)]'
                   }`}
                 >
@@ -383,7 +383,7 @@ export default function LegalLibroReclamacionesPage({
                     value={opt.id}
                     checked={formState.record_type === opt.id}
                     onChange={(e) => setFormState({ ...formState, record_type: e.target.value })}
-                    className="mt-0.5 accent-[#FFC000]"
+                    className="mt-0.5 accent-[#FFC93C]"
                   />
                   <div>
                     <strong className="text-[var(--text-primary)] block">{opt.id}</strong>
@@ -403,7 +403,7 @@ export default function LegalLibroReclamacionesPage({
                 value={formState.detail}
                 onChange={(e) => setFormState({ ...formState, detail: e.target.value })}
                 placeholder="Describe de manera clara lo ocurrido, fechas y referencias..."
-                className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] p-3 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] p-3 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
               />
             </div>
 
@@ -417,7 +417,7 @@ export default function LegalLibroReclamacionesPage({
                 value={formState.consumer_request}
                 onChange={(e) => setFormState({ ...formState, consumer_request: e.target.value })}
                 placeholder="Indica qué solución o medida solicitas..."
-                className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] p-3 text-xs text-[var(--text-primary)] focus:border-[#FFC000] focus:outline-hidden"
+                className="w-full rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-page)] p-3 text-xs text-[var(--text-primary)] focus:border-[#FFC93C] focus:outline-hidden"
               />
             </div>
           </div>
@@ -429,7 +429,7 @@ export default function LegalLibroReclamacionesPage({
                 type="checkbox"
                 checked={privacyAccepted}
                 onChange={(e) => setPrivacyAccepted(e.target.checked)}
-                className="w-4 h-4 mt-0.5 accent-[#FFC000] shrink-0"
+                className="w-4 h-4 mt-0.5 accent-[#FFC93C] shrink-0"
               />
               <span>
                 He leído y acepto la{' '}
@@ -451,7 +451,7 @@ export default function LegalLibroReclamacionesPage({
               <button
                 type="submit"
                 disabled={submitting || !privacyAccepted}
-                className="px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#E5AC00] disabled:opacity-45 disabled:cursor-not-allowed text-[#09090B] text-xs font-semibold transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] disabled:opacity-45 disabled:cursor-not-allowed text-[#2B2D31] text-xs font-semibold transition-colors cursor-pointer"
               >
                 {submitting ? 'Registrando hoja...' : 'Enviar Hoja de Reclamación'}
               </button>

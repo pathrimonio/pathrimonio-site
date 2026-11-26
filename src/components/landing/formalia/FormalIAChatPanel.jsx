@@ -73,25 +73,25 @@ export default function FormalIAChatPanel({
   const isLimitReached = turnsCount >= maxTurns;
 
   return (
-    <div className="flex flex-col h-full bg-[#FFFFFF] dark:bg-[#111113] border-b lg:border-b-0 lg:border-r border-[#E4E4E7] dark:border-[#27272A]">
-      
+    <div className="flex flex-col h-full bg-[var(--bg-surface)] border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)]">
+
       {/* ── Header Entrevistador + Barra de Progreso ── */}
-      <div className="p-4 border-b border-[#E4E4E7] dark:border-[#27272A] bg-[#FAFAFA] dark:bg-[#09090B]/60 flex flex-col gap-3">
+      <div className="p-4 border-b border-[var(--border-subtle)] bg-[var(--bg-page)] flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-[6px] bg-[#FFC000] text-[#09090B] flex items-center justify-center shrink-0 shadow-xs">
+            <div className="w-8 h-8 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] flex items-center justify-center shrink-0 shadow-xs">
               <Sparkles size={16} strokeWidth={2} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-[#09090B] dark:text-[#F4F4F5] tracking-tight truncate">
+                <h3 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight truncate">
                   Entrevistador FORMALIA
                 </h3>
-                <span className="px-1.5 py-0.5 rounded bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] font-mono text-[10px] font-medium">
+                <span className="px-1.5 py-0.5 rounded bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)] font-mono text-[10px] font-medium">
                   {turnsCount}/{maxTurns} turnos
                 </span>
               </div>
-              <p className="text-[11px] text-[#52525B] dark:text-[#A1A1AA] truncate">
+              <p className="text-[11px] text-[var(--text-secondary)] truncate">
                 Describe tu operación en español; extraigo roles y carriles en vivo
               </p>
             </div>
@@ -103,9 +103,9 @@ export default function FormalIAChatPanel({
               onClick={onLoadExample}
               disabled={isExtracting}
               title="Cargar caso ejemplo: Transportes del Norte SAC"
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#18181B] hover:border-[#FFC000] text-[11px] font-medium text-[#09090B] dark:text-[#F4F4F5] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] hover:border-[#FFC93C] text-[11px] font-medium text-[var(--text-primary)] transition-colors cursor-pointer"
             >
-              <Wand2 size={12} className="text-[#9A6700] dark:text-[#FFC000]" />
+              <Wand2 size={12} className="text-[var(--accent-text)]" />
               <span className="hidden sm:inline">Ejemplo SDD</span>
             </button>
 
@@ -114,7 +114,7 @@ export default function FormalIAChatPanel({
               onClick={onResetSession}
               disabled={isExtracting}
               title="Reiniciar conversación y lienzo"
-              className="p-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#18181B] hover:bg-[#F4F4F5] dark:hover:bg-[#27272A] text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors cursor-pointer"
+              className="p-1.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] hover:bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               <RotateCcw size={13} />
             </button>
@@ -124,16 +124,16 @@ export default function FormalIAChatPanel({
         {/* Barra de Completitud (0% - 100%) */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-medium text-[#52525B] dark:text-[#A1A1AA]">
+            <span className="font-medium text-[var(--text-secondary)]">
               Completitud del proceso
             </span>
-            <span className="font-mono font-semibold text-[#09090B] dark:text-[#F4F4F5] tabular-nums">
+            <span className="font-mono font-semibold text-[var(--text-primary)] tabular-nums">
               {completenessScore}%
             </span>
           </div>
-          <div className="w-full h-1.5 rounded-full bg-[#E4E4E7] dark:bg-[#27272A] overflow-hidden">
+          <div className="w-full h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
             <div
-              className="h-full bg-[#FFC000] transition-all duration-500 ease-out rounded-full"
+              className="h-full bg-[#FFC93C] transition-all duration-500 ease-out rounded-full"
               style={{ width: `${Math.min(100, Math.max(5, completenessScore))}%` }}
             />
           </div>
@@ -151,10 +151,10 @@ export default function FormalIAChatPanel({
                   key={phase.id}
                   className={`px-2 py-0.5 rounded-[4px] text-[10px] font-mono whitespace-nowrap border transition-colors ${
                     isActive
-                      ? 'bg-[#FFC000] border-[#FFC000] text-[#09090B] font-semibold'
+                      ? 'bg-[#FFC93C] border-[#FFC93C] text-[#2B2D31] font-semibold'
                       : isPast
-                        ? 'bg-[#FFFBEB] dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000]'
-                        : 'bg-[#F4F4F5] dark:bg-[#18181B] border-[#E4E4E7] dark:border-[#27272A] text-[#71717A] dark:text-[#71717A]'
+                        ? 'bg-[var(--accent-soft)] border-[var(--accent-border)] text-[var(--accent-text)]'
+                        : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--text-muted)]'
                   }`}
                 >
                   {phase.short}
@@ -182,8 +182,8 @@ export default function FormalIAChatPanel({
               <div
                 className={`w-7 h-7 rounded-[6px] flex items-center justify-center shrink-0 mt-0.5 border ${
                   isUser
-                    ? 'bg-[#09090B] dark:bg-[#F4F4F5] text-[#FFFFFF] dark:text-[#09090B] border-transparent'
-                    : 'bg-[#FFFBEB] dark:bg-amber-500/10 text-[#9A6700] dark:text-[#FFC000] border-amber-200 dark:border-amber-500/30'
+                    ? 'bg-[var(--bg-silver)] text-[var(--text-on-silver)] border-transparent'
+                    : 'bg-[var(--accent-soft)] text-[var(--accent-text)] border-[var(--accent-border)]'
                 }`}
               >
                 {isUser ? <User size={14} /> : <Bot size={14} />}
@@ -193,8 +193,8 @@ export default function FormalIAChatPanel({
                 <div
                   className={`px-3.5 py-2.5 rounded-[10px] text-[13px] leading-relaxed border ${
                     isUser
-                      ? 'bg-[#09090B] dark:bg-[#27272A] text-[#FFFFFF] border-[#09090B] dark:border-[#3F3F46]'
-                      : 'bg-[#FAFAFA] dark:bg-[#18181B] text-[#09090B] dark:text-[#F4F4F5] border-[#E4E4E7] dark:border-[#27272A]'
+                      ? 'bg-[var(--bg-silver)] text-[var(--text-on-silver)] border-[var(--border-silver)] font-medium'
+                      : 'bg-[var(--bg-page)] text-[var(--text-primary)] border-[var(--border-subtle)]'
                   }`}
                 >
                   {msg.content}
@@ -205,7 +205,7 @@ export default function FormalIAChatPanel({
                     {patchChips.map((chip, idx) => (
                       <span
                         key={idx}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 font-mono text-[10px]"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px]"
                       >
                         <CheckCircle2 size={10} />
                         <span>{chip}</span>
@@ -220,14 +220,14 @@ export default function FormalIAChatPanel({
 
         {isExtracting && (
           <div className="flex gap-2.5 items-start">
-            <div className="w-7 h-7 rounded-[6px] bg-[#FFFBEB] dark:bg-amber-500/10 text-[#9A6700] dark:text-[#FFC000] border border-amber-200 dark:border-amber-500/30 flex items-center justify-center shrink-0">
+            <div className="w-7 h-7 rounded-[6px] bg-[var(--accent-soft)] text-[var(--accent-text)] border border-[var(--accent-border)] flex items-center justify-center shrink-0">
               <Bot size={14} className="animate-pulse" />
             </div>
-            <div className="px-3.5 py-2.5 rounded-[10px] bg-[#FAFAFA] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] text-xs text-[#52525B] dark:text-[#A1A1AA] flex items-center gap-2">
+            <div className="px-3.5 py-2.5 rounded-[10px] bg-[var(--bg-page)] border border-[var(--border-subtle)] text-xs text-[var(--text-secondary)] flex items-center gap-2">
               <span className="inline-flex gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000] animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000] animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000] animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FFC93C] animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FFC93C] animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FFC93C] animate-bounce" style={{ animationDelay: '300ms' }} />
               </span>
               <span>FORMALIA está actualizando carriles y roles...</span>
             </div>
@@ -235,7 +235,7 @@ export default function FormalIAChatPanel({
         )}
 
         {errorMessage && (
-          <div className="p-2.5 rounded-[8px] bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-xs text-[#9A6700] dark:text-[#FFC000] flex items-start gap-2">
+          <div className="p-2.5 rounded-[8px] bg-[var(--accent-soft)] border border-[var(--accent-border)] text-xs text-[var(--accent-text)] flex items-start gap-2">
             <AlertTriangle size={14} className="shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
           </div>
@@ -243,10 +243,10 @@ export default function FormalIAChatPanel({
       </div>
 
       {/* ── Chips de Respuesta Rápida + Caja de Entrada ── */}
-      <div className="p-3.5 border-t border-[#E4E4E7] dark:border-[#27272A] bg-[#FAFAFA] dark:bg-[#09090B]/60 flex flex-col gap-2.5">
+      <div className="p-3.5 border-t border-[var(--border-subtle)] bg-[var(--bg-page)] flex flex-col gap-2.5">
         {activeQuickReplies.length > 0 && !isLimitReached && (
           <div className="flex flex-col gap-1.5">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-[#71717A] dark:text-[#A1A1AA]">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
               Respuestas rápidas sugeridas:
             </span>
             <div className="flex flex-wrap gap-1.5">
@@ -256,7 +256,7 @@ export default function FormalIAChatPanel({
                   type="button"
                   disabled={isExtracting}
                   onClick={() => handleQuickReply(reply)}
-                  className="text-left px-2.5 py-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#18181B] hover:border-[#FFC000] hover:bg-[#FFFBEB] dark:hover:bg-amber-500/10 text-[11px] font-medium text-[#09090B] dark:text-[#F4F4F5] transition-colors cursor-pointer disabled:opacity-50"
+                  className="text-left px-2.5 py-1.5 rounded-[6px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] hover:border-[#FFC93C] text-[11px] font-medium text-[var(--text-primary)] transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {reply}
                 </button>
@@ -276,13 +276,13 @@ export default function FormalIAChatPanel({
                 ? 'Límite de 15 turnos alcanzado — descarga tu diagrama o cotiza'
                 : 'Describe qué rol recibe el pedido, qué usa (WhatsApp/Excel) y qué pasa después...'
             }
-            className="flex-1 min-w-0 h-10 px-3.5 rounded-[8px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#18181B] text-xs text-[#09090B] dark:text-[#F4F4F5] placeholder:text-[#A1A1AA] focus:outline-none focus:border-[#FFC000] transition-colors disabled:opacity-60"
+            className="flex-1 min-w-0 h-10 px-3.5 rounded-[8px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#FFC93C] transition-colors disabled:opacity-60"
           />
           <button
             type="submit"
             disabled={!inputText.trim() || isExtracting || isLimitReached}
             aria-label="Enviar mensaje a FORMALIA"
-            className="h-10 px-4 rounded-[8px] bg-[#FFC000] hover:bg-[#E5AC00] text-[#09090B] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            className="h-10 px-4 rounded-[8px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             <Send size={14} />
             <span className="hidden sm:inline">Mapear</span>

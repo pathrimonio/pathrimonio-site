@@ -257,10 +257,10 @@ export default function FormalIAWorkspace({
   return (
     <section
       id="formalia"
-      className={`w-full ${isStandalonePage ? 'py-10 lg:py-14' : 'py-20 lg:py-24'} bg-[#FAFAFA] dark:bg-[#09090B] border-b border-[#E4E4E7] dark:border-[#27272A] transition-colors`}
+      className={`w-full ${isStandalonePage ? 'py-10 lg:py-14' : 'py-20 lg:py-24'} bg-[var(--bg-page)] border-b border-[var(--border-subtle)] transition-colors`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Encabezado de Sección */}
         <div className="max-w-3xl mx-auto text-center mb-10">
           {isStandalonePage && onBackHome && (
@@ -271,27 +271,28 @@ export default function FormalIAWorkspace({
                   e.preventDefault();
                   onBackHome();
                 }}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 <span>← Volver al inicio de Pathrimonio</span>
               </a>
             </div>
           )}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] text-xs font-medium mb-4">
-            <Sparkles size={13} />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-primary)] text-xs font-medium mb-4">
+            <Sparkles size={13} className="text-[var(--accent-text)]" />
             <span>Módulo Conversacional FORMALIA · Gratis y sin registro</span>
           </div>
           {isStandalonePage ? (
-            <h1 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-3">
+            <h1 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] tracking-[-0.02em] mb-3">
               Mapea tu negocio en carriles vivos antes de cotizar
             </h1>
           ) : (
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-3">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] tracking-[-0.02em] mb-3">
               Mapea tu negocio en carriles vivos antes de cotizar
             </h2>
           )}
-          <p className="text-sm sm:text-base text-[#52525B] dark:text-[#A1A1AA] leading-relaxed">
-            Cuéntale a FORMALIA cómo trabaja tu equipo hoy. Al instante obtienes tu diagrama de roles, cuellos de botella en PNG/PDF, historial versionado y tu sistema precargado a <strong className="text-[#09090B] dark:text-[#F4F4F5]">$1 USD/día por rol</strong>.
+          <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">
+            Cuéntale a FORMALIA cómo trabaja tu equipo hoy. Al instante obtienes tu diagrama de roles, cuellos de botella en PNG/PDF, historial versionado y tu sistema precargado a{' '}
+            <strong className="text-[var(--text-primary)]">$1 USD/día por rol</strong>.
           </p>
         </div>
 
@@ -299,22 +300,22 @@ export default function FormalIAWorkspace({
         <div
           className={
             isExpanded
-              ? 'fixed inset-0 z-[70] bg-[#FAFAFA] dark:bg-[#09090B] p-2 sm:p-4 flex flex-col'
-              : 'relative rounded-[16px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#111113] shadow-lg overflow-hidden flex flex-col'
+              ? 'fixed inset-0 z-[70] bg-[var(--bg-page)] p-2 sm:p-4 flex flex-col'
+              : 'relative rounded-[16px] border border-[var(--border-strong)] bg-[var(--bg-surface)] shadow-lg overflow-hidden flex flex-col'
           }
         >
           {/* Barra superior del Studio Split-Screen */}
-          <div className="px-4 py-2.5 border-b border-[#E4E4E7] dark:border-[#27272A] bg-[#F4F4F5]/70 dark:bg-[#18181B] flex items-center justify-between gap-3">
+          <div className="px-4 py-2.5 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-deep)] text-[#D9DADC] flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="w-2 h-2 rounded-full bg-[#FFC000]" />
-              <span className="font-mono text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+              <span className="w-2 h-2 rounded-full bg-[#FFC93C]" />
+              <span className="font-mono text-xs font-semibold text-[#D9DADC]">
                 FORMALIA Studio
               </span>
-              <span className="hidden sm:inline font-mono text-[11px] text-[#71717A]">
+              <span className="hidden sm:inline font-mono text-[11px] text-[#9699A1]">
                 · Sesión {session.session_id}
               </span>
               {session.versions?.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 font-mono text-[10px] font-semibold text-[#9A6700] dark:text-[#FFC000]">
+                <span className="px-1.5 py-0.5 rounded bg-[#2B2D31] border border-[#FFC93C]/40 font-mono text-[10px] font-semibold text-[#FFC93C]">
                   {currentVersionLabel} · {session.generated_files?.length || 0} archivos
                 </span>
               )}
@@ -323,7 +324,7 @@ export default function FormalIAWorkspace({
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#111113] text-[11px] font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] cursor-pointer"
+              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] border border-[#D9DADC]/20 bg-[#2B2D31] text-[11px] font-medium text-[#D9DADC] hover:border-[#FFC93C]/60 cursor-pointer"
               title={isExpanded ? 'Contraer espacio de trabajo' : 'Expandir a pantalla completa'}
             >
               {isExpanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
@@ -332,14 +333,14 @@ export default function FormalIAWorkspace({
           </div>
 
           {/* Pestañas Móviles (< 768px — SDD Criterio 5) */}
-          <div className="grid grid-cols-2 md:hidden border-b border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#111113]">
+          <div className="grid grid-cols-2 md:hidden border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
             <button
               type="button"
               onClick={() => setMobileTab('chat')}
               className={`py-2.5 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
                 mobileTab === 'chat'
-                  ? 'border-[#FFC000] text-[#09090B] dark:text-[#F4F4F5] bg-[#FFFBEB]/40 dark:bg-amber-500/5'
-                  : 'border-transparent text-[#71717A] dark:text-[#A1A1AA]'
+                  ? 'border-[#FFC93C] text-[var(--text-primary)] bg-[var(--accent-soft)]'
+                  : 'border-transparent text-[var(--text-secondary)]'
               }`}
             >
               <MessageSquare size={14} />
@@ -353,14 +354,14 @@ export default function FormalIAWorkspace({
               }}
               className={`relative py-2.5 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 border-b-2 transition-colors cursor-pointer ${
                 mobileTab === 'diagram'
-                  ? 'border-[#FFC000] text-[#09090B] dark:text-[#F4F4F5] bg-[#FFFBEB]/40 dark:bg-amber-500/5'
-                  : 'border-transparent text-[#71717A] dark:text-[#A1A1AA]'
+                  ? 'border-[#FFC93C] text-[var(--text-primary)] bg-[var(--accent-soft)]'
+                  : 'border-transparent text-[var(--text-secondary)]'
               }`}
             >
               <GitBranch size={14} />
               <span>{`Ver mi Diagrama (${stepsCount} pasos)`}</span>
               {diagramUpdatedBadge && mobileTab !== 'diagram' && (
-                <span className="w-2 h-2 rounded-full bg-[#FFC000] animate-ping" />
+                <span className="w-2 h-2 rounded-full bg-[#FFC93C] animate-ping" />
               )}
             </button>
           </div>

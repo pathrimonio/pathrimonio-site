@@ -134,23 +134,15 @@ export default function App({ initialPath = '/' }) {
 function AppContent({ initialPath = '/' }) {
   const initialCleanPath = normalizePathname(initialPath);
 
-  // ── Theme state: determinista en SSR, sincronizado tras montaje para evitar hydration mismatch
-  const [theme, setTheme] = useState('light');
+  // ── Theme state: determinista en SSR (60% Gray #2B2D31 / 30% Silver #D9DADC / 10% Yellow #FFC93C)
+  const [theme, setTheme] = useState('dark');
   const [themeHydrated, setThemeHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      const savedTheme = localStorage.getItem('pathrimonio_theme');
-      const prefersDark =
-        typeof window !== 'undefined' &&
-        window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const resolved =
-        savedTheme === 'dark' || savedTheme === 'light'
-          ? savedTheme
-          : prefersDark
-            ? 'dark'
-            : 'light';
+      const paletteVer = localStorage.getItem('pathrimonio_theme_ver');
+      const savedTheme = paletteVer === '60-30-10' ? localStorage.getItem('pathrimonio_theme') : null;
+      const resolved = savedTheme === 'light' ? 'light' : 'dark';
       setTheme(resolved);
     } catch (_) {}
     setThemeHydrated(true);
@@ -173,6 +165,9 @@ function AppContent({ initialPath = '/' }) {
   }, [theme, themeHydrated]);
 
   const toggleTheme = () => {
+    try {
+      localStorage.setItem('pathrimonio_theme_ver', '60-30-10');
+    } catch (_) {}
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
@@ -1643,10 +1638,10 @@ function AppContent({ initialPath = '/' }) {
       )}
 
       {/* ══════════════════════════════════════════
-          VIEW: LANDING PAGE (Minimalista Moderno - SDD)
+          VIEW: LANDING PAGE (Paleta 60-30-10: Gray #2B2D31 / Silver #D9DADC / Yellow #FFC93C)
       ══════════════════════════════════════════ */}
       {currentView === 'landing' && (
-        <div className="flex flex-col w-full bg-[#FAFAFA] dark:bg-[#09090B] text-[#09090B] dark:text-[#F4F4F5] min-h-screen selection:bg-amber-100 dark:selection:bg-amber-900/40 selection:text-amber-950 dark:selection:text-amber-200 transition-colors duration-200">
+        <div className="flex flex-col w-full bg-[var(--bg-page)] text-[var(--text-primary)] min-h-screen selection:bg-[#FFC93C]/30 selection:text-[#D9DADC] transition-colors duration-200">
           <Navbar 
             theme={theme}
             onToggleTheme={toggleTheme}
@@ -1692,7 +1687,7 @@ function AppContent({ initialPath = '/' }) {
           VIEW: FORMALIA (/formalia — SSG + SPA)
       ══════════════════════════════════════════ */}
       {currentView === 'formalia' && (
-        <div className="flex flex-col w-full bg-[#FAFAFA] dark:bg-[#09090B] text-[#09090B] dark:text-[#F4F4F5] min-h-screen selection:bg-amber-100 dark:selection:bg-amber-900/40 selection:text-amber-950 dark:selection:text-amber-200 transition-colors duration-200">
+        <div className="flex flex-col w-full bg-[var(--bg-page)] text-[var(--text-primary)] min-h-screen selection:bg-[#FFC93C]/30 selection:text-[#D9DADC] transition-colors duration-200">
           <Navbar
             isSubpage
             theme={theme}

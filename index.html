@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="es" class="scroll-smooth dark" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -32,22 +32,22 @@
     <script>
       (function() {
         try {
-          var saved = localStorage.getItem('pathrimonio_theme');
-          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          if (saved === 'dark' || (!saved && prefersDark)) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.documentElement.style.colorScheme = 'dark';
-          } else {
+          var ver = localStorage.getItem('pathrimonio_theme_ver');
+          var saved = ver === '60-30-10' ? localStorage.getItem('pathrimonio_theme') : 'dark';
+          if (saved === 'light') {
             document.documentElement.classList.remove('dark');
             document.documentElement.setAttribute('data-theme', 'light');
             document.documentElement.style.colorScheme = 'light';
+          } else {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.style.colorScheme = 'dark';
           }
         } catch(e) {}
       })();
     </script>
   </head>
-  <body class="bg-[#FAFAFA] dark:bg-[#09090B] text-[#09090B] dark:text-[#F4F4F5] antialiased selection:bg-amber-100 dark:selection:bg-amber-900/40 selection:text-amber-950 dark:selection:text-amber-200 transition-colors">
+  <body class="bg-[var(--bg-page)] text-[var(--text-primary)] antialiased selection:bg-[#FFC93C]/30 selection:text-[#D9DADC] transition-colors">
     <div id="root"><!--APP_HTML--></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

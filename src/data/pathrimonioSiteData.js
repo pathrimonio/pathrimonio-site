@@ -801,7 +801,7 @@ export const PATHRIMONIO_SITE_INTERFACES = [
       contenido:
         'Navbar con selector de tema Oscuro/Claro, Hero (con CTA a /formalia), RolesSection, ArchitectureSection, PartnershipSection, ImpactPathwayBento, InteractiveEstimator (Paso 4 con checkbox obligatorio de Política de Privacidad), FAQSection, Footer (/legal/* y botón Configurar cookies) y ContactModal.',
       reglas:
-        'Soporta modo oscuro/claro en pathrimonio-theme; bloquea envío en POST /api/v1/quotes sin privacy_policy_accepted = true y se renderiza con HTML SSG pre-generado.',
+        'Paleta 60-30-10 en landing (60% Gray #2B2D31, 30% Silver #D9DADC, 10% Yellow #FFC93C CTA) con alternancia Silver en pathrimonio_theme; bloquea envío en POST /api/v1/quotes sin privacy_policy_accepted = true y se renderiza con HTML SSG pre-generado.',
       detalles:
         'Componentes activos: Navbar.jsx, Hero.jsx, RolesSection.jsx, ArchitectureSection.jsx, PartnershipSection.jsx, ImpactPathwayBento.jsx, InteractiveEstimator.jsx, FAQSection.jsx, Footer.jsx, ContactModal.jsx y api/v1/quotes.js. (Retirados del render: Pillars, Manifesto, FutureProducts, PathwaySection, ServicesSection, CommunityImpactSection).'
     },
@@ -813,9 +813,9 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     linkedStory: 'US-PS-07',
     author: 'Jhan C.',
     reviewedBy: 'Arquitecto de Software',
-    approvedAt: '2026-11-25',
-    ultima_fecha_modificacion: '2026-11-25T16:40:00-05:00',
-    version: 'v1.2'
+    approvedAt: '2026-11-26',
+    ultima_fecha_modificacion: '2026-11-26T05:40:00-05:00',
+    version: 'v1.3'
   },
   {
     id: 'INT-PS-02',

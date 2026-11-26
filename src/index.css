@@ -2,32 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Superficies */
-  --bg-page: #FAFAFA;
-  --bg-surface: #FFFFFF;
-  --bg-subtle: #F4F4F5;
+:root,
+[data-theme="dark"],
+.dark {
+  color-scheme: dark;
 
-  /* Texto */
-  --text-primary: #09090B;
-  --text-secondary: #52525B;
-  --text-muted: #A1A1AA;
+  /* 60% Color Primario — GRAY (#2B2D31) y sus escalas tonales */
+  --bg-page: #2B2D31;
+  --bg-surface: #33363B;
+  --bg-surface-deep: #232529;
+  --bg-subtle: #3B3E45;
+  --border-subtle: rgba(217, 218, 220, 0.14);
+  --border-strong: rgba(217, 218, 220, 0.28);
 
-  /* Bordes */
-  --border-subtle: #E4E4E7;
-  --border-strong: #D4D4D8;
+  /* 30% Color Secundario — SILVER (#D9DADC) */
+  --bg-silver: #D9DADC;
+  --bg-silver-hover: #E6E7E9;
+  --bg-silver-subtle: #C9CBCE;
+  --border-silver: rgba(43, 45, 49, 0.16);
+  --text-primary: #D9DADC;
+  --text-secondary: #B8BAC0;
+  --text-muted: #9699A1;
+  --text-on-silver: #2B2D31;
+  --text-secondary-on-silver: #4A4D54;
 
-  /* Acento Institucional (#FFC000) */
-  --accent-primary: #FFC000;          /* Botones sólidos, switches, barras de progreso */
-  --accent-primary-hover: #E5AC00;    /* Hover de botón sólido */
-  --accent-text-on-solid: #09090B;    /* Texto oscuro obligatorio sobre #FFC000 */
-  --accent-text: #9A6700;             /* Solo para enlaces, íconos o texto destacado sobre blanco */
-  --accent-soft: #FFFBEB;             /* Fondo suave para tarjeta Socio / Pathway */
-  --accent-border: #FDE047;           /* Borde sutil dorado en modo claro */
+  /* 10% Color para llamar al clic — YELLOW (#FFC93C) */
+  --accent-primary: #FFC93C;          /* CTAs primarios, estados activos, enfoque */
+  --accent-primary-hover: #FFD561;    /* Hover luminoso sobre #FFC93C */
+  --accent-text-on-solid: #2B2D31;    /* Contraste 8.97:1 AAA sobre #FFC93C */
+  --accent-text: #FFC93C;             /* Enlaces e íconos destacados sobre #2B2D31 (8.97:1) */
+  --accent-soft: rgba(255, 201, 60, 0.12);
+  --accent-border: rgba(255, 201, 60, 0.40);
 
   /* Estados */
-  --status-success: #15803D;
-  --status-warning: #B45309;
+  --status-success: #4ADE80;
+  --status-warning: #FFC93C;
 
   /* Radios */
   --radius-sm: 6px;
@@ -43,36 +52,49 @@
   --m-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme="dark"], .dark {
-  color-scheme: dark;
+/* Alternancia opcional a modo Silver-primario manteniendo 100% la paleta Gray / Silver / Yellow */
+[data-theme="light"] {
+  color-scheme: light;
 
-  /* Superficies */
-  --bg-page: #09090B;
-  --bg-surface: #111113;
-  --bg-subtle: #18181B;
+  /* Superficies Silver (#D9DADC) + Paneles Gray (#2B2D31) */
+  --bg-page: #D9DADC;
+  --bg-surface: #E5E6E8;
+  --bg-surface-deep: #2B2D31;
+  --bg-subtle: #CCCDD1;
+  --border-subtle: rgba(43, 45, 49, 0.15);
+  --border-strong: rgba(43, 45, 49, 0.30);
+
+  --bg-silver: #2B2D31;
+  --bg-silver-hover: #35383E;
+  --bg-silver-subtle: #232529;
+  --border-silver: rgba(217, 218, 220, 0.20);
 
   /* Texto */
-  --text-primary: #F4F4F5;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
+  --text-primary: #2B2D31;
+  --text-secondary: #484B52;
+  --text-muted: #61656E;
+  --text-on-silver: #D9DADC;
+  --text-secondary-on-silver: #B8BAC0;
 
-  /* Bordes */
-  --border-subtle: #27272A;
-  --border-strong: #3F3F46;
+  /* Yellow #FFC93C CTA */
+  --accent-primary: #FFC93C;
+  --accent-primary-hover: #F2B922;
+  --accent-text-on-solid: #2B2D31;
+  --accent-text: #2B2D31;             /* Sobre fondo Silver claro, tinta #2B2D31 (9.87:1) */
+  --accent-soft: rgba(255, 201, 60, 0.24);
+  --accent-border: rgba(43, 45, 49, 0.25);
 
-  /* Acento Institucional (#FFC000) */
-  --accent-primary: #FFC000;                 /* Contraste > 11:1 sobre #09090B */
-  --accent-primary-hover: #FFD133;           /* Hover ligeramente más luminoso */
-  --accent-text-on-solid: #09090B;           /* Texto oscuro obligatorio sobre botón #FFC000 */
-  --accent-text: #FFC000;                    /* Enlaces e íconos destacados en oscuro */
-  --accent-soft: rgba(255, 192, 0, 0.08);    /* Fondo translúcido para Socio / Pathway */
-  --accent-border: rgba(255, 192, 0, 0.30);  /* Borde dorado sutil sin brillo neón */
+  /* Estados */
+  --status-success: #15803D;
+  --status-warning: #B45309;
 }
 
 @layer base {
   html, body {
     margin: 0;
     padding: 0;
+    background-color: var(--bg-page);
+    color: var(--text-primary);
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
@@ -95,14 +117,14 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-subtle);
+  background: var(--bg-surface-deep);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--text-secondary);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -126,7 +148,22 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .card-minimal:hover {
-    border-color: var(--border-strong);
+    border-color: var(--accent-border);
+    transform: translateY(var(--m-lift));
+    transition-duration: var(--m-in);
+  }
+}
+
+.card-on-silver {
+  background-color: #2B2D31;
+  color: #D9DADC;
+  border: 1px solid rgba(43, 45, 49, 0.18);
+  border-radius: var(--radius-md);
+  transition: border-color var(--m-out) var(--m-ease), transform var(--m-out) var(--m-ease), box-shadow var(--m-out) var(--m-ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .card-on-silver:hover {
+    border-color: #FFC93C;
     transform: translateY(var(--m-lift));
     transition-duration: var(--m-in);
   }
@@ -168,7 +205,8 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-  .card-minimal:hover {
+  .card-minimal:hover,
+  .card-on-silver:hover {
     transform: none !important;
   }
 }

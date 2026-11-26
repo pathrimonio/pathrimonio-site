@@ -150,20 +150,20 @@ export default function FormalIAEngineeringModal({
       aria-label="Paquete Técnico y Versiones FORMALIA"
       className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
     >
-      <div className="w-full max-w-4xl max-h-[88vh] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] rounded-[16px] shadow-2xl flex flex-col overflow-hidden">
-        
+      <div className="w-full max-w-4xl max-h-[88vh] bg-[var(--bg-surface)] text-[var(--text-primary)] border border-[var(--border-strong)] rounded-[16px] shadow-2xl flex flex-col overflow-hidden">
+
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#E4E4E7] dark:border-[#27272A] bg-[#FAFAFA] dark:bg-[#09090B] flex items-center justify-between gap-3">
+        <div className="px-5 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-page)] flex items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2 py-0.5 rounded bg-[#FFC000] text-[#09090B] font-mono text-[10px] font-bold">
+              <span className="px-2 py-0.5 rounded bg-[#FFC93C] text-[#2B2D31] font-mono text-[10px] font-bold">
                 FORMALIA · {currentVersionLabel}
               </span>
-              <h3 className="text-sm sm:text-base font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+              <h3 className="text-sm sm:text-base font-semibold text-[var(--text-primary)]">
                 Paquete Técnico, Chat y Versiones FORMALIA — {handoff.process_name || 'Proceso'}
               </h3>
             </div>
-            <p className="text-xs text-[#52525B] dark:text-[#A1A1AA] mt-0.5">
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
               Sesión <span className="font-mono">{handoff.session_id}</span> · {messages.length} mensajes recopilados · {versions.length} versiones · {generatedFiles.length} archivos generados.
             </p>
           </div>
@@ -171,14 +171,14 @@ export default function FormalIAEngineeringModal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar modal FORMALIA"
-            className="p-2 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] cursor-pointer"
+            className="p-2 rounded-[6px] border border-[var(--border-strong)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="px-5 pt-3 border-b border-[#E4E4E7] dark:border-[#27272A] flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <div className="px-5 pt-3 border-b border-[var(--border-subtle)] flex items-center gap-2 overflow-x-auto no-scrollbar">
           {[
             { id: 'plantuml', label: 'Código PlantUML (.puml)', icon: Code2 },
             { id: 'versions', label: `Archivos & Versiones (${versions.length} · ${generatedFiles.length})`, icon: History },
@@ -196,11 +196,11 @@ export default function FormalIAEngineeringModal({
                 onClick={() => setActiveTab(tab.id)}
                 className={`inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-colors whitespace-nowrap cursor-pointer ${
                   active
-                    ? 'border-[#FFC000] text-[#09090B] dark:text-[#F4F4F5]'
-                    : 'border-transparent text-[#71717A] hover:text-[#09090B] dark:hover:text-[#F4F4F5]'
+                    ? 'border-[#FFC93C] text-[var(--text-primary)]'
+                    : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                <Icon size={14} className={active ? 'text-[#9A6700] dark:text-[#FFC000]' : ''} />
+                <Icon size={14} className={active ? 'text-[var(--accent-text)]' : ''} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -208,33 +208,33 @@ export default function FormalIAEngineeringModal({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5 bg-[#FAFAFA] dark:bg-[#09090B]/40">
+        <div className="flex-1 overflow-y-auto p-5 bg-[var(--bg-page)]">
           {activeTab === 'plantuml' && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+                <span className="text-xs text-[var(--text-secondary)]">
                   Diagrama de actividad con carriles (<span className="font-mono">|Rol|</span>) versión <span className="font-mono font-semibold">{currentVersionLabel}</span>.
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => handleCopy(handoff.plantuml, 'puml')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#18181B] text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] hover:border-[#FFC000] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs font-medium text-[var(--text-primary)] hover:border-[#FFC93C] cursor-pointer"
                   >
-                    {copiedKey === 'puml' ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                    {copiedKey === 'puml' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                     <span>{copiedKey === 'puml' ? 'Copiado' : 'Copiar .puml'}</span>
                   </button>
                   <button
                     type="button"
                     onClick={handleDownloadPuml}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFC000] text-[#09090B] text-xs font-semibold hover:bg-[#E5AC00] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] text-xs font-semibold hover:bg-[#FFD561] cursor-pointer"
                   >
                     <Download size={13} />
                     <span>Descargar .puml ({currentVersionLabel})</span>
                   </button>
                 </div>
               </div>
-              <pre className="p-4 rounded-[10px] bg-[#09090B] text-[#F4F4F5] border border-[#27272A] font-mono text-xs overflow-x-auto leading-relaxed">
+              <pre className="p-4 rounded-[10px] bg-[#232529] text-[#D9DADC] border border-[#D9DADC]/15 font-mono text-xs overflow-x-auto leading-relaxed">
                 {handoff.plantuml}
               </pre>
             </div>
@@ -244,11 +244,11 @@ export default function FormalIAEngineeringModal({
             <div className="space-y-6">
               {/* Timeline de Versiones del Proceso */}
               <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider font-mono text-[#52525B] dark:text-[#A1A1AA] mb-2.5">
+                <h4 className="text-xs font-semibold uppercase tracking-wider font-mono text-[var(--text-secondary)] mb-2.5">
                   Versiones del Proceso FORMALIA ({versions.length})
                 </h4>
                 {versions.length === 0 ? (
-                  <p className="text-xs text-[#71717A] p-4 rounded-[10px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#111113]">
+                  <p className="text-xs text-[var(--text-muted)] p-4 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
                     Envía al menos un mensaje en el chat de FORMALIA o carga el ejemplo para generar la versión <span className="font-mono">v1</span>.
                   </p>
                 ) : (
@@ -256,21 +256,21 @@ export default function FormalIAEngineeringModal({
                     {[...versions].reverse().map((v) => (
                       <div
                         key={v.version_label}
-                        className="p-3.5 rounded-[10px] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] flex flex-wrap items-center justify-between gap-3"
+                        className="p-3.5 rounded-[10px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-wrap items-center justify-between gap-3"
                       >
                         <div className="flex flex-col gap-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="px-2 py-0.5 rounded bg-[#FFC000] text-[#09090B] font-mono text-[11px] font-bold">
+                            <span className="px-2 py-0.5 rounded bg-[#FFC93C] text-[#2B2D31] font-mono text-[11px] font-bold">
                               {v.version_label}
                             </span>
-                            <span className="text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+                            <span className="text-xs font-semibold text-[var(--text-primary)]">
                               {v.actors_count} roles · {v.steps_count} pasos · {v.completeness_score}% completitud
                             </span>
-                            <span className="text-[11px] font-mono text-[#71717A]">
+                            <span className="text-[11px] font-mono text-[var(--text-muted)]">
                               {v.created_at ? new Date(v.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : ''}
                             </span>
                           </div>
-                          <p className="text-xs text-[#52525B] dark:text-[#A1A1AA] truncate">
+                          <p className="text-xs text-[var(--text-secondary)] truncate">
                             {v.change_summary}
                           </p>
                         </div>
@@ -282,7 +282,7 @@ export default function FormalIAEngineeringModal({
                               onRestoreVersion(v);
                               onClose();
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FAFAFA] dark:bg-[#18181B] hover:border-[#FFC000] text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] cursor-pointer shrink-0"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-page)] hover:border-[#FFC93C] text-xs font-medium text-[var(--text-primary)] cursor-pointer shrink-0"
                           >
                             <RotateCcw size={12} />
                             <span>Restaurar {v.version_label}</span>
@@ -296,11 +296,11 @@ export default function FormalIAEngineeringModal({
 
               {/* Archivos Generados y Exportados */}
               <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wider font-mono text-[#52525B] dark:text-[#A1A1AA] mb-2.5">
+                <h4 className="text-xs font-semibold uppercase tracking-wider font-mono text-[var(--text-secondary)] mb-2.5">
                   Archivos Generados con FORMALIA ({generatedFiles.length})
                 </h4>
                 {generatedFiles.length === 0 ? (
-                  <p className="text-xs text-[#71717A] p-4 rounded-[10px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#111113]">
+                  <p className="text-xs text-[var(--text-muted)] p-4 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
                     Los archivos <span className="font-mono">.puml</span>, <span className="font-mono">.png</span>, <span className="font-mono">.pdf</span>, <span className="font-mono">.json</span> y transcripciones de chat aparecerán aquí automáticamente.
                   </p>
                 ) : (
@@ -316,22 +316,22 @@ export default function FormalIAEngineeringModal({
                       return (
                         <div
                           key={file.id}
-                          className="p-3 rounded-[10px] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] flex items-center justify-between gap-3"
+                          className="p-3 rounded-[10px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex items-center justify-between gap-3"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-8 h-8 rounded-[6px] bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-[6px] bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)] flex items-center justify-center shrink-0">
                               <Icon size={15} />
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] truncate">
+                                <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
                                   {file.file_name}
                                 </span>
-                                <span className="px-1.5 py-0.5 rounded bg-[#F4F4F5] dark:bg-[#18181B] font-mono text-[9px] text-[#52525B] dark:text-[#A1A1AA] border border-[#E4E4E7] dark:border-[#27272A]">
+                                <span className="px-1.5 py-0.5 rounded bg-[var(--bg-page)] font-mono text-[9px] text-[var(--text-secondary)] border border-[var(--border-subtle)]">
                                   {file.version_label}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-[#71717A] truncate">
+                              <p className="text-[11px] text-[var(--text-muted)] truncate">
                                 {file.artifact_kind.toUpperCase()} · {formatBytes(file.size_bytes)}
                               </p>
                             </div>
@@ -341,7 +341,7 @@ export default function FormalIAEngineeringModal({
                             <button
                               type="button"
                               onClick={() => handleDownloadArchivedFile(file)}
-                              className="p-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#FFC000] text-[#09090B] dark:text-[#F4F4F5] cursor-pointer shrink-0"
+                              className="p-1.5 rounded-[6px] border border-[var(--border-strong)] hover:border-[#FFC93C] text-[var(--text-primary)] cursor-pointer shrink-0"
                               title="Descargar archivo"
                             >
                               <Download size={13} />
@@ -359,22 +359,22 @@ export default function FormalIAEngineeringModal({
           {activeTab === 'chat' && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <span className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+                <span className="text-xs text-[var(--text-secondary)]">
                   Chat completo recopilado en esta sesión de FORMALIA ({messages.length} mensajes).
                 </span>
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={() => handleCopy(buildChatMarkdown({ session_id: graph.session_id, process_graph: graph, messages, turns_count: messages.filter((m) => m.role === 'user').length }), 'chat_md')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#18181B] text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] hover:border-[#FFC000] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs font-medium text-[var(--text-primary)] hover:border-[#FFC93C] cursor-pointer"
                   >
-                    {copiedKey === 'chat_md' ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                    {copiedKey === 'chat_md' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                     <span>{copiedKey === 'chat_md' ? 'Copiado' : 'Copiar Chat'}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDownloadChat('md')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#18181B] text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] hover:border-[#FFC000] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs font-medium text-[var(--text-primary)] hover:border-[#FFC93C] cursor-pointer"
                   >
                     <Download size={13} />
                     <span>.md</span>
@@ -382,7 +382,7 @@ export default function FormalIAEngineeringModal({
                   <button
                     type="button"
                     onClick={() => handleDownloadChat('json')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFC000] text-[#09090B] text-xs font-semibold hover:bg-[#E5AC00] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] text-xs font-semibold hover:bg-[#FFD561] cursor-pointer"
                   >
                     <Download size={13} />
                     <span>Descargar Chat .json</span>
@@ -396,19 +396,19 @@ export default function FormalIAEngineeringModal({
                     key={m.id || idx}
                     className={`p-3 rounded-[10px] border text-xs ${
                       m.role === 'user'
-                        ? 'bg-[#FFFFFF] dark:bg-[#18181B] border-[#E4E4E7] dark:border-[#3F3F46]'
-                        : 'bg-[#FFFBEB]/50 dark:bg-amber-500/[0.06] border-amber-200 dark:border-amber-500/30'
+                        ? 'bg-[var(--bg-surface)] border-[var(--border-strong)]'
+                        : 'bg-[var(--accent-soft)] border-[var(--accent-border)]'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="font-mono text-[10px] font-bold uppercase text-[#9A6700] dark:text-[#FFC000]">
+                      <span className="font-mono text-[10px] font-bold uppercase text-[var(--accent-text)]">
                         {m.role === 'user' ? 'Usuario' : 'FORMALIA'}
                       </span>
-                      <span className="font-mono text-[10px] text-[#71717A]">
+                      <span className="font-mono text-[10px] text-[var(--text-muted)]">
                         {m.timestamp ? new Date(m.timestamp).toLocaleString('es-PE') : ''}
                       </span>
                     </div>
-                    <p className="text-[#09090B] dark:text-[#F4F4F5] leading-relaxed">{m.content}</p>
+                    <p className="text-[var(--text-primary)] leading-relaxed">{m.content}</p>
                   </div>
                 ))}
               </div>
@@ -418,37 +418,37 @@ export default function FormalIAEngineeringModal({
           {activeTab === 'stories' && (
             <div className="space-y-3">
               {handoff.user_stories.length === 0 ? (
-                <p className="text-xs text-[#52525B] dark:text-[#A1A1AA]">
+                <p className="text-xs text-[var(--text-secondary)]">
                   Aún no hay pasos suficientes en el diagrama para generar historias. Describe pasos en el chat primero.
                 </p>
               ) : (
                 handoff.user_stories.map((story) => (
                   <div
                     key={story.id}
-                    className="p-4 rounded-[10px] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col gap-2"
+                    className="p-4 rounded-[10px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-[#F4F4F5] dark:bg-[#18181B] text-[#09090B] dark:text-[#F4F4F5] border border-[#E4E4E7] dark:border-[#27272A]">
+                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-[var(--bg-page)] text-[var(--text-primary)] border border-[var(--border-subtle)]">
                           {story.id}
                         </span>
-                        <span className="text-xs font-semibold text-[#9A6700] dark:text-[#FFC000]">
+                        <span className="text-xs font-semibold text-[var(--accent-text)]">
                           {story.role}
                         </span>
                       </div>
                       {story.is_priority_automation && (
-                        <span className="px-2 py-0.5 rounded bg-[#FFC000]/20 border border-[#FFC000]/40 text-[#9A6700] dark:text-[#FFC000] text-[10px] font-mono font-semibold">
+                        <span className="px-2 py-0.5 rounded bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)] text-[10px] font-mono font-semibold">
                           Automatización Prioritaria
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-[#09090B] dark:text-[#F4F4F5] leading-relaxed">
+                    <p className="text-xs text-[var(--text-primary)] leading-relaxed">
                       <strong>Como</strong> {story.role}, <strong>quiero</strong> {story.action} <strong>para</strong> {story.benefit}.
                     </p>
-                    <div className="pt-2 border-t border-[#E4E4E7] dark:border-[#27272A] space-y-1">
+                    <div className="pt-2 border-t border-[var(--border-subtle)] space-y-1">
                       {story.acceptance_criteria.map((c, idx) => (
-                        <div key={idx} className="text-[11px] text-[#52525B] dark:text-[#A1A1AA] flex items-start gap-1.5">
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓</span>
+                        <div key={idx} className="text-[11px] text-[var(--text-secondary)] flex items-start gap-1.5">
+                          <span className="text-emerald-400 font-bold">✓</span>
                           <span>{c}</span>
                         </div>
                       ))}
@@ -461,15 +461,15 @@ export default function FormalIAEngineeringModal({
 
           {activeTab === 'rbac' && (
             <div className="space-y-4">
-              <div className="p-4 rounded-[10px] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A]">
-                <h4 className="text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5] mb-2">
+              <div className="p-4 rounded-[10px] bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
+                <h4 className="text-xs font-semibold text-[var(--text-primary)] mb-2">
                   Entidades de Base de Datos Detectadas ({handoff.entities.length})
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {handoff.entities.map((ent) => (
                     <span
                       key={ent}
-                      className="px-2.5 py-1 rounded-[6px] bg-[#F4F4F5] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] font-mono text-xs text-[#09090B] dark:text-[#F4F4F5]"
+                      className="px-2.5 py-1 rounded-[6px] bg-[var(--bg-page)] border border-[var(--border-subtle)] font-mono text-xs text-[var(--text-primary)]"
                     >
                       {ent}
                     </span>
@@ -481,21 +481,21 @@ export default function FormalIAEngineeringModal({
                 {handoff.rbac_rules.map((rule) => (
                   <div
                     key={rule.actor_id}
-                    className="p-4 rounded-[10px] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] flex flex-col gap-2"
+                    className="p-4 rounded-[10px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-2"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-[#09090B] dark:text-[#F4F4F5]">
+                      <span className="text-xs font-semibold text-[var(--text-primary)]">
                         {rule.role_name}
                       </span>
-                      <span className="px-2 py-0.5 rounded bg-[#FFFBEB] dark:bg-amber-500/10 text-[#9A6700] dark:text-[#FFC000] font-mono text-[10px] border border-amber-200 dark:border-amber-500/30">
+                      <span className="px-2 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent-text)] font-mono text-[10px] border border-[var(--accent-border)]">
                         {rule.actor_type === 'EXTERNAL_CUSTOMER' ? 'Externo' : 'Socio $1/día'}
                       </span>
                     </div>
-                    <span className="text-[11px] text-[#52525B] dark:text-[#A1A1AA]">
+                    <span className="text-[11px] text-[var(--text-secondary)]">
                       {rule.access_scope}
                     </span>
                     {rule.permitted_actions.length > 0 && (
-                      <ul className="text-[11px] text-[#09090B] dark:text-[#E4E4E7] list-disc list-inside space-y-0.5">
+                      <ul className="text-[11px] text-[var(--text-primary)] list-disc list-inside space-y-0.5">
                         {rule.permitted_actions.map((act, i) => (
                           <li key={i}>{act}</li>
                         ))}
@@ -517,22 +517,22 @@ export default function FormalIAEngineeringModal({
                   <button
                     type="button"
                     onClick={() => handleCopy(JSON.stringify(graph, null, 2), 'json')}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[#E4E4E7] dark:border-[#27272A] bg-[#FFFFFF] dark:bg-[#18181B] text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] hover:border-[#FFC000] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-page)] text-xs font-medium text-[var(--text-primary)] hover:border-[#FFC93C] cursor-pointer"
                   >
-                    {copiedKey === 'json' ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                    {copiedKey === 'json' ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                     <span>{copiedKey === 'json' ? 'Copiado' : 'Copiar JSON'}</span>
                   </button>
                   <button
                     type="button"
                     onClick={handleDownloadJson}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFC000] text-[#09090B] text-xs font-semibold hover:bg-[#E5AC00] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] text-xs font-semibold hover:bg-[#FFD561] cursor-pointer"
                   >
                     <Download size={13} />
                     <span>Descargar .json ({currentVersionLabel})</span>
                   </button>
                 </div>
               </div>
-              <pre className="p-4 rounded-[10px] bg-[#09090B] text-[#F4F4F5] border border-[#27272A] font-mono text-xs overflow-x-auto leading-relaxed">
+              <pre className="p-4 rounded-[10px] bg-[#232529] text-[#D9DADC] border border-[#D9DADC]/15 font-mono text-xs overflow-x-auto leading-relaxed">
                 {JSON.stringify(graph, null, 2)}
               </pre>
             </div>

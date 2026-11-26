@@ -29,7 +29,7 @@ export default function Navbar({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#FFFFFF]/90 dark:bg-[#09090B]/90 backdrop-blur-md border-b border-[#E4E4E7] dark:border-[#27272A] transition-colors">
+    <header className="sticky top-0 z-50 w-full bg-[var(--bg-page)]/95 backdrop-blur-md border-b border-[var(--border-subtle)] transition-colors">
       <div className="max-w-6xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
         <a
@@ -40,15 +40,15 @@ export default function Navbar({
               onNavigate('/');
             }
           }}
-          className="flex items-center gap-2.5 text-[#09090B] dark:text-[#F4F4F5] font-semibold tracking-tight text-lg group"
+          className="flex items-center gap-2.5 text-[var(--text-primary)] font-semibold tracking-tight text-lg group"
         >
           <img
             src="/assets/images/icono_202609011609.jpg"
             alt="Pathrimonio"
-            className="w-8 h-8 rounded-[6px] object-cover shrink-0 transition-transform group-hover:scale-105 shadow-xs"
+            className="w-8 h-8 rounded-[6px] object-cover shrink-0 transition-transform group-hover:scale-105 shadow-xs border border-[var(--border-subtle)]"
           />
           <span className="font-semibold text-[17px] tracking-tight">Pathrimonio</span>
-          <span className="hidden sm:inline-block text-[11px] font-mono font-medium text-[#9A6700] dark:text-[#FFC000] bg-[#FFFBEB] dark:bg-amber-500/10 px-2 py-0.5 rounded-[4px] border border-amber-200/80 dark:border-amber-500/30">
+          <span className="hidden sm:inline-block text-[11px] font-mono font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] px-2 py-0.5 rounded-[4px] border border-[var(--border-strong)]">
             Company
           </span>
         </a>
@@ -60,7 +60,7 @@ export default function Navbar({
               key={link.name}
               href={link.href}
               onClick={handleNavClick(link.href)}
-              className="text-sm font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors"
+              className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               {link.name}
             </a>
@@ -69,16 +69,16 @@ export default function Navbar({
 
         {/* Desktop Actions */}
         <div className="hidden sm:flex items-center gap-3">
-          {/* Theme Toggle Button */}
+          {/* Theme Toggle Button (Gray #2B2D31 <-> Silver #D9DADC) */}
           <button
             type="button"
             onClick={onToggleTheme}
-            aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-            title={theme === 'dark' ? 'Activar modo claro' : 'Activar modo oscuro'}
-            className="p-2 text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#D4D4D8] dark:hover:border-[#3F3F46] hover:bg-[#F4F4F5] dark:hover:bg-[#18181B] rounded-[6px] transition-all cursor-pointer"
+            aria-label={theme === 'dark' ? 'Cambiar a contraste Silver' : 'Cambiar a primario Gray'}
+            title={theme === 'dark' ? 'Alternar contraste Silver' : 'Activar base Gray #2B2D31'}
+            className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] rounded-[6px] transition-all cursor-pointer"
           >
             {theme === 'dark' ? (
-              <Sun size={15} strokeWidth={1.75} className="text-[#FFC000]" />
+              <Sun size={15} strokeWidth={1.75} className="text-[#FFC93C]" />
             ) : (
               <Moon size={15} strokeWidth={1.75} />
             )}
@@ -86,17 +86,17 @@ export default function Navbar({
 
           <button
             onClick={onOpenPortal}
-            className="px-3.5 py-1.5 text-xs font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] bg-[#FFFFFF] dark:bg-[#111113] border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#D4D4D8] dark:hover:border-[#3F3F46] hover:bg-[#F4F4F5] dark:hover:bg-[#18181B] rounded-[6px] transition-all cursor-pointer"
+            className="px-3.5 py-1.5 text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] rounded-[6px] transition-all cursor-pointer"
           >
             Portal Operativo
           </button>
           <a
             href={isSubpage ? '/#cotizador' : '#cotizador'}
             onClick={handleNavClick(isSubpage ? '/#cotizador' : '#cotizador')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#09090B] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] rounded-[6px] transition-colors shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#2B2D31] bg-[#FFC93C] hover:bg-[#FFD561] active:scale-[0.98] rounded-[6px] transition-all shadow-sm cursor-pointer"
           >
             <span>Cotizar ($1/día)</span>
-            <ArrowRight size={13} strokeWidth={1.5} />
+            <ArrowRight size={13} strokeWidth={1.75} />
           </a>
         </div>
 
@@ -105,18 +105,18 @@ export default function Navbar({
           <button
             type="button"
             onClick={onToggleTheme}
-            aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-            className="p-2 rounded-[6px] text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] hover:bg-[#F4F4F5] dark:hover:bg-[#18181B] transition-colors cursor-pointer"
+            aria-label={theme === 'dark' ? 'Cambiar a contraste Silver' : 'Cambiar a primario Gray'}
+            className="p-2 rounded-[6px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors cursor-pointer"
           >
             {theme === 'dark' ? (
-              <Sun size={18} strokeWidth={1.75} className="text-[#FFC000]" />
+              <Sun size={18} strokeWidth={1.75} className="text-[#FFC93C]" />
             ) : (
               <Moon size={18} strokeWidth={1.75} />
             )}
           </button>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-[6px] text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] hover:bg-[#F4F4F5] dark:hover:bg-[#18181B] transition-colors cursor-pointer"
+            className="p-2 rounded-[6px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors cursor-pointer"
             aria-label="Abrir menú"
           >
             {mobileMenuOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
@@ -126,54 +126,54 @@ export default function Navbar({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="sm:hidden bg-[#FFFFFF] dark:bg-[#09090B] border-b border-[#E4E4E7] dark:border-[#27272A] px-6 py-4 flex flex-col gap-3">
+        <div className="sm:hidden bg-[var(--bg-page)] border-b border-[var(--border-subtle)] px-6 py-4 flex flex-col gap-3">
           {navLinks.map((link) => (
             <a
               key={link.name}
               href={link.href}
               onClick={handleNavClick(link.href)}
-              className="text-sm font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] py-1.5 transition-colors"
+              className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] py-1.5 transition-colors"
             >
               {link.name}
             </a>
           ))}
-          <div className="pt-3 border-t border-[#E4E4E7] dark:border-[#27272A] flex flex-col gap-2">
+          <div className="pt-3 border-t border-[var(--border-subtle)] flex flex-col gap-2">
             <div className="flex items-center justify-between py-1.5 px-1">
-              <span className="text-xs font-medium text-[#52525B] dark:text-[#A1A1AA]">Tema</span>
+              <span className="text-xs font-medium text-[var(--text-secondary)]">Contraste</span>
               <button
                 type="button"
                 onClick={onToggleTheme}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#09090B] dark:text-[#F4F4F5] bg-[#F4F4F5] dark:bg-[#18181B] border border-[#E4E4E7] dark:border-[#27272A] rounded-[6px]"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[6px]"
               >
                 {theme === 'dark' ? (
                   <>
-                    <Sun size={13} className="text-[#FFC000]" />
-                    <span>Modo Claro</span>
+                    <Sun size={13} className="text-[#FFC93C]" />
+                    <span>Silver</span>
                   </>
                 ) : (
                   <>
                     <Moon size={13} />
-                    <span>Modo Oscuro</span>
+                    <span>Gray Base</span>
                   </>
                 )}
               </button>
             </div>
             <button
               onClick={() => { setMobileMenuOpen(false); onOpenPortal(); }}
-              className="w-full text-center py-2 text-xs font-medium text-[#52525B] dark:text-[#A1A1AA] bg-[#F4F4F5] dark:bg-[#18181B] rounded-[6px]"
+              className="w-full text-center py-2 text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[6px]"
             >
               Portal Operativo (Ingreso)
             </button>
             <button
               onClick={() => { setMobileMenuOpen(false); onOpenRegister(); }}
-              className="w-full text-center py-2 text-xs font-medium text-[#9A6700] dark:text-[#FFC000] bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/30 rounded-[6px]"
+              className="w-full text-center py-2 text-xs font-medium text-[var(--text-on-silver)] bg-[var(--bg-silver)] hover:bg-[var(--bg-silver-hover)] rounded-[6px]"
             >
               Crear Cuenta Colaborador
             </button>
             <a
               href={isSubpage ? '/#cotizador' : '#cotizador'}
               onClick={handleNavClick(isSubpage ? '/#cotizador' : '#cotizador')}
-              className="w-full text-center py-2 text-xs font-semibold text-[#09090B] bg-[#FFC000] hover:bg-[#E5AC00] dark:hover:bg-[#FFD133] rounded-[6px]"
+              className="w-full text-center py-2 text-xs font-semibold text-[#2B2D31] bg-[#FFC93C] hover:bg-[#FFD561] rounded-[6px]"
             >
               Cotizar Sistema a Medida
             </a>
