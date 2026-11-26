@@ -193,7 +193,7 @@ export default function StoryFeed({
         </div>
       ) : (
         /* Full Cards View */
-        <div className="flex flex-row gap-x-3.5 overflow-x-auto pb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {sortedStories.map((story) => {
             const isBlocker = story.priority === 'Bloqueante';
             const isHigh = story.priority === 'Alta';
@@ -202,7 +202,7 @@ export default function StoryFeed({
             return (
               <article 
                 key={story.id}
-                className={`w-1/2 shrink-0 bg-surface-container-low rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex flex-col gap-y-3 group ${
+                className={`bg-surface-container-low rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex flex-col gap-y-3 group ${
                   isBlocker ? 'border border-outline-variant hover:border-error/40' :
                   isHigh ? 'border-l-2 border-l-primary border-y border-r border-outline-variant' :
                   'border border-outline-variant'
