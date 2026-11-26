@@ -170,7 +170,7 @@ export default function ArchitectureSection() {
         <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[10px] p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
 
           {/* Lado Izquierdo: Descripción y Especificaciones (5/12 cols) */}
-          <div className="lg:col-span-5 flex flex-col justify-between h-full gap-6">
+          <div className="lg:col-span-5 min-w-0 flex flex-col justify-between h-full gap-6">
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-mono font-semibold text-[var(--accent-text)] mb-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FFC93C]"></span>
@@ -201,24 +201,24 @@ export default function ArchitectureSection() {
           </div>
 
           {/* Lado Derecho: Bloque de Código de Inspección (7/12 cols - Deep Gray #232529) */}
-          <div className="lg:col-span-7 rounded-[8px] bg-[#232529] border border-[#D9DADC]/15 overflow-hidden flex flex-col shadow-inner">
-            <div className="px-4 py-2.5 bg-[#1E2024] border-b border-[#D9DADC]/12 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1.5">
+          <div className="lg:col-span-7 min-w-0 w-full rounded-[8px] bg-[#232529] border border-[#D9DADC]/15 overflow-hidden flex flex-col shadow-inner">
+            <div className="px-4 py-2.5 bg-[#1E2024] border-b border-[#D9DADC]/12 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="flex gap-1.5 shrink-0">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#3A3D45]"></span>
                   <span className="w-2.5 h-2.5 rounded-full bg-[#3A3D45]"></span>
                   <span className="w-2.5 h-2.5 rounded-full bg-[#3A3D45]"></span>
                 </div>
-                <span className="text-[11px] font-mono text-[#B8BAC0] pl-2">
+                <span className="text-[11px] font-mono text-[#B8BAC0] pl-2 truncate">
                   {activeTab === 'abstract_manifest' ? 'methods.manifest.json' : 'pathrimonio.architecture.ts'}
                 </span>
               </div>
-              <span className="text-[10px] font-mono font-semibold text-[#FFC93C] bg-[#FFC93C]/10 px-2 py-0.5 rounded border border-[#FFC93C]/35">
+              <span className="text-[10px] font-mono font-semibold text-[#FFC93C] bg-[#FFC93C]/10 px-2 py-0.5 rounded border border-[#FFC93C]/35 shrink-0">
                 AUDITADO
               </span>
             </div>
 
-            <div className="p-4 sm:p-5 overflow-x-auto text-[12px] font-mono text-[#D9DADC] leading-relaxed">
+            <div className="p-4 sm:p-5 overflow-x-auto max-w-full text-[12px] font-mono text-[#D9DADC] leading-relaxed">
               <pre className="selection:bg-[#FFC93C]/30 selection:text-[#D9DADC]">
                 <code>{activePillar.codeSnippet}</code>
               </pre>
