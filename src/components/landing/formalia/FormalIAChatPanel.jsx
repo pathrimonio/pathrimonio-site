@@ -7,7 +7,8 @@ import {
   AlertTriangle,
   Bot,
   User,
-  Wand2
+  Wand2,
+  Save
 } from 'lucide-react';
 
 const PHASE_LABELS = [
@@ -50,9 +51,11 @@ export default function FormalIAChatPanel({
   maxTurns = 15,
   isExtracting = false,
   errorMessage = '',
+  hasUnsavedContent = false,
   onSendMessage,
   onResetSession,
-  onLoadExample
+  onLoadExample,
+  onSaveSession
 }) {
   const [inputText, setInputText] = useState('');
   const scrollContainerRef = useRef(null);
@@ -116,6 +119,24 @@ export default function FormalIAChatPanel({
               <Wand2 size={12} className="text-[var(--accent-text)]" />
               <span className="hidden sm:inline">Ejemplo SDD</span>
             </button>
+
+            {/* Guardar conversación */}
+            {onSaveSession && (
+              <button
+                type="button"
+                onClick={onSaveSession}
+                disabled={isExtracting || !hasUnsavedContent}
+                title={hasUnsavedContent ? 'Guardar conversación en tu cuenta' : 'Escribe algo primero para poder guardar'}
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] border text-[11px] font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${
+                  hasUnsavedContent
+                    ? 'border-[#FFC93C] bg-[#FFC93C] text-[#2B2D31] hover:bg-[#FFD561]'
+                    : 'border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'
+                }`}
+              >
+                <Save size={12} />
+                <span className="hidden sm:inline">Guardar</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -270,6 +291,24 @@ export default function FormalIAChatPanel({
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Banner Guardar — aparece cuando hay turnos y el usuario no ha guardado */}
+        {hasUnsavedContent && onSaveSession && !isLimitReached && (
+          <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-[8px] bg-[#FFC93C]/10 border border-[#FFC93C]/30">
+            <span className="text-[11px] text-[var(--text-secondary)] leading-tight">
+              💾 <strong className="text-[var(--text-primary)]">¿Quieres guardar esta conversación?</strong>{' '}
+              Crea una cuenta gratis y accede al portal más tarde.
+            </span>
+            <button
+              type="button"
+              onClick={onSaveSession}
+              className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] text-[11px] font-semibold hover:bg-[#FFD561] transition-colors cursor-pointer"
+            >
+              <Save size={11} />
+              Guardar
+            </button>
           </div>
         )}
 

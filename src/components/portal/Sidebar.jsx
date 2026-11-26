@@ -18,10 +18,10 @@ export default function Sidebar({
     { id: 'actors', label: 'Actores & Roles', icon: 'badge', badge: 'ROL' },
     { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US' },
     { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX' },
+    { id: 'formalia', label: 'FORMALIA (Flujos → HUs)', icon: 'auto_awesome', badge: 'IA' },
     { id: 'architecture', label: 'Arquitectura de Software', icon: 'account_tree', badge: 'ARCH' },
     { id: 'dataModel', label: 'Arquitectura de Datos', icon: 'database', badge: 'DB' },
     { id: 'files', label: 'Archivos & Manifiestos', icon: 'folder_open', badge: 'FILES' },
-    { id: 'formalia', label: 'FORMALIA (Chats & Archivos)', icon: 'auto_awesome', badge: 'IA' },
     { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted' },
     { id: 'sprints', label: 'Sprints & Ciclos', icon: 'timelapse' },
     { id: 'docs', label: 'Docs de Arquitectura', icon: 'article', badge: 'DOCS' },
@@ -92,7 +92,7 @@ export default function Sidebar({
           {userRole === 'Colaborador' && (
             <div className="mx-1 my-1 p-2 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-amber-300 font-space text-[10px]">
               <span className="material-symbols-outlined text-[15px] shrink-0">shield_person</span>
-              <span className="font-semibold leading-tight">Acceso Acotado: Roles, Historias & UI</span>
+              <span className="font-semibold leading-tight">Comunidad SDD: Roles, HUs, UI &amp; FORMALIA</span>
             </div>
           )}
           <nav className="flex flex-col gap-y-1 pt-1">

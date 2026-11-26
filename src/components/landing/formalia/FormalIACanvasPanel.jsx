@@ -12,6 +12,7 @@ import {
   Layers,
   GitBranch,
   AlertTriangle,
+  ListChecks,
   Download,
   FileText,
   ArrowRight,
@@ -26,8 +27,16 @@ import {
   CheckCircle2,
   Loader2,
   Sparkles,
-  History
+  History,
+  Copy,
+  Check,
+  Rocket,
+  ExternalLink
 } from 'lucide-react';
+import {
+  generateEngineeringHandoff,
+  handoffStoriesToMarkdown
+} from '../../../lib/formalia/compilers';
 import { exportDiagramAsPNG, exportDiagramAsPDF } from '../../../lib/formalia/diagramExport';
 import FormalIAEngineeringModal from './FormalIAEngineeringModal';
 
@@ -166,16 +175,23 @@ export default function FormalIACanvasPanel({
   versions = [],
   generatedFiles = [],
   isExtracting = false,
+  isPortalEmbedded = false,
+  targetProjectName = '',
+  onPromoteToProject,
+  onOpenInPortal,
   onApplyToQuote,
   onRecordArtifact,
   onRestoreVersion
 }) {
-  const [activeView, setActiveView] = useState('swimlanes'); // 'swimlanes' | 'macro' | 'bottlenecks'
+  const [activeView, setActiveView] = useState('swimlanes'); // 'swimlanes' | 'macro' | 'bottlenecks' | 'stories'
   const [isExporting, setIsExporting] = useState(false);
   const [isEngineeringOpen, setIsEngineeringOpen] = useState(false);
   const [modalInitialTab, setModalInitialTab] = useState('plantuml');
   const [isClientMounted, setIsClientMounted] = useState(false);
+  const [copiedBacklog, setCopiedBacklog] = useState(false);
   const canvasCaptureRef = useRef(null);
+
+  const handoff = useMemo(() => generateEngineeringHandoff(graph), [graph]);
 
   useEffect(() => {
     setIsClientMounted(true);
@@ -315,13 +331,14 @@ export default function FormalIACanvasPanel({
   return (
     <div className="flex flex-col h-full bg-[var(--bg-page)]">
 
-      {/* ── Selector Superior de 3 Vistas Sincronizadas ── */}
+      {/* ── Selector Superior de 4 Vistas Sincronizadas ── */}
       <div className="px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex items-center gap-1 p-1 rounded-[8px] bg-[var(--bg-page)] border border-[var(--border-subtle)] overflow-x-auto no-scrollbar max-w-full">
           {[
             { id: 'swimlanes', label: 'Carriles por Rol', icon: Layers },
             { id: 'macro', label: 'Macroprocesos', icon: GitBranch },
-            { id: 'bottlenecks', label: `Datos y Cuellos (${bottlenecks.length})`, icon: AlertTriangle }
+            { id: 'bottlenecks', label: `Datos y Cuellos (${bottlenecks.length})`, icon: AlertTriangle },
+            { id: 'stories', label: `Historias de Usuario (${handoff.user_stories.length})`, icon: ListChecks }
           ].map((tab) => {
             const Icon = tab.icon;
             const active = activeView === tab.id;
@@ -625,6 +642,160 @@ export default function FormalIACanvasPanel({
             </div>
           </div>
         )}
+
+        {/* VISTA 4: HISTORIAS DE USUARIO Y SÍNTESIS PARA DESARROLLO */}
+        {activeView === 'stories' && (
+          <div className="h-full overflow-y-auto p-5 space-y-4">
+            <div className="p-4 rounded-[10px] border border-[var(--border-strong)] bg-[var(--bg-surface)] flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h4 className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
+                  <ListChecks size={15} className="text-[var(--accent-text)]" />
+                  <span>Backlog de Software Derivado — {ctx.process_name || 'Operación'}</span>
+                </h4>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  {handoff.user_stories.length} historias de usuario · {handoff.suggested_interfaces.length} interfaces · {handoff.suggested_data_models.length} tablas relacionales listas para desarrollo.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={handoff.user_stories.length === 0}
+                  onClick={() => {
+                    navigator.clipboard?.writeText(handoffStoriesToMarkdown(handoff));
+                    setCopiedBacklog(true);
+                    setTimeout(() => setCopiedBacklog(false), 2000);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-page)] hover:border-[#FFC93C] text-[11px] font-medium text-[var(--text-primary)] cursor-pointer disabled:opacity-40"
+                >
+                  {copiedBacklog ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                  <span>{copiedBacklog ? 'Backlog copiado' : 'Copiar .md'}</span>
+                </button>
+
+                {onPromoteToProject && (
+                  <button
+                    type="button"
+                    disabled={handoff.user_stories.length === 0 && actors.length === 0}
+                    onClick={() => onPromoteToProject(graph)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-[11px] font-semibold cursor-pointer disabled:opacity-40"
+                  >
+                    <Rocket size={12} />
+                    <span>Materializar en {targetProjectName || 'Proyecto SDD'}</span>
+                  </button>
+                )}
+
+                {!onPromoteToProject && onOpenInPortal && (
+                  <button
+                    type="button"
+                    disabled={handoff.user_stories.length === 0 && actors.length === 0}
+                    onClick={() => onOpenInPortal(graph)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-[11px] font-semibold cursor-pointer disabled:opacity-40"
+                  >
+                    <ExternalLink size={12} />
+                    <span>Desarrollar en Portal de Colaboradores</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {handoff.user_stories.length === 0 ? (
+              <div className="p-8 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-center">
+                <p className="text-xs text-[var(--text-secondary)]">
+                  Detalla el flujo en el chat izquierdo para generar automáticamente las Historias de Usuario, Interfaces y Entidades de Software.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2.5">
+                  {handoff.user_stories.map((st) => (
+                    <div
+                      key={st.id}
+                      className={`p-3.5 rounded-[10px] border bg-[var(--bg-surface)] ${
+                        st.is_priority_automation
+                          ? 'border-[#FFC93C]/70'
+                          : 'border-[var(--border-subtle)]'
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2 py-0.5 rounded bg-[#FFC93C] text-[#2B2D31] font-mono text-[10px] font-bold">
+                            {st.id}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-[var(--bg-page)] border border-[var(--border-subtle)] font-mono text-[10px] text-[var(--text-primary)]">
+                            {st.role}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-[var(--bg-page)] border border-[var(--border-subtle)] text-[10px] text-[var(--text-secondary)]">
+                            {st.target_interface}
+                          </span>
+                        </div>
+                        <span
+                          className={`px-2 py-0.5 rounded font-mono text-[10px] font-semibold ${
+                            st.priority === 'Alta'
+                              ? 'bg-[#FFC93C]/20 text-[var(--accent-text)] border border-[#FFC93C]/40'
+                              : 'bg-[var(--bg-page)] text-[var(--text-muted)] border border-[var(--border-subtle)]'
+                          }`}
+                        >
+                          Prioridad {st.priority}{st.is_priority_automation ? ' · Automatizar' : ''}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-[var(--text-primary)] leading-relaxed mb-2">
+                        <strong>Como</strong> {st.role}, <strong>quiero</strong> {st.action} <strong>para</strong> {st.benefit}.
+                      </p>
+
+                      <ul className="space-y-1 pl-3 border-l-2 border-[#FFC93C]/40">
+                        {(st.acceptance_criteria || []).map((c, idx) => (
+                          <li key={idx} className="text-[11px] text-[var(--text-secondary)]">
+                            {c}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Interfaces y Tablas Derivadas */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div className="p-3.5 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+                    <h5 className="text-xs font-semibold text-[var(--text-primary)] mb-2">
+                      Interfaces de Software Sugeridas ({handoff.suggested_interfaces.length})
+                    </h5>
+                    <div className="space-y-1.5">
+                      {handoff.suggested_interfaces.map((iface) => (
+                        <div key={iface.number} className="p-2 rounded-[6px] bg-[var(--bg-page)] border border-[var(--border-subtle)] text-[11px]">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-[var(--text-primary)]">{iface.title}</span>
+                            <span className="font-mono text-[10px] text-[var(--accent-text)]">{iface.platform}</span>
+                          </div>
+                          <p className="text-[10px] text-[var(--text-secondary)] mt-0.5 line-clamp-2">{iface.objective}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+                    <h5 className="text-xs font-semibold text-[var(--text-primary)] mb-2">
+                      Entidades / Tablas Derivadas ({handoff.suggested_data_models.length})
+                    </h5>
+                    <div className="space-y-1.5">
+                      {handoff.suggested_data_models.map((dm) => (
+                        <div key={dm.tableName} className="p-2 rounded-[6px] bg-[var(--bg-page)] border border-[var(--border-subtle)] text-[11px] flex items-center justify-between gap-2">
+                          <div>
+                            <span className="font-mono font-semibold text-[var(--text-primary)]">{dm.tableName}</span>
+                            <p className="text-[10px] text-[var(--text-secondary)]">{dm.attributes.length} columnas · vinculada a {dm.linkedStory || 'flujo'}</p>
+                          </div>
+                          <span className="px-1.5 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent-text)] font-mono text-[9px]">
+                            PostgreSQL
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Barra de Acciones Inferior (SDD Sección 2.2) ── */}
@@ -678,20 +849,47 @@ export default function FormalIACanvasPanel({
             <History size={13} className="text-[var(--accent-text)]" />
             <span>Chat &amp; Versiones ({versions.length} · {generatedFiles.length})</span>
           </button>
+
+          {!isPortalEmbedded && onOpenInPortal && (
+            <button
+              type="button"
+              disabled={steps.length === 0}
+              onClick={() => onOpenInPortal(graph)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] border border-[#FFC93C]/50 bg-[var(--accent-soft)] hover:border-[#FFC93C] text-[11px] font-semibold text-[var(--accent-text)] transition-colors cursor-pointer disabled:opacity-40"
+              title="Llevar este diagrama al Portal de Colaboradores para generar Roles, HUs e Interfaces"
+            >
+              <ExternalLink size={12} />
+              <span>Abrir en Portal SDD</span>
+            </button>
+          )}
         </div>
 
         {/* CTA Principal en Yellow #FFC93C */}
-        <button
-          type="button"
-          onClick={() => onApplyToQuote?.(graph)}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
-        >
-          <span>
-            Cotizar este sistema en Pathrimonio
-            {internalRolesCount > 0 ? ` (${internalRolesCount} ${internalRolesCount === 1 ? 'rol' : 'roles'} · $${internalRolesCount}/día)` : ''}
-          </span>
-          <ArrowRight size={14} strokeWidth={2} />
-        </button>
+        {isPortalEmbedded && onPromoteToProject ? (
+          <button
+            type="button"
+            disabled={steps.length === 0 && actors.length === 0}
+            onClick={() => onPromoteToProject(graph)}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99] disabled:opacity-40"
+          >
+            <Rocket size={14} strokeWidth={2} />
+            <span>
+              Materializar en {targetProjectName || 'Proyecto'} ({actors.length} roles · {handoff.user_stories.length} HUs)
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => onApplyToQuote?.(graph)}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+          >
+            <span>
+              Cotizar este sistema en Pathrimonio
+              {internalRolesCount > 0 ? ` (${internalRolesCount} ${internalRolesCount === 1 ? 'rol' : 'roles'} · $${internalRolesCount}/día)` : ''}
+            </span>
+            <ArrowRight size={14} strokeWidth={2} />
+          </button>
+        )}
       </div>
 
       {/* Modal de Handoff Ingeniería, Chat y Versiones FORMALIA */}

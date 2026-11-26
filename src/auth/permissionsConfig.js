@@ -130,7 +130,11 @@ export function loadRoleDefinitions() {
         const defaultRole = DEFAULT_ROLE_DEFINITIONS[roleKey] || {};
         const parsedRole = parsed[roleKey] || {};
         const allowedTabs = Array.isArray(parsedRole.allowedTabs) ? [...parsedRole.allowedTabs] : (defaultRole.allowedTabs || []);
-        // Guarantee 'architecture' and 'files' are available for all roles
+        // Guarantee 'formalia', 'architecture' and 'files' are available next to core SDD tabs
+        if (!allowedTabs.includes('formalia') && allowedTabs.includes('interfaces')) {
+          const ifaceIdx = allowedTabs.indexOf('interfaces');
+          allowedTabs.splice(ifaceIdx + 1, 0, 'formalia');
+        }
         if (!allowedTabs.includes('architecture')) {
           const insertIdx = allowedTabs.indexOf('interfaces');
           if (insertIdx !== -1) {

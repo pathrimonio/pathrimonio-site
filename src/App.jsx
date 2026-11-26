@@ -91,6 +91,7 @@ import InviteProjectMemberModal from './components/portal/InviteProjectMemberMod
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 import FormalIAPortalView from './components/portal/FormalIAPortalView';
 import AdminUsersView from './components/portal/AdminUsersView';
+import { compileProcessToPortalBundle } from './lib/formalia/compilers';
 import { 
   loadRoleDefinitions, 
   saveRoleDefinitions, 
@@ -870,19 +871,20 @@ function AppContent({ initialPath = '/' }) {
     if (canonicalTag) canonicalTag.setAttribute('href', seo.canonical);
   };
 
-  const navigateToPortal = (initialAction = 'login') => {
+  const navigateToPortal = (initialAction = 'login', initialTab = 'actors') => {
     if (window.location.pathname !== '/') {
       window.history.replaceState({}, '', '/');
       setCurrentPath('/');
     }
+    const targetTab = initialTab || 'actors';
     if (initialAction === 'register') {
-      window.location.hash = '#portal?mode=register';
+      window.location.hash = `#portal?mode=register${targetTab !== 'actors' ? `&tab=${targetTab}` : ''}`;
       setLoginMode('register');
     } else {
-      window.location.hash = '#portal';
+      window.location.hash = targetTab !== 'actors' ? `#portal?tab=${targetTab}` : '#portal';
       setLoginMode('login');
     }
-    setActivePortalTab('actors');
+    setActivePortalTab(targetTab);
     setCurrentView('portal');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -900,7 +902,9 @@ function AppContent({ initialPath = '/' }) {
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
     setShowLogin(false);
-    setActivePortalTab('actors');
+    const hashQuery = window.location.hash.split('?')[1] || '';
+    const requestedTab = new URLSearchParams(hashQuery).get('tab');
+    setActivePortalTab(requestedTab || 'actors');
 
     if (user.initialProjectName && (!user.initialProject || !projects.some(p => p.id === user.initialProject))) {
       const slug = (user.initialProject || user.initialProjectName)
@@ -1484,6 +1488,88 @@ function AppContent({ initialPath = '/' }) {
     });
   };
 
+  // ── Promoción de Flujo FORMALIA a Artefactos SDD Reales del Proyecto
+  const handlePromoteFormaliaToProject = (graph) => {
+    const targetProjectId =
+      activeProjectId && activeProjectId !== 'all'
+        ? activeProjectId
+        : (projects[0]?.id || 'pathway');
+    const targetProj = projects.find((p) => p.id === targetProjectId);
+    const bundle = compileProcessToPortalBundle(graph, targetProjectId);
+
+    const upsertById = (existingList, incomingList) => {
+      const incomingIds = new Set(incomingList.map((item) => item.id));
+      const kept = existingList.filter((item) => !incomingIds.has(item.id));
+      return [...incomingList, ...kept];
+    };
+
+    const nextActors = upsertById(actors, bundle.actors);
+    const nextStories = upsertById(stories, bundle.stories);
+    const nextModels = upsertById(dataModels, bundle.dataModels);
+    const nextInterfaces = upsertById(interfaces, bundle.interfaces);
+
+    setActors(nextActors);
+    setStories(nextStories);
+    setDataModels(nextModels);
+    setInterfaces(nextInterfaces);
+    setFiles((prev) => upsertById(prev, [bundle.file]));
+
+    if (bundle.handoff?.process_name && !interfaceModules.includes(bundle.handoff.process_name)) {
+      handleAddInterfaceModule(bundle.handoff.process_name);
+    }
+
+    setSearchQuery('');
+    setActorSearchQuery('');
+    setInterfaceSearchQuery('');
+    setDataModelSearchQuery('');
+
+    // Persistencia encadenada respetando llaves foráneas en Supabase
+    const actorIdLookup = (roleName, projId) => {
+      const found = nextActors.find(
+        (a) => a.name === roleName && (!a.projectId || a.projectId === (projId || targetProjectId))
+      );
+      return found?.id || null;
+    };
+    const nextValidStoryIds = new Set(nextStories.map((s) => s.id));
+    const nextValidModelIds = new Set(nextModels.map((m) => m.id));
+    const nextValidInterfaceIds = new Set(nextInterfaces.map((i) => i.id));
+
+    (async () => {
+      try {
+        for (const a of bundle.actors) {
+          await saveActor(a);
+        }
+        for (const s of bundle.stories) {
+          await saveStory(s);
+        }
+        for (const dm of bundle.dataModels) {
+          await saveDataModel(dm, nextValidStoryIds, nextValidInterfaceIds);
+        }
+        for (const iface of bundle.interfaces) {
+          await saveInterface(iface, actorIdLookup, nextValidModelIds, nextValidStoryIds);
+        }
+        await saveFile(bundle.file);
+      } catch (err) {
+        if (supabase) console.warn('[FORMALIA -> Portal] Persistencia parcial:', err?.message || err);
+      }
+    })();
+
+    const projectName = targetProj?.shortName || targetProj?.name || targetProjectId;
+    notify(
+      `¡Flujo materializado en ${projectName}! ${bundle.actors.length} roles, ${bundle.stories.length} HUs, ${bundle.interfaces.length} interfaces y ${bundle.dataModels.length} tablas.`
+    );
+
+    return {
+      projectId: targetProjectId,
+      projectName,
+      processName: bundle.handoff?.process_name || 'Flujo FORMALIA',
+      actorsCount: bundle.actors.length,
+      storiesCount: bundle.stories.length,
+      interfacesCount: bundle.interfaces.length,
+      tablesCount: bundle.dataModels.length
+    };
+  };
+
   // ── Project File Handlers
   const handleSaveFile = (newFile) => {
     setFiles(prev => [newFile, ...prev]);
@@ -1701,6 +1787,7 @@ function AppContent({ initialPath = '/' }) {
             <FormalIAWorkspace
               isStandalonePage
               onBackHome={() => navigateToPath('/')}
+              onOpenInPortal={() => navigateToPortal('login', 'formalia')}
               onPreloadQuote={(data) => {
                 setPreloadedFormaliaData(data);
                 notify('Configuración de roles y canales precargada desde FORMALIA.');
@@ -2073,7 +2160,13 @@ function AppContent({ initialPath = '/' }) {
                   {activePortalTab === 'formalia' && (
                     <FormalIAPortalView
                       activeProjectId={activeProjectId}
+                      activeProjectName={activeProject?.shortName || activeProject?.name || 'Proyecto Activo'}
                       onSaveToProjectFiles={handleSaveFile}
+                      onPromoteGraphToProject={handlePromoteFormaliaToProject}
+                      onNavigatePortalTab={(tabId) => {
+                        setActivePortalTab(tabId);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
                       onNotify={notify}
                     />
                   )}

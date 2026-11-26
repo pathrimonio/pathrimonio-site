@@ -23,6 +23,7 @@ import {
 } from '../../../services/formaliaService';
 import FormalIAChatPanel from './FormalIAChatPanel';
 import FormalIACanvasPanel from './FormalIACanvasPanel';
+import FormalIASaveModal from './FormalIASaveModal';
 
 const INITIAL_SSR_GRAPH = createInitialProcessGraph('FIA-2026-INIT');
 const INITIAL_SSR_WELCOME = {
@@ -42,6 +43,11 @@ const INITIAL_SSR_WELCOME = {
 export default function FormalIAWorkspace({
   onPreloadQuote,
   isStandalonePage = false,
+  isPortalEmbedded = false,
+  targetProjectName = '',
+  initialSessionOverride = null,
+  onPromoteToProject,
+  onOpenInPortal,
   onBackHome
 }) {
   const [session, setSession] = useState({
@@ -60,10 +66,22 @@ export default function FormalIAWorkspace({
   const [mobileTab, setMobileTab] = useState('chat'); // 'chat' | 'diagram'
   const [diagramUpdatedBadge, setDiagramUpdatedBadge] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [sessionSaved, setSessionSaved] = useState(false);
 
   // Hidrata sesión desde localStorage o inicia sesión remota tras montaje en cliente (SSR-safe)
   useEffect(() => {
     setClientHydrated(true);
+    if (initialSessionOverride && initialSessionOverride.session_id) {
+      const normalized = {
+        versions: [],
+        generated_files: [],
+        ...initialSessionOverride
+      };
+      saveLocalFormaliaSession(normalized);
+      setSession(normalized);
+      return;
+    }
     const saved = loadLocalFormaliaSession();
     if (saved) {
       const normalizedMessages =
@@ -81,7 +99,7 @@ export default function FormalIAWorkspace({
         setSession(newSess);
       });
     }
-  }, []);
+  }, [initialSessionOverride]);
 
   useEffect(() => {
     if (!clientHydrated || session.session_id === 'FIA-2026-INIT') return;
@@ -270,13 +288,20 @@ export default function FormalIAWorkspace({
       : 'v0';
 
   return (
+    <>
     <section
       id="formalia"
-      className={`w-full ${isStandalonePage ? 'py-10 lg:py-14' : 'py-20 lg:py-24'} bg-[var(--bg-page)] border-b border-[var(--border-subtle)] transition-colors`}
+      data-theme={isPortalEmbedded ? 'dark' : undefined}
+      className={`w-full ${
+        isPortalEmbedded
+          ? 'py-0 bg-transparent border-0'
+          : `${isStandalonePage ? 'py-10 lg:py-14' : 'py-20 lg:py-24'} bg-[var(--bg-page)] border-b border-[var(--border-subtle)]`
+      } transition-colors`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={isPortalEmbedded ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}>
 
-        {/* Encabezado de Sección */}
+        {/* Encabezado de Sección (solo en vista pública / standalone) */}
+        {!isPortalEmbedded && (
         <div className="max-w-3xl mx-auto text-center mb-10">
           {isStandalonePage && onBackHome && (
             <div className="mb-4">
@@ -310,6 +335,7 @@ export default function FormalIAWorkspace({
             <strong className="text-[var(--text-primary)]">$1 USD/día por rol</strong>.
           </p>
         </div>
+        )}
 
         {/* Contenedor Split-Screen (O Fullscreen expandible) */}
         <div
@@ -398,9 +424,11 @@ export default function FormalIAWorkspace({
                 maxTurns={session.max_turns || 15}
                 isExtracting={isExtracting}
                 errorMessage={errorMsg}
+                hasUnsavedContent={(session.turns_count || 0) > 0 && !sessionSaved}
                 onSendMessage={handleSendMessage}
                 onResetSession={handleResetSession}
                 onLoadExample={handleLoadExample}
+                onSaveSession={!isPortalEmbedded ? () => setShowSaveModal(true) : undefined}
               />
             </div>
 
@@ -416,6 +444,10 @@ export default function FormalIAWorkspace({
                 versions={session.versions || []}
                 generatedFiles={session.generated_files || []}
                 isExtracting={isExtracting}
+                isPortalEmbedded={isPortalEmbedded}
+                targetProjectName={targetProjectName}
+                onPromoteToProject={onPromoteToProject}
+                onOpenInPortal={onOpenInPortal}
                 onApplyToQuote={handleApplyToQuote}
                 onRecordArtifact={handleRecordArtifact}
                 onRestoreVersion={handleRestoreVersion}
@@ -427,5 +459,18 @@ export default function FormalIAWorkspace({
 
       </div>
     </section>
+
+    {/* Modal Guardar Sesión FORMALIA */}
+    {showSaveModal && (
+      <FormalIASaveModal
+        session={session}
+        onClose={() => setShowSaveModal(false)}
+        onSaved={() => {
+          setSessionSaved(true);
+          setShowSaveModal(false);
+        }}
+      />
+    )}
+    </>
   );
 }
