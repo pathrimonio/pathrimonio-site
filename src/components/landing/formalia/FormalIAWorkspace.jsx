@@ -19,7 +19,8 @@ import {
   clearLocalFormaliaSession,
   createWelcomeMessage,
   buildVersionSnapshot,
-  registerGeneratedArtifact
+  registerGeneratedArtifact,
+  syncLinkedFormaliaSession
 } from '../../../services/formaliaService';
 import FormalIAChatPanel from './FormalIAChatPanel';
 import FormalIACanvasPanel from './FormalIACanvasPanel';
@@ -44,6 +45,7 @@ export default function FormalIAWorkspace({
   onPreloadQuote,
   isStandalonePage = false,
   isPortalEmbedded = false,
+  currentUser = null,
   targetProjectName = '',
   initialSessionOverride = null,
   onPromoteToProject,
@@ -80,6 +82,7 @@ export default function FormalIAWorkspace({
       };
       saveLocalFormaliaSession(normalized);
       setSession(normalized);
+      setSessionSaved(Boolean(normalized.saved_to_account));
       return;
     }
     const saved = loadLocalFormaliaSession();
@@ -94,9 +97,11 @@ export default function FormalIAWorkspace({
         ...saved,
         messages: normalizedMessages
       });
+      setSessionSaved(Boolean(saved.saved_to_account));
     } else {
       startFormaliaSession().then((newSess) => {
         setSession(newSess);
+        setSessionSaved(false);
       });
     }
   }, [initialSessionOverride]);
@@ -105,6 +110,40 @@ export default function FormalIAWorkspace({
     if (!clientHydrated || session.session_id === 'FIA-2026-INIT') return;
     saveLocalFormaliaSession(session);
   }, [session, clientHydrated]);
+
+  // Si ya está vinculado a cuenta (o editando dentro del Portal), mantener cambios sincronizados en la nube
+  useEffect(() => {
+    if (!clientHydrated || session.session_id === 'FIA-2026-INIT') return;
+    const isLinked = Boolean(sessionSaved || session.saved_to_account);
+    const autoBindInPortal = Boolean(isPortalEmbedded && currentUser && (session.turns_count || 0) > 0);
+    if (!isLinked && !autoBindInPortal) return;
+
+    const timer = window.setTimeout(() => {
+      const payload = autoBindInPortal && !isLinked
+        ? {
+            ...session,
+            user_id: currentUser.id,
+            user_email: currentUser.email,
+            user_name: currentUser.name,
+            saved_to_account: true
+          }
+        : session;
+      syncLinkedFormaliaSession(payload).catch(() => {});
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    clientHydrated,
+    sessionSaved,
+    isPortalEmbedded,
+    currentUser,
+    session.session_id,
+    session.saved_to_account,
+    session.turns_count,
+    session.messages?.length,
+    session.generated_files?.length,
+    session.versions?.length
+  ]);
 
   const handleSendMessage = async (text) => {
     setErrorMsg('');
@@ -129,7 +168,22 @@ export default function FormalIAWorkspace({
         turnsCount: session.turns_count,
         conversationHistory: session.messages || [],
         existingVersions: session.versions || [],
-        existingFiles: session.generated_files || []
+        existingFiles: session.generated_files || [],
+        accountLink: (sessionSaved || session.saved_to_account)
+          ? {
+              user_id: session.user_id || currentUser?.id || null,
+              user_email: session.user_email || currentUser?.email || null,
+              user_name: session.user_name || currentUser?.name || null,
+              saved_to_account: true
+            }
+          : (isPortalEmbedded && currentUser
+              ? {
+                  user_id: currentUser.id,
+                  user_email: currentUser.email,
+                  user_name: currentUser.name,
+                  saved_to_account: true
+                }
+              : null)
       });
 
       const assistantMsg = {
@@ -148,7 +202,15 @@ export default function FormalIAWorkspace({
         turns_count: res.turns_count,
         versions: res.versions || prev.versions || [],
         generated_files: res.generated_files || prev.generated_files || [],
-        messages: [...prev.messages, assistantMsg]
+        messages: [...prev.messages, assistantMsg],
+        ...(isPortalEmbedded && currentUser && !prev.saved_to_account
+          ? {
+              user_id: currentUser.id,
+              user_email: currentUser.email,
+              user_name: currentUser.name,
+              saved_to_account: true
+            }
+          : {})
       }));
 
       setDiagramUpdatedBadge(true);
@@ -163,6 +225,7 @@ export default function FormalIAWorkspace({
     clearLocalFormaliaSession();
     setErrorMsg('');
     setDiagramUpdatedBadge(false);
+    setSessionSaved(false);
     setSession({
       session_id: 'FIA-2026-INIT',
       process_graph: createInitialProcessGraph('FIA-2026-INIT'),
@@ -216,6 +279,7 @@ export default function FormalIAWorkspace({
       1
     );
 
+    setSessionSaved(false);
     setSession({
       session_id: exampleGraph.session_id,
       process_graph: exampleGraph,
@@ -286,6 +350,10 @@ export default function FormalIAWorkspace({
     session.versions?.length > 0
       ? session.versions[session.versions.length - 1].version_label
       : 'v0';
+  const hasUserMessages =
+    (session.turns_count || 0) > 0 || (session.messages || []).some((m) => m.role === 'user');
+  const isSavedToAccount = Boolean(sessionSaved || session.saved_to_account);
+  const savedAccountEmail = session.user_email || (isPortalEmbedded ? currentUser?.email : '') || '';
 
   return (
     <>
@@ -360,6 +428,11 @@ export default function FormalIAWorkspace({
                   {currentVersionLabel} · {session.generated_files?.length || 0} archivos
                 </span>
               )}
+              {isSavedToAccount && (
+                <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/40 font-mono text-[10px] font-semibold text-emerald-400">
+                  Guardado{savedAccountEmail ? ` · ${savedAccountEmail}` : ''}
+                </span>
+              )}
             </div>
 
             <button
@@ -424,11 +497,14 @@ export default function FormalIAWorkspace({
                 maxTurns={session.max_turns || 15}
                 isExtracting={isExtracting}
                 errorMessage={errorMsg}
-                hasUnsavedContent={(session.turns_count || 0) > 0 && !sessionSaved}
+                hasUnsavedContent={hasUserMessages && !isSavedToAccount}
+                isSavedToAccount={isSavedToAccount}
+                savedAccountEmail={savedAccountEmail}
                 onSendMessage={handleSendMessage}
                 onResetSession={handleResetSession}
                 onLoadExample={handleLoadExample}
                 onSaveSession={!isPortalEmbedded ? () => setShowSaveModal(true) : undefined}
+                onOpenPortal={onOpenInPortal ? () => onOpenInPortal(session.process_graph) : undefined}
               />
             </div>
 
@@ -464,10 +540,23 @@ export default function FormalIAWorkspace({
     {showSaveModal && (
       <FormalIASaveModal
         session={session}
+        currentUser={currentUser}
         onClose={() => setShowSaveModal(false)}
-        onSaved={() => {
+        onSaved={({ session: savedSess }) => {
+          if (savedSess) {
+            setSession(savedSess);
+          }
           setSessionSaved(true);
+        }}
+        onGoToPortal={({ needsEmailConfirm } = {}) => {
           setShowSaveModal(false);
+          if (onOpenInPortal) {
+            onOpenInPortal(session.process_graph, { needsEmailConfirm });
+          } else {
+            window.location.href = needsEmailConfirm
+              ? '/#portal?tab=formalia&mode=login'
+              : '/#portal?tab=formalia';
+          }
         }}
       />
     )}

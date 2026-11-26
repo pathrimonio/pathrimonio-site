@@ -1,30 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { mapSupabaseUser } from '../../auth/authConfig';
 import { supabase } from '../../lib/supabase';
-import { PORTAL_USERS_STORAGE_KEY } from '../../auth/permissionsConfig';
-
-function registerPortalUserLocally(user) {
-  try {
-    const raw = localStorage.getItem(PORTAL_USERS_STORAGE_KEY);
-    const existing = raw ? JSON.parse(raw) : [];
-    const filtered = existing.filter(u => u.email?.toLowerCase() !== user.email?.toLowerCase());
-    const updated = [
-      {
-        id: user.id || `collab_${Date.now()}`,
-        name: user.name,
-        email: user.email,
-        organization: user.organization || 'Pathrimonio Colaboradores',
-        role: 'Colaborador',
-        avatar: user.avatar || 'CO',
-        color: 'bg-amber-600',
-        status: 'active',
-        permissions: ['create_role', 'create_story', 'create_interface']
-      },
-      ...filtered
-    ];
-    localStorage.setItem(PORTAL_USERS_STORAGE_KEY, JSON.stringify(updated));
-  } catch (_) {}
-}
+import { registerPortalUserLocally } from '../../auth/permissionsConfig';
 
 const ROLE_OPTIONS = [
   { value: 'Product Owner', label: 'Product Owner / Líder de Proyecto' },
@@ -73,6 +50,8 @@ export default function LoginPage({
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
+  const [resendingConfirm, setResendingConfirm] = useState(false);
 
   // Sync mode if initialMode changes
   useEffect(() => {
@@ -84,6 +63,33 @@ export default function LoginPage({
     setMode(newMode);
     setError('');
     setSuccessMessage('');
+    setNeedsEmailConfirm(false);
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!supabase || !loginEmail.trim() || resendingConfirm) return;
+    setResendingConfirm(true);
+    setError('');
+    setSuccessMessage('');
+    try {
+      const { error: resendErr } = await supabase.auth.resend({
+        type: 'signup',
+        email: loginEmail.trim().toLowerCase(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/#portal`
+        }
+      });
+      if (resendErr) {
+        setError(resendErr.message || 'No se pudo reenviar el correo de confirmación.');
+      } else {
+        setSuccessMessage(`Enlace de confirmación reenviado a ${loginEmail.trim()}. Revisa tu bandeja o spam.`);
+        setNeedsEmailConfirm(false);
+      }
+    } catch (err) {
+      setError(err?.message || 'Error al reenviar la confirmación.');
+    } finally {
+      setResendingConfirm(false);
+    }
   };
 
   // ── Handle Login Submission
@@ -91,6 +97,7 @@ export default function LoginPage({
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+    setNeedsEmailConfirm(false);
 
     if (!loginEmail.trim() || !loginPassword.trim()) {
       setError('Por favor ingresa tu correo y contraseña.');
@@ -120,7 +127,12 @@ export default function LoginPage({
       });
 
       if (authError) {
-        setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
+        if (/email not confirmed|confirm/i.test(authError.message || '')) {
+          setNeedsEmailConfirm(true);
+          setError('Tu correo electrónico aún no ha sido confirmado. Haz clic en el enlace que te enviamos para activar tu cuenta.');
+        } else {
+          setError('Credenciales incorrectas. Verifica tu correo y contraseña.');
+        }
         return;
       }
 
@@ -418,11 +430,23 @@ export default function LoginPage({
                   </div>
                 </div>
 
-                {/* Error Alert */}
+                {/* Error Alert (Login) */}
                 {error && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-error-container border border-error/30 text-error text-xs font-jakarta animate-shake">
-                    <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
-                    <span>{error}</span>
+                  <div className="flex flex-col gap-2 px-3 py-2.5 rounded-lg bg-error-container border border-error/30 text-error text-xs font-jakarta animate-shake">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
+                      <span>{error}</span>
+                    </div>
+                    {needsEmailConfirm && (
+                      <button
+                        type="button"
+                        onClick={handleResendConfirmation}
+                        disabled={resendingConfirm}
+                        className="self-start px-2.5 py-1 rounded bg-primary text-on-primary font-space text-[11px] font-semibold hover:bg-[#e09419] transition-colors cursor-pointer disabled:opacity-60"
+                      >
+                        {resendingConfirm ? 'Reenviando enlace...' : 'Reenviar correo de confirmación'}
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -680,7 +704,7 @@ export default function LoginPage({
                   </div>
                 </div>
 
-                {/* Error Alert */}
+                {/* Error Alert (Register) */}
                 {error && (
                   <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-error-container border border-error/30 text-error text-xs font-jakarta animate-shake">
                     <span className="material-symbols-outlined text-[16px] shrink-0">error</span>

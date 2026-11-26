@@ -187,3 +187,27 @@ export function isActionAllowedForRole(role, actionId, roleDefinitions) {
   if (!roleConfig || !roleConfig.actions) return false;
   return Boolean(roleConfig.actions[actionId]);
 }
+
+export function registerPortalUserLocally(user) {
+  if (!user || !user.email || typeof localStorage === 'undefined') return;
+  try {
+    const raw = localStorage.getItem(PORTAL_USERS_STORAGE_KEY);
+    const existing = raw ? JSON.parse(raw) : [];
+    const filtered = existing.filter(u => u.email?.toLowerCase() !== user.email?.toLowerCase());
+    const updated = [
+      {
+        id: user.id || `collab_${Date.now()}`,
+        name: user.name || user.email.split('@')[0],
+        email: user.email,
+        organization: user.organization || 'Pathrimonio Colaboradores',
+        role: user.role || 'Colaborador',
+        avatar: user.avatar || String(user.name || user.email || 'CO').slice(0, 2).toUpperCase(),
+        color: user.color || 'bg-amber-600',
+        status: 'active',
+        permissions: user.permissions || ['create_role', 'create_story', 'create_interface']
+      },
+      ...filtered
+    ];
+    localStorage.setItem(PORTAL_USERS_STORAGE_KEY, JSON.stringify(updated));
+  } catch (_) {}
+}

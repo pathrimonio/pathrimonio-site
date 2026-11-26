@@ -904,7 +904,8 @@ function AppContent({ initialPath = '/' }) {
     setShowLogin(false);
     const hashQuery = window.location.hash.split('?')[1] || '';
     const requestedTab = new URLSearchParams(hashQuery).get('tab');
-    setActivePortalTab(requestedTab || 'actors');
+    const defaultTab = user?.source === 'formalia' ? 'formalia' : 'actors';
+    setActivePortalTab(requestedTab || defaultTab);
 
     if (user.initialProjectName && (!user.initialProject || !projects.some(p => p.id === user.initialProject))) {
       const slug = (user.initialProject || user.initialProjectName)
@@ -1786,6 +1787,7 @@ function AppContent({ initialPath = '/' }) {
           <main className="w-full flex-1">
             <FormalIAWorkspace
               isStandalonePage
+              currentUser={currentUser}
               onBackHome={() => navigateToPath('/')}
               onOpenInPortal={() => navigateToPortal('login', 'formalia')}
               onPreloadQuote={(data) => {
@@ -2159,6 +2161,7 @@ function AppContent({ initialPath = '/' }) {
                   )}
                   {activePortalTab === 'formalia' && (
                     <FormalIAPortalView
+                      currentUser={currentUser}
                       activeProjectId={activeProjectId}
                       activeProjectName={activeProject?.shortName || activeProject?.name || 'Proyecto Activo'}
                       onSaveToProjectFiles={handleSaveFile}

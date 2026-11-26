@@ -94,12 +94,13 @@ export function mapSupabaseUser(user) {
   return {
     id: user.id,
     email: user.email,
-    name: meta.name || demo?.name || user.email,
+    name: meta.name || meta.full_name || demo?.name || user.email,
     role: meta.role || demo?.role || 'Colaborador',
+    source: meta.source || null,
     organization: meta.organization || null,
     softwareNeeds: meta.softwareNeeds || null,
     initialProject: meta.initialProject || null,
-    avatar: meta.avatar || demo?.avatar || String(meta.name || user.email || '?').slice(0, 2).toUpperCase(),
+    avatar: meta.avatar || demo?.avatar || String(meta.name || meta.full_name || user.email || '?').slice(0, 2).toUpperCase(),
     color: meta.color || demo?.color || 'bg-primary',
     permissions: meta.permissions || demo?.permissions || ['read', 'write']
   };

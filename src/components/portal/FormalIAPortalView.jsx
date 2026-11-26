@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   fetchFormaliaArchive,
+  loadLocalFormaliaSession,
   downloadChatTranscriptFile,
   downloadPlantUMLFile,
   downloadCanonicalJSONFile
@@ -16,6 +17,7 @@ function formatBytes(bytes = 0) {
 }
 
 export default function FormalIAPortalView({
+  currentUser = null,
   activeProjectId,
   activeProjectName = 'Proyecto Activo',
   onSaveToProjectFiles,
@@ -35,10 +37,29 @@ export default function FormalIAPortalView({
   const loadSessions = async () => {
     setLoading(true);
     try {
-      const list = await fetchFormaliaArchive();
+      const list = await fetchFormaliaArchive({
+        userId: currentUser?.id,
+        userEmail: currentUser?.email,
+        role: currentUser?.role
+      });
       setSessions(list);
       if (list.length > 0 && !selectedSessionId) {
         setSelectedSessionId(list[0].session_id);
+      }
+
+      // Si el usuario entra desde otro dispositivo o con sesión vacía en localStorage,
+      // retomar automáticamente su última conversación guardada en la cuenta.
+      const localSess = loadLocalFormaliaSession();
+      const localHasTurns =
+        (localSess?.turns_count || 0) > 0 ||
+        (localSess?.messages || []).some((m) => m.role === 'user');
+      if (!studioOverrideSession && !localHasTurns && list.length > 0) {
+        const ownedSession =
+          list.find((s) => s.is_mine && ((s.turns_count || 0) > 0 || (s.messages || []).length > 1)) ||
+          list.find((s) => s.saved_to_account && ((s.turns_count || 0) > 0 || (s.messages || []).length > 1));
+        if (ownedSession) {
+          setStudioOverrideSession(ownedSession);
+        }
       }
     } finally {
       setLoading(false);
@@ -47,7 +68,7 @@ export default function FormalIAPortalView({
 
   useEffect(() => {
     loadSessions();
-  }, []);
+  }, [currentUser?.id, currentUser?.email, currentUser?.role]);
 
   const filteredSessions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -58,6 +79,8 @@ export default function FormalIAPortalView({
         (s.session_id || '').toLowerCase().includes(q) ||
         (ctx.company_name || '').toLowerCase().includes(q) ||
         (ctx.process_name || '').toLowerCase().includes(q) ||
+        (s.user_email || '').toLowerCase().includes(q) ||
+        (s.user_name || '').toLowerCase().includes(q) ||
         (s.linked_quote_id || '').toLowerCase().includes(q)
       );
     });
@@ -259,6 +282,7 @@ export default function FormalIAPortalView({
         <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
           <FormalIAWorkspace
             isPortalEmbedded
+            currentUser={currentUser}
             targetProjectName={activeProjectName}
             initialSessionOverride={studioOverrideSession}
             onPromoteToProject={handleMaterializeGraph}
@@ -357,6 +381,11 @@ export default function FormalIAPortalView({
                         <span>{(sess.process_graph?.steps || []).length} pasos</span>
                         <span>•</span>
                         <span>{(sess.generated_files || []).length} archivos</span>
+                        {(sess.is_mine || sess.saved_to_account) && (
+                          <span className="px-1.5 py-0.5 rounded bg-[#FFC93C]/15 text-[#FFC93C] border border-[#FFC93C]/30">
+                            {sess.user_email || 'Guardada'}
+                          </span>
+                        )}
                         {sess.linked_quote_id && (
                           <span className="ml-auto px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                             {sess.linked_quote_id}

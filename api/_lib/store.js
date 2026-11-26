@@ -49,6 +49,11 @@ export async function getSession(sessionId) {
       if (data) {
         const record = {
           session_id: data.session_id,
+          user_id: data.user_id || null,
+          user_email: data.user_email || null,
+          user_name: data.user_name || null,
+          process_name: data.process_name || data.process_graph?.business_context?.process_name || null,
+          saved_to_account: Boolean(data.saved_to_account),
           process_graph: data.process_graph,
           messages: data.messages || [],
           versions: data.versions || [],
@@ -71,18 +76,45 @@ export async function saveSession(record) {
   memorySessions.set(record.session_id, record);
   const sb = getSupabaseServerClient();
   if (sb) {
+    const processName =
+      record.process_name ||
+      record.process_graph?.business_context?.process_name ||
+      null;
+    const payload = {
+      session_id: record.session_id,
+      process_graph: record.process_graph,
+      messages: record.messages || [],
+      versions: record.versions || [],
+      generated_files: record.generated_files || [],
+      turns_count: record.turns_count || 0,
+      completeness_score: record.completeness_score || 0,
+      linked_quote_id: record.linked_quote_id || null,
+      process_name: processName,
+      updated_at: new Date().toISOString()
+    };
+    if (record.user_id !== undefined) payload.user_id = record.user_id || null;
+    if (record.user_email !== undefined) payload.user_email = record.user_email || null;
+    if (record.user_name !== undefined) payload.user_name = record.user_name || null;
+    if (record.saved_to_account !== undefined) {
+      payload.saved_to_account = Boolean(record.saved_to_account);
+      if (record.saved_to_account) {
+        payload.expires_at = '2099-12-31T23:59:59Z';
+      }
+    }
     try {
-      await sb.from('formalia_sessions').upsert({
-        session_id: record.session_id,
-        process_graph: record.process_graph,
-        messages: record.messages || [],
-        versions: record.versions || [],
-        generated_files: record.generated_files || [],
-        turns_count: record.turns_count || 0,
-        completeness_score: record.completeness_score || 0,
-        linked_quote_id: record.linked_quote_id || null,
-        updated_at: new Date().toISOString()
-      });
+      const { error } = await sb.from('formalia_sessions').upsert(payload);
+      if (error) {
+        // Fallback sin columnas extendidas si alguna BD aún no aplicó la migración
+        const {
+          user_id: _uid,
+          user_email: _ue,
+          user_name: _un,
+          process_name: _pn,
+          saved_to_account: _sta,
+          ...legacyPayload
+        } = payload;
+        await sb.from('formalia_sessions').upsert(legacyPayload);
+      }
     } catch (_) {}
   }
   return record;
@@ -120,16 +152,33 @@ export async function saveArtifactVersion(artifact) {
   return artifact;
 }
 
-export async function listFormaliaSessionsArchive() {
+export async function listFormaliaSessionsArchive({ userId = null, userEmail = null, mineOnly = false } = {}) {
+  const cleanEmail = userEmail ? String(userEmail).trim().toLowerCase() : null;
+  const matchesOwner = (s) => {
+    if (!mineOnly) return true;
+    if (userId && s.user_id && s.user_id === userId) return true;
+    if (cleanEmail && s.user_email && String(s.user_email).trim().toLowerCase() === cleanEmail) return true;
+    return false;
+  };
+
   const sb = getSupabaseServerClient();
   if (sb) {
     try {
-      const { data: sessions } = await sb
+      let query = sb
         .from('formalia_sessions')
         .select('*')
         .not('session_id', 'like', 'SYS-%')
         .order('updated_at', { ascending: false })
-        .limit(50);
+        .limit(80);
+
+      if (mineOnly && (userId || cleanEmail)) {
+        const filters = [];
+        if (userId) filters.push(`user_id.eq.${userId}`);
+        if (cleanEmail) filters.push(`user_email.ilike.${cleanEmail}`);
+        if (filters.length > 0) query = query.or(filters.join(','));
+      }
+
+      const { data: sessions } = await query;
 
       const { data: artifacts } = await sb
         .from('formalia_artifact_versions')
@@ -143,14 +192,17 @@ export async function listFormaliaSessionsArchive() {
           if (!artifactsBySession.has(a.session_id)) artifactsBySession.set(a.session_id, []);
           artifactsBySession.get(a.session_id).push(a);
         });
-        return sessions.map((s) => ({
+        return sessions.filter(matchesOwner).map((s) => ({
           ...s,
           generated_files: artifactsBySession.get(s.session_id) || s.generated_files || []
         }));
       }
+      if (mineOnly) return [];
     } catch (_) {}
   }
-  return Array.from(memorySessions.values()).filter((s) => !String(s.session_id || '').startsWith('SYS-'));
+  return Array.from(memorySessions.values())
+    .filter((s) => !String(s.session_id || '').startsWith('SYS-'))
+    .filter(matchesOwner);
 }
 
 export async function saveQuoteWithHandoff(quotePayload) {

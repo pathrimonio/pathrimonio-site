@@ -28,6 +28,13 @@ export default async function handler(req, res) {
     };
   }
 
+  if (body.account_link && (body.account_link.saved_to_account || body.account_link.user_email || body.account_link.user_id)) {
+    if (body.account_link.user_id) session.user_id = body.account_link.user_id;
+    if (body.account_link.user_email) session.user_email = body.account_link.user_email;
+    if (body.account_link.user_name) session.user_name = body.account_link.user_name;
+    session.saved_to_account = true;
+  }
+
   if (session.turns_count >= MAX_TURNS_PER_SESSION) {
     return res.status(429).json({
       error: `Límite máximo de ${MAX_TURNS_PER_SESSION} turnos por sesión anónima alcanzado. Descarga tu diagrama o cotiza tu sistema.`,

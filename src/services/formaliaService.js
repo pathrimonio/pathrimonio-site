@@ -197,7 +197,8 @@ export async function sendFormaliaMessage({
   turnsCount,
   conversationHistory,
   existingVersions = [],
-  existingFiles = []
+  existingFiles = [],
+  accountLink = null
 }) {
   if (turnsCount >= MAX_TURNS) {
     throw new Error(`Alcanzaste el límite de ${MAX_TURNS} turnos para esta sesión gratuita. Descarga tu diagrama o cotiza tu sistema.`);
@@ -220,7 +221,8 @@ export async function sendFormaliaMessage({
     body: JSON.stringify({
       message,
       process_graph: currentGraph,
-      history: compactHistory
+      history: compactHistory,
+      ...(accountLink ? { account_link: accountLink } : {})
     })
   });
 
@@ -321,14 +323,149 @@ export async function registerGeneratedArtifact(artifact) {
     saveLocalFormaliaSession({ ...active, generated_files: nextFiles });
   }
 
-  // Enviar al endpoint serverless
-  await tryApiJson(`/api/v1/formalia/sessions/${encodeURIComponent(normalized.session_id)}/artifacts`, {
+  // Enviar al endpoint serverless; en dev local persistir directo en Supabase
+  const apiSaved = await tryApiJson(`/api/v1/formalia/sessions/${encodeURIComponent(normalized.session_id)}/artifacts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(normalized)
   });
 
+  if (!apiSaved && isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('formalia_artifact_versions').upsert({
+        id: normalized.id,
+        session_id: normalized.session_id,
+        version_number: normalized.version_number,
+        version_label: normalized.version_label,
+        artifact_kind: normalized.artifact_kind,
+        file_name: normalized.file_name,
+        mime_type: normalized.mime_type,
+        content_text: normalized.content_text,
+        data_url: normalized.data_url,
+        size_bytes: normalized.size_bytes,
+        change_summary: normalized.change_summary,
+        chat_turns_at: normalized.chat_turns_at,
+        created_at: normalized.created_at
+      });
+    } catch (_) {}
+  }
+
   return normalized;
+}
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Vincula y persiste una sesión FORMALIA completa (chat + grafo + versiones + archivos)
+ * a una cuenta de usuario para que nunca expire y sea retomable en el Portal.
+ */
+export async function saveFormaliaSessionToAccount(session, account = {}) {
+  if (!session || !session.session_id) {
+    return { ok: false, error: 'Sesión FORMALIA inválida' };
+  }
+
+  const userId = account.userId && UUID_REGEX.test(String(account.userId)) ? String(account.userId) : null;
+  const userEmail = account.email ? String(account.email).trim().toLowerCase() : (session.user_email || null);
+  const userName = account.name ? String(account.name).trim() : (session.user_name || null);
+  const processName =
+    session.process_graph?.business_context?.process_name ||
+    session.process_graph?.process_name ||
+    session.process_name ||
+    null;
+
+  const stampedSession = {
+    ...session,
+    user_id: userId || session.user_id || null,
+    user_email: userEmail,
+    user_name: userName,
+    process_name: processName,
+    saved_to_account: true,
+    expires_at: '2099-12-31T23:59:59Z',
+    updated_at: new Date().toISOString()
+  };
+
+  saveLocalFormaliaSession(stampedSession);
+
+  if (!isSupabaseConfigured || !supabase) {
+    return { ok: true, session: stampedSession, cloudSynced: false };
+  }
+
+  const basePayload = {
+    session_id: stampedSession.session_id,
+    process_graph: stampedSession.process_graph || {},
+    messages: stampedSession.messages || [],
+    versions: stampedSession.versions || [],
+    generated_files: stampedSession.generated_files || [],
+    turns_count: stampedSession.turns_count || 0,
+    completeness_score: stampedSession.process_graph?.completeness_score || 0,
+    expires_at: stampedSession.expires_at,
+    updated_at: stampedSession.updated_at
+  };
+
+  const extendedPayload = {
+    ...basePayload,
+    user_id: stampedSession.user_id,
+    user_email: stampedSession.user_email,
+    user_name: stampedSession.user_name,
+    process_name: processName,
+    saved_to_account: true
+  };
+
+  let { error } = await supabase
+    .from('formalia_sessions')
+    .upsert(extendedPayload, { onConflict: 'session_id' });
+
+  // Si user_id provoca violación FK o aún falta alguna columna en BD remota, reintentar sin user_id
+  if (error && stampedSession.user_id) {
+    const retry = await supabase
+      .from('formalia_sessions')
+      .upsert({ ...extendedPayload, user_id: null }, { onConflict: 'session_id' });
+    error = retry.error;
+  }
+
+  if (error) {
+    const legacy = await supabase
+      .from('formalia_sessions')
+      .upsert(basePayload, { onConflict: 'session_id' });
+    if (legacy.error) {
+      return { ok: false, session: stampedSession, cloudSynced: false, error: legacy.error.message };
+    }
+  }
+
+  // Persistir artefactos generados en tabla formalia_artifact_versions
+  if (Array.isArray(stampedSession.generated_files) && stampedSession.generated_files.length > 0) {
+    const rows = stampedSession.generated_files.map((art) => ({
+      id: art.id || `${stampedSession.session_id}_${art.artifact_kind || 'file'}_${Date.now()}`,
+      session_id: stampedSession.session_id,
+      version_number: Number(art.version_number) || 1,
+      version_label: art.version_label || `v${Number(art.version_number) || 1}`,
+      artifact_kind: art.artifact_kind || 'puml',
+      file_name: art.file_name || `FORMALIA-${stampedSession.session_id}.txt`,
+      mime_type: art.mime_type || 'text/plain',
+      content_text: art.content_text || null,
+      data_url: art.data_url || null,
+      size_bytes: Number(art.size_bytes) || 0,
+      change_summary: art.change_summary || '',
+      chat_turns_at: Number(art.chat_turns_at) || 0,
+      created_at: art.created_at || new Date().toISOString()
+    }));
+    await supabase.from('formalia_artifact_versions').upsert(rows).catch(() => {});
+  }
+
+  return { ok: true, session: stampedSession, cloudSynced: true };
+}
+
+/**
+ * Sincroniza silenciosamente cambios posteriores en una sesión ya vinculada a una cuenta.
+ */
+export async function syncLinkedFormaliaSession(session) {
+  if (!session || !session.session_id) return null;
+  if (!session.saved_to_account && !session.user_email && !session.user_id) return null;
+  return saveFormaliaSessionToAccount(session, {
+    userId: session.user_id,
+    email: session.user_email,
+    name: session.user_name
+  });
 }
 
 export async function convertFormaliaToQuote({ sessionId, graph }) {
@@ -441,18 +578,49 @@ export function downloadChatTranscriptFile(session, format = 'md', versionLabel 
   return { fileName, contentText: content, mimeType, sizeBytes: blob.size };
 }
 
-export async function fetchFormaliaArchive() {
+const PRIVILEGED_REVIEWER_ROLES = new Set([
+  'Admin',
+  'Desarrollador',
+  'Fintech Lead',
+  'Auditora de Impacto'
+]);
+
+export async function fetchFormaliaArchive({ userId = null, userEmail = null, role = null } = {}) {
   const localArchive = loadLocalFormaliaArchive();
   const active = loadLocalFormaliaSession();
+  const localIds = new Set();
   const mergedMap = new Map();
 
-  if (active) mergedMap.set(active.session_id, active);
+  if (active && active.session_id) {
+    localIds.add(active.session_id);
+    mergedMap.set(active.session_id, active);
+  }
   localArchive.forEach((s) => {
-    if (!mergedMap.has(s.session_id)) mergedMap.set(s.session_id, s);
+    if (s && s.session_id) {
+      localIds.add(s.session_id);
+      if (!mergedMap.has(s.session_id)) mergedMap.set(s.session_id, s);
+    }
   });
 
+  const cleanEmail = userEmail ? String(userEmail).trim().toLowerCase() : null;
+  const isPrivilegedReviewer = role ? PRIVILEGED_REVIEWER_ROLES.has(role) : true;
+  const mineOnly = Boolean((userId || cleanEmail) && !isPrivilegedReviewer);
+
+  const belongsToCurrentUser = (sess) => {
+    if (!userId && !cleanEmail) return false;
+    if (userId && sess.user_id && sess.user_id === userId) return true;
+    if (cleanEmail && sess.user_email && String(sess.user_email).trim().toLowerCase() === cleanEmail) return true;
+    return false;
+  };
+
+  const params = new URLSearchParams();
+  if (userId) params.set('user_id', userId);
+  if (cleanEmail) params.set('user_email', cleanEmail);
+  if (mineOnly) params.set('mine_only', '1');
+  const qs = params.toString() ? `?${params.toString()}` : '';
+
   // 1. Intentar API serverless
-  const apiRes = await tryApiJson('/api/v1/formalia/archive', { method: 'GET' });
+  const apiRes = await tryApiJson(`/api/v1/formalia/archive${qs}`, { method: 'GET' });
   if (apiRes && !apiRes._apiError && Array.isArray(apiRes.sessions)) {
     apiRes.sessions.forEach((remote) => {
       const local = mergedMap.get(remote.session_id);
@@ -467,16 +635,28 @@ export async function fetchFormaliaArchive() {
   } else if (isSupabaseConfigured && supabase) {
     // 2. Consulta directa a Supabase si API route no respondió (ej. Vite dev local)
     try {
-      const { data: sessions } = await supabase
+      let sessQuery = supabase
         .from('formalia_sessions')
         .select('*')
+        .not('session_id', 'like', 'SYS-%')
         .order('updated_at', { ascending: false })
-        .limit(40);
+        .limit(60);
+
+      if (mineOnly) {
+        const filters = [];
+        if (userId && UUID_REGEX.test(String(userId))) filters.push(`user_id.eq.${userId}`);
+        if (cleanEmail) filters.push(`user_email.ilike.${cleanEmail}`);
+        if (filters.length > 0) {
+          sessQuery = sessQuery.or(filters.join(','));
+        }
+      }
+
+      const { data: sessions } = await sessQuery;
       const { data: artifacts } = await supabase
         .from('formalia_artifact_versions')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(150);
+        .limit(180);
 
       if (sessions) {
         const bySession = new Map();
@@ -498,9 +678,16 @@ export async function fetchFormaliaArchive() {
     } catch (_) {}
   }
 
-  return Array.from(mergedMap.values()).sort(
-    (a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0)
-  );
+  return Array.from(mergedMap.values())
+    .filter((s) => !String(s.session_id || '').startsWith('SYS-'))
+    .filter((s) => !mineOnly || belongsToCurrentUser(s) || localIds.has(s.session_id))
+    .map((s) => ({
+      ...s,
+      is_mine: belongsToCurrentUser(s)
+    }))
+    .sort(
+      (a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0)
+    );
 }
 
 function mergeArtifacts(a = [], b = []) {

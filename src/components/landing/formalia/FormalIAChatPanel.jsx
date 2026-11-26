@@ -52,10 +52,13 @@ export default function FormalIAChatPanel({
   isExtracting = false,
   errorMessage = '',
   hasUnsavedContent = false,
+  isSavedToAccount = false,
+  savedAccountEmail = '',
   onSendMessage,
   onResetSession,
   onLoadExample,
-  onSaveSession
+  onSaveSession,
+  onOpenPortal
 }) {
   const [inputText, setInputText] = useState('');
   const scrollContainerRef = useRef(null);
@@ -120,21 +123,29 @@ export default function FormalIAChatPanel({
               <span className="hidden sm:inline">Ejemplo SDD</span>
             </button>
 
-            {/* Guardar conversación */}
+            {/* Guardar conversación / Estado guardado */}
             {onSaveSession && (
               <button
                 type="button"
                 onClick={onSaveSession}
-                disabled={isExtracting || !hasUnsavedContent}
-                title={hasUnsavedContent ? 'Guardar conversación en tu cuenta' : 'Escribe algo primero para poder guardar'}
+                disabled={isExtracting || (!hasUnsavedContent && !isSavedToAccount)}
+                title={
+                  isSavedToAccount
+                    ? `Conversación guardada en ${savedAccountEmail || 'tu cuenta'}`
+                    : hasUnsavedContent
+                      ? 'Crear cuenta o ingresar para guardar esta conversación'
+                      : 'Envía al menos 1 mensaje para poder guardar'
+                }
                 className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] border text-[11px] font-semibold transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 ${
-                  hasUnsavedContent
-                    ? 'border-[#FFC93C] bg-[#FFC93C] text-[#2B2D31] hover:bg-[#FFD561]'
-                    : 'border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'
+                  isSavedToAccount
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                    : hasUnsavedContent
+                      ? 'border-[#FFC93C] bg-[#FFC93C] text-[#2B2D31] hover:bg-[#FFD561]'
+                      : 'border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-secondary)]'
                 }`}
               >
-                <Save size={12} />
-                <span className="hidden sm:inline">Guardar</span>
+                {isSavedToAccount ? <CheckCircle2 size={12} /> : <Save size={12} />}
+                <span className="hidden sm:inline">{isSavedToAccount ? 'Guardado' : 'Guardar'}</span>
               </button>
             )}
 
@@ -294,21 +305,44 @@ export default function FormalIAChatPanel({
           </div>
         )}
 
-        {/* Banner Guardar — aparece cuando hay turnos y el usuario no ha guardado */}
-        {hasUnsavedContent && onSaveSession && !isLimitReached && (
+        {/* Banner Guardar o estado sincronizado con cuenta */}
+        {onSaveSession && hasUnsavedContent && !isSavedToAccount && (
           <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-[8px] bg-[#FFC93C]/10 border border-[#FFC93C]/30">
-            <span className="text-[11px] text-[var(--text-secondary)] leading-tight">
-              💾 <strong className="text-[var(--text-primary)]">¿Quieres guardar esta conversación?</strong>{' '}
-              Crea una cuenta gratis y accede al portal más tarde.
-            </span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Save size={13} className="text-[#FFC93C] shrink-0" />
+              <span className="text-[11px] text-[var(--text-secondary)] leading-tight">
+                <strong className="text-[var(--text-primary)]">Guarda esta conversación</strong>{' '}
+                creando una cuenta para retomar tu chat luego en el Portal.
+              </span>
+            </div>
             <button
               type="button"
               onClick={onSaveSession}
               className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] text-[11px] font-semibold hover:bg-[#FFD561] transition-colors cursor-pointer"
             >
               <Save size={11} />
-              Guardar
+              <span>Guardar</span>
             </button>
+          </div>
+        )}
+
+        {onSaveSession && isSavedToAccount && (
+          <div className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-[8px] bg-emerald-500/10 border border-emerald-500/30">
+            <span className="text-[11px] text-emerald-400 flex items-center gap-1.5 min-w-0 truncate">
+              <CheckCircle2 size={12} className="shrink-0" />
+              <span className="truncate">
+                Guardado en <strong>{savedAccountEmail || 'tu cuenta'}</strong> · sincronización automática
+              </span>
+            </span>
+            {onOpenPortal && (
+              <button
+                type="button"
+                onClick={onOpenPortal}
+                className="shrink-0 text-[11px] font-semibold text-[#FFC93C] hover:underline cursor-pointer whitespace-nowrap"
+              >
+                Ir al Portal →
+              </button>
+            )}
           </div>
         )}
 
