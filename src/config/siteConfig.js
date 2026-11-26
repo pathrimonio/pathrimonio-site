@@ -76,6 +76,14 @@ export const HOME_SEO = {
   ogImage: `${SITE_URL}/assets/images/icono_202609011609.jpg`
 };
 
+export const FORMALIA_SEO = {
+  path: '/formalia',
+  metaTitle: 'FORMALIA — Mapea tu negocio en carriles vivos gratis | Pathrimonio',
+  metaDescription:
+    'Motor conversacional gratuito FORMALIA de Pathrimonio: describe tu operación, obtén tu diagrama de carriles por rol en PNG/PDF, código PlantUML y precarga tu sistema a $1 USD/día por rol.',
+  ogImage: `${SITE_URL}/assets/images/icono_202609011609.jpg`
+};
+
 export const COOKIE_INVENTORY = [
   {
     name: 'pathrimonio-consent',
@@ -144,6 +152,17 @@ export const COOKIE_INVENTORY = [
 
 export function getSeoForPath(pathname = '/') {
   const cleanPath = normalizePathname(pathname);
+  if (cleanPath === '/formalia') {
+    return {
+      path: FORMALIA_SEO.path,
+      title: FORMALIA_SEO.metaTitle,
+      description: FORMALIA_SEO.metaDescription,
+      canonical: `${SITE_URL}${FORMALIA_SEO.path}`,
+      ogImage: FORMALIA_SEO.ogImage,
+      isLegal: false,
+      legalRoute: null
+    };
+  }
   const legal = LEGAL_ROUTES.find((r) => r.path === cleanPath);
   if (legal) {
     return {

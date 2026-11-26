@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight, CheckCircle2, Shield, Database, Sparkles } from 'lucide-react';
 
-export default function Hero({ onOpenPortal }) {
+export default function Hero({ onOpenPortal, onNavigate }) {
   return (
     <section className="relative w-full pt-20 pb-24 md:pt-28 md:pb-32 bg-[#FAFAFA] dark:bg-[#09090B] border-b border-[#E4E4E7] dark:border-[#27272A] transition-colors overflow-hidden">
       <div className="max-w-6xl mx-auto px-6 lg:px-8">
@@ -33,7 +33,13 @@ export default function Hero({ onOpenPortal }) {
               <ArrowRight size={15} strokeWidth={1.5} />
             </a>
             <a
-              href="#formalia"
+              href="/formalia"
+              onClick={(e) => {
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate('/formalia');
+                }
+              }}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFFFFF] dark:bg-[#111113] hover:bg-[#FFFBEB] dark:hover:bg-amber-500/10 border border-[#E4E4E7] dark:border-[#27272A] hover:border-[#FFC000] text-[#09090B] dark:text-[#F4F4F5] text-sm font-medium transition-colors cursor-pointer"
             >
               <Sparkles size={15} strokeWidth={1.75} className="text-[#9A6700] dark:text-[#FFC000]" />

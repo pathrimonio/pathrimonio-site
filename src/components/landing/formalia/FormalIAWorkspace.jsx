@@ -39,7 +39,11 @@ const INITIAL_SSR_WELCOME = {
   timestamp: '2026-11-25T00:00:00.000Z'
 };
 
-export default function FormalIAWorkspace({ onPreloadQuote }) {
+export default function FormalIAWorkspace({
+  onPreloadQuote,
+  isStandalonePage = false,
+  onBackHome
+}) {
   const [session, setSession] = useState({
     session_id: INITIAL_SSR_GRAPH.session_id,
     process_graph: INITIAL_SSR_GRAPH,
@@ -253,19 +257,39 @@ export default function FormalIAWorkspace({ onPreloadQuote }) {
   return (
     <section
       id="formalia"
-      className="w-full py-20 lg:py-24 bg-[#FAFAFA] dark:bg-[#09090B] border-b border-[#E4E4E7] dark:border-[#27272A] transition-colors"
+      className={`w-full ${isStandalonePage ? 'py-10 lg:py-14' : 'py-20 lg:py-24'} bg-[#FAFAFA] dark:bg-[#09090B] border-b border-[#E4E4E7] dark:border-[#27272A] transition-colors`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Encabezado de Sección */}
         <div className="max-w-3xl mx-auto text-center mb-10">
+          {isStandalonePage && onBackHome && (
+            <div className="mb-4">
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onBackHome();
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-[#52525B] dark:text-[#A1A1AA] hover:text-[#09090B] dark:hover:text-[#F4F4F5] transition-colors"
+              >
+                <span>← Volver al inicio de Pathrimonio</span>
+              </a>
+            </div>
+          )}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FFFBEB] dark:bg-amber-500/10 border border-amber-200/80 dark:border-amber-500/30 text-[#9A6700] dark:text-[#FFC000] text-xs font-medium mb-4">
             <Sparkles size={13} />
             <span>Módulo Conversacional FORMALIA · Gratis y sin registro</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-3">
-            Mapea tu negocio en carriles vivos antes de cotizar
-          </h2>
+          {isStandalonePage ? (
+            <h1 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-3">
+              Mapea tu negocio en carriles vivos antes de cotizar
+            </h1>
+          ) : (
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#09090B] dark:text-[#F4F4F5] tracking-[-0.02em] mb-3">
+              Mapea tu negocio en carriles vivos antes de cotizar
+            </h2>
+          )}
           <p className="text-sm sm:text-base text-[#52525B] dark:text-[#A1A1AA] leading-relaxed">
             Cuéntale a FORMALIA cómo trabaja tu equipo hoy. Al instante obtienes tu diagrama de roles, cuellos de botella en PNG/PDF, historial versionado y tu sistema precargado a <strong className="text-[#09090B] dark:text-[#F4F4F5]">$1 USD/día por rol</strong>.
           </p>

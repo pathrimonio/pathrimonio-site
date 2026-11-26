@@ -175,10 +175,14 @@ function AppContent({ initialPath = '/' }) {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // ── Path & View state: 'landing' | 'legal' | 'portal'
+  // ── Path & View state: 'landing' | 'formalia' | 'legal' | 'portal'
   const [currentPath, setCurrentPath] = useState(initialCleanPath);
   const [currentView, setCurrentView] = useState(() =>
-    isLegalPathname(initialCleanPath) ? 'legal' : 'landing'
+    isLegalPathname(initialCleanPath)
+      ? 'legal'
+      : initialCleanPath === '/formalia'
+        ? 'formalia'
+        : 'landing'
   );
   const [preloadedFormaliaData, setPreloadedFormaliaData] = useState(null);
 
@@ -534,6 +538,9 @@ function AppContent({ initialPath = '/' }) {
       } else if (isLegalPathname(cleanPath)) {
         setCurrentView('legal');
         syncSeoHead(cleanPath);
+      } else if (cleanPath === '/formalia') {
+        setCurrentView('formalia');
+        syncSeoHead('/formalia');
       } else {
         setCurrentView('landing');
         syncSeoHead('/');
@@ -793,6 +800,9 @@ function AppContent({ initialPath = '/' }) {
 
     if (isLegalPathname(cleanPath)) {
       setCurrentView('legal');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (cleanPath === '/formalia') {
+      setCurrentView('formalia');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       setCurrentView('landing');
@@ -1572,13 +1582,14 @@ function AppContent({ initialPath = '/' }) {
           <Navbar 
             theme={theme}
             onToggleTheme={toggleTheme}
+            onNavigate={navigateToPath}
             onOpenPortal={() => navigateToPortal('login')}
             onOpenRegister={navigateToRegister} 
           />
 
           <main className="w-full">
             {/* Sección 01: Hero */}
-            <Hero onOpenPortal={() => navigateToPortal('login')} />
+            <Hero onOpenPortal={() => navigateToPortal('login')} onNavigate={navigateToPath} />
 
             {/* Sección 02: Roles y Control */}
             <RolesSection />
@@ -1592,14 +1603,6 @@ function AppContent({ initialPath = '/' }) {
             {/* Sección 05: Impacto y Pathway (Bento Grid) */}
             <ImpactPathwayBento />
 
-            {/* Sección 05B: FORMALIA (Motor Conversacional + Carriles Vivos) */}
-            <FormalIAWorkspace
-              onPreloadQuote={(data) => {
-                setPreloadedFormaliaData(data);
-                notify('Configuración de roles y canales precargada desde FORMALIA.');
-              }}
-            />
-
           {/* Sección 06: Cotizador Interactivo (Split-Screen 65/35) */}
             <InteractiveEstimator
               onOpenContact={() => setIsContactModalOpen(true)}
@@ -1612,6 +1615,37 @@ function AppContent({ initialPath = '/' }) {
           </main>
 
           {/* Sección 07: Footer */}
+          <Footer onOpenContact={() => setIsContactModalOpen(true)} onNavigate={navigateToPath} />
+          <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} onNavigate={navigateToPath} />
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════
+          VIEW: FORMALIA (/formalia — SSG + SPA)
+      ══════════════════════════════════════════ */}
+      {currentView === 'formalia' && (
+        <div className="flex flex-col w-full bg-[#FAFAFA] dark:bg-[#09090B] text-[#09090B] dark:text-[#F4F4F5] min-h-screen selection:bg-amber-100 dark:selection:bg-amber-900/40 selection:text-amber-950 dark:selection:text-amber-200 transition-colors duration-200">
+          <Navbar
+            isSubpage
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            onNavigate={navigateToPath}
+            onOpenPortal={() => navigateToPortal('login')}
+            onOpenRegister={navigateToRegister}
+          />
+
+          <main className="w-full flex-1">
+            <FormalIAWorkspace
+              isStandalonePage
+              onBackHome={() => navigateToPath('/')}
+              onPreloadQuote={(data) => {
+                setPreloadedFormaliaData(data);
+                notify('Configuración de roles y canales precargada desde FORMALIA.');
+                navigateToPath('/#cotizador');
+              }}
+            />
+          </main>
+
           <Footer onOpenContact={() => setIsContactModalOpen(true)} onNavigate={navigateToPath} />
           <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} onNavigate={navigateToPath} />
         </div>

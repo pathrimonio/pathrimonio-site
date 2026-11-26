@@ -15,14 +15,14 @@ export default function Navbar({
     { name: 'Roles & Control', href: isSubpage ? '/#roles' : '#roles' },
     { name: 'Arquitectura', href: isSubpage ? '/#arquitectura' : '#arquitectura' },
     { name: 'Socios', href: isSubpage ? '/#socios' : '#socios' },
-    { name: 'FORMALIA', href: isSubpage ? '/#formalia' : '#formalia' },
+    { name: 'FORMALIA', href: '/formalia' },
     { name: 'Cotizador', href: isSubpage ? '/#cotizador' : '#cotizador' },
     { name: 'FAQ', href: isSubpage ? '/#faq' : '#faq' },
   ];
 
   const handleNavClick = (href) => (e) => {
     setMobileMenuOpen(false);
-    if (isSubpage && onNavigate && href.startsWith('/')) {
+    if (onNavigate && href.startsWith('/')) {
       e.preventDefault();
       onNavigate(href);
     }
