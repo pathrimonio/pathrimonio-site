@@ -989,7 +989,7 @@ server.registerTool(
       if (extract_abstract_signatures && scan.extractedByPath.size > 0) {
         const nodeByPath = new Map(upsertedRows.map((row) => [row.path, row]));
         const entries = Array.from(scan.extractedByPath.entries());
-        const concurrency = 8;
+        const concurrency = 3;
 
         for (let i = 0; i < entries.length; i += concurrency) {
           const batch = entries.slice(i, i + concurrency);
@@ -1147,6 +1147,219 @@ server.registerTool(
       return okResult({
         published: data
       });
+    } catch (error) {
+      return errResult(error);
+    }
+  }
+);
+
+// 13. list_interfaces
+server.registerTool(
+  'list_interfaces',
+  {
+    title: 'Listar interfaces UI/UX del proyecto',
+    description: 'Lista las fichas de interfaces registradas para un proyecto con roles, consumo de datos y ultima_fecha_modificacion, con ordenamiento por últimas modificadas.',
+    inputSchema: {
+      project_id: z.string().min(1).describe('ID del proyecto en Pathrimonio (ej. pathrimonio-site)'),
+      module: z.string().optional().describe('Filtrar por módulo funcional'),
+      status: z.string().optional().describe('Filtrar por estado'),
+      order_by: z.enum(['last_modified', 'id', 'number']).optional().default('last_modified').describe('Criterio de ordenamiento (default last_modified)')
+    }
+  },
+  async ({ project_id, module, status, order_by = 'last_modified' }) => {
+    try {
+      const { supabase } = await getSupabaseClient();
+      let q = supabase
+        .from('interfaces')
+        .select('id, project_id, number, title, full_name, module, status, platform, linked_story_id, author, reviewed_by, approved_at, version, created_at, updated_at, ultima_fecha_modificacion, interface_roles(role_name, position), interface_data_usage(table_name, attribute_name)')
+        .eq('project_id', project_id);
+
+      if (module) q = q.eq('module', module);
+      if (status) q = q.eq('status', status);
+
+      if (order_by === 'last_modified') {
+        q = q.order('ultima_fecha_modificacion', { ascending: false }).order('id', { ascending: true });
+      } else if (order_by === 'number') {
+        q = q.order('number', { ascending: true }).order('id', { ascending: true });
+      } else {
+        q = q.order('id', { ascending: true });
+      }
+
+      const { data, error } = await q;
+      if (error) throw error;
+      return okResult({
+        projectId: project_id,
+        orderBy: order_by,
+        total: (data || []).length,
+        interfaces: data || []
+      });
+    } catch (error) {
+      return errResult(error);
+    }
+  }
+);
+
+// 14. upsert_interface
+server.registerTool(
+  'upsert_interface',
+  {
+    title: 'Crear o actualizar una interfaz UI/UX',
+    description: 'Inserta o actualiza una especificación de interfaz en public.interfaces junto con interface_roles e interface_data_usage, actualizando ultima_fecha_modificacion.',
+    inputSchema: {
+      project_id: z.string().min(1),
+      id: z.string().min(1),
+      number: z.string().optional(),
+      title: z.string().min(1),
+      full_name: z.string().optional(),
+      module: z.string().optional(),
+      status: z.string().optional().default('Aprobado por Cliente'),
+      platform: z.string().optional().default('Web & Mobile'),
+      image_placeholder: z.string().optional(),
+      objective: z.string().optional(),
+      content: z.string().optional(),
+      rules: z.string().optional(),
+      details: z.string().optional(),
+      linked_story_id: z.string().nullable().optional(),
+      roles: z.array(z.string()).optional(),
+      data_usage: z.array(z.object({
+        data_model_id: z.string().optional().nullable(),
+        attribute_id: z.string().optional(),
+        schema_name: z.string().optional().default('public'),
+        table_name: z.string(),
+        table_label: z.string().optional().nullable(),
+        attribute_name: z.string(),
+        data_type: z.string().optional().nullable(),
+        is_primary: z.boolean().optional().default(false),
+        foreign_key: z.string().optional().nullable()
+      })).optional(),
+      author: z.string().optional(),
+      reviewed_by: z.string().optional().nullable(),
+      approved_at: z.string().optional().nullable(),
+      version: z.string().optional().default('v1.1'),
+      ultima_fecha_modificacion: z.string().optional()
+    }
+  },
+  async ({
+    project_id,
+    id,
+    number,
+    title,
+    full_name,
+    module,
+    status = 'Aprobado por Cliente',
+    platform = 'Web & Mobile',
+    image_placeholder,
+    objective,
+    content,
+    rules,
+    details,
+    linked_story_id,
+    roles = [],
+    data_usage = [],
+    author = 'Agente IA / MCP',
+    reviewed_by = null,
+    approved_at = null,
+    version = 'v1.1',
+    ultima_fecha_modificacion
+  }) => {
+    try {
+      const { supabase } = await getSupabaseClient();
+      const nowIso = ultima_fecha_modificacion || new Date().toISOString();
+
+      const { data: savedRow, error: upErr } = await supabase
+        .from('interfaces')
+        .upsert({
+          id,
+          project_id,
+          number: number ?? null,
+          title,
+          full_name: full_name || (number ? `${number}. ${title}` : title),
+          module: module ?? null,
+          status,
+          platform,
+          image_placeholder: image_placeholder ?? null,
+          objective: objective ?? null,
+          content: content ?? null,
+          rules: rules ?? null,
+          details: details ?? null,
+          linked_story_id: linked_story_id ?? null,
+          author,
+          reviewed_by,
+          approved_at,
+          version,
+          ultima_fecha_modificacion: nowIso
+        }, { onConflict: 'id' })
+        .select('*')
+        .single();
+      if (upErr) throw upErr;
+
+      if (Array.isArray(roles)) {
+        const { data: projectActors } = await supabase
+          .from('actors')
+          .select('id, name')
+          .eq('project_id', project_id);
+        const actorByName = new Map((projectActors || []).map((a) => [a.name, a.id]));
+
+        await supabase.from('interface_roles').delete().eq('interface_id', id);
+        if (roles.length > 0) {
+          const roleRows = roles.map((r, idx) => ({
+            interface_id: id,
+            role_name: String(r),
+            actor_id: actorByName.get(String(r)) || null,
+            position: idx
+          }));
+          const { error: roleErr } = await supabase.from('interface_roles').insert(roleRows);
+          if (roleErr) throw roleErr;
+        }
+      }
+
+      if (Array.isArray(data_usage)) {
+        await supabase.from('interface_data_usage').delete().eq('interface_id', id);
+        if (data_usage.length > 0) {
+          const usageRows = data_usage.map((ref, idx) => ({
+            interface_id: id,
+            data_model_id: ref.data_model_id ?? null,
+            attribute_id: ref.attribute_id || ref.attribute_name,
+            schema_name: ref.schema_name || 'public',
+            table_name: ref.table_name,
+            table_label: ref.table_label ?? null,
+            attribute_name: ref.attribute_name,
+            data_type: ref.data_type ?? null,
+            is_primary: Boolean(ref.is_primary),
+            foreign_key: ref.foreign_key ?? null,
+            position: idx
+          }));
+          const { error: usageErr } = await supabase.from('interface_data_usage').insert(usageRows);
+          if (usageErr) throw usageErr;
+        }
+      }
+
+      return okResult({ interface: savedRow });
+    } catch (error) {
+      return errResult(error);
+    }
+  }
+);
+
+// 15. delete_interface
+server.registerTool(
+  'delete_interface',
+  {
+    title: 'Eliminar una interfaz obsoleta o retirada',
+    description: 'Elimina una interfaz de public.interfaces (con cascada en roles y uso de datos) cuando deja de formar parte del proyecto.',
+    inputSchema: {
+      id: z.string().min(1).describe('ID de la interfaz a eliminar (ej. INT-PS-XX)'),
+      project_id: z.string().optional().describe('Opcional: restringir borrado al proyecto indicado')
+    }
+  },
+  async ({ id, project_id }) => {
+    try {
+      const { supabase } = await getSupabaseClient();
+      let q = supabase.from('interfaces').delete().eq('id', id);
+      if (project_id) q = q.eq('project_id', project_id);
+      const { data, error } = await q.select('id, project_id, title');
+      if (error) throw error;
+      return okResult({ deletedCount: (data || []).length, deleted: data || [] });
     } catch (error) {
       return errResult(error);
     }

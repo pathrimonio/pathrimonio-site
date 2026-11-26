@@ -16,6 +16,8 @@ export const PATHRIMONIO_SITE_PROJECT = {
   version: 'v1.0.0',
   modules: [
     'Landing Corporativa & Portada',
+    'FormalIA Studio & Preventa',
+    'Cumplimiento Legal & Cookies',
     'Autenticación & Control RBAC',
     'Actores, Historias & Trazabilidad',
     'Interfaces Interactivas & Hotspots',
@@ -117,9 +119,13 @@ export const PATHRIMONIO_SITE_ACTORS = [
     avatarIcon: 'public',
     color: 'rose',
     description:
-      'Visitante público de https://www.pathrimonio.site que explora la propuesta SDD, los pilares de arquitectura sin fuga de código y utiliza el estimador interactivo y modal de contacto.',
+      'Visitante público de https://www.pathrimonio.site que explora la propuesta SDD, mapea procesos en FormalIA Studio, configura preferencias de cookies, cotiza con consentimiento legal y consulta los documentos /legal/*.',
     permissionLevel: 'Consulta / Lectura',
-    systemAreas: ['Landing Corporativa & Portada'],
+    systemAreas: [
+      'Landing Corporativa & Portada',
+      'FormalIA Studio & Preventa',
+      'Cumplimiento Legal & Cookies'
+    ],
     assignedWorker: 'contacto@pathrimonio.site',
     assignedWorkerName: 'Audiencia Pública Web',
     status: 'Activo',
@@ -281,6 +287,50 @@ export const PATHRIMONIO_SITE_STORIES = [
     attachmentName: null,
     author: 'Jhan C.',
     createdAt: 'Hoy',
+    image: null
+  },
+  {
+    id: 'US-PS-08',
+    projectId: 'pathrimonio-site',
+    module: 'FormalIA Studio & Preventa',
+    priority: 'Alta',
+    status: 'Aprobado por PO',
+    role: 'Visitante Web / Prospecto B2B',
+    action:
+      'describir mi operación comercial en lenguaje natural dentro de FormalIA Studio para generar un mapa de carriles por rol, identificar cuellos manuales y precargar el cotizador',
+    benefit:
+      'pueda exportar mi diagrama (PNG/PDF/PlantUML) y enviar una cotización precisa sin crear cuenta previa.',
+    criteria: [
+      { id: 'c1', text: 'Sesiones anónimas formalia_sessions con expiración automática a 7 días y tope de 15 turnos', checked: true },
+      { id: 'c2', text: 'Renderizado multi-vista: Carriles React Flow, Macroprocesos y Cuellos de Botella', checked: true },
+      { id: 'c3', text: 'Handoff automático POST /api/v1/quotes con precarga en Paso 2 del Cotizador', checked: true }
+    ],
+    attachmentsCount: 1,
+    attachmentName: '20261125000100_formalia_sessions.sql',
+    author: 'Jhan C.',
+    createdAt: '2026-11-25',
+    image: null
+  },
+  {
+    id: 'US-PS-09',
+    projectId: 'pathrimonio-site',
+    module: 'Cumplimiento Legal & Cookies',
+    priority: 'Bloqueante',
+    status: 'Aprobado por PO',
+    role: 'Visitante Web / Prospecto B2B',
+    action:
+      'acceder a los documentos legales (/legal/*), otorgar o revocar cookies no esenciales con bloqueo previo real y rastrear páginas SSG en buscadores',
+    benefit:
+      'el sitio cumpla con la Ley N.º 29733, Indecopi, estándares GDPR sin dark patterns y correcta indexación técnica en Google.',
+    criteria: [
+      { id: 'c1', text: '4 rutas SSG pre-renderizadas en HTML (/legal/aviso-legal, privacidad, cookies y libro-reclamaciones)', checked: true },
+      { id: 'c2', text: 'Opt-in estricto con ConsentGatedScript, Google Consent Mode v2 y revocación con purga de cookies', checked: true },
+      { id: 'c3', text: 'Checkbox obligatorio de Privacidad en Cotizador/Libro + /robots.txt, /sitemap.xml y JSON-LD', checked: true }
+    ],
+    attachmentsCount: 1,
+    attachmentName: '20261125000200_quotes_privacy_consent.sql',
+    author: 'Jhan C.',
+    createdAt: '2026-11-25',
     image: null
   }
 ];
@@ -456,7 +506,8 @@ export const PATHRIMONIO_SITE_DATA_MODELS = [
       { id: 'c4', name: 'title', type: 'TEXT', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: null, description: 'Título visible de la interfaz.' },
       { id: 'c5', name: 'module', type: 'TEXT', isPrimary: false, isNullable: true, isUnique: false, foreignKey: null, defaultValue: null, description: 'Módulo funcional.' },
       { id: 'c6', name: 'platform', type: 'TEXT', isPrimary: false, isNullable: true, isUnique: false, foreignKey: null, defaultValue: null, description: 'Web / Desktop, Mobile o Web & Mobile.' },
-      { id: 'c7', name: 'linked_story_id', type: 'TEXT', isPrimary: false, isNullable: true, isUnique: false, foreignKey: 'stories(id)', defaultValue: null, description: 'Historia de usuario trazada.' }
+      { id: 'c7', name: 'linked_story_id', type: 'TEXT', isPrimary: false, isNullable: true, isUnique: false, foreignKey: 'stories(id)', defaultValue: null, description: 'Historia de usuario trazada.' },
+      { id: 'c8', name: 'ultima_fecha_modificacion', type: 'TIMESTAMPTZ', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: 'now()', description: 'Fecha exacta de la última modificación para ordenamiento y auditoría.' }
     ]
   },
   {
@@ -654,6 +705,81 @@ export const PATHRIMONIO_SITE_DATA_MODELS = [
       { id: 'c5', name: 'html_content', type: 'TEXT', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: null, description: 'HTML completo autónomo generado por archify.' },
       { id: 'c6', name: 'generator_version', type: 'TEXT', isPrimary: false, isNullable: true, isUnique: false, foreignKey: null, defaultValue: null, description: 'Versión de archify (ej. archify 3.3.0).' }
     ]
+  },
+  {
+    id: 'TBL-PS-16',
+    projectId: 'pathrimonio-site',
+    tableName: 'formalia_sessions',
+    name: 'Sesiones Conversacionales Anónimas FormalIA',
+    module: 'FormalIA Studio & Preventa',
+    storageTarget: 'PostgreSQL (Supabase Cloud)',
+    storageLocation: 'Supabase Cloud (public.formalia_sessions)',
+    syncStrategy: 'API serverless /api/v1/formalia/sessions + fallback localStorage; expiración automática a 7 días.',
+    status: 'Aprobado por Arquitectura',
+    description: 'Persiste el grafo incremental ProcessGraphJSON, historial de turnos (máx. 15) y vínculo opcional a cotización.',
+    linkedStory: 'US-PS-08',
+    linkedInterface: 'INT-PS-13',
+    author: '20261125000100_formalia_sessions.sql',
+    approvedAt: '2026-11-25',
+    version: 'v1.0',
+    attributes: [
+      { id: 'c1', name: 'session_id', type: 'TEXT', isPrimary: true, isNullable: false, isUnique: true, foreignKey: null, defaultValue: null, description: 'ID de sesión anónima (ej. FIA-2026-XXXX).' },
+      { id: 'c2', name: 'process_graph', type: 'JSONB', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: "'{}'::jsonb", description: 'Grafo canónico de actores, pasos y cuellos de botella.' },
+      { id: 'c3', name: 'turns_count', type: 'INTEGER', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: '0', description: 'Contador de turnos (<= 15).' },
+      { id: 'c4', name: 'linked_quote_id', type: 'TEXT', isPrimary: false, isNullable: true, isUnique: false, foreignKey: null, defaultValue: null, description: 'Cotización asociada tras conversión.' },
+      { id: 'c5', name: 'expires_at', type: 'TIMESTAMPTZ', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: "(now() + interval '7 days')", description: 'Expiración automática a los 7 días.' }
+    ]
+  },
+  {
+    id: 'TBL-PS-17',
+    projectId: 'pathrimonio-site',
+    tableName: 'quotes',
+    name: 'Cotizaciones & Consentimiento de Privacidad',
+    module: 'Landing Corporativa & Portada',
+    storageTarget: 'PostgreSQL (Supabase Cloud)',
+    storageLocation: 'Supabase Cloud (public.quotes)',
+    syncStrategy: 'Endpoint POST /api/v1/quotes con RLS que exige privacy_policy_accepted = true.',
+    status: 'Aprobado por Arquitectura',
+    description: 'Almacena cotizaciones generadas en el Cotizador Interactivo con handoff de ingeniería FormalIA y prueba verificable de consentimiento.',
+    linkedStory: 'US-PS-09',
+    linkedInterface: 'INT-PS-01',
+    author: '20261125000200_quotes_privacy_consent.sql',
+    approvedAt: '2026-11-25',
+    version: 'v1.1',
+    attributes: [
+      { id: 'c1', name: 'quote_id', type: 'TEXT', isPrimary: true, isNullable: false, isUnique: true, foreignKey: null, defaultValue: null, description: 'ID único de cotización.' },
+      { id: 'c2', name: 'formalia_session_id', type: 'TEXT', isPrimary: false, isNullable: true, isUnique: false, foreignKey: 'formalia_sessions(session_id)', defaultValue: null, description: 'Sesión FormalIA vinculada.' },
+      { id: 'c3', name: 'pricing_summary', type: 'JSONB', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: "'{}'::jsonb", description: 'Desglose mensual, diario y setup fee.' },
+      { id: 'c4', name: 'lead_contact', type: 'JSONB', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: "'{}'::jsonb", description: 'Nombre, WhatsApp y correo de contacto.' },
+      { id: 'c5', name: 'privacy_policy_accepted', type: 'BOOLEAN', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: 'false', description: 'Aceptación explícita de Política de Privacidad.' },
+      { id: 'c6', name: 'privacy_policy_version', type: 'TEXT', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: "'2026-11'", description: 'Versión legal aceptada.' },
+      { id: 'c7', name: 'accepted_at', type: 'TIMESTAMPTZ', isPrimary: false, isNullable: true, isUnique: false, foreignKey: null, defaultValue: null, description: 'Marca temporal exacta de aceptación.' }
+    ]
+  },
+  {
+    id: 'TBL-PS-18',
+    projectId: 'pathrimonio-site',
+    tableName: 'complaints',
+    name: 'Hojas del Libro de Reclamaciones Virtual',
+    module: 'Cumplimiento Legal & Cookies',
+    storageTarget: 'PostgreSQL (Supabase Cloud)',
+    storageLocation: 'Supabase Cloud (public.complaints)',
+    syncStrategy: 'Endpoint POST /api/v1/complaints con código único LR-2026-XXXXXX y aceptación obligatoria de privacidad.',
+    status: 'Aprobado por Arquitectura',
+    description: 'Registro oficial de Reclamos y Quejas conforme a Ley N.º 29571 (Indecopi, Perú).',
+    linkedStory: 'US-PS-09',
+    linkedInterface: 'INT-PS-15',
+    author: '20261125000200_quotes_privacy_consent.sql',
+    approvedAt: '2026-11-25',
+    version: 'v1.0',
+    attributes: [
+      { id: 'c1', name: 'complaint_code', type: 'TEXT', isPrimary: true, isNullable: false, isUnique: true, foreignKey: null, defaultValue: null, description: 'Código de hoja (LR-2026-XXXXXX).' },
+      { id: 'c2', name: 'record_type', type: 'TEXT', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: null, description: 'Reclamo | Queja.' },
+      { id: 'c3', name: 'consumer_name', type: 'TEXT', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: null, description: 'Nombre o razón social del consumidor.' },
+      { id: 'c4', name: 'document_number', type: 'TEXT', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: null, description: 'DNI / CE / RUC.' },
+      { id: 'c5', name: 'privacy_policy_accepted', type: 'BOOLEAN', isPrimary: false, isNullable: false, isUnique: false, foreignKey: null, defaultValue: 'false', description: 'Aceptación de Política de Privacidad.' },
+      { id: 'c6', name: 'accepted_at', type: 'TIMESTAMPTZ', isPrimary: false, isNullable: true, isUnique: false, foreignKey: null, defaultValue: null, description: 'Timestamp de aceptación.' }
+    ]
   }
 ];
 
@@ -662,8 +788,8 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     id: 'INT-PS-01',
     projectId: 'pathrimonio-site',
     number: '1',
-    title: 'Landing Corporativa & Estimador SDD',
-    fullName: '1. Landing Corporativa & Estimador SDD',
+    title: 'Landing Corporativa, Estimador SDD & Consentimiento',
+    fullName: '1. Landing Corporativa, Estimador SDD & Consentimiento',
     module: 'Landing Corporativa & Portada',
     status: 'Aprobado por Cliente',
     platform: 'Web & Mobile',
@@ -671,21 +797,25 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     imagePlaceholder: 'landing',
     fields: {
       objetivo:
-        'Presentar la metodología SDD de Pathrimonio, la arquitectura Zero-Code Leakage y permitir estimar alcance/costo interactivo o solicitar contacto.',
+        'Presentar la metodología SDD de Pathrimonio, la arquitectura Zero-Code Leakage, acceso a FormalIA Studio y permitir estimar alcance/costo con consentimiento legal auditado.',
       contenido:
-        'Navbar con selector de tema Oscuro/Claro, Hero, RolesSection, Pillars, ArchitectureSection, InteractiveEstimator, PartnershipSection y ContactModal.',
+        'Navbar con selector de tema Oscuro/Claro, Hero (con CTA a /formalia), RolesSection, ArchitectureSection, PartnershipSection, ImpactPathwayBento, InteractiveEstimator (Paso 4 con checkbox obligatorio de Política de Privacidad), FAQSection, Footer (/legal/* y botón Configurar cookies) y ContactModal.',
       reglas:
-        'Soporta modo oscuro/claro sincronizado en pathrimonio_theme y transición directa a #portal o modal de registro.',
+        'Soporta modo oscuro/claro en pathrimonio-theme; bloquea envío en POST /api/v1/quotes sin privacy_policy_accepted = true y se renderiza con HTML SSG pre-generado.',
       detalles:
-        'Componentes principales: Navbar.jsx, Hero.jsx, ArchitectureSection.jsx, InteractiveEstimator.jsx, pricingRules.js.'
+        'Componentes activos: Navbar.jsx, Hero.jsx, RolesSection.jsx, ArchitectureSection.jsx, PartnershipSection.jsx, ImpactPathwayBento.jsx, InteractiveEstimator.jsx, FAQSection.jsx, Footer.jsx, ContactModal.jsx y api/v1/quotes.js. (Retirados del render: Pillars, Manifesto, FutureProducts, PathwaySection, ServicesSection, CommunityImpactSection).'
     },
     roles: ['Visitante Web / Prospecto B2B', 'Administrador Sistémico'],
-    dataUsage: [],
+    dataUsage: [
+      { key: 'TBL-PS-17:c1', tableId: 'TBL-PS-17', tableName: 'quotes', tableLabel: 'Cotizaciones & Consentimiento de Privacidad', schema: 'public', attribute: 'quote_id', type: 'TEXT', isPrimary: true },
+      { key: 'TBL-PS-17:c5', tableId: 'TBL-PS-17', tableName: 'quotes', tableLabel: 'Cotizaciones & Consentimiento de Privacidad', schema: 'public', attribute: 'privacy_policy_accepted', type: 'BOOLEAN', isPrimary: false }
+    ],
     linkedStory: 'US-PS-07',
     author: 'Jhan C.',
     reviewedBy: 'Arquitecto de Software',
-    approvedAt: '2026-11-24',
-    version: 'v1.0'
+    approvedAt: '2026-11-25',
+    ultima_fecha_modificacion: '2026-11-25T16:40:00-05:00',
+    version: 'v1.2'
   },
   {
     id: 'INT-PS-02',
@@ -716,6 +846,7 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     author: 'Administrador Sistémico',
     reviewedBy: 'Arquitecto de Software',
     approvedAt: '2026-11-24',
+    ultima_fecha_modificacion: '2026-11-24T11:20:00-05:00',
     version: 'v1.0'
   },
   {
@@ -731,12 +862,12 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     imagePlaceholder: 'dashboard',
     fields: {
       objetivo:
-        'Orquestar la navegación lateral responsiva (Sidebar), cabecera contextual, selector global de proyectos y creación de nuevos softwares.',
+        'Orquestar la navegación lateral responsiva (Sidebar), cabecera contextual, selector global de proyectos, enrutamiento SSG (/formalia, /legal/*) y creación de nuevos softwares.',
       contenido:
-        'Sidebar fija en escritorio y drawer en móvil, ProjectSelector, NewProjectModal, Header con UserMenu, theme toggle y Toast de estado.',
+        'Sidebar fija en escritorio y drawer en móvil (incluyendo pestaña FormalIA Studio), ProjectSelector, NewProjectModal, Header con UserMenu, theme toggle y Toast de estado.',
       reglas:
         'El área principal ocupa 100% del ancho disponible (w-full px-3 sm:px-4 lg:px-5) filtrando proyectos según project_members.',
-      detalles: 'Implementado en App.jsx, Sidebar.jsx, Header.jsx, ProjectSelector.jsx y NewProjectModal.jsx.'
+      detalles: 'Implementado en App.jsx, Sidebar.jsx, Header.jsx, ProjectSelector.jsx, NewProjectModal.jsx y FormalIAPortalView.jsx.'
     },
     roles: ['Administrador Sistémico', 'Arquitecto de Software', 'Product Owner / Analista SDD'],
     dataUsage: [
@@ -747,8 +878,9 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     linkedStory: 'US-PS-01',
     author: 'Jhan C.',
     reviewedBy: 'Product Owner',
-    approvedAt: '2026-11-24',
-    version: 'v1.0'
+    approvedAt: '2026-11-25',
+    ultima_fecha_modificacion: '2026-11-25T14:20:00-05:00',
+    version: 'v1.1'
   },
   {
     id: 'INT-PS-04',
@@ -763,12 +895,12 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     imagePlaceholder: 'actors',
     fields: {
       objetivo:
-        'Definir los roles humanos y sistémicos de cada proyecto, áreas autorizadas, responsable asignado y nivel de permisos.',
+        'Definir los roles humanos y sistémicos de cada proyecto, áreas autorizadas con popover informativo, responsable asignado y nivel de permisos.',
       contenido:
-        'ActorsControlsBar, cuadrícula ActorFeed / ActorCard, modal ActorBuilder y detalle ActorDetailModal.',
+        'ActorsControlsBar con BusinessAreasPopover, SectionInfoPopover (i) en cabecera, cuadrícula ActorFeed / ActorCard (icono superior optimizado), modal ActorBuilder y ActorDetailModal.',
       reglas:
-        'Cada actor se vincula posteriormente con las interfaces UI/UX mediante public.interface_roles.',
-      detalles: 'Componentes: ActorFeed.jsx, ActorCard.jsx, ActorBuilder.jsx, ActorDetailModal.jsx.'
+        'Cada actor se vincula posteriormente con las interfaces UI/UX mediante public.interface_roles y contabiliza áreas únicas cubiertas en vivo.',
+      detalles: 'Componentes: ActorFeed.jsx, ActorCard.jsx, ActorBuilder.jsx, ActorDetailModal.jsx, BusinessAreasPopover.jsx, SectionInfoPopover.jsx.'
     },
     roles: ['Administrador Sistémico', 'Product Owner / Analista SDD'],
     dataUsage: [
@@ -779,8 +911,9 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     linkedStory: 'US-PS-02',
     author: 'Sofía V.',
     reviewedBy: 'Administrador Sistémico',
-    approvedAt: '2026-11-24',
-    version: 'v1.0'
+    approvedAt: '2026-11-25',
+    ultima_fecha_modificacion: '2026-11-25T15:30:00-05:00',
+    version: 'v1.2'
   },
   {
     id: 'INT-PS-05',
@@ -795,12 +928,12 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     imagePlaceholder: 'stories',
     fields: {
       objetivo:
-        'Registrar, filtrar y aprobar historias de usuario con su lista interactiva de criterios de aceptación (DoD) y adjuntos.',
+        'Registrar, filtrar y aprobar historias de usuario con su lista interactiva de criterios de aceptación (DoD), popover de ayuda (i) y adjuntos.',
       contenido:
-        'ControlsBar con filtros por módulo/prioridad/estado, StoryFeed, StoryBuilder y StoryDetailModal.',
+        'ControlsBar con filtros por módulo/prioridad/estado, SectionInfoPopover (i), StoryFeed, StoryBuilder y StoryDetailModal.',
       reglas:
         'Los criterios marcados se persisten en story_criteria conservando el orden exacto de checklist.',
-      detalles: 'Componentes: StoryFeed.jsx, StoryBuilder.jsx, StoryDetailModal.jsx, ControlsBar.jsx.'
+      detalles: 'Componentes: StoryFeed.jsx, StoryBuilder.jsx, StoryDetailModal.jsx, ControlsBar.jsx, SectionInfoPopover.jsx.'
     },
     roles: ['Product Owner / Analista SDD', 'Arquitecto de Software'],
     dataUsage: [
@@ -812,14 +945,15 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     author: 'Sofía V.',
     reviewedBy: 'Arquitecto de Software',
     approvedAt: '2026-11-24',
-    version: 'v1.0'
+    ultima_fecha_modificacion: '2026-11-24T17:10:00-05:00',
+    version: 'v1.1'
   },
   {
     id: 'INT-PS-06',
     projectId: 'pathrimonio-site',
     number: '6',
-    title: 'Catálogo de Interfaces & Hotspots Interactivos',
-    fullName: '6. Catálogo de Interfaces & Hotspots Interactivos',
+    title: 'Catálogo de Interfaces, Hotspots & Orden en Vivo',
+    fullName: '6. Catálogo de Interfaces, Hotspots & Orden en Vivo',
     module: 'Interfaces Interactivas & Hotspots',
     status: 'Aprobado por Cliente',
     platform: 'Web & Mobile',
@@ -827,26 +961,28 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     imagePlaceholder: 'interfaces',
     fields: {
       objetivo:
-        'Documentar interfaces UI/UX, superponer hotspots interactivos sobre capturas reales y enlazar campos de BD consumidos por cada vista.',
+        'Documentar interfaces UI/UX, superponer hotspots interactivos, registrar ultima_fecha_modificacion, ordenar por "Últimas modificadas" y sincronizar cambios vía Supabase Realtime y MCP.',
       contenido:
-        'InterfaceControlsBar, InterfaceFeed, InterfaceBuilder, InterfaceDetailModal, InterfaceHotspotOverlay y DataUsagePicker.',
+        'InterfaceControlsBar, InterfaceFeed con selector de orden (Últimas modificadas, Número, Prioridad, Estado, Código ID), chip temporal en InterfaceCard, InterfaceBuilder, InterfaceDetailModal, InterfaceHotspotOverlay y DataUsagePicker.',
       reglas:
-        'Soporta exportación visual y múltiple plataforma, catálogo global de módulos (interface_modules) y navegación entre pantallas por hotspot.',
+        'Cada creación, edición, duplicación o cambio de estado actualiza ultima_fecha_modificacion (trigger BEFORE UPDATE en Postgres); herramientas MCP list_interfaces, upsert_interface y delete_interface mantienen el catálogo sincronizado.',
       detalles:
-        'Componentes: InterfaceFeed.jsx, InterfaceCard.jsx, InterfaceBuilder.jsx, InterfaceDetailModal.jsx, InterfaceHotspotOverlay.jsx.'
+        'Componentes: InterfaceFeed.jsx, InterfaceCard.jsx, InterfaceBuilder.jsx, InterfaceDetailModal.jsx, InterfaceHotspotOverlay.jsx, supabaseData.js y mcp/pathrimonio-mcp-server.mjs.'
     },
-    roles: ['Product Owner / Analista SDD', 'Arquitecto de Software'],
+    roles: ['Product Owner / Analista SDD', 'Arquitecto de Software', 'Agente IA / MCP (pathrimonio-files)'],
     dataUsage: [
       { key: 'TBL-PS-07:c1', tableId: 'TBL-PS-07', tableName: 'interfaces', tableLabel: 'Especificaciones de Interfaces UI/UX', schema: 'public', attribute: 'id', type: 'TEXT', isPrimary: true },
       { key: 'TBL-PS-07:c4', tableId: 'TBL-PS-07', tableName: 'interfaces', tableLabel: 'Especificaciones de Interfaces UI/UX', schema: 'public', attribute: 'title', type: 'TEXT', isPrimary: false },
+      { key: 'TBL-PS-07:c8', tableId: 'TBL-PS-07', tableName: 'interfaces', tableLabel: 'Especificaciones de Interfaces UI/UX', schema: 'public', attribute: 'ultima_fecha_modificacion', type: 'TIMESTAMPTZ', isPrimary: false },
       { key: 'TBL-PS-08:c2', tableId: 'TBL-PS-08', tableName: 'interface_roles', tableLabel: 'Roles Autorizados por Interfaz', schema: 'public', attribute: 'role_name', type: 'TEXT', isPrimary: true },
       { key: 'TBL-PS-11:c6', tableId: 'TBL-PS-11', tableName: 'interface_data_usage', tableLabel: 'Trazabilidad de Datos por Interfaz', schema: 'public', attribute: 'attribute_name', type: 'TEXT', isPrimary: false }
     ],
     linkedStory: 'US-PS-03',
     author: 'Elena Morales',
     reviewedBy: 'Product Owner',
-    approvedAt: '2026-11-24',
-    version: 'v1.0'
+    approvedAt: '2026-11-25',
+    ultima_fecha_modificacion: '2026-11-25T20:10:00-05:00',
+    version: 'v1.2'
   },
   {
     id: 'INT-PS-07',
@@ -878,6 +1014,7 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     author: 'Arquitecto Principal',
     reviewedBy: 'Administrador Sistémico',
     approvedAt: '2026-11-24',
+    ultima_fecha_modificacion: '2026-11-24T19:00:00-05:00',
     version: 'v1.0'
   },
   {
@@ -910,6 +1047,7 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     author: 'Arquitecto Principal',
     reviewedBy: 'Administrador Sistémico',
     approvedAt: '2026-11-24',
+    ultima_fecha_modificacion: '2026-11-24T16:30:00-05:00',
     version: 'v1.0'
   },
   {
@@ -929,8 +1067,8 @@ export const PATHRIMONIO_SITE_INTERFACES = [
       contenido:
         'FilesControlsBar (acceso rápido a "Arquitectura archify"), ProjectTreeView en panel dividido, buscador global y modal TreeFileDetailModal para editar/ver métodos.',
       reglas:
-        'Sincronizado vía Supabase Realtime; cambios desde agentes de código con sync_modified_file o sync_directory_from_disk aparecen sin recargar.',
-      detalles: 'Implementado en ProjectTreeView.jsx, TreeFileDetailModal.jsx, FolderImportModal.jsx y mcp/abstractExtractor.mjs.'
+        'Sincronizado vía Supabase Realtime; cambios desde agentes de código con sync_modified_file o sync_directory_from_disk aparecen sin recargar (excluyendo dist-ssr).',
+      detalles: 'Implementado en ProjectTreeView.jsx, TreeFileDetailModal.jsx, FolderImportModal.jsx, mcp/abstractExtractor.mjs y mcp/pathrimonio-mcp-server.mjs.'
     },
     roles: ['Agente IA / MCP (pathrimonio-files)', 'Arquitecto de Software', 'Administrador Sistémico'],
     dataUsage: [
@@ -942,8 +1080,9 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     linkedStory: 'US-PS-05',
     author: 'Carlos D.',
     reviewedBy: 'Arquitecto de Software',
-    approvedAt: '2026-11-24',
-    version: 'v1.0'
+    approvedAt: '2026-11-25',
+    ultima_fecha_modificacion: '2026-11-25T11:15:00-05:00',
+    version: 'v1.1'
   },
   {
     id: 'INT-PS-10',
@@ -974,6 +1113,7 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     author: 'Sofía V.',
     reviewedBy: 'Administrador Sistémico',
     approvedAt: '2026-11-24',
+    ultima_fecha_modificacion: '2026-11-24T14:00:00-05:00',
     version: 'v1.0'
   },
   {
@@ -1004,6 +1144,7 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     author: 'Sofía V.',
     reviewedBy: 'Administrador Sistémico',
     approvedAt: '2026-11-24',
+    ultima_fecha_modificacion: '2026-11-24T12:15:00-05:00',
     version: 'v1.0'
   },
   {
@@ -1036,6 +1177,140 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     author: 'Administrador Sistémico',
     reviewedBy: 'Arquitecto de Software',
     approvedAt: '2026-11-24',
+    ultima_fecha_modificacion: '2026-11-24T13:05:00-05:00',
+    version: 'v1.0'
+  },
+  {
+    id: 'INT-PS-13',
+    projectId: 'pathrimonio-site',
+    number: '13',
+    title: 'FormalIA Studio — Workbench & Grafo de Proceso',
+    fullName: '13. FormalIA Studio — Workbench & Grafo de Proceso',
+    module: 'FormalIA Studio & Preventa',
+    status: 'Aprobado por Cliente',
+    platform: 'Web & Mobile',
+    image: null,
+    imagePlaceholder: 'formalia',
+    fields: {
+      objetivo:
+        'Permitir a prospectos y consultores modelar procesos operativos en lenguaje natural y convertirlos en un ProcessGraphJSON, Mermaid y Markdown SDD con handoff directo al Cotizador.',
+      contenido:
+        'Ruta pública SSG (/formalia) y vista integrada en portal (FormalIAPortalView): FormalIAWorkspace split-screen con FormalIAChatPanel, FormalIACanvasPanel y FormalIAEngineeringModal.',
+      reglas:
+        'Sesiones anónimas limitadas a 15 turnos con expiración a 7 días en public.formalia_sessions; soporta exportación Mermaid/Markdown y conversión a cotización (to-quote).',
+      detalles:
+        'Componentes: FormalIAWorkspace.jsx, FormalIAChatPanel.jsx, FormalIACanvasPanel.jsx, FormalIAEngineeringModal.jsx, FormalIAPortalView.jsx, extractorEngine.js, compilers.js y api/v1/formalia/*.'
+    },
+    roles: ['Visitante Web / Prospecto B2B', 'Product Owner / Analista SDD', 'Arquitecto de Software'],
+    dataUsage: [
+      { key: 'TBL-PS-16:c1', tableId: 'TBL-PS-16', tableName: 'formalia_sessions', tableLabel: 'Sesiones Conversacionales Anónimas FormalIA', schema: 'public', attribute: 'session_id', type: 'TEXT', isPrimary: true },
+      { key: 'TBL-PS-16:c2', tableId: 'TBL-PS-16', tableName: 'formalia_sessions', tableLabel: 'Sesiones Conversacionales Anónimas FormalIA', schema: 'public', attribute: 'process_graph', type: 'JSONB', isPrimary: false },
+      { key: 'TBL-PS-16:c5', tableId: 'TBL-PS-16', tableName: 'formalia_sessions', tableLabel: 'Sesiones Conversacionales Anónimas FormalIA', schema: 'public', attribute: 'expires_at', type: 'TIMESTAMPTZ', isPrimary: false }
+    ],
+    linkedStory: 'US-PS-08',
+    author: 'Jhan C.',
+    reviewedBy: 'Arquitecto de Software',
+    approvedAt: '2026-11-25',
+    ultima_fecha_modificacion: '2026-11-25T17:50:00-05:00',
+    version: 'v1.0'
+  },
+  {
+    id: 'INT-PS-14',
+    projectId: 'pathrimonio-site',
+    number: '14',
+    title: 'Centro de Documentos Legales SSG (/legal/*)',
+    fullName: '14. Centro de Documentos Legales SSG (/legal/*)',
+    module: 'Cumplimiento Legal & Cookies',
+    status: 'Aprobado por Cliente',
+    platform: 'Web & Mobile',
+    image: null,
+    imagePlaceholder: 'legal',
+    fields: {
+      objetivo:
+        'Publicar rutas estáticas pre-renderizadas (SSG) para Aviso Legal, Política de Privacidad (Ley N.º 29733 / derechos ARCO) y Política de Cookies.',
+      contenido:
+        'LegalLayout minimalista (max-w-3xl, tokens Claro/Oscuro), LegalPageRouter y vistas dedicadas LegalAvisoPage, LegalPrivacidadPage y LegalCookiesPage con botón directo a preferencias de cookies.',
+      reglas:
+        'Pre-renderizadas vía scripts/prerender.mjs y src/entry-server.jsx para responder HTML completo (HTTP 200 OK) indexable sin esperar hidratación JS, junto a api/robots.js y api/sitemap.js.',
+      detalles:
+        'Implementado en LegalLayout.jsx, LegalPageRouter.jsx, LegalAvisoPage.jsx, LegalPrivacidadPage.jsx, LegalCookiesPage.jsx, siteConfig.js y scripts/prerender.mjs.'
+    },
+    roles: ['Visitante Web / Prospecto B2B', 'Administrador Sistémico'],
+    dataUsage: [
+      { key: 'TBL-PS-17:c5', tableId: 'TBL-PS-17', tableName: 'quotes', tableLabel: 'Cotizaciones & Consentimiento de Privacidad', schema: 'public', attribute: 'privacy_policy_accepted', type: 'BOOLEAN', isPrimary: false },
+      { key: 'TBL-PS-17:c6', tableId: 'TBL-PS-17', tableName: 'quotes', tableLabel: 'Cotizaciones & Consentimiento de Privacidad', schema: 'public', attribute: 'privacy_policy_version', type: 'TEXT', isPrimary: false }
+    ],
+    linkedStory: 'US-PS-09',
+    author: 'Jhan C.',
+    reviewedBy: 'Arquitecto de Software',
+    approvedAt: '2026-11-25',
+    ultima_fecha_modificacion: '2026-11-25T18:30:00-05:00',
+    version: 'v1.0'
+  },
+  {
+    id: 'INT-PS-15',
+    projectId: 'pathrimonio-site',
+    number: '15',
+    title: 'Libro de Reclamaciones Virtual (Indecopi)',
+    fullName: '15. Libro de Reclamaciones Virtual (Indecopi)',
+    module: 'Cumplimiento Legal & Cookies',
+    status: 'Aprobado por Cliente',
+    platform: 'Web & Mobile',
+    image: null,
+    imagePlaceholder: 'complaints',
+    fields: {
+      objetivo:
+        'Registrar oficialmente Reclamos y Quejas de consumidores peruanos conforme a la Ley N.º 29571 generando constancia con código único LR-2026-XXXXXX.',
+      contenido:
+        'Formulario accesible en /legal/libro-reclamaciones con tipo (Reclamo/Queja), datos del consumidor (DNI/CE/RUC), bien o servicio, monto reclamado, detalle/pedido y checkbox de privacidad.',
+      reglas:
+        'Persiste en public.complaints vía POST /api/v1/complaints exigiendo privacy_policy_accepted = true y entregando código de hoja trazable.',
+      detalles:
+        'Componentes: LegalLibroReclamacionesPage.jsx, api/v1/complaints.js y migración 20261125000200_quotes_privacy_consent.sql.'
+    },
+    roles: ['Visitante Web / Prospecto B2B', 'Administrador Sistémico'],
+    dataUsage: [
+      { key: 'TBL-PS-18:c1', tableId: 'TBL-PS-18', tableName: 'complaints', tableLabel: 'Hojas del Libro de Reclamaciones Virtual', schema: 'public', attribute: 'complaint_code', type: 'TEXT', isPrimary: true },
+      { key: 'TBL-PS-18:c2', tableId: 'TBL-PS-18', tableName: 'complaints', tableLabel: 'Hojas del Libro de Reclamaciones Virtual', schema: 'public', attribute: 'record_type', type: 'TEXT', isPrimary: false },
+      { key: 'TBL-PS-18:c5', tableId: 'TBL-PS-18', tableName: 'complaints', tableLabel: 'Hojas del Libro de Reclamaciones Virtual', schema: 'public', attribute: 'privacy_policy_accepted', type: 'BOOLEAN', isPrimary: false }
+    ],
+    linkedStory: 'US-PS-09',
+    author: 'Jhan C.',
+    reviewedBy: 'Administrador Sistémico',
+    approvedAt: '2026-11-25',
+    ultima_fecha_modificacion: '2026-11-25T19:05:00-05:00',
+    version: 'v1.0'
+  },
+  {
+    id: 'INT-PS-16',
+    projectId: 'pathrimonio-site',
+    number: '16',
+    title: 'Gestor Real de Cookies & Banner Opt-in Estricto',
+    fullName: '16. Gestor Real de Cookies & Banner Opt-in Estricto',
+    module: 'Cumplimiento Legal & Cookies',
+    status: 'Aprobado por Cliente',
+    platform: 'Web & Mobile',
+    image: null,
+    imagePlaceholder: 'consent',
+    fields: {
+      objetivo:
+        'Garantizar bloqueo previo real de scripts de analítica y marketing (GA4 / Meta Pixel / Tag Manager) hasta que el usuario otorgue consentimiento explícito sin dark patterns.',
+      contenido:
+        'Banner flotante CookieBanner con tres botones simétricos ("Aceptar todas", "Rechazar no esenciales", "Configurar") y CookiePreferencesModal con switches granulares y reapertura desde Footer o /legal/cookies.',
+      reglas:
+        'ConsentGatedScript solo inyecta scripts en el DOM si consent.analytics o consent.marketing === true; almacena contrato JSON v1.0 en cookie/storage pathrimonio-consent y revoca trackers al instante.',
+      detalles:
+        'Implementado en src/context/ConsentContext.jsx, CookieBanner.jsx, CookiePreferencesModal.jsx, ConsentGatedScript.jsx y ConsentTrackers.jsx.'
+    },
+    roles: ['Visitante Web / Prospecto B2B'],
+    dataUsage: [
+      { key: 'TBL-PS-17:c6', tableId: 'TBL-PS-17', tableName: 'quotes', tableLabel: 'Cotizaciones & Consentimiento de Privacidad', schema: 'public', attribute: 'privacy_policy_version', type: 'TEXT', isPrimary: false }
+    ],
+    linkedStory: 'US-PS-09',
+    author: 'Jhan C.',
+    reviewedBy: 'Arquitecto de Software',
+    approvedAt: '2026-11-25',
+    ultima_fecha_modificacion: '2026-11-25T19:45:00-05:00',
     version: 'v1.0'
   }
 ];
@@ -1125,16 +1400,16 @@ export const PATHRIMONIO_SITE_FILES = [
     format: 'md',
     sizeBytes: 4120,
     sizeFormatted: '4.0 KB',
-    version: 'v1.1',
+    version: 'v1.2',
     status: 'Vigente / Oficial',
     uploadedBy: 'Carlos D.',
-    uploadedAt: '2026-11-24',
+    uploadedAt: '2026-11-25',
     description:
-      'Guía oficial del servidor MCP pathrimonio-files (12 herramientas para sincronizar archivos, firmas AST sin fuga de código y diagramas HTML Archify).',
-    tags: ['MCP', 'Documentación', 'AST', 'Archify'],
-    linkedEntity: 'US-PS-05 / US-PS-06',
+      'Guía oficial del servidor MCP pathrimonio-files (15 herramientas para sincronizar archivos, firmas AST sin fuga de código, diagramas HTML Archify e interfaces UI/UX).',
+    tags: ['MCP', 'Documentación', 'AST', 'Archify', 'Interfaces'],
+    linkedEntity: 'US-PS-03 / US-PS-05 / US-PS-06',
     downloadUrl: '#file-ps-mcp-doc',
-    contentPreview: 'Servidor MCP pathrimonio-files: list_projects, sync_modified_file, sync_directory_from_disk, publish_archify_html...'
+    contentPreview: 'Servidor MCP pathrimonio-files: list_projects, sync_modified_file, list_interfaces, upsert_interface, delete_interface...'
   },
   {
     id: 'FILE-PS-06',
@@ -1154,27 +1429,84 @@ export const PATHRIMONIO_SITE_FILES = [
     linkedEntity: 'US-PS-06 / INT-PS-07',
     downloadUrl: '/archify/pathrimonio-site-architecture.html',
     contentPreview: '<!DOCTYPE html><html lang="es"><meta name="generator" content="archify 3.3.0">...'
+  },
+  {
+    id: 'FILE-PS-07',
+    projectId: 'pathrimonio-site',
+    name: '20261125000100_formalia_sessions.sql',
+    category: 'Arquitectura & SQL',
+    format: 'sql',
+    sizeBytes: 2480,
+    sizeFormatted: '2.4 KB',
+    version: 'v1.0',
+    status: 'Vigente / Oficial',
+    uploadedBy: 'Jhan C.',
+    uploadedAt: '2026-11-25',
+    description:
+      'Migración SQL para sesiones anónimas de FormalIA Studio (formalia_sessions) con ProcessGraphJSON, expiración a 7 días y políticas de acceso seguro.',
+    tags: ['PostgreSQL', 'FormalIA', 'JSONB', 'Preventa'],
+    linkedEntity: 'US-PS-08 / INT-PS-13',
+    downloadUrl: '#file-ps-formalia-sql',
+    contentPreview: 'CREATE TABLE IF NOT EXISTS public.formalia_sessions (...);'
+  },
+  {
+    id: 'FILE-PS-08',
+    projectId: 'pathrimonio-site',
+    name: '20261125000200_quotes_privacy_consent.sql',
+    category: 'Arquitectura & SQL',
+    format: 'sql',
+    sizeBytes: 3620,
+    sizeFormatted: '3.5 KB',
+    version: 'v1.0',
+    status: 'Vigente / Oficial',
+    uploadedBy: 'Jhan C.',
+    uploadedAt: '2026-11-25',
+    description:
+      'Tablas public.quotes (con privacy_policy_accepted, privacy_policy_version y accepted_at) y public.complaints (Libro de Reclamaciones Indecopi).',
+    tags: ['PostgreSQL', 'Privacidad', 'Ley 29733', 'Indecopi'],
+    linkedEntity: 'US-PS-09 / INT-PS-15',
+    downloadUrl: '#file-ps-legal-sql',
+    contentPreview: 'CREATE TABLE IF NOT EXISTS public.quotes (...); CREATE TABLE IF NOT EXISTS public.complaints (...);'
+  },
+  {
+    id: 'FILE-PS-09',
+    projectId: 'pathrimonio-site',
+    name: '20261125000300_interfaces_ultima_modificacion.sql',
+    category: 'Arquitectura & SQL',
+    format: 'sql',
+    sizeBytes: 1740,
+    sizeFormatted: '1.7 KB',
+    version: 'v1.0',
+    status: 'Vigente / Oficial',
+    uploadedBy: 'Jhan C.',
+    uploadedAt: '2026-11-25',
+    description:
+      'Agrega ultima_fecha_modificacion a public.interfaces con trigger automático BEFORE INSERT/UPDATE, índice de ordenamiento y publicación Realtime.',
+    tags: ['PostgreSQL', 'Realtime', 'Trigger', 'Interfaces'],
+    linkedEntity: 'US-PS-03 / INT-PS-06',
+    downloadUrl: '#file-ps-interfaces-mod-sql',
+    contentPreview: 'ALTER TABLE public.interfaces ADD COLUMN IF NOT EXISTS ultima_fecha_modificacion TIMESTAMPTZ NOT NULL DEFAULT now();'
   }
 ];
 
 export const PATHRIMONIO_SITE_ARCHITECTURE = {
   projectId: 'pathrimonio-site',
   projectName: 'Pathrimonio Site — Portal SDD & Arquitectura',
-  architecturePattern: 'Modular React Portal + MCP AST Bridge + Supabase Realtime + Archify HTML',
-  version: 'v1.0.0',
+  architecturePattern: 'Modular React Portal + SSG Legal/FormalIA + MCP AST Bridge + Supabase Realtime + Archify HTML',
+  version: 'v1.2.0',
   synthesizedBy: 'archify Engine v3.3 (AST & HTML Mode)',
-  lastAnalyzed: '2026-11-24T16:15:00-05:00',
-  tokenSavingsPercent: 96.1,
-  auditStatus: 'Certificada (Cero Fuga de Código)',
+  lastAnalyzed: '2026-11-25T20:10:00-05:00',
+  tokenSavingsPercent: 96.4,
+  auditStatus: 'Certificada (Cero Fuga de Código + Opt-in Cookies)',
   summary:
-    'Plataforma web corporativa y workspace SDD construida en React 18, Vite y Tailwind CSS sobre Supabase PostgreSQL y Supabase Realtime. Integra un servidor MCP en Node.js con análisis AST vía TypeScript Compiler API para registrar archivos y firmas abstractas reales sin exponer implementaciones privadas ni secretos, junto a un visor embebido de diagramas HTML generados por archify.',
+    'Plataforma web corporativa (con SSG pre-renderizado para /formalia y /legal/*), Gestor Real de Cookies sin dark patterns y workspace SDD completo en React 18, Vite y Tailwind CSS sobre Supabase PostgreSQL + Realtime y Vercel Serverless (/api/v1/*). Integra servidor MCP de 15 herramientas AST/Interfaces para mantener trazabilidad viva sin exposición de secretos.',
   metrics: {
     layersCount: 4,
-    abstractMethodsCount: 48,
+    abstractMethodsCount: 72,
     tracedStoriesPercent: 100,
     tokenReductionRatio: '21.5x',
-    offlineReadiness: 'Respaldo Local JSON / HTML + Supabase Cloud',
-    dipCompliance: '100% Separación UI / Servicios / Datos / MCP'
+    offlineReadiness: 'SSG Prerender + Respaldo Local JSON / HTML + Supabase Cloud',
+    dipCompliance: '100% Separación UI / Servicios / Datos / Serverless / MCP'
   },
   layers: [
     {
@@ -1276,7 +1608,7 @@ export const PATHRIMONIO_SITE_ARCHITECTURE = {
       badge: 'INFRA',
       colorClass: 'text-purple-400 border-purple-500/30 bg-purple-500/10',
       description:
-        'Repositorios PostgreSQL en Supabase (15 tablas con RLS y Realtime), servidor MCP stdio de 12 herramientas y archivos estáticos desplegados en Vercel Edge.',
+        'Repositorios PostgreSQL en Supabase (19 tablas con RLS y Realtime), endpoints Vercel Serverless (/api/v1/*), servidor MCP stdio de 15 herramientas y páginas SSG desplegadas en Edge.',
       components: [
         {
           name: 'PathrimonioFilesMcpServer',
@@ -1285,7 +1617,8 @@ export const PATHRIMONIO_SITE_ARCHITECTURE = {
           abstractMethods: [
             { symbol: 'sync_modified_file', signature: 'tool sync_modified_file(project_id, local_file_path, repo_root): Promise<McpResult>', visibility: 'public', isAsync: true, line: 720, doc: 'Indexa un archivo modificado y sincroniza sus métodos abstractos en Supabase Realtime.' },
             { symbol: 'sync_directory_from_disk', signature: 'tool sync_directory_from_disk(project_id, directory_path, prune_missing): Promise<McpResult>', visibility: 'public', isAsync: true, line: 890, doc: 'Sincronización incremental del repositorio completo hacia project_tree_nodes y file_records.' },
-            { symbol: 'publish_archify_html', signature: 'tool publish_archify_html(project_id, html_file_path, slug, is_primary): Promise<McpResult>', visibility: 'public', isAsync: true, line: 1085, doc: 'Publica un .html de Archify directamente en Supabase para renderizarlo en el portal.' }
+            { symbol: 'publish_archify_html', signature: 'tool publish_archify_html(project_id, html_file_path, slug, is_primary): Promise<McpResult>', visibility: 'public', isAsync: true, line: 1085, doc: 'Publica un .html de Archify directamente en Supabase para renderizarlo en el portal.' },
+            { symbol: 'upsert_interface', signature: 'tool upsert_interface(project_id, id, title, ultima_fecha_modificacion, ...): Promise<McpResult>', visibility: 'public', isAsync: true, line: 1255, doc: 'Registra o actualiza especificaciones UI/UX con sello ultima_fecha_modificacion en Realtime.' }
           ]
         },
         {
@@ -1294,6 +1627,7 @@ export const PATHRIMONIO_SITE_ARCHITECTURE = {
           type: 'repository',
           abstractMethods: [
             { symbol: 'fetchWorkspace', signature: 'export async function fetchWorkspace(): Promise<WorkspaceSnapshot>', visibility: 'public', isAsync: true, line: 250, doc: 'Carga inicial paralela de proyectos, historias, interfaces, modelos, actores y archivos.' },
+            { symbol: 'fetchInterfaces', signature: 'export async function fetchInterfaces(): Promise<InterfaceSpec[]>', visibility: 'public', isAsync: true, line: 277, doc: 'Refresca interfaces con roles, campos trazados y ultima_fecha_modificacion.' },
             { symbol: 'fetchProjectArchitectureArtifacts', signature: 'export async function fetchProjectArchitectureArtifacts(projectId: string): Promise<ArchifyArtifact[]>', visibility: 'public', isAsync: true, line: 728, doc: 'Recupera los diagramas interactivos .html almacenados para el proyecto activo.' }
           ]
         }
@@ -1301,14 +1635,17 @@ export const PATHRIMONIO_SITE_ARCHITECTURE = {
     }
   ],
   mermaidDiagram: `flowchart TD
-  subgraph Presentation["Capa 1: UI Web React 18 + Vite"]
-    UI_Portal["App / Workspace Portal (10 Vistas)"]
+  subgraph Presentation["Capa 1: UI Web React 18 + Vite + SSG"]
+    UI_Portal["App / Workspace Portal (11 Vistas)"]
+    UI_FormalIA["FormalIA Studio (/formalia)"]
+    UI_Legal["Legal SSG + ConsentManager (/legal/*)"]
     UI_Arch["SoftwareArchitectureView (Visor Archify HTML)"]
     UI_Tree["ProjectTreeView (Árbol + Métodos AST)"]
   end
 
-  subgraph Application["Capa 2: Servicios & Puente Local"]
+  subgraph Application["Capa 2: Servicios, Consent & API"]
     Srv_Vite["Vite Dev Middleware (/api/archify/sync)"]
+    Srv_API["Vercel Serverless (/api/v1/formalia, quotes, complaints)"]
     Srv_Data["supabaseData.js + Parser DDL SQL"]
   end
 
@@ -1318,17 +1655,20 @@ export const PATHRIMONIO_SITE_ARCHITECTURE = {
   end
 
   subgraph Infrastructure["Capa 4: MCP + Supabase Cloud + Archify CLI"]
-    MCP_Srv["pathrimonio-mcp-server.mjs (12 Tools stdio)"]
+    MCP_Srv["pathrimonio-mcp-server.mjs (15 Tools stdio)"]
     CLI_Arch["archify.mjs v3.3.0 (Render HTML Showcase)"]
-    DB_Supa[("Supabase PostgreSQL 15 (15 Tablas + Realtime)")]
+    DB_Supa[("Supabase PostgreSQL 15 (19 Tablas + Realtime)")]
   end
 
   UI_Arch -->|localhost| Srv_Vite
   UI_Portal -->|CRUD / Realtime| Srv_Data
+  UI_FormalIA -->|REST| Srv_API
+  UI_Legal -->|REST / Consent| Srv_API
   UI_Tree -->|live subscription| DB_Supa
   Srv_Vite -->|invoca| CLI_Arch
+  Srv_API -->|persiste| DB_Supa
   MCP_Srv -->|usa| Dom_AST
-  MCP_Srv -->|escribe AST & HTML| DB_Supa
+  MCP_Srv -->|escribe AST, Interfaces & HTML| DB_Supa
   Srv_Data -->|SQL / Auth| DB_Supa`,
   traceabilityMatrix: [
     {
@@ -1359,6 +1699,26 @@ export const PATHRIMONIO_SITE_ARCHITECTURE = {
       abstractMethod: 'parseSQLScript(...)',
       domainModel: 'data_models + data_model_attributes',
       doDCriterion: 'Extracción automática de tablas, tipos, PK y FK desde migraciones PostgreSQL.',
+      status: 'Auditado'
+    },
+    {
+      storyId: 'US-PS-08',
+      storyTitle: 'FormalIA Studio conversacional y extracción de ProcessGraphJSON',
+      interfaceId: 'INT-PS-13',
+      interfaceName: 'FormalIA Studio — Workbench & Grafo de Proceso',
+      abstractMethod: 'FormalIAWorkspace / extractorEngine.extractProcessGraph(...)',
+      domainModel: 'formalia_sessions + quotes',
+      doDCriterion: 'Handoff automático a Cotizador y exportación Mermaid/Markdown con sesión a 7 días.',
+      status: 'Auditado'
+    },
+    {
+      storyId: 'US-PS-09',
+      storyTitle: 'Cumplimiento legal SSG, bloqueo previo de cookies e Indecopi',
+      interfaceId: 'INT-PS-14',
+      interfaceName: 'Centro Legal SSG / Libro Indecopi / Gestor Cookies',
+      abstractMethod: 'ConsentProvider / ConsentGatedScript / prerender()',
+      domainModel: 'quotes + complaints',
+      doDCriterion: 'Zero-tracking pre-consentimiento, HTTP 200 SSG en /legal/* y registro LR Indecopi.',
       status: 'Auditado'
     }
   ],

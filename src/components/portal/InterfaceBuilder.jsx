@@ -317,6 +317,8 @@ export default function InterfaceBuilder({
       author: 'Usuario Activo',
       reviewedBy: status.includes('Aprobado') ? 'Cliente / PO' : null,
       approvedAt: status.includes('Aprobado') ? new Date().toISOString().split('T')[0] : null,
+      ultimaFechaModificacion: new Date().toISOString(),
+      ultima_fecha_modificacion: new Date().toISOString(),
       version: 'v1.0'
     };
 

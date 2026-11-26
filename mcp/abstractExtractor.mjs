@@ -9,6 +9,7 @@ export const DEFAULT_IGNORED_FOLDERS = new Set([
   'node_modules',
   '.git',
   'dist',
+  'dist-ssr',
   'build',
   '.next',
   'out',

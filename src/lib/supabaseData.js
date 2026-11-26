@@ -130,6 +130,10 @@ const mapInterface = (row) => {
     approvedAt: row.approved_at,
     version: row.version,
     imageAspect: row.image_aspect,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at || row.ultima_fecha_modificacion || row.created_at,
+    ultimaFechaModificacion: row.ultima_fecha_modificacion || row.updated_at || row.created_at,
+    ultima_fecha_modificacion: row.ultima_fecha_modificacion || row.updated_at || row.created_at,
     dataUsage: (row.interface_data_usage || [])
       .slice()
       .sort((a, b) => a.position - b.position)
@@ -253,7 +257,11 @@ export async function fetchWorkspace() {
   const [projects, stories, interfaces, dataModels, actors, files, modules, portalUsers, projectMembers] = await Promise.all([
     db.from('projects').select('*').order('name'),
     db.from('stories').select('*, story_criteria(*)').order('id'),
-    db.from('interfaces').select('*, interface_roles(*), interface_data_usage(*)').order('id'),
+    db
+      .from('interfaces')
+      .select('*, interface_roles(*), interface_data_usage(*)')
+      .order('ultima_fecha_modificacion', { ascending: false })
+      .order('id'),
     db.from('data_models').select('*, data_model_attributes(*)').order('id'),
     db.from('actors').select('*').order('id'),
     db.from('files').select('*').order('id'),
@@ -273,6 +281,16 @@ export async function fetchWorkspace() {
     portalUsers: check(portalUsers).map(mapPortalUser),
     projectMembers: check(projectMembers).map(mapProjectMember)
   };
+}
+
+export async function fetchInterfaces() {
+  const db = requireSupabase();
+  const res = await db
+    .from('interfaces')
+    .select('*, interface_roles(*), interface_data_usage(*)')
+    .order('ultima_fecha_modificacion', { ascending: false })
+    .order('id');
+  return check(res).map(mapInterface);
 }
 
 // ── Stories ───────────────────────────────────────────────────
@@ -369,7 +387,9 @@ export async function saveInterface(item, actorLookup, validDataModelIds, validS
     reviewed_by: orNull(item.reviewedBy),
     approved_at: dateOnly(item.approvedAt),
     version: orNull(item.version),
-    image_aspect: item.imageAspect ?? null
+    image_aspect: item.imageAspect ?? null,
+    ultima_fecha_modificacion:
+      item.ultimaFechaModificacion || item.ultima_fecha_modificacion || new Date().toISOString()
   }, { onConflict: 'id' }));
 
   check(await db.from('interface_roles').delete().eq('interface_id', item.id));

@@ -12,6 +12,7 @@ import {
   fetchWorkspace,
   saveStory,
   deleteStory,
+  fetchInterfaces,
   saveInterface,
   deleteInterface,
   saveDataModel,
@@ -753,6 +754,52 @@ function AppContent({ initialPath = '/' }) {
     };
   }, [activePortalTab, effectiveArchProjectId]);
 
+  // ── Supabase: Realtime live sync for interfaces (including MCP upsert_interface / delete_interface)
+  useEffect(() => {
+    if (!workspaceReady || !isSupabaseConfigured) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    let refreshTimer = null;
+
+    const scheduleInterfacesRefresh = () => {
+      if (refreshTimer) window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => {
+        fetchInterfaces()
+          .then((rows) => {
+            if (!cancelled) setInterfaces(rows);
+          })
+          .catch(() => {});
+      }, 250);
+    };
+
+    const interfacesChannel = supabase
+      .channel('interfaces-live-catalog')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'interfaces' },
+        scheduleInterfacesRefresh
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'interface_roles' },
+        scheduleInterfacesRefresh
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'interface_data_usage' },
+        scheduleInterfacesRefresh
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      if (refreshTimer) window.clearTimeout(refreshTimer);
+      supabase.removeChannel(interfacesChannel);
+    };
+  }, [workspaceReady]);
+
   const handleRefreshArchitectureArtifacts = async (overrideProjectId) => {
     const targetId = overrideProjectId || effectiveArchProjectId;
     if (!targetId || !isSupabaseConfigured) return [];
@@ -1015,20 +1062,33 @@ function AppContent({ initialPath = '/' }) {
   const validInterfaceIds = new Set(interfaces.map((item) => item.id));
 
   const handleSaveInterface = (newInterface) => {
-    setInterfaces(prev => [newInterface, ...prev]);
-    persist(saveInterface(newInterface, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
+    const nowIso = new Date().toISOString();
+    const stamped = {
+      ...newInterface,
+      ultimaFechaModificacion: newInterface.ultimaFechaModificacion || nowIso,
+      ultima_fecha_modificacion: newInterface.ultima_fecha_modificacion || nowIso
+    };
+    setInterfaces(prev => [stamped, ...prev]);
+    persist(saveInterface(stamped, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
   };
 
   const handleUpdateInterface = (updated) => {
-    setInterfaces(prev => prev.map(i => i.id === updated.id ? updated : i));
-    persist(saveInterface(updated, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
-    notify(`Interfaz ${updated.id} (${updated.fullName || updated.title || updated.id}) actualizada.`);
+    const nowIso = new Date().toISOString();
+    const stamped = {
+      ...updated,
+      ultimaFechaModificacion: nowIso,
+      ultima_fecha_modificacion: nowIso
+    };
+    setInterfaces(prev => prev.map(i => i.id === stamped.id ? stamped : i));
+    persist(saveInterface(stamped, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
+    notify(`Interfaz ${stamped.id} (${stamped.fullName || stamped.title || stamped.id}) actualizada.`);
   };
 
   const handleDuplicateInterface = (item) => {
     const dupImages = Array.isArray(item.images) && item.images.length > 0
       ? [...item.images]
       : (item.image ? [item.image] : []);
+    const nowIso = new Date().toISOString();
 
     const dup = {
       ...item,
@@ -1039,6 +1099,8 @@ function AppContent({ initialPath = '/' }) {
       image: dupImages[0] || item.image || null,
       status: 'Borrador',
       createdAt: 'Justo ahora',
+      ultimaFechaModificacion: nowIso,
+      ultima_fecha_modificacion: nowIso,
       version: `${item.version || 'v1.0'}-copy`
     };
     setInterfaces(prev => [dup, ...prev]);
@@ -1056,11 +1118,14 @@ function AppContent({ initialPath = '/' }) {
   const handleQuickInterfaceStatus = (id, newStatus) => {
     const item = interfaces.find(i => i.id === id);
     if (!item) return;
+    const nowIso = new Date().toISOString();
     const updated = {
       ...item,
       status: newStatus,
       reviewedBy: newStatus.includes('Aprobado') ? 'Cliente / PO' : item.reviewedBy,
-      approvedAt: newStatus.includes('Aprobado') ? new Date().toISOString().split('T')[0] : item.approvedAt
+      approvedAt: newStatus.includes('Aprobado') ? nowIso.split('T')[0] : item.approvedAt,
+      ultimaFechaModificacion: nowIso,
+      ultima_fecha_modificacion: nowIso
     };
     setInterfaces(prev => prev.map(i => i.id === id ? updated : i));
     persist(saveInterface(updated, resolveActorId, validDataModelIds, validStoryIds), 'interfaz');
@@ -1072,12 +1137,15 @@ function AppContent({ initialPath = '/' }) {
       notify('No hay interfaces en revisión para confirmar.');
       return 0;
     }
-    const approvedAt = new Date().toISOString().split('T')[0];
+    const nowIso = new Date().toISOString();
+    const approvedAt = nowIso.split('T')[0];
     const updated = itemsToApprove.map(item => ({
       ...item,
       status: 'Aprobado por Cliente',
       reviewedBy: 'Cliente / PO',
-      approvedAt
+      approvedAt,
+      ultimaFechaModificacion: nowIso,
+      ultima_fecha_modificacion: nowIso
     }));
     const updatedById = new Map(updated.map(item => [item.id, item]));
     setInterfaces(prev => prev.map(item => updatedById.get(item.id) || item));

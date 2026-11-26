@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import InterfaceCard from './InterfaceCard';
+import { getInterfaceModifiedTimestamp } from '../../utils/interfaceMeta';
 import { 
   PLATFORM_OPTIONS, 
   INTERFACE_STATUS_OPTIONS, 
@@ -24,7 +25,7 @@ export default function InterfaceFeed({
   const [selectedStatus, setSelectedStatus] = useState('Todos');
   const [selectedModule, setSelectedModule] = useState('Todos');
   const [selectedRole, setSelectedRole] = useState('Todos');
-  const [sortBy, setSortBy] = useState('priority'); // 'priority' | 'id' | 'status'
+  const [sortBy, setSortBy] = useState('last_modified'); // 'last_modified' | 'number' | 'priority' | 'status' | 'id'
   const [viewMode, setViewMode] = useState('horizontal'); // 'horizontal' | 'stack'
   const [expandedCards, setExpandedCards] = useState({});
   const scrollContainerRef = useRef(null);
@@ -124,6 +125,16 @@ export default function InterfaceFeed({
 
   // Sorting
   const sortedInterfaces = [...filteredInterfaces].sort((a, b) => {
+    if (sortBy === 'last_modified') {
+      const diff = getInterfaceModifiedTimestamp(b) - getInterfaceModifiedTimestamp(a);
+      if (diff !== 0) return diff;
+      const numDiff = (Number(a.number) || 9999) - (Number(b.number) || 9999);
+      return numDiff !== 0 ? numDiff : a.id.localeCompare(b.id);
+    }
+    if (sortBy === 'number') {
+      const numDiff = (Number(a.number) || 9999) - (Number(b.number) || 9999);
+      return numDiff !== 0 ? numDiff : a.id.localeCompare(b.id);
+    }
     if (sortBy === 'priority') {
       return (priorityWeight[b.priority] || 0) - (priorityWeight[a.priority] || 0);
     }
@@ -285,13 +296,16 @@ export default function InterfaceFeed({
 
           {/* Sort & View Mode */}
           <div className="flex items-center gap-2 sm:ml-auto shrink-0 w-full sm:w-auto justify-between sm:justify-end">
-            <div className="flex-1 sm:flex-initial min-w-[115px] sm:min-w-[125px] flex items-center gap-1 text-xs text-on-surface-variant font-space bg-surface-container-lowest border border-outline-variant px-2.5 py-1 rounded-xl focus-within:border-primary transition-colors overflow-hidden">
+            <div className="flex-1 sm:flex-initial min-w-[155px] sm:min-w-[175px] flex items-center gap-1 text-xs text-on-surface-variant font-space bg-surface-container-lowest border border-outline-variant px-2.5 py-1 rounded-xl focus-within:border-primary transition-colors overflow-hidden">
               <span className="material-symbols-outlined text-[15px] text-on-surface-variant shrink-0">sort</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
+                title="Ordenar catálogo de interfaces"
                 className="w-full min-w-0 max-w-full bg-transparent text-xs font-space text-white focus:outline-none cursor-pointer truncate"
               >
+                <option value="last_modified" className="bg-surface-container-highest text-white">Últimas modificadas</option>
+                <option value="number" className="bg-surface-container-highest text-white">Número</option>
                 <option value="priority" className="bg-surface-container-highest text-white">Prioridad</option>
                 <option value="status" className="bg-surface-container-highest text-white">Estado</option>
                 <option value="id" className="bg-surface-container-highest text-white">Código ID</option>

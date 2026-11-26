@@ -5,6 +5,7 @@ import DataUsagePicker from './DataUsagePicker';
 import DataUsageList from './DataUsageList';
 import { getEffectiveAspect } from '../../utils/aspectRatio';
 import { useImageAspect } from '../../utils/useImageAspect';
+import { formatInterfaceModifiedAt, formatInterfaceModifiedFull } from '../../utils/interfaceMeta';
 
 export default function InterfaceDetailModal({
   item,
@@ -202,21 +203,27 @@ export default function InterfaceDetailModal({
 
   const handleSave = (e) => {
     e?.preventDefault();
+    const nowIso = new Date().toISOString();
     const toSave = {
       ...formData,
       images: currentImages,
-      image: currentImages[0] || null
+      image: currentImages[0] || null,
+      ultimaFechaModificacion: nowIso,
+      ultima_fecha_modificacion: nowIso
     };
     onUpdateInterface?.(toSave);
     onClose?.();
   };
 
   const handleSetStatus = (newStatus) => {
+    const nowIso = new Date().toISOString();
     const updated = {
       ...formData,
       status: newStatus,
       reviewedBy: newStatus.includes('Aprobado') ? 'Cliente / PO' : formData.reviewedBy,
-      approvedAt: newStatus.includes('Aprobado') ? new Date().toISOString().split('T')[0] : formData.approvedAt
+      approvedAt: newStatus.includes('Aprobado') ? nowIso.split('T')[0] : formData.approvedAt,
+      ultimaFechaModificacion: nowIso,
+      ultima_fecha_modificacion: nowIso
     };
     setFormData(updated);
     onUpdateInterface?.(updated);
@@ -839,8 +846,19 @@ export default function InterfaceDetailModal({
 
         {/* Modal Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-outline-variant/60 bg-surface-container-low shrink-0">
-          <div className="text-xs text-on-surface-variant font-space">
-            {formData.reviewedBy ? `Aprobado por: ${formData.reviewedBy} (${formData.approvedAt})` : 'Pendiente de firma de cliente'}
+          <div className="flex items-center gap-3 flex-wrap text-xs text-on-surface-variant font-space">
+            <span>
+              {formData.reviewedBy ? `Aprobado por: ${formData.reviewedBy} (${formData.approvedAt})` : 'Pendiente de firma de cliente'}
+            </span>
+            {formatInterfaceModifiedAt(formData) && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container border border-outline-variant/80 font-mono text-[11px]"
+                title={formatInterfaceModifiedFull(formData) || 'Última fecha de modificación'}
+              >
+                <span className="material-symbols-outlined text-[13px] text-primary">schedule</span>
+                <span>Mod. {formatInterfaceModifiedAt(formData)}</span>
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-3">

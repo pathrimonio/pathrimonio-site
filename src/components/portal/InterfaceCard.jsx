@@ -3,6 +3,7 @@ import InterfaceMockupPreview from './InterfaceMockupPreview';
 import DataUsageList from './DataUsageList';
 import { getEffectiveAspect } from '../../utils/aspectRatio';
 import { useImageAspect } from '../../utils/useImageAspect';
+import { formatInterfaceModifiedAt, formatInterfaceModifiedFull } from '../../utils/interfaceMeta';
 
 export default function InterfaceCard({
   item,
@@ -441,6 +442,20 @@ export default function InterfaceCard({
               <span className="text-primary font-bold">{item.linkedStory}</span>
             </div>
           )}
+          {(() => {
+            const modifiedLabel = formatInterfaceModifiedAt(item);
+            const modifiedFull = formatInterfaceModifiedFull(item);
+            if (!modifiedLabel) return null;
+            return (
+              <div
+                className="flex items-center gap-1 px-2 py-1 rounded bg-surface-container border border-outline-variant/80 font-mono text-[11px] text-on-surface-variant"
+                title={modifiedFull ? `Última modificación: ${modifiedFull}` : 'Última fecha de modificación'}
+              >
+                <span className="material-symbols-outlined text-[13px] text-primary">schedule</span>
+                <span>Mod. {modifiedLabel}</span>
+              </div>
+            );
+          })()}
           <span className="text-on-surface-variant font-space text-[11px]">
             {item.version || 'v1.0'} • {item.author || 'Equipo'}
           </span>
