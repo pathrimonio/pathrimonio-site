@@ -449,7 +449,9 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
       chat_turns_at: Number(art.chat_turns_at) || 0,
       created_at: art.created_at || new Date().toISOString()
     }));
-    await supabase.from('formalia_artifact_versions').upsert(rows).catch(() => {});
+    try {
+      await supabase.from('formalia_artifact_versions').upsert(rows);
+    } catch (_) {}
   }
 
   return { ok: true, session: stampedSession, cloudSynced: true };

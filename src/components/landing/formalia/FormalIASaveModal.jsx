@@ -44,15 +44,24 @@ function computeInitials(name = '', email = '') {
 async function syncPortalUserRow(userObj) {
   if (!isSupabaseConfigured || !supabase || !userObj?.id || !userObj?.email) return;
   try {
-    await supabase.from('portal_users').upsert({
+    const cleanEmail = String(userObj.email).trim().toLowerCase();
+    const { data: existing } = await supabase
+      .from('portal_users')
+      .select('id')
+      .ilike('email', cleanEmail)
+      .maybeSingle();
+
+    if (existing?.id) return;
+
+    await supabase.from('portal_users').insert({
       id: userObj.id,
-      email: userObj.email,
-      name: userObj.name || userObj.email,
+      email: cleanEmail,
+      name: userObj.name || cleanEmail,
       role: userObj.role || 'Colaborador',
-      avatar: userObj.avatar || computeInitials(userObj.name, userObj.email),
+      avatar: userObj.avatar || computeInitials(userObj.name, cleanEmail),
       color: userObj.color || 'bg-amber-600',
       permissions: userObj.permissions || ['create_role', 'create_story', 'create_interface']
-    }, { onConflict: 'email' });
+    });
   } catch (_) {}
 }
 

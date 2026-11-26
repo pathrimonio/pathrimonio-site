@@ -87,11 +87,11 @@ export default function FormalIAChatPanel({
   const isLimitReached = turnsCount >= maxTurns;
 
   return (
-    <div className="flex flex-col h-full bg-[var(--bg-surface)] border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)]">
+    <div className="flex flex-col h-full min-h-0 bg-[var(--bg-surface)] border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)]">
 
       {/* ── Header Entrevistador + Barra de Progreso ── */}
-      <div className="p-4 border-b border-[var(--border-subtle)] bg-[var(--bg-page)] flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2">
+      <div className="p-4 border-b border-[var(--border-subtle)] bg-[var(--bg-page)] flex flex-col gap-3 shrink-0">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] flex items-center justify-center shrink-0 shadow-xs">
               <Sparkles size={16} strokeWidth={2} />
