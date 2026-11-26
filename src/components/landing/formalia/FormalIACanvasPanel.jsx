@@ -373,12 +373,28 @@ export default function FormalIACanvasPanel({
               <div className="w-12 h-12 rounded-[10px] bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)] flex items-center justify-center mb-3">
                 <Sparkles size={22} />
               </div>
-              <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
-                Tu Mapa de Carriles aparecerá aquí en vivo
-              </h4>
-              <p className="text-xs text-[var(--text-secondary)] max-w-md leading-relaxed">
-                Elige una respuesta rápida en el panel izquierdo o describe tu operación. Cada rol detectado abrirá su propio carril con sus pasos y traspasos.
-              </p>
+              {ctx.process_name && ctx.process_name !== 'Operación por mapear' ? (
+                <>
+                  <span className="mb-2 px-2.5 py-0.5 rounded-[4px] bg-[#FFC93C] text-[#2B2D31] font-mono text-[10px] font-bold uppercase tracking-wider">
+                    Alcance Conversado
+                  </span>
+                  <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
+                    {ctx.process_name}
+                  </h4>
+                  <p className="text-xs text-[var(--text-secondary)] max-w-md leading-relaxed">
+                    FORMALIA ya registró el enfoque de tu diagrama. Responde en el chat qué roles participan y cómo inicia el primer paso real para abrir los carriles en vivo.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h4 className="text-sm font-semibold text-[var(--text-primary)] mb-1">
+                    Tu Mapa de Carriles aparecerá aquí en vivo
+                  </h4>
+                  <p className="text-xs text-[var(--text-secondary)] max-w-md leading-relaxed">
+                    Conversemos primero qué proceso deseas graficar. A medida que definas roles y actividades en el chat, cada carril se irá dibujando aquí sin inventar pasos.
+                  </p>
+                </>
+              )}
             </div>
           ) : isClientMounted ? (
             <div className="w-full h-[460px] lg:h-[520px]">

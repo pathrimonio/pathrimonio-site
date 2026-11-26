@@ -1197,9 +1197,9 @@ export const PATHRIMONIO_SITE_INTERFACES = [
       contenido:
         'Ruta pública SSG (/formalia) y vista integrada en portal (FormalIAPortalView): FormalIAWorkspace split-screen con FormalIAChatPanel, FormalIACanvasPanel y FormalIAEngineeringModal.',
       reglas:
-        'Sesiones anónimas limitadas a 15 turnos con expiración a 7 días en public.formalia_sessions; soporta exportación Mermaid/Markdown y conversión a cotización (to-quote).',
+        'Sesiones anónimas limitadas a 15 turnos con expiración a 7 días en public.formalia_sessions; motor LLM conversacional multi-turno (Gemini 3.1/3) que identifica primero intención/alcance antes de crear nodos y soporta actualización/eliminación incremental, bifurcaciones, Mermaid/Markdown y to-quote.',
       detalles:
-        'Componentes: FormalIAWorkspace.jsx, FormalIAChatPanel.jsx, FormalIACanvasPanel.jsx, FormalIAEngineeringModal.jsx, FormalIAPortalView.jsx, extractorEngine.js, compilers.js y api/v1/formalia/*.'
+        'Componentes: FormalIAWorkspace.jsx, FormalIAChatPanel.jsx, FormalIACanvasPanel.jsx, FormalIAEngineeringModal.jsx, FormalIAPortalView.jsx, extractorEngine.js (LLM conversacional + historial), schema.js (graph_patch CRUD), compilers.js y api/v1/formalia/*.'
     },
     roles: ['Visitante Web / Prospecto B2B', 'Product Owner / Analista SDD', 'Arquitecto de Software'],
     dataUsage: [
@@ -1210,9 +1210,9 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     linkedStory: 'US-PS-08',
     author: 'Jhan C.',
     reviewedBy: 'Arquitecto de Software',
-    approvedAt: '2026-11-25',
-    ultima_fecha_modificacion: '2026-11-25T17:50:00-05:00',
-    version: 'v1.0'
+    approvedAt: '2026-11-26',
+    ultima_fecha_modificacion: '2026-11-26T14:51:00-05:00',
+    version: 'v1.1'
   },
   {
     id: 'INT-PS-14',

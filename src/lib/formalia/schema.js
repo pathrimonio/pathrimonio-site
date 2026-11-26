@@ -106,14 +106,51 @@ export const GraphPatchOpSchema = z.discriminatedUnion('op', [
     actor: ActorSchema
   }),
   z.object({
+    op: z.literal('update_role'),
+    id: z.string().min(1),
+    name: z.string().min(1).optional(),
+    type: ActorTypeEnum.optional(),
+    is_field_role: z.boolean().optional()
+  }),
+  z.object({
+    op: z.literal('remove_role'),
+    id: z.string().min(1)
+  }),
+  z.object({
     op: z.literal('add_step'),
-    step: StepSchema
+    step: StepSchema,
+    insert_after: z.string().optional(),
+    insert_before: z.string().optional()
+  }),
+  z.object({
+    op: z.literal('update_step'),
+    id: z.string().min(1),
+    actor_id: z.string().min(1).optional(),
+    label: z.string().min(1).optional(),
+    step_type: StepTypeEnum.optional(),
+    channel: z.string().optional(),
+    artifacts: z.array(z.string()).optional(),
+    is_manual_bottleneck: z.boolean().optional(),
+    automation_opportunity: z.string().nullable().optional()
+  }),
+  z.object({
+    op: z.literal('remove_step'),
+    id: z.string().min(1)
+  }),
+  z.object({
+    op: z.literal('reorder_steps'),
+    step_ids: z.array(z.string().min(1))
   }),
   z.object({
     op: z.literal('add_edge'),
     from: z.string(),
     to: z.string(),
     condition: z.string().nullable().optional()
+  }),
+  z.object({
+    op: z.literal('remove_edge'),
+    from: z.string(),
+    to: z.string()
   }),
   z.object({
     op: z.literal('flag_bottleneck'),
@@ -147,6 +184,13 @@ export const ExtractorResponseSchema = z.object({
     '3_handoffs_data',
     '4_gaps_validation',
     '5_synthesis'
+  ]).optional(),
+  dialogue_state: z.enum([
+    'discovering_scope',
+    'clarifying_actors',
+    'mapping_flow',
+    'refining_details',
+    'ready_for_synthesis'
   ]).optional()
 });
 
@@ -178,27 +222,46 @@ export function createInitialProcessGraph(sessionId = generateFormaliaSessionId(
   };
 }
 
+function humanizeActorId(actorId = '') {
+  const raw = String(actorId || '')
+    .replace(/^(act_|role_)/i, '')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+  if (!raw) return 'Rol Operativo';
+  return raw.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 /**
  * Aplica de forma pura e idempotente una lista de operaciones graph_patch sobre ProcessGraphJSON.
  */
 export function applyGraphPatches(currentGraph, patches = []) {
   const next = structuredClone(currentGraph);
+  next.actors = Array.isArray(next.actors) ? next.actors : [];
+  next.steps = Array.isArray(next.steps) ? next.steps : [];
+  next.transitions = Array.isArray(next.transitions) ? next.transitions : [];
+  next.engineering_artifacts = next.engineering_artifacts || {
+    detected_entities: [],
+    external_apis_needed: []
+  };
 
   for (const patch of patches) {
     if (!patch || !patch.op) continue;
 
     switch (patch.op) {
       case 'set_context': {
-        if (patch.company_name) next.business_context.company_name = patch.company_name;
+        if (patch.company_name !== undefined && patch.company_name !== null) {
+          next.business_context.company_name = String(patch.company_name).trim();
+        }
         if (patch.industry) next.business_context.industry = patch.industry;
         if (patch.macroprocess_category) {
           next.business_context.macroprocess_category = patch.macroprocess_category;
         }
-        if (patch.process_name) next.business_context.process_name = patch.process_name;
+        if (patch.process_name) next.business_context.process_name = String(patch.process_name).trim();
         break;
       }
 
       case 'add_role': {
+        if (!patch.actor?.id || !patch.actor?.name) break;
         const exists = next.actors.some(
           (a) =>
             a.id === patch.actor.id ||
@@ -207,7 +270,7 @@ export function applyGraphPatches(currentGraph, patches = []) {
         if (!exists) {
           next.actors.push({
             id: patch.actor.id,
-            name: patch.actor.name,
+            name: patch.actor.name.trim(),
             type: patch.actor.type || 'INTERNAL_ADMIN_ROLE',
             is_field_role: Boolean(patch.actor.is_field_role)
           });
@@ -215,37 +278,153 @@ export function applyGraphPatches(currentGraph, patches = []) {
         break;
       }
 
+      case 'update_role': {
+        const actor = next.actors.find((a) => a.id === patch.id);
+        if (actor) {
+          if (patch.name) actor.name = patch.name.trim();
+          if (patch.type) actor.type = patch.type;
+          if (patch.is_field_role !== undefined) actor.is_field_role = Boolean(patch.is_field_role);
+        }
+        break;
+      }
+
+      case 'remove_role': {
+        const removedStepIds = new Set(
+          next.steps.filter((s) => s.actor_id === patch.id).map((s) => s.id)
+        );
+        next.actors = next.actors.filter((a) => a.id !== patch.id);
+        next.steps = next.steps.filter((s) => s.actor_id !== patch.id);
+        next.transitions = next.transitions.filter(
+          (t) => !removedStepIds.has(t.from) && !removedStepIds.has(t.to)
+        );
+        break;
+      }
+
       case 'add_step': {
+        if (!patch.step?.id || !patch.step?.label) break;
+        // Garantizar que el actor exista para evitar nodos huérfanos en el lienzo
+        let resolvedActorId = patch.step.actor_id;
+        if (resolvedActorId) {
+          const matchingActor = next.actors.find(
+            (a) =>
+              a.id === resolvedActorId ||
+              a.name.trim().toLowerCase() === resolvedActorId.trim().toLowerCase()
+          );
+          if (matchingActor) {
+            resolvedActorId = matchingActor.id;
+          } else {
+            next.actors.push({
+              id: resolvedActorId,
+              name: humanizeActorId(resolvedActorId),
+              type: /^act_cliente/i.test(resolvedActorId) ? 'EXTERNAL_CUSTOMER' : 'INTERNAL_ADMIN_ROLE',
+              is_field_role: /(despacho|ruta|chofer|campo|motorizado|tecnico)/i.test(resolvedActorId)
+            });
+          }
+        }
+
         const existingIdx = next.steps.findIndex((s) => s.id === patch.step.id);
         const normalizedStep = {
           id: patch.step.id,
-          actor_id: patch.step.actor_id,
-          label: patch.step.label,
+          actor_id: resolvedActorId || next.actors[0]?.id || 'role_operaciones',
+          label: patch.step.label.trim(),
           step_type: patch.step.step_type || 'TASK',
           channel: patch.step.channel || 'presencial',
           artifacts: Array.isArray(patch.step.artifacts) ? patch.step.artifacts : [],
           is_manual_bottleneck: Boolean(patch.step.is_manual_bottleneck),
           automation_opportunity: patch.step.automation_opportunity || null
         };
+
         if (existingIdx >= 0) {
           next.steps[existingIdx] = { ...next.steps[existingIdx], ...normalizedStep };
+        } else if (patch.insert_after) {
+          const afterIdx = next.steps.findIndex((s) => s.id === patch.insert_after);
+          if (afterIdx >= 0) {
+            next.steps.splice(afterIdx + 1, 0, normalizedStep);
+          } else {
+            next.steps.push(normalizedStep);
+          }
+        } else if (patch.insert_before) {
+          const beforeIdx = next.steps.findIndex((s) => s.id === patch.insert_before);
+          if (beforeIdx >= 0) {
+            next.steps.splice(beforeIdx, 0, normalizedStep);
+          } else {
+            next.steps.push(normalizedStep);
+          }
         } else {
           next.steps.push(normalizedStep);
         }
         break;
       }
 
-      case 'add_edge': {
-        const edgeExists = next.transitions.some(
-          (t) => t.from === patch.from && t.to === patch.to
+      case 'update_step': {
+        const step = next.steps.find((s) => s.id === patch.id);
+        if (step) {
+          if (patch.actor_id) {
+            const matchingActor = next.actors.find(
+              (a) =>
+                a.id === patch.actor_id ||
+                a.name.trim().toLowerCase() === patch.actor_id.trim().toLowerCase()
+            );
+            step.actor_id = matchingActor ? matchingActor.id : patch.actor_id;
+          }
+          if (patch.label) step.label = patch.label.trim();
+          if (patch.step_type) step.step_type = patch.step_type;
+          if (patch.channel) step.channel = patch.channel;
+          if (Array.isArray(patch.artifacts)) step.artifacts = patch.artifacts;
+          if (patch.is_manual_bottleneck !== undefined) {
+            step.is_manual_bottleneck = Boolean(patch.is_manual_bottleneck);
+          }
+          if (patch.automation_opportunity !== undefined) {
+            step.automation_opportunity = patch.automation_opportunity;
+          }
+        }
+        break;
+      }
+
+      case 'remove_step': {
+        next.steps = next.steps.filter((s) => s.id !== patch.id);
+        next.transitions = next.transitions.filter(
+          (t) => t.from !== patch.id && t.to !== patch.id
         );
-        if (!edgeExists && patch.from !== patch.to) {
-          next.transitions.push({
-            from: patch.from,
-            to: patch.to,
-            condition: patch.condition ?? null
+        break;
+      }
+
+      case 'reorder_steps': {
+        if (Array.isArray(patch.step_ids) && patch.step_ids.length > 0) {
+          const orderMap = new Map(patch.step_ids.map((id, i) => [id, i]));
+          next.steps.sort((a, b) => {
+            const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
+            const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
+            return idxA - idxB;
           });
         }
+        break;
+      }
+
+      case 'add_edge': {
+        const existingEdge = next.transitions.find(
+          (t) => t.from === patch.from && t.to === patch.to
+        );
+        if (patch.from && patch.to && patch.from !== patch.to) {
+          if (existingEdge) {
+            if (patch.condition !== undefined) {
+              existingEdge.condition = patch.condition;
+            }
+          } else {
+            next.transitions.push({
+              from: patch.from,
+              to: patch.to,
+              condition: patch.condition ?? null
+            });
+          }
+        }
+        break;
+      }
+
+      case 'remove_edge': {
+        next.transitions = next.transitions.filter(
+          (t) => !(t.from === patch.from && t.to === patch.to)
+        );
         break;
       }
 
@@ -292,6 +471,12 @@ export function applyGraphPatches(currentGraph, patches = []) {
         break;
     }
   }
+
+  // Limpiar transiciones huérfanas que apunten a pasos inexistentes
+  const validStepIds = new Set(next.steps.map((s) => s.id));
+  next.transitions = next.transitions.filter(
+    (t) => validStepIds.has(t.from) && validStepIds.has(t.to) && t.from !== t.to
+  );
 
   return next;
 }

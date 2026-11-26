@@ -38,11 +38,16 @@ export default async function handler(req, res) {
 
   const baseGraph = clientGraph || session.process_graph;
   const nextTurn = (session.turns_count || 0) + 1;
+  const conversationHistory =
+    (Array.isArray(req.body?.history) && req.body.history.length > 0 ? req.body.history : null) ||
+    (Array.isArray(req.body?.messages) && req.body.messages.length > 0 ? req.body.messages : null) ||
+    (Array.isArray(session.messages) ? session.messages : []);
 
   const extraction = await extractProcessTurn({
     userMessage,
     currentGraph: baseGraph,
-    turnCount: nextTurn
+    turnCount: nextTurn,
+    conversationHistory
   });
 
   let updatedGraph = applyGraphPatches(baseGraph, extraction.graph_patch);

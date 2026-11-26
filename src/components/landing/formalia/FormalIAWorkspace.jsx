@@ -29,11 +29,11 @@ const INITIAL_SSR_WELCOME = {
   id: 'msg_welcome_init',
   role: 'assistant',
   content:
-    'Hola, soy FORMALIA. Cuéntame en tus propias palabras: ¿qué proceso de tu negocio te genera hoy más desorden? (Ej. Ventas, Despachos, Pedidos)',
+    'Hola, soy FORMALIA. Cuéntame en tus propias palabras qué proceso de tu negocio quieres graficar (por ejemplo ventas, pedidos, despachos o atención). Primero conversamos el alcance y luego vamos detallando juntos cada rol y actividad en el diagrama.',
   quick_replies: [
-    'Recibimos pedidos por WhatsApp, anotamos en Excel y despachamos en ruta',
-    'Comercio / Bodega: ventas en caja, control de stock e inventario manual',
-    'Restaurante / Delivery: comandas, cocina y entregas con demora'
+    'Quiero graficar el proceso de pedidos y despachos de mi distribuidora',
+    'Quiero diagramar las ventas en mostrador y control de stock de mi ferretería',
+    'Necesito mapear la atención de clientes, citas y cobranza de mi clínica'
   ],
   phase: '1_context',
   timestamp: '2026-11-25T00:00:00.000Z'
@@ -104,6 +104,7 @@ export default function FormalIAWorkspace({
         message: text,
         currentGraph: session.process_graph,
         turnsCount: session.turns_count,
+        conversationHistory: session.messages || [],
         existingVersions: session.versions || [],
         existingFiles: session.generated_files || []
       });

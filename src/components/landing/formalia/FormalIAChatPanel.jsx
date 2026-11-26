@@ -20,15 +20,23 @@ const PHASE_LABELS = [
 
 function summarizePatches(patches = []) {
   if (!patches || patches.length === 0) return [];
+  const contextPatch = patches.find((p) => p.op === 'set_context' && p.process_name);
   const roles = patches.filter((p) => p.op === 'add_role').length;
   const steps = patches.filter((p) => p.op === 'add_step').length;
+  const updated = patches.filter((p) => p.op === 'update_step' || p.op === 'update_role').length;
+  const removed = patches.filter((p) => p.op === 'remove_step' || p.op === 'remove_role').length;
   const bottlenecks = patches.filter((p) => p.op === 'add_step' && p.step?.is_manual_bottleneck).length +
     patches.filter((p) => p.op === 'flag_bottleneck').length;
   const entities = patches.filter((p) => p.op === 'add_entity').length;
 
   const chips = [];
+  if (contextPatch?.process_name && steps === 0 && roles === 0) {
+    chips.push(`Tema: ${contextPatch.process_name}`);
+  }
   if (roles > 0) chips.push(`+${roles} rol${roles > 1 ? 'es' : ''}`);
   if (steps > 0) chips.push(`+${steps} paso${steps > 1 ? 's' : ''}`);
+  if (updated > 0) chips.push(`~${updated} ajuste${updated > 1 ? 's' : ''}`);
+  if (removed > 0) chips.push(`-${removed} quitado${removed > 1 ? 's' : ''}`);
   if (bottlenecks > 0) chips.push(`${bottlenecks} cuello${bottlenecks > 1 ? 's' : ''} de botella`);
   if (entities > 0) chips.push(`+${entities} entidad${entities > 1 ? 'es' : ''}`);
   return chips;
@@ -92,7 +100,7 @@ export default function FormalIAChatPanel({
                 </span>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] truncate">
-                Describe tu operación en español; extraigo roles y carriles en vivo
+                Conversa sobre tu negocio; vamos detallando el diagrama paso a paso
               </p>
             </div>
           </div>
@@ -274,7 +282,7 @@ export default function FormalIAChatPanel({
             placeholder={
               isLimitReached
                 ? 'Límite de 15 turnos alcanzado — descarga tu diagrama o cotiza'
-                : 'Describe qué rol recibe el pedido, qué usa (WhatsApp/Excel) y qué pasa después...'
+                : 'Cuéntame qué proceso quieres graficar o detalla un rol, paso o cambio...'
             }
             className="flex-1 min-w-0 h-10 px-3.5 rounded-[8px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#FFC93C] transition-colors disabled:opacity-60"
           />
@@ -285,7 +293,7 @@ export default function FormalIAChatPanel({
             className="h-10 px-4 rounded-[8px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold inline-flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             <Send size={14} />
-            <span className="hidden sm:inline">Mapear</span>
+            <span className="hidden sm:inline">Enviar</span>
           </button>
         </form>
       </div>

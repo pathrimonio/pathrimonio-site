@@ -20,11 +20,11 @@ export function createWelcomeMessage() {
     id: `msg_${Date.now()}_welcome`,
     role: 'assistant',
     content:
-      'Hola, soy FORMALIA. Cuéntame en tus propias palabras: ¿qué proceso de tu negocio te genera hoy más desorden? (Ej. Ventas, Despachos, Pedidos)',
+      'Hola, soy FORMALIA. Cuéntame en tus propias palabras qué proceso de tu negocio quieres graficar (por ejemplo ventas, pedidos, despachos o atención). Primero conversamos el alcance y luego vamos detallando juntos cada rol y actividad en el diagrama.',
     quick_replies: [
-      'Recibimos pedidos por WhatsApp, anotamos en Excel y despachamos en ruta',
-      'Comercio / Bodega: ventas en caja, control de stock e inventario manual',
-      'Restaurante / Delivery: comandas, cocina y entregas con demora'
+      'Quiero graficar el proceso de pedidos y despachos de mi distribuidora',
+      'Quiero diagramar las ventas en mostrador y control de stock de mi ferretería',
+      'Necesito mapear la atención de clientes, citas y cobranza de mi clínica'
     ],
     phase: '1_context',
     timestamp: new Date().toISOString()
@@ -195,6 +195,7 @@ export async function sendFormaliaMessage({
   message,
   currentGraph,
   turnsCount,
+  conversationHistory,
   existingVersions = [],
   existingFiles = []
 }) {
@@ -202,10 +203,25 @@ export async function sendFormaliaMessage({
     throw new Error(`Alcanzaste el límite de ${MAX_TURNS} turnos para esta sesión gratuita. Descarga tu diagrama o cotiza tu sistema.`);
   }
 
+  const rawHistory = Array.isArray(conversationHistory)
+    ? conversationHistory
+    : loadLocalFormaliaSession()?.messages || [];
+  const compactHistory = rawHistory
+    .filter((m) => m && m.role && m.content)
+    .slice(-14)
+    .map((m) => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content)
+    }));
+
   const apiRes = await tryApiJson(`/api/v1/formalia/sessions/${encodeURIComponent(sessionId)}/message`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, process_graph: currentGraph })
+    body: JSON.stringify({
+      message,
+      process_graph: currentGraph,
+      history: compactHistory
+    })
   });
 
   if (apiRes && !apiRes._apiError && apiRes.process_graph) {
@@ -237,12 +253,13 @@ export async function sendFormaliaMessage({
     };
   }
 
-  // Fallback cliente determinista / Gemini directo
+  // Fallback cliente conversacional / dev
   const nextTurn = turnsCount + 1;
   const extraction = await extractProcessTurn({
     userMessage: message,
     currentGraph,
-    turnCount: nextTurn
+    turnCount: nextTurn,
+    conversationHistory: compactHistory
   });
 
   const updatedGraph = applyGraphPatches(currentGraph, extraction.graph_patch);
