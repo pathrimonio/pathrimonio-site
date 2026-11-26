@@ -1012,6 +1012,25 @@ function buildConversationContents(conversationHistory = [], userMessage, curren
   return geminiContents;
 }
 
+function maskApiFingerprint(key = '') {
+  const clean = String(key || '').trim();
+  if (!clean) return '';
+  if (clean.length <= 10) return `${clean.slice(0, 3)}••••`;
+  return `${clean.slice(0, 5)}••••${clean.slice(-4)}`;
+}
+
+function readOpenAiRateLimitHeaders(res) {
+  if (!res?.headers) return {};
+  const headers = {
+    limit_requests: res.headers.get('x-ratelimit-limit-requests'),
+    remaining_requests: res.headers.get('x-ratelimit-remaining-requests'),
+    limit_tokens: res.headers.get('x-ratelimit-limit-tokens'),
+    remaining_tokens: res.headers.get('x-ratelimit-remaining-tokens'),
+    reset_requests: res.headers.get('x-ratelimit-reset-requests')
+  };
+  return Object.fromEntries(Object.entries(headers).filter(([, v]) => Boolean(v)));
+}
+
 async function callGeminiConversational({ apiKey, userMessage, currentGraph, turnCount, conversationHistory }) {
   const candidates = [
     { model: 'gemini-flash-lite-latest', extraConfig: {} },
@@ -1019,12 +1038,15 @@ async function callGeminiConversational({ apiKey, userMessage, currentGraph, tur
     { model: 'gemini-3.1-flash-lite-preview', extraConfig: {} }
   ];
   const contents = buildConversationContents(conversationHistory, userMessage, currentGraph, turnCount);
+  const keyFingerprint = maskApiFingerprint(apiKey);
+  const attemptLogs = [];
   let lastErr = null;
 
   for (const { model, extraConfig } of candidates) {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8500);
+    const t0 = Date.now();
 
     try {
       const response = await fetch(endpoint, {
@@ -1044,16 +1066,56 @@ async function callGeminiConversational({ apiKey, userMessage, currentGraph, tur
         })
       });
 
+      const latencyMs = Date.now() - t0;
+
       if (!response.ok) {
         const errPayload = await response.json().catch(() => ({}));
         lastErr = errPayload?.error?.message || `HTTP ${response.status} (${model})`;
+        attemptLogs.push({
+          key_id: 'server_gemini',
+          key_label: 'Google Gemini API (Servidor FormalIA)',
+          key_fingerprint: keyFingerprint,
+          provider: 'gemini',
+          model,
+          source_module: 'formalia',
+          scope: 'server',
+          http_status: response.status,
+          success: false,
+          prompt_tokens: 0,
+          output_tokens: 0,
+          total_tokens: 0,
+          latency_ms: latencyMs,
+          error_message: lastErr
+        });
         continue;
       }
 
       const data = await response.json();
       const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      const usageMeta = data?.usageMetadata || {};
+      const promptTokens = Number(usageMeta.promptTokenCount) || 0;
+      const outputTokens =
+        (Number(usageMeta.candidatesTokenCount) || 0) + (Number(usageMeta.thoughtsTokenCount) || 0);
+      const totalTokens = Number(usageMeta.totalTokenCount) || (promptTokens + outputTokens);
+
       if (!rawText) {
         lastErr = `Respuesta vacía en ${model}`;
+        attemptLogs.push({
+          key_id: 'server_gemini',
+          key_label: 'Google Gemini API (Servidor FormalIA)',
+          key_fingerprint: keyFingerprint,
+          provider: 'gemini',
+          model,
+          source_module: 'formalia',
+          scope: 'server',
+          http_status: 502,
+          success: false,
+          prompt_tokens: promptTokens,
+          output_tokens: outputTokens,
+          total_tokens: totalTokens,
+          latency_ms: latencyMs,
+          error_message: lastErr
+        });
         continue;
       }
 
@@ -1063,19 +1125,54 @@ async function callGeminiConversational({ apiKey, userMessage, currentGraph, tur
         .trim();
 
       const parsed = sanitizeExtractorPayload(JSON.parse(cleanJsonText), currentGraph);
+      attemptLogs.push({
+        key_id: 'server_gemini',
+        key_label: 'Google Gemini API (Servidor FormalIA)',
+        key_fingerprint: keyFingerprint,
+        provider: 'gemini',
+        model,
+        source_module: 'formalia',
+        scope: 'server',
+        http_status: 200,
+        success: true,
+        prompt_tokens: promptTokens,
+        output_tokens: outputTokens,
+        total_tokens: totalTokens,
+        latency_ms: latencyMs
+      });
+
       return {
         ...parsed,
         engine_source: 'gemini_llm',
-        llm_model: model
+        llm_model: model,
+        attempt_logs: attemptLogs
       };
     } catch (err) {
       lastErr = err?.message || `Error invocando ${model}`;
+      attemptLogs.push({
+        key_id: 'server_gemini',
+        key_label: 'Google Gemini API (Servidor FormalIA)',
+        key_fingerprint: keyFingerprint,
+        provider: 'gemini',
+        model,
+        source_module: 'formalia',
+        scope: 'server',
+        http_status: err?.name === 'AbortError' ? 504 : 500,
+        success: false,
+        prompt_tokens: 0,
+        output_tokens: 0,
+        total_tokens: 0,
+        latency_ms: Date.now() - t0,
+        error_message: lastErr
+      });
     } finally {
       clearTimeout(timeout);
     }
   }
 
-  throw new Error(lastErr || 'No se obtuvo respuesta válida de Gemini');
+  const error = new Error(lastErr || 'No se obtuvo respuesta válida de Gemini');
+  error.attemptLogs = attemptLogs;
+  throw error;
 }
 
 async function callOpenAiCompatibleConversational({ config, userMessage, currentGraph, turnCount, conversationHistory }) {
@@ -1087,8 +1184,11 @@ async function callOpenAiCompatibleConversational({ config, userMessage, current
       content: String(m.content)
     }));
 
+  const keyId = `server_${config.provider}`;
+  const keyFingerprint = maskApiFingerprint(config.apiKey);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 14000);
+  const t0 = Date.now();
 
   try {
     const response = await fetch(config.endpoint, {
@@ -1113,21 +1213,68 @@ async function callOpenAiCompatibleConversational({ config, userMessage, current
       })
     });
 
+    const latencyMs = Date.now() - t0;
+    const rateLimitInfo = readOpenAiRateLimitHeaders(response);
+
     if (!response.ok) {
       const errJson = await response.json().catch(() => ({}));
-      throw new Error(errJson?.error?.message || `HTTP ${response.status}`);
+      const errMsg = errJson?.error?.message || `HTTP ${response.status}`;
+      const error = new Error(errMsg);
+      error.attemptLogs = [
+        {
+          key_id: keyId,
+          key_label: `${config.provider.toUpperCase()} API (Respaldo Servidor)`,
+          key_fingerprint: keyFingerprint,
+          provider: config.provider,
+          model: config.model,
+          source_module: 'formalia',
+          scope: 'server',
+          http_status: response.status,
+          success: false,
+          prompt_tokens: 0,
+          output_tokens: 0,
+          total_tokens: 0,
+          latency_ms: latencyMs,
+          rate_limit_info: rateLimitInfo,
+          error_message: errMsg
+        }
+      ];
+      throw error;
     }
 
     const data = await response.json();
     const rawText = data?.choices?.[0]?.message?.content;
     if (!rawText) throw new Error('Respuesta vacía de OpenAI/DeepSeek');
 
+    const usage = data?.usage || {};
+    const promptTokens = Number(usage.prompt_tokens) || 0;
+    const outputTokens = Number(usage.completion_tokens) || 0;
+    const totalTokens = Number(usage.total_tokens) || (promptTokens + outputTokens);
+
     const cleanJsonText = rawText.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
     const parsed = sanitizeExtractorPayload(JSON.parse(cleanJsonText), currentGraph);
     return {
       ...parsed,
       engine_source: `${config.provider}_llm`,
-      llm_model: config.model
+      llm_model: config.model,
+      attempt_logs: [
+        {
+          key_id: keyId,
+          key_label: `${config.provider.toUpperCase()} API (Respaldo Servidor)`,
+          key_fingerprint: keyFingerprint,
+          provider: config.provider,
+          model: config.model,
+          source_module: 'formalia',
+          scope: 'server',
+          http_status: 200,
+          success: true,
+          prompt_tokens: promptTokens,
+          output_tokens: outputTokens,
+          total_tokens: totalTokens,
+          latency_ms: latencyMs,
+          rate_limit_info: rateLimitInfo
+        }
+      ]
     };
   } finally {
     clearTimeout(timeout);
@@ -1142,18 +1289,21 @@ export async function extractProcessTurn({
   turnCount = 1,
   conversationHistory = []
 }) {
+  const attemptLogs = [];
   const geminiKey = getGeminiApiKey();
 
   if (geminiKey) {
     try {
-      return await callGeminiConversational({
+      const res = await callGeminiConversational({
         apiKey: geminiKey,
         userMessage,
         currentGraph,
         turnCount,
         conversationHistory
       });
+      return res;
     } catch (err) {
+      if (Array.isArray(err?.attemptLogs)) attemptLogs.push(...err.attemptLogs);
       if (typeof console !== 'undefined') {
         console.warn('[FORMALIA] Fallo en Gemini LLM, intentando respaldo:', err?.message || err);
       }
@@ -1163,14 +1313,19 @@ export async function extractProcessTurn({
   const openAiConfig = getOpenAiCompatibleConfig();
   if (openAiConfig) {
     try {
-      return await callOpenAiCompatibleConversational({
+      const res = await callOpenAiCompatibleConversational({
         config: openAiConfig,
         userMessage,
         currentGraph,
         turnCount,
         conversationHistory
       });
+      return {
+        ...res,
+        attempt_logs: [...attemptLogs, ...(res.attempt_logs || [])]
+      };
     } catch (err) {
+      if (Array.isArray(err?.attemptLogs)) attemptLogs.push(...err.attemptLogs);
       if (typeof console !== 'undefined') {
         console.warn('[FORMALIA] Fallo en OpenAI/DeepSeek, usando motor conversacional local:', err?.message || err);
       }
@@ -1184,5 +1339,8 @@ export async function extractProcessTurn({
     conversationHistory
   );
 
-  return fallbackResult;
+  return {
+    ...fallbackResult,
+    attempt_logs: attemptLogs
+  };
 }

@@ -81,6 +81,35 @@ export function saveArchiflyAiConfig(config) {
   }
 }
 
+const CLIENT_API_USAGE_KEY = 'pathrimonio_client_api_usage_v1';
+
+function maskByokKey(key = '') {
+  const clean = String(key || '').trim();
+  if (!clean) return '';
+  if (clean.length <= 10) return `${clean.slice(0, 3)}••••`;
+  return `${clean.slice(0, 5)}••••${clean.slice(-4)}`;
+}
+
+async function reportArchiflyApiTelemetry(event) {
+  try {
+    const raw = localStorage.getItem(CLIENT_API_USAGE_KEY);
+    const list = raw ? JSON.parse(raw) : [];
+    const next = [{ ...event, created_at: new Date().toISOString() }, ...list].slice(0, 100);
+    localStorage.setItem(CLIENT_API_USAGE_KEY, JSON.stringify(next));
+  } catch (_) {}
+
+  try {
+    await fetch('/api/v1/admin/api-usage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'record_event',
+        event
+      })
+    });
+  } catch (_) {}
+}
+
 // Probar conexión con la API
 export async function testAiConnection({ provider = 'gemini', apiKey, model }) {
   const cleanKey = (apiKey || getEnvApiKey()).trim();
@@ -89,17 +118,20 @@ export async function testAiConnection({ provider = 'gemini', apiKey, model }) {
     return { success: false, error: 'Por favor ingresa una clave de API válida.' };
   }
 
+  const keyFingerprint = maskByokKey(cleanKey);
+
   try {
     if (provider === 'gemini') {
       const candidateModels = [
         model || 'gemini-3.5-flash-lite',
-        'gemini-3.5-flash-lite',
-        'gemini-3.5-flash',
-        'gemini-3.8-flash'
+        'gemini-flash-lite-latest',
+        'gemini-3-flash-preview',
+        'gemini-3.5-flash'
       ];
 
       let lastError = null;
       for (const m of candidateModels) {
+        const t0 = Date.now();
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${cleanKey}`;
           const res = await fetch(url, {
@@ -109,13 +141,44 @@ export async function testAiConnection({ provider = 'gemini', apiKey, model }) {
               contents: [{ parts: [{ text: 'Responde únicamente con la palabra: PONG' }] }]
             })
           });
+          const latencyMs = Date.now() - t0;
 
           if (res.ok) {
+            const okJson = await res.json().catch(() => ({}));
+            const um = okJson?.usageMetadata || {};
+            reportArchiflyApiTelemetry({
+              key_id: `portal_byok_${provider}`,
+              key_label: 'Portal Archifly BYOK (Gemini)',
+              key_fingerprint: keyFingerprint,
+              provider: 'gemini',
+              model: m,
+              source_module: 'archifly',
+              scope: 'client_byok',
+              http_status: res.status,
+              success: true,
+              prompt_tokens: Number(um.promptTokenCount) || 0,
+              output_tokens: (Number(um.candidatesTokenCount) || 0) + (Number(um.thoughtsTokenCount) || 0),
+              total_tokens: Number(um.totalTokenCount) || 0,
+              latency_ms: latencyMs
+            });
             return { success: true, message: `Conexión exitosa con Google Gemini (${m}). API Key activa y válida.` };
           }
 
           const errJson = await res.json().catch(() => ({}));
           lastError = errJson?.error?.message || `HTTP ${res.status}`;
+          reportArchiflyApiTelemetry({
+            key_id: `portal_byok_${provider}`,
+            key_label: 'Portal Archifly BYOK (Gemini)',
+            key_fingerprint: keyFingerprint,
+            provider: 'gemini',
+            model: m,
+            source_module: 'archifly',
+            scope: 'client_byok',
+            http_status: res.status,
+            success: false,
+            latency_ms: latencyMs,
+            error_message: lastError
+          });
         } catch (e) {
           lastError = e.message;
         }
@@ -129,6 +192,7 @@ export async function testAiConnection({ provider = 'gemini', apiKey, model }) {
         ? 'https://api.deepseek.com/v1/chat/completions'
         : 'https://api.openai.com/v1/chat/completions';
       const activeModel = model || (provider === 'deepseek' ? 'deepseek-chat' : 'gpt-4o-mini');
+      const t0 = Date.now();
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -142,11 +206,44 @@ export async function testAiConnection({ provider = 'gemini', apiKey, model }) {
           max_tokens: 10
         })
       });
+      const latencyMs = Date.now() - t0;
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson?.error?.message || `HTTP ${res.status}: Error de autenticación`);
+        const errMsg = errJson?.error?.message || `HTTP ${res.status}: Error de autenticación`;
+        reportArchiflyApiTelemetry({
+          key_id: `portal_byok_${provider}`,
+          key_label: `Portal Archifly BYOK (${provider.toUpperCase()})`,
+          key_fingerprint: keyFingerprint,
+          provider,
+          model: activeModel,
+          source_module: 'archifly',
+          scope: 'client_byok',
+          http_status: res.status,
+          success: false,
+          latency_ms: latencyMs,
+          error_message: errMsg
+        });
+        throw new Error(errMsg);
       }
+
+      const okJson = await res.json().catch(() => ({}));
+      const u = okJson?.usage || {};
+      reportArchiflyApiTelemetry({
+        key_id: `portal_byok_${provider}`,
+        key_label: `Portal Archifly BYOK (${provider.toUpperCase()})`,
+        key_fingerprint: keyFingerprint,
+        provider,
+        model: activeModel,
+        source_module: 'archifly',
+        scope: 'client_byok',
+        http_status: res.status,
+        success: true,
+        prompt_tokens: Number(u.prompt_tokens) || 0,
+        output_tokens: Number(u.completion_tokens) || 0,
+        total_tokens: Number(u.total_tokens) || 0,
+        latency_ms: latencyMs
+      });
 
       return { success: true, message: `Conexión exitosa con ${provider.toUpperCase()} (${activeModel}).` };
     }
@@ -314,6 +411,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
       let success = false;
 
       for (const m of candidateModels) {
+        const t0 = Date.now();
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${cleanKey}`;
           const res = await fetch(url, {
@@ -334,9 +432,26 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
               }
             })
           });
+          const latencyMs = Date.now() - t0;
 
           if (res.ok) {
             const resJson = await res.json();
+            const um = resJson?.usageMetadata || {};
+            reportArchiflyApiTelemetry({
+              key_id: 'portal_byok_gemini',
+              key_label: 'Portal Archifly BYOK (Gemini)',
+              key_fingerprint: maskByokKey(cleanKey),
+              provider: 'gemini',
+              model: m,
+              source_module: 'archifly',
+              scope: 'client_byok',
+              http_status: res.status,
+              success: true,
+              prompt_tokens: Number(um.promptTokenCount) || 0,
+              output_tokens: (Number(um.candidatesTokenCount) || 0) + (Number(um.thoughtsTokenCount) || 0),
+              total_tokens: Number(um.totalTokenCount) || 0,
+              latency_ms: latencyMs
+            });
             rawText = resJson?.candidates?.[0]?.content?.parts?.[0]?.text || '';
             usedModel = m;
             success = true;
@@ -345,6 +460,19 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
 
           const errJson = await res.json().catch(() => ({}));
           lastError = errJson?.error?.message || `HTTP ${res.status}`;
+          reportArchiflyApiTelemetry({
+            key_id: 'portal_byok_gemini',
+            key_label: 'Portal Archifly BYOK (Gemini)',
+            key_fingerprint: maskByokKey(cleanKey),
+            provider: 'gemini',
+            model: m,
+            source_module: 'archifly',
+            scope: 'client_byok',
+            http_status: res.status,
+            success: false,
+            latency_ms: latencyMs,
+            error_message: lastError
+          });
         } catch (e) {
           lastError = e.message;
         }
@@ -358,6 +486,7 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
       const endpoint = provider === 'deepseek'
         ? 'https://api.deepseek.com/v1/chat/completions'
         : 'https://api.openai.com/v1/chat/completions';
+      const t0 = Date.now();
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -374,13 +503,44 @@ Devuelve ÚNICAMENTE un objeto JSON válido con esta estructura (sin texto markd
           temperature: 0.2
         })
       });
+      const latencyMs = Date.now() - t0;
 
       if (!res.ok) {
         const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson?.error?.message || `HTTP ${res.status} al consultar ${provider}`);
+        const errMsg = errJson?.error?.message || `HTTP ${res.status} al consultar ${provider}`;
+        reportArchiflyApiTelemetry({
+          key_id: `portal_byok_${provider}`,
+          key_label: `Portal Archifly BYOK (${provider.toUpperCase()})`,
+          key_fingerprint: maskByokKey(cleanKey),
+          provider,
+          model: initialModel,
+          source_module: 'archifly',
+          scope: 'client_byok',
+          http_status: res.status,
+          success: false,
+          latency_ms: latencyMs,
+          error_message: errMsg
+        });
+        throw new Error(errMsg);
       }
 
       const resJson = await res.json();
+      const u = resJson?.usage || {};
+      reportArchiflyApiTelemetry({
+        key_id: `portal_byok_${provider}`,
+        key_label: `Portal Archifly BYOK (${provider.toUpperCase()})`,
+        key_fingerprint: maskByokKey(cleanKey),
+        provider,
+        model: initialModel,
+        source_module: 'archifly',
+        scope: 'client_byok',
+        http_status: res.status,
+        success: true,
+        prompt_tokens: Number(u.prompt_tokens) || 0,
+        output_tokens: Number(u.completion_tokens) || 0,
+        total_tokens: Number(u.total_tokens) || 0,
+        latency_ms: latencyMs
+      });
       rawText = resJson?.choices?.[0]?.message?.content || '';
     }
 

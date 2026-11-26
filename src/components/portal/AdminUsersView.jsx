@@ -6,6 +6,7 @@ import {
   saveRoleDefinitions 
 } from '../../auth/permissionsConfig';
 import SectionInfoPopover from './SectionInfoPopover';
+import AdminApiUsageView from './AdminApiUsageView';
 
 export default function AdminUsersView({
   currentUser,
@@ -15,7 +16,7 @@ export default function AdminUsersView({
   onUpdateRoleDefinitions,
   onNotify
 }) {
-  const [activeAdminTab, setActiveAdminTab] = useState('users'); // 'users' | 'matrix'
+  const [activeAdminTab, setActiveAdminTab] = useState('users'); // 'users' | 'matrix' | 'api_usage'
   const [searchUser, setSearchUser] = useState('');
   const [roleFilter, setRoleFilter] = useState('Todos');
   const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState('Colaborador');
@@ -169,20 +170,20 @@ export default function AdminUsersView({
             </h1>
             <SectionInfoPopover
               title="Administración de Pathrimonio"
-              description="Manejo integral de cuentas de usuario, asignación de roles y configuración de la matriz de permisos para cada perfil operativo del sistema."
+              description="Manejo integral de cuentas de usuario, asignación de roles, matriz de permisos y monitoreo del consumo diario y límites de las claves API conectadas."
             />
             <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/40">
-              Control de Accesos
+              Control de Accesos &amp; APIs
             </span>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center bg-surface-container-low p-1 rounded-lg border border-outline-variant shrink-0">
+        <div className="flex flex-wrap items-center bg-surface-container-low p-1 rounded-lg border border-outline-variant shrink-0 gap-1">
           <button
             type="button"
             onClick={() => setActiveAdminTab('users')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md font-space text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md font-space text-xs font-semibold transition-all cursor-pointer ${
               activeAdminTab === 'users'
                 ? 'bg-primary text-on-primary shadow-xs'
                 : 'text-on-surface-variant hover:text-white'
@@ -198,7 +199,7 @@ export default function AdminUsersView({
           <button
             type="button"
             onClick={() => setActiveAdminTab('matrix')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md font-space text-xs font-semibold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md font-space text-xs font-semibold transition-all cursor-pointer ${
               activeAdminTab === 'matrix'
                 ? 'bg-primary text-on-primary shadow-xs'
                 : 'text-on-surface-variant hover:text-white'
@@ -207,8 +208,31 @@ export default function AdminUsersView({
             <span className="material-symbols-outlined text-[16px]">security</span>
             <span>Roles y Permisos de Acceso</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveAdminTab('api_usage')}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md font-space text-xs font-semibold transition-all cursor-pointer ${
+              activeAdminTab === 'api_usage'
+                ? 'bg-primary text-on-primary shadow-xs'
+                : 'text-on-surface-variant hover:text-white'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">monitoring</span>
+            <span>Consumo &amp; Límites API</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-black/20 text-current">
+              API
+            </span>
+          </button>
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════
+          TAB 3: CONSUMO DIARIO DE API Y LÍMITES DE CLAVES
+      ══════════════════════════════════════════ */}
+      {activeAdminTab === 'api_usage' && (
+        <AdminApiUsageView currentUser={currentUser} onNotify={onNotify} />
+      )}
 
       {/* ══════════════════════════════════════════
           TAB 1: MANEJO DE USUARIOS

@@ -1151,8 +1151,8 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     id: 'INT-PS-12',
     projectId: 'pathrimonio-site',
     number: '12',
-    title: 'Administración de Usuarios, Permisos & Miembros',
-    fullName: '12. Administración de Usuarios, Permisos & Miembros',
+    title: 'Administración de Usuarios, Permisos & Consumo API',
+    fullName: '12. Administración de Usuarios, Permisos & Consumo API',
     module: 'Autenticación & Control RBAC',
     status: 'Aprobado por Cliente',
     platform: 'Web / Desktop',
@@ -1160,12 +1160,12 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     imagePlaceholder: 'settings',
     fields: {
       objetivo:
-        'Configurar la matriz de acceso por rol (pestañas visibles y acciones permitidas) e invitar o revocar miembros de proyectos específicos.',
+        'Configurar la matriz de acceso por rol, gestionar miembros de proyectos y monitorear el consumo diario de API junto a los límites de cuota por clave conectada.',
       contenido:
-        'Panel RBAC en AdminUsersView, modal InviteProjectMemberModal y selector de roles (owner, editor, viewer).',
+        'Panel RBAC en AdminUsersView, modal InviteProjectMemberModal y tablero AdminApiUsageView con estado de claves (Servidor Vercel y BYOK), consumo RPD/TPD/RPM, probe sin costo y bitácora de auditoría.',
       reglas:
-        'Solo usuarios con permiso canManageUsers / rol Admin pueden modificar accesos y membresías en project_members.',
-      detalles: 'Componentes: AdminUsersView.jsx, InviteProjectMemberModal.jsx, permissionsConfig.js.'
+        'Solo usuarios con permiso canManageUsers / rol Admin pueden modificar accesos, membresías, probar claves conectadas o ajustar topes diarios (/api/v1/admin/api-usage); cero fuga de secretos.',
+      detalles: 'Componentes: AdminUsersView.jsx, AdminApiUsageView.jsx, apiUsageService.js, api/v1/admin/api-usage.js, InviteProjectMemberModal.jsx, permissionsConfig.js.'
     },
     roles: ['Administrador Sistémico'],
     dataUsage: [
@@ -1176,9 +1176,9 @@ export const PATHRIMONIO_SITE_INTERFACES = [
     linkedStory: 'US-PS-01',
     author: 'Administrador Sistémico',
     reviewedBy: 'Arquitecto de Software',
-    approvedAt: '2026-11-24',
-    ultima_fecha_modificacion: '2026-11-24T13:05:00-05:00',
-    version: 'v1.0'
+    approvedAt: '2026-11-26',
+    ultima_fecha_modificacion: '2026-11-26T16:43:00-05:00',
+    version: 'v1.1'
   },
   {
     id: 'INT-PS-13',

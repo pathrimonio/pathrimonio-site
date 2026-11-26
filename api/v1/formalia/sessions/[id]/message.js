@@ -1,7 +1,7 @@
 import { applyGraphPatches, createInitialProcessGraph } from '../../../../../src/lib/formalia/schema.js';
 import { extractProcessTurn } from '../../../../../src/lib/formalia/extractorEngine.js';
 import { graphToPlantUML } from '../../../../../src/lib/formalia/compilers.js';
-import { getSession, saveSession, saveArtifactVersion, MAX_TURNS_PER_SESSION } from '../../../../_lib/store.js';
+import { getSession, saveSession, saveArtifactVersion, recordApiUsageEvent, MAX_TURNS_PER_SESSION } from '../../../../_lib/store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -91,6 +91,12 @@ export default async function handler(req, res) {
 
   session.versions = [...(session.versions || []), versionSnapshot];
   await saveSession(session);
+
+  if (Array.isArray(extraction.attempt_logs) && extraction.attempt_logs.length > 0) {
+    await Promise.all(
+      extraction.attempt_logs.map((ev) => recordApiUsageEvent(ev).catch(() => null))
+    );
+  }
 
   await saveArtifactVersion({
     id: `${id}_puml_${versionLabel}`,
