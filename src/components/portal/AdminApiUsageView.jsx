@@ -339,7 +339,7 @@ export default function AdminApiUsageView({ currentUser, onNotify }) {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-space text-sm font-bold text-white truncate">{k.label}</span>
+                        <span className="font-space text-sm font-bold text-white leading-snug">{k.label}</span>
                         <span className="px-1.5 py-0.5 rounded bg-surface-container-highest border border-outline-variant font-mono text-[10px] text-on-surface-variant uppercase">
                           {k.scope === 'client_byok' ? 'BYOK Navegador' : 'Servidor Vercel'}
                         </span>

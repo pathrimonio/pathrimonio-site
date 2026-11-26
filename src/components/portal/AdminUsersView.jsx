@@ -161,25 +161,25 @@ export default function AdminUsersView({
   return (
     <div className="flex flex-col gap-6 w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
       {/* Header Superior */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-outline-variant">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-[22px]">admin_panel_settings</span>
-            <h1 className="font-space text-xl sm:text-2xl text-white font-bold tracking-tight">
+      <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3.5 pb-4 border-b border-outline-variant">
+        <div className="min-w-0">
+          <div className="flex items-center flex-wrap gap-2">
+            <span className="material-symbols-outlined text-primary text-[22px] shrink-0">admin_panel_settings</span>
+            <h1 className="font-space text-xl sm:text-2xl text-white font-bold tracking-tight whitespace-nowrap">
               Administración de Pathrimonio
             </h1>
             <SectionInfoPopover
               title="Administración de Pathrimonio"
               description="Manejo integral de cuentas de usuario, asignación de roles, matriz de permisos y monitoreo del consumo diario y límites de las claves API conectadas."
             />
-            <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/40">
+            <span className="px-2 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary border border-primary/40 whitespace-nowrap">
               Control de Accesos &amp; APIs
             </span>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex flex-wrap items-center bg-surface-container-low p-1 rounded-lg border border-outline-variant shrink-0 gap-1">
+        <div className="flex flex-wrap items-center self-start 2xl:self-auto bg-surface-container-low p-1 rounded-lg border border-outline-variant gap-1 max-w-full">
           <button
             type="button"
             onClick={() => setActiveAdminTab('users')}
