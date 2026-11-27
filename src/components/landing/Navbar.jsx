@@ -28,8 +28,16 @@ export default function Navbar({
     }
   };
 
+  const isDarkTheme = theme !== 'light';
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-[var(--bg-page)]/95 backdrop-blur-md border-b border-[var(--border-subtle)] transition-colors">
+    <header
+      className={`sticky top-0 z-50 w-full border-b transition-colors ${
+        isDarkTheme
+          ? 'bg-black border-white/10 text-[#D9DADC]'
+          : 'bg-white border-black/10 text-[#2B2D31]'
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand */}
         <a
@@ -50,7 +58,9 @@ export default function Navbar({
           <img
             src="/assets/images/Banner_PATHRIMONIO_COMPANY.png"
             alt="Pathrimonio Company"
-            className="h-9 sm:h-10 w-auto object-contain rounded-[6px] bg-black px-1 border border-[var(--border-subtle)] shrink-0 transition-transform group-hover:scale-[1.02]"
+            className={`h-9 sm:h-10 w-auto object-contain rounded-[6px] bg-black shrink-0 transition-transform group-hover:scale-[1.02] ${
+              isDarkTheme ? 'px-0 border border-transparent' : 'px-1.5 border border-black/15 shadow-xs'
+            }`}
           />
         </a>
 
@@ -127,7 +137,11 @@ export default function Navbar({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="sm:hidden bg-[var(--bg-page)] border-b border-[var(--border-subtle)] px-6 py-4 flex flex-col gap-3">
+        <div
+          className={`sm:hidden border-b border-[var(--border-subtle)] px-6 py-4 flex flex-col gap-3 ${
+            isDarkTheme ? 'bg-black' : 'bg-white'
+          }`}
+        >
           {navLinks.map((link) => (
             <a
               key={link.name}
