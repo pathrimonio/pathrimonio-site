@@ -47,10 +47,11 @@ export default function Navbar({
             alt="Pathrimonio"
             className="w-8 h-8 rounded-[6px] object-cover shrink-0 transition-transform group-hover:scale-105 shadow-xs border border-[var(--border-subtle)]"
           />
-          <span className="font-semibold text-[17px] tracking-tight">Pathrimonio</span>
-          <span className="hidden sm:inline-block text-[11px] font-mono font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] px-2 py-0.5 rounded-[4px] border border-[var(--border-strong)]">
-            Company
-          </span>
+          <img
+            src="/assets/images/Banner_PATHRIMONIO_COMPANY.png"
+            alt="Pathrimonio Company"
+            className="h-9 sm:h-10 w-auto object-contain rounded-[6px] bg-black px-1 border border-[var(--border-subtle)] shrink-0 transition-transform group-hover:scale-[1.02]"
+          />
         </a>
 
         {/* Desktop Nav Links */}

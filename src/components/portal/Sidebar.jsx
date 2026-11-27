@@ -60,18 +60,14 @@ export default function Sidebar({
               className="flex items-center gap-x-2.5 cursor-pointer group"
               title="Volver a la portada de Pathrimonio"
             >
-              <div className="w-7 h-7 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center group-hover:border-primary transition-colors">
+              <div className="w-7 h-7 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center group-hover:border-primary transition-colors shrink-0">
                 <img src="/assets/images/logo.png" alt="Pathrimonio" className="w-4 h-4 object-contain" />
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-baseline tracking-tight font-space text-base leading-none">
-                  <span className="text-white font-bold">PATH</span>
-                  <span className="text-primary font-bold">RIMONIO</span>
-                </div>
-                <span className="font-space text-[9px] text-primary/90 font-medium tracking-tight mt-0.5">
-                  Impulsamos el desarrollo comunitario
-                </span>
-              </div>
+              <img
+                src="/assets/images/Banner_PATHRIMONIO_COMPANY.png"
+                alt="Pathrimonio Company"
+                className="h-9 w-auto max-w-[138px] object-contain rounded-[6px] bg-black px-1 border border-outline-variant/60 shrink-0"
+              />
             </div>
 
             <button 
