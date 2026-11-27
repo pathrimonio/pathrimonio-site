@@ -53,15 +53,11 @@ export default function Navbar({
           <img
             src={
               isDarkTheme
-                ? '/assets/images/icono_202609011609.jpg'
-                : '/assets/images/logo_blanco_pathrimonio.png'
+                ? '/assets/images/logo-sin-fondo-oscuro.png'
+                : '/assets/images/logo-sin-fondo-claro.png'
             }
             alt="Pathrimonio"
-            className={`h-9 sm:h-10 w-auto aspect-square rounded-[6px] shrink-0 transition-transform group-hover:scale-105 ${
-              isDarkTheme
-                ? 'object-cover shadow-xs border border-[var(--border-subtle)]'
-                : 'object-contain bg-white border border-transparent'
-            }`}
+            className="h-9 sm:h-10 w-auto aspect-square shrink-0 object-contain transition-transform group-hover:scale-105"
           />
           <img
             src={

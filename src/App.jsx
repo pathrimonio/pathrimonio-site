@@ -2110,7 +2110,11 @@ function AppContent({ initialPath = '/' }) {
 
           <main className="w-full">
             {/* Sección 01: Hero */}
-            <Hero onOpenPortal={() => navigateToPortal('login')} onNavigate={navigateToPath} />
+            <Hero
+              onOpenPortal={() => navigateToPortal('login')}
+              onNavigate={navigateToPath}
+              theme={theme}
+            />
 
             {/* Sección 02: Roles y Control */}
             <RolesSection />
