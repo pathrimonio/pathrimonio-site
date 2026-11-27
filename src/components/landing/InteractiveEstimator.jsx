@@ -397,8 +397,8 @@ export default function InteractiveEstimator({
             <div className="flex items-center gap-2.5 text-xs text-[var(--text-secondary)]">
               <Sparkles size={15} className="text-[var(--accent-text)] shrink-0" />
               <span>
-                ¿No estás seguro de qué roles o módulos necesitas? Deja que{' '}
-                <strong className="text-[var(--text-primary)]">FORMALIA</strong> mapee tu operación y llene esto por ti.
+                ¿Todavía no tienes claros qué roles o pantallas necesitas? Describe tu operación en{' '}
+                <strong className="text-[var(--text-primary)]">FormalIA</strong> y obtén tu diagrama gratis primero.
               </span>
             </div>
             <a
@@ -411,7 +411,7 @@ export default function InteractiveEstimator({
               }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[var(--bg-silver)] hover:bg-[var(--bg-silver-hover)] border border-[var(--border-silver)] text-[var(--text-on-silver)] text-xs font-semibold transition-colors whitespace-nowrap"
             >
-              <span>Mapea tu negocio gratis con FORMALIA</span>
+              <span>Mapear mi negocio gratis con FormalIA</span>
               <ArrowRight size={13} />
             </a>
           </div>
@@ -867,7 +867,7 @@ export default function InteractiveEstimator({
               <form onSubmit={handleFinalSubmit} className="flex flex-col gap-8">
                 <div>
                   <h3 className="text-xl font-bold text-[var(--text-primary)] mb-1">4. Modalidad y Datos de Envío</h3>
-                  <p className="text-xs text-[var(--text-secondary)]">Elige tu tipo de compromiso y recibe tu propuesta técnica.</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Elige tu modalidad de permanencia y recibe tu propuesta detallada.</p>
                 </div>
 
                 {/* Modalidad de Compromiso */}
@@ -1105,13 +1105,13 @@ export default function InteractiveEstimator({
             {/* Desglose de Configuración */}
             <div className="pt-2 flex flex-col gap-2 text-xs text-[var(--text-secondary-on-silver)]">
               <div className="flex justify-between">
-                <span>Roles administrativos ({pricing.totalAdminUsers}):</span>
+                <span>Roles operativos ({pricing.totalAdminUsers}):</span>
                 <span className="font-mono tabular-nums text-[var(--text-on-silver)] font-semibold">
                   ${pricing.monthlyRolesBase} USD
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>Clientes e infraestructura:</span>
+                <span>Capacidad y canales adicionales:</span>
                 <span className="font-mono tabular-nums text-[var(--text-on-silver)] font-semibold">
                   ${pricing.monthlyCustomersExtra + pricing.monthlyInterfaces + pricing.monthlyDataAndApis} USD
                 </span>
@@ -1124,31 +1124,31 @@ export default function InteractiveEstimator({
                 Garantías de la Alianza
               </span>
               <div className="flex items-center gap-2 text-xs text-[var(--text-secondary-on-silver)]">
-                <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC93C] flex items-center justify-center shrink-0">
+                <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC000] flex items-center justify-center shrink-0">
                   <Check size={10} strokeWidth={2.5} />
                 </span>
-                <span>Base de datos 100% propia (SQLite/Postgres)</span>
+                <span>Propiedad total sobre tu sistema y tus datos</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-[var(--text-secondary-on-silver)]">
-                <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC93C] flex items-center justify-center shrink-0">
+                <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC000] flex items-center justify-center shrink-0">
                   <Check size={10} strokeWidth={2.5} />
                 </span>
-                <span>Arquitectura Offline-First sin cortes</span>
+                <span>Operación fluida en local o en campo sin bloqueos</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-[var(--text-secondary-on-silver)]">
-                <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC93C] flex items-center justify-center shrink-0">
+                <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC000] flex items-center justify-center shrink-0">
                   <Check size={10} strokeWidth={2.5} />
                 </span>
-                <span>Soporte continuo y sin costo por hora</span>
+                <span>Soporte continuo y mejoras sin costo por hora</span>
               </div>
             </div>
 
-            {/* Botón de Acción Principal (10% Yellow #FFC93C Call-to-Click) */}
+            {/* Botón de Acción Principal (#FFC000 Call-to-Click) */}
             {activeStep < 4 ? (
               <button
                 type="button"
                 onClick={() => goToStep(4)}
-                className="w-full py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] border border-[#2B2D31]/15 text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer text-center shadow-xs"
+                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] border border-[#2B2D31]/15 text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer text-center shadow-xs"
               >
                 Completar y Enviar Cotización
               </button>
@@ -1157,7 +1157,7 @@ export default function InteractiveEstimator({
                 type="button"
                 onClick={handleFinalSubmit}
                 disabled={!privacyAccepted}
-                className="w-full py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] disabled:opacity-45 disabled:cursor-not-allowed border border-[#2B2D31]/15 text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer text-center shadow-xs"
+                className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] disabled:opacity-45 disabled:cursor-not-allowed border border-[#2B2D31]/15 text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer text-center shadow-xs"
               >
                 Enviar a WhatsApp Ahora
               </button>

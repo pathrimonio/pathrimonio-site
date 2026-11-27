@@ -231,7 +231,7 @@ export const END_CUSTOMER_TIERS = [
     customersMax: 2000,
     monthlyPrice: 120,
     badge: 'Escala Masiva',
-    desc: 'Infraestructura dedicada con optimización de caché y respuestas ultra rápidas.'
+    desc: 'Capacidad ampliada con rendimiento prioritario para múltiples puntos de atención.'
   },
   {
     id: 'mas_2000_enterprise',
@@ -239,7 +239,7 @@ export const END_CUSTOMER_TIERS = [
     customersMax: 5000,
     monthlyPrice: 180,
     badge: 'Enterprise',
-    desc: 'Escala ilimitada elástica con soporte de alta concurrencia y base de datos dedicada.'
+    desc: 'Escala ilimitada para empresas multi-sede con alta demanda simultánea.'
   }
 ];
 
@@ -315,18 +315,18 @@ export const DATA_AND_APIS_OPTIONS = [
   },
   {
     id: 'almacenamiento_cloud',
-    name: 'Almacenamiento Cloud de Evidencias (25 GB)',
+    name: 'Archivo Digital de Evidencias (25 GB)',
     icon: 'cloud_upload',
     monthlyPrice: 15,
-    desc: 'Guarda fotos de entregas firmadas, guías escaneadas y contratos con respaldo diario cifrado.'
+    desc: 'Guarda fotos de entregas firmadas, guías escaneadas y contratos con respaldo diario.'
   },
   {
     id: 'integracion_hardware_erp',
-    name: 'Integración Hardware / ERP Propio',
+    name: 'Conexión con Balanzas, Impresoras o Contabilidad',
     icon: 'developer_board',
     monthlyPrice: 0,
     isEnterpriseTrigger: true,
-    desc: 'Conexión con balanzas industriales, lectores de código de barras, impresoras fiscales o software contable existente.'
+    desc: 'Enlace directo con balanzas comerciales, lectores de barras, impresoras térmicas o tu estudio contable.'
   }
 ];
 
@@ -338,7 +338,7 @@ export const COMMITMENT_MODES = [
     setupPrice: 0,
     originalSetupPrice: 350,
     savingsText: 'Ahorras $350 USD en implementación inicial',
-    desc: 'Configuración inicial, carga de datos y capacitación del equipo 100% bonificadas con compromiso semestral.'
+    desc: 'Configuración inicial, carga de catálogos y capacitación del equipo 100% bonificadas con compromiso semestral.'
   },
   {
     id: 'mensual_sin_permanencia',

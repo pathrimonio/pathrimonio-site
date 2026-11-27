@@ -335,6 +335,15 @@
   }
 }
 
+@keyframes flowSignal {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
 .hero-enter {
   animation: heroRise var(--duration-very-slow) var(--ease-smooth-out) both;
   animation-delay: calc(var(--duration-stagger) * var(--stagger-idx, 0));

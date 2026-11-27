@@ -19,29 +19,35 @@ export default function FAQSection() {
               <span className="font-semibold">PREGUNTAS FRECUENTES</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] tracking-[-0.025em] leading-[1.1] mb-4">
-              Claridad técnica y transparencia sin rodeos.
+              Respuestas directas sin letra chica.
             </h2>
             <p className="text-base text-[var(--text-secondary)] leading-relaxed mb-8 max-w-[44ch]">
-              Respondemos directamente a las dudas habituales sobre nuestros modelos de cobro, arquitectura offline y garantías de soberanía.
+              Resolvemos las dudas clave antes de empezar: clientes activos, roles temporales, permanencia y propiedad de tu información.
             </p>
 
-            <div className="p-5 rounded-[10px] bg-[var(--bg-surface)] border border-[var(--border-subtle)]">
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-3">
-                ¿Tienes un caso operativo específico o requieres integración con balanzas, impresoras térmicas o hardware propio?
+            <div className="p-5 rounded-[10px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] flex flex-col gap-3">
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                Elige cómo prefieres comenzar sin compromiso:
               </p>
-              <a
-                href="https://wa.me/51950293223?text=Hola,%20quisiera%20hacer%20una%20consulta%20técnica%20sobre%20el%20software%20de%20Pathrimonio"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-text)] underline decoration-[#FFC93C] underline-offset-4 hover:opacity-85 transition-opacity"
-              >
-                <span>Consulta directa por WhatsApp con un ingeniero</span>
-                <ArrowRight
-                  size={13}
-                  strokeWidth={2}
-                  className="transition-transform duration-150 group-hover:translate-x-[3px]"
-                />
-              </a>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <a
+                  href="#cotizador"
+                  className="group inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer"
+                >
+                  <span>Cotizar mi sistema</span>
+                  <ArrowRight
+                    size={13}
+                    strokeWidth={2}
+                    className="transition-transform duration-150 group-hover:translate-x-[3px]"
+                  />
+                </a>
+                <a
+                  href="/formalia"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[6px] bg-[var(--bg-page)] border border-[var(--border-strong)] hover:border-[#FFC000] text-[var(--text-primary)] text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  <span>Probar FormalIA</span>
+                </a>
+              </div>
             </div>
           </div>
 

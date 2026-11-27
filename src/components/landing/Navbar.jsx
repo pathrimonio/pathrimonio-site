@@ -12,10 +12,9 @@ export default function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { name: 'Roles & Control', href: isSubpage ? '/#roles' : '#roles' },
-    { name: 'Arquitectura', href: isSubpage ? '/#arquitectura' : '#arquitectura' },
-    { name: 'Socios', href: isSubpage ? '/#socios' : '#socios' },
-    { name: 'FORMALIA', href: '/formalia' },
+    { name: 'Roles', href: isSubpage ? '/#roles' : '#roles' },
+    { name: 'FormalIA', href: isSubpage ? '/formalia' : '#formalia-demo' },
+    { name: 'Socios & Propósito', href: isSubpage ? '/#socios' : '#socios' },
     { name: 'Cotizador', href: isSubpage ? '/#cotizador' : '#cotizador' },
     { name: 'FAQ', href: isSubpage ? '/#faq' : '#faq' },
   ];
@@ -112,9 +111,9 @@ export default function Navbar({
           <a
             href={isSubpage ? '/#cotizador' : '#cotizador'}
             onClick={handleNavClick(isSubpage ? '/#cotizador' : '#cotizador')}
-            className="btn-accent group inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs shadow-sm cursor-pointer"
+            className="group inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] active:scale-[0.985] text-[#2B2D31] text-xs font-semibold transition-all shadow-sm cursor-pointer"
           >
-            <span>Cotizar ($1/día)</span>
+            <span>Cotizar mi sistema</span>
             <ArrowRight size={13} strokeWidth={1.75} className="transition-transform duration-150 group-hover:translate-x-[3px]" />
           </a>
         </div>
@@ -196,9 +195,9 @@ export default function Navbar({
             <a
               href={isSubpage ? '/#cotizador' : '#cotizador'}
               onClick={handleNavClick(isSubpage ? '/#cotizador' : '#cotizador')}
-              className="w-full text-center py-2 text-xs font-semibold text-[#2B2D31] bg-[#FFC93C] hover:bg-[#FFD561] rounded-[6px]"
+              className="w-full text-center py-2.5 text-xs font-semibold text-[#2B2D31] bg-[#FFC000] hover:bg-[#FFD038] rounded-[6px]"
             >
-              Cotizar Sistema a Medida
+              Cotizar mi sistema
             </a>
           </div>
         </div>

@@ -3,123 +3,172 @@ import {
   Building2,
   Receipt,
   Package,
-  ShoppingCart,
   Truck,
-  MessageSquare,
-  ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  Lock,
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 
-const ROLES = [
+const CORE_ROLES = [
   {
     id: 'gerencia',
-    title: 'Gerencia & Dirección',
+    title: 'Gerencia',
     icon: Building2,
-    description: 'Tablero consolidado de indicadores, control centralizado de usuarios y trazabilidad ejecutiva de operaciones.',
-    badge: 'Auditoría Total',
-    features: ['Control de permisos por rol', 'Exportación de balances', 'Bitácora de cambios']
+    badge: 'Vista Ejecutiva',
+    description: 'Supervisa ingresos, alertas de inventario y actividad diaria del equipo desde un resumen claro.',
+    screenPreview: {
+      header: 'Resumen del día',
+      metric: '$4,820',
+      metricLabel: 'Ventas conciliadas',
+      rows: [
+        { label: 'Caja turno mañana', status: 'Cerrada OK' },
+        { label: 'Despachos entregados', status: '14 / 16' }
+      ]
+    },
+    permissions: ['Indicadores consolidados', 'Permisos por colaborador', 'Auditoría de cambios']
   },
   {
     id: 'caja',
-    title: 'Caja & Cobranzas',
+    title: 'Caja',
     icon: Receipt,
-    description: 'Apertura y cuadre diario de caja, liquidación de cobros en efectivo/transferencia y emisión rápida de comprobantes.',
-    badge: 'Permisos de Cobro',
-    features: ['Cierres ciegos de turno', 'Control de diferencias', 'Historial inalterable']
+    badge: 'Cobros & Turno',
+    description: 'Registra pagos en efectivo o transferencia, emite comprobantes y realiza cierres exactos al finalizar el turno.',
+    screenPreview: {
+      header: 'Turno activo · Ventanilla 1',
+      metric: '$1,390',
+      metricLabel: 'En caja conciliada',
+      rows: [
+        { label: 'Efectivo declarado', status: 'Cuadrado' },
+        { label: 'Yape / Transferencias', status: 'Verificado' }
+      ]
+    },
+    permissions: ['Apertura y arqueo diario', 'Boletas y recibos rápidos', 'Registro de anulaciones']
   },
   {
     id: 'almacen',
-    title: 'Almacén & Inventario',
+    title: 'Almacén',
     icon: Package,
-    description: 'Registro de entradas y salidas de stock, inventario físico vs. digital, alertas de quiebre y soporte para pesaje.',
-    badge: 'Control de Stock',
-    features: ['Kardex en tiempo real', 'Ajustes con motivo', 'Sincronización offline']
-  },
-  {
-    id: 'ventas',
-    title: 'Ventas & Mostrador',
-    icon: ShoppingCart,
-    description: 'Terminal ágil para atención en mostrador o campo, consulta de listas de precios y emisión de notas de pedido.',
-    badge: 'Terminal POS',
-    features: ['Operación sin internet', 'Catálogo con fotos', 'Historial por cliente']
+    badge: 'Stock Real',
+    description: 'Controla entradas de proveedores, salidas por pedido y alertas tempranas antes de quedarte sin mercadería.',
+    screenPreview: {
+      header: 'Control de inventario',
+      metric: '3 alertas',
+      metricLabel: 'Productos por reponer',
+      rows: [
+        { label: 'Ingreso proveedor #042', status: '+240 unid.' },
+        { label: 'Stock físico vs digital', status: 'Sin merma' }
+      ]
+    },
+    permissions: ['Entradas y salidas claras', 'Alertas de reposición', 'Trazabilidad por lote']
   },
   {
     id: 'despacho',
-    title: 'Despacho & Rutas',
+    title: 'Despacho',
     icon: Truck,
-    description: 'Asignación de pedidos por vehículo o zona de reparto, confirmación de entregas en destino y guías de remisión.',
-    badge: 'Seguimiento de Rutas',
-    features: ['Validación de recepción', 'Control de transportista', 'Firma o evidencia digital']
-  },
-  {
-    id: 'atencion',
-    title: 'Atención & WhatsApp',
-    icon: MessageSquare,
-    description: 'Gestión conversacional directa con clientes, envío automatizado de pedidos y resolución de consultas frecuentes.',
-    badge: 'Canal Conversacional',
-    features: ['Respuestas rápidas', 'Pedidos desde chat', 'Seguimiento de estado']
+    badge: 'Rutas & Entregas',
+    description: 'Organiza salidas por reparto o zona y confirma cada entrega con foto o firma desde el celular del repartidor.',
+    screenPreview: {
+      header: 'Ruta activa · Zona Sur',
+      metric: '92%',
+      metricLabel: 'Entregas completadas',
+      rows: [
+        { label: 'Pedido #189 · Bodega Sol', status: 'Entregado' },
+        { label: 'Pedido #190 · Comercial Luz', status: 'En camino' }
+      ]
+    },
+    permissions: ['Hojas de ruta por unidad', 'Confirmación de recepción', 'Cobro contraentrega']
   }
 ];
 
-export default function RolesSection() {
+export default function RolesSection({ onNavigate }) {
   return (
     <section
       id="roles"
       className="w-full py-20 lg:py-28 bg-[var(--bg-silver)] text-[var(--text-on-silver)] border-b border-[var(--border-silver)] transition-colors"
     >
       <div className="site-container">
-        {/* Encabezado de Sección (Sobre Silver #D9DADC -> Tinta #2B2D31) */}
-        <div className="max-w-3xl mb-14">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#2B2D31] text-[#D9DADC] text-xs font-mono mb-3">
-            <span className="font-semibold">ROLES Y CONTROL</span>
+        {/* Encabezado limpio + explicación lógica de $1/día por rol */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-14">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#2B2D31] text-[#D9DADC] text-xs font-mono mb-3">
+              <span className="font-semibold">CONTROL POR ROLES</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-[var(--text-on-silver)] tracking-[-0.025em] leading-[1.1] mb-4">
+              Cada rol con su propia vista, permisos claros y auditoría real.
+            </h2>
+            <p className="text-base text-[var(--text-secondary-on-silver)] leading-relaxed max-w-[60ch]">
+              A diferencia de un software genérico donde todos entran con la misma cuenta, aquí nadie comparte contraseñas ni ve información ajena a su área. Pagas{' '}
+              <strong className="font-semibold text-[var(--text-on-silver)]">$1 USD al día por rol activo</strong>{' '}
+              con trazabilidad completa de cada movimiento.
+            </p>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-on-silver)] tracking-[-0.02em] mb-4">
-            Cada colaborador con la pantalla exacta que necesita.
-          </h2>
-          <p className="text-base text-[var(--text-secondary-on-silver)] leading-relaxed">
-            Elimina el desorden operativo limitando lo que cada perfil puede ver, editar y autorizar.
-            El costo es de{' '}
-            <span className="font-semibold text-[var(--text-on-silver)]">$1 USD al día por rol activo</span>, con auditoría criptográfica de cambios.
-          </p>
+
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-[8px] bg-[#2B2D31]/10 border border-[var(--border-silver)] text-xs font-medium text-[var(--text-on-silver)] shrink-0 self-start lg:self-end">
+            <Lock size={14} strokeWidth={2} className="shrink-0" />
+            <span>Cero contraseñas compartidas entre colaboradores</span>
+          </div>
         </div>
 
-        {/* Grid de 3 Columnas: Tarjetas Gray #2B2D31 sobre lienzo Silver #D9DADC */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {ROLES.map((role) => {
+        {/* 4 Tarjetas limpias (Gerencia, Caja, Almacén, Despacho) con vista real de pantalla */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+          {CORE_ROLES.map((role) => {
             const Icon = role.icon;
             return (
               <div
                 key={role.id}
-                className="card-on-silver p-6 flex flex-col justify-between group"
+                className="card-on-silver p-6 flex flex-col justify-between gap-5"
               >
                 <div>
-                  {/* Top Bar: Icono + Badge */}
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="w-10 h-10 rounded-[6px] bg-[#363940] border border-[#FFC93C]/40 flex items-center justify-center text-[#FFC93C]">
-                      <Icon size={20} strokeWidth={1.6} />
+                  {/* Cabecera */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 rounded-[6px] bg-[#363940] border border-[#FFC000]/45 flex items-center justify-center text-[#FFC000]">
+                      <Icon size={20} strokeWidth={1.7} />
                     </div>
                     <span className="text-[11px] font-mono font-medium text-[#D9DADC] bg-[#363940] border border-[#D9DADC]/15 px-2.5 py-1 rounded-[4px]">
                       {role.badge}
                     </span>
                   </div>
 
-                  {/* Nombre del Rol */}
-                  <h3 className="text-lg font-semibold text-[#D9DADC] mb-2 tracking-tight">
+                  <h3 className="text-xl font-bold text-[#D9DADC] mb-2 tracking-tight">
                     {role.title}
                   </h3>
 
-                  {/* Descripción */}
                   <p className="text-sm text-[#B8BAC0] leading-relaxed mb-5">
                     {role.description}
                   </p>
+
+                  {/* Miniatura viva de lo que ve ese rol (Cards.md: datos reales, sin cajas redundantes) */}
+                  <div className="rounded-[8px] bg-[#232529] border border-[#D9DADC]/12 p-3.5 mb-5">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-[#9699A1] mb-2">
+                      <span>{role.screenPreview.header}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000]" />
+                    </div>
+                    <div className="flex items-baseline gap-2 mb-3 pb-2.5 border-b border-[#D9DADC]/10">
+                      <span className="text-lg font-bold font-mono tabular-nums text-[#FFC000]">
+                        {role.screenPreview.metric}
+                      </span>
+                      <span className="text-[11px] text-[#B8BAC0]">
+                        {role.screenPreview.metricLabel}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {role.screenPreview.rows.map((r, rIdx) => (
+                        <div key={rIdx} className="flex items-center justify-between text-[11px] gap-2">
+                          <span className="text-[#B8BAC0] truncate">{r.label}</span>
+                          <span className="font-mono text-[#D9DADC] font-medium shrink-0">{r.status}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Sub-lista de permisos */}
-                <div className="pt-4 border-t border-[#D9DADC]/15 flex flex-col gap-1.5">
-                  {role.features.map((feat, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs text-[#B8BAC0]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFC93C]"></span>
-                      <span>{feat}</span>
+                {/* Permisos clave */}
+                <div className="pt-3.5 border-t border-[#D9DADC]/15 flex flex-col gap-2">
+                  {role.permissions.map((perm, idx) => (
+                    <div key={idx} className="flex items-center gap-2 text-xs text-[#D9DADC]/90">
+                      <CheckCircle2 size={13} strokeWidth={2} className="text-[#FFC000] shrink-0" />
+                      <span>{perm}</span>
                     </div>
                   ))}
                 </div>
@@ -128,23 +177,33 @@ export default function RolesSection() {
           })}
         </div>
 
-        {/* Callout de Auditoría (Bloque Gray #2B2D31 con botón CTA Yellow #FFC93C) */}
-        <div className="mt-8 p-4 sm:p-5 rounded-[8px] bg-[#2B2D31] text-[#D9DADC] border border-[#2B2D31]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-[6px] bg-[#363940] border border-[#FFC93C]/40 flex items-center justify-center text-[#FFC93C] shrink-0">
-              <ShieldAlert size={16} strokeWidth={1.6} />
-            </div>
-            <p className="text-xs sm:text-sm text-[#B8BAC0]">
-              <strong className="text-[#D9DADC] font-medium">Control antifraude incluido:</strong> Ningún usuario puede borrar cobros o modificar inventario sin dejar registro visible para la Gerencia.
-            </p>
+        {/* Barra de acción enfocada exclusivamente en los dos destinos */}
+        <div className="mt-10 pt-8 border-t border-[var(--border-silver)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <p className="text-xs sm:text-sm text-[var(--text-secondary-on-silver)]">
+            ¿Solo necesitas 2 roles o toda la operación conectada? Arma tu combinación exacta sin licencias sobrantes.
+          </p>
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            <a
+              href="/formalia"
+              onClick={(e) => {
+                if (onNavigate) {
+                  e.preventDefault();
+                  onNavigate('/formalia');
+                }
+              }}
+              className="group inline-flex items-center gap-2 px-4 py-2 rounded-[6px] bg-[#2B2D31] hover:bg-[#363940] text-[#D9DADC] text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <Sparkles size={13} className="text-[#FFC000]" />
+              <span>Ordenar roles en FormalIA</span>
+            </a>
+            <a
+              href="#cotizador"
+              className="group inline-flex items-center gap-1.5 px-4 py-2 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer"
+            >
+              <span>Cotizar mis roles</span>
+              <ArrowRight size={13} strokeWidth={2} className="transition-transform duration-150 group-hover:translate-x-[3px]" />
+            </a>
           </div>
-          <a
-            href="#cotizador"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-xs font-semibold text-[#2B2D31] shrink-0 transition-colors"
-          >
-            <span>Configurar mis roles</span>
-            <ArrowRight size={13} strokeWidth={1.75} />
-          </a>
         </div>
       </div>
     </section>

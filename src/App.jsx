@@ -43,9 +43,8 @@ import {
 import Navbar from './components/landing/Navbar';
 import Hero from './components/landing/Hero';
 import RolesSection from './components/landing/RolesSection';
-import ArchitectureSection from './components/landing/ArchitectureSection';
+import FormalIAShowcaseSection from './components/landing/FormalIAShowcaseSection';
 import PartnershipSection from './components/landing/PartnershipSection';
-import ImpactPathwayBento from './components/landing/ImpactPathwayBento';
 import FormalIAWorkspace from './components/landing/formalia/FormalIAWorkspace';
 import InteractiveEstimator from './components/landing/InteractiveEstimator';
 import FAQSection from './components/landing/FAQSection';
@@ -2111,26 +2110,23 @@ function AppContent({ initialPath = '/' }) {
           />
 
           <main className="w-full">
-            {/* Sección 01: Hero */}
+            {/* Bloque 1: Hero — Propuesta directa y doble puerta de entrada */}
             <Hero
               onOpenPortal={() => navigateToPortal('login')}
               onNavigate={navigateToPath}
               theme={theme}
             />
 
-            {/* Sección 02: Roles y Control */}
-            <RolesSection />
+            {/* Bloque 2: El diferenciador — Control por roles */}
+            <RolesSection onNavigate={navigateToPath} />
 
-            {/* Sección 03: Arquitectura Sistemática & Soberanía */}
-            <ArchitectureSection />
+            {/* Bloque 3: FormalIA — Demostración de autoridad (Antes / Después) */}
+            <FormalIAShowcaseSection onNavigate={navigateToPath} />
 
-            {/* Sección 04: Programa de Socios & Simulador de Créditos */}
-            <PartnershipSection pricingConfig={pricingConfig} />
+            {/* Bloque 4: Programa de Socios + Propósito */}
+            <PartnershipSection pricingConfig={pricingConfig} communityImpact={communityImpact} />
 
-            {/* Sección 05: Impacto y Pathway (Bento Grid) */}
-            <ImpactPathwayBento communityImpact={communityImpact} />
-
-          {/* Sección 06: Cotizador Interactivo (Split-Screen 65/35) */}
+            {/* Bloque 5: El Cotizador Interactivo */}
             <InteractiveEstimator
               onOpenContact={() => setIsContactModalOpen(true)}
               onNavigate={navigateToPath}
@@ -2139,12 +2135,12 @@ function AppContent({ initialPath = '/' }) {
               currentUser={currentUser}
             />
 
-            {/* Sección 07: FAQ Minimalista */}
+            {/* Bloque 6: FAQ de objeciones */}
             <FAQSection />
           </main>
 
-          {/* Sección 07: Footer */}
-          <Footer onOpenContact={() => setIsContactModalOpen(true)} onNavigate={navigateToPath} />
+          {/* Footer legal minimalista */}
+          <Footer onNavigate={navigateToPath} />
           <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} onNavigate={navigateToPath} />
         </div>
       )}
