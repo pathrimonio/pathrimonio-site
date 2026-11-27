@@ -22,7 +22,7 @@ import {
 import { supabase, isSupabaseConfigured } from '../../../lib/supabase';
 import { mapSupabaseUser, getPortalEmailRedirectUrl } from '../../../auth/authConfig';
 import { registerPortalUserLocally } from '../../../auth/permissionsConfig';
-import { saveFormaliaSessionToAccount } from '../../../services/formaliaService';
+import { saveFormaliaSessionToAccount, claimFormaliaSession } from '../../../services/formaliaService';
 
 const INPUT_CLASS =
   'w-full h-10 px-3.5 rounded-[8px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#FFC93C] transition-colors disabled:opacity-60';
@@ -57,10 +57,12 @@ async function syncPortalUserRow(userObj) {
       id: userObj.id,
       email: cleanEmail,
       name: userObj.name || cleanEmail,
-      role: userObj.role || 'Colaborador',
+      organization: userObj.organization || 'PYME Pathrimonio',
+      role: userObj.role || 'Usuario Registrado',
+      source: 'formalia',
       avatar: userObj.avatar || computeInitials(userObj.name, cleanEmail),
       color: userObj.color || 'bg-amber-600',
-      permissions: userObj.permissions || ['create_role', 'create_story', 'create_interface']
+      permissions: userObj.permissions || ['read', 'write', 'create_workspace', 'implement_web', 'send_quote']
     });
   } catch (_) {}
 }
@@ -118,10 +120,13 @@ export default function FormalIASaveModal({
     setError('');
     setLoading(true);
     try {
-      const saveResult = await saveFormaliaSessionToAccount(session, {
-        userId: activeAuthUser.id,
-        email: activeAuthUser.email,
-        name: activeAuthUser.name
+      const saveResult = await claimFormaliaSession({
+        anonymousSession: session,
+        account: {
+          userId: activeAuthUser.id,
+          email: activeAuthUser.email,
+          name: activeAuthUser.name
+        }
       });
       if (!saveResult.ok) {
         throw new Error(saveResult.error || 'No se pudo guardar la conversación.');
@@ -129,7 +134,12 @@ export default function FormalIASaveModal({
       setSavedUser(activeAuthUser);
       setNeedsEmailConfirm(false);
       setSuccess(true);
-      onSaved?.({ user: activeAuthUser, session: saveResult.session, needsEmailConfirm: false });
+      onSaved?.({
+        user: activeAuthUser,
+        session: saveResult.session,
+        quota: saveResult.quota || null,
+        needsEmailConfirm: false
+      });
     } catch (err) {
       setError(err.message || 'Ocurrió un error al guardar.');
     } finally {
@@ -191,12 +201,12 @@ export default function FormalIASaveModal({
           name: name.trim(),
           full_name: name.trim(),
           organization: organization.trim() || null,
-          role: 'Colaborador',
+          role: 'Usuario Registrado',
           source: 'formalia',
           softwareNeeds: 'Sistema de Gestión Operativa / ERP PYME',
           avatar: initials,
           color: 'bg-amber-600',
-          permissions: ['create_role', 'create_story', 'create_interface']
+          permissions: ['read', 'write', 'create_workspace', 'implement_web', 'send_quote']
         };
 
         const { data, error: signUpError } = await supabase.auth.signUp({
@@ -260,10 +270,14 @@ export default function FormalIASaveModal({
         requiresConfirm = false;
       }
 
-      const saveResult = await saveFormaliaSessionToAccount(session, {
-        userId: mappedUser.id,
-        email: mappedUser.email,
-        name: mappedUser.name
+      const saveResult = await claimFormaliaSession({
+        anonymousSession: session,
+        account: {
+          userId: mappedUser.id,
+          email: mappedUser.email,
+          name: mappedUser.name
+        },
+        workspaceName: organization.trim() || undefined
       });
 
       if (!saveResult.ok) {
@@ -276,6 +290,7 @@ export default function FormalIASaveModal({
       onSaved?.({
         user: mappedUser,
         session: saveResult.session,
+        quota: saveResult.quota || null,
         needsEmailConfirm: requiresConfirm
       });
     } catch (err) {
@@ -319,15 +334,15 @@ export default function FormalIASaveModal({
             <div>
               <h2 id="save-modal-title" className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
                 {success
-                  ? '¡Conversación guardada!'
+                  ? '¡Diagrama reclamado en tu cuenta!'
                   : mode === 'register'
-                    ? 'Guardar chat y crear cuenta'
-                    : 'Ingresar y guardar chat'}
+                    ? 'Inicia sesión o crea cuenta'
+                    : 'Ingresar y reclamar lienzo'}
               </h2>
               <p className="text-[11px] text-[var(--text-secondary)] mt-0.5">
                 {success
-                  ? `Sesión "${processName}" vinculada a tu cuenta`
-                  : `Guarda "${processName}" para acceder luego al Portal`}
+                  ? `"${processName}" guardado de forma permanente`
+                  : 'Inicia sesión para conservar tu diagrama y obtener 15 turnos diarios de IA'}
               </p>
             </div>
           </div>
@@ -610,7 +625,7 @@ export default function FormalIASaveModal({
               <p className="text-center text-[11px] text-[var(--text-muted)] leading-relaxed">
                 {mode === 'register' ? (
                   <>
-                    Se creará una cuenta de <strong className="text-[var(--text-primary)]">Colaborador</strong> con la que podrás entrar al Portal y ver tus chats de FORMALIA.{' '}
+                    Se creará una cuenta de <strong className="text-[var(--text-primary)]">Usuario Registrado</strong> (15 turnos IA/día, hasta 5 Workspaces y 20 lienzos, edición manual y solución web).{' '}
                     <a href="/legal/privacidad" target="_blank" rel="noopener" className="text-[#FFC93C] hover:underline">
                       Política de privacidad
                     </a>

@@ -2214,6 +2214,11 @@ function AppContent({ initialPath = '/' }) {
                       projects={projects}
                       onSaveToProjectFiles={handleSaveFile}
                       onPromoteGraphToProject={handlePromoteFormaliaToProject}
+                      onPreloadQuote={(data) => {
+                        setPreloadedFormaliaData(data);
+                        notify('Blueprint web y roles precargados en el Cotizador.');
+                        navigateToPath('/#cotizador');
+                      }}
                       onNavigatePortalTab={(tabId) => {
                         setActivePortalTab(tabId);
                         window.scrollTo({ top: 0, behavior: 'smooth' });

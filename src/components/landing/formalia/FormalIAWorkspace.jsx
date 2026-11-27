@@ -12,7 +12,8 @@ import {
   Trash2,
   Check,
   X,
-  Lock
+  Lock,
+  AppWindow
 } from 'lucide-react';
 import {
   createInitialProcessGraph,
@@ -37,11 +38,14 @@ import {
   buildWorkspaceDirectory,
   normalizeSessionWorkspace,
   renameOrMoveFormaliaCanvas,
-  deleteFormaliaCanvas
+  deleteFormaliaCanvas,
+  fetchFormaliaQuota,
+  applyManualGraphPatches
 } from '../../../services/formaliaService';
 import FormalIAChatPanel from './FormalIAChatPanel';
 import FormalIACanvasPanel from './FormalIACanvasPanel';
 import FormalIASaveModal from './FormalIASaveModal';
+import WebBlueprintModal from './WebBlueprintModal';
 
 const INITIAL_SSR_GRAPH = createInitialProcessGraph('FIA-2026-INIT');
 const INITIAL_SSR_WELCOME = {
@@ -79,7 +83,7 @@ export default function FormalIAWorkspace({
     versions: [],
     generated_files: [],
     turns_count: 0,
-    max_turns: 15
+    max_turns: currentUser ? 15 : 5
   });
   const [clientHydrated, setClientHydrated] = useState(false);
 
@@ -89,7 +93,9 @@ export default function FormalIAWorkspace({
   const [diagramUpdatedBadge, setDiagramUpdatedBadge] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showBlueprintModal, setShowBlueprintModal] = useState(false);
   const [sessionSaved, setSessionSaved] = useState(false);
+  const [quota, setQuota] = useState(null);
 
   // Espacios de trabajo y múltiples lienzos (habilitado tras iniciar sesión)
   const isAuthenticated = Boolean(currentUser && (currentUser.id || currentUser.email));
@@ -197,6 +203,23 @@ export default function FormalIAWorkspace({
       cancelled = true;
     };
   }, [isAuthenticated, currentUser?.id, currentUser?.email]);
+
+  // Sincroniza cuota real de IA (5 por sesión anónima / 15 por día usuario registrado)
+  useEffect(() => {
+    if (!clientHydrated || session.session_id === 'FIA-2026-INIT') return;
+    let cancelled = false;
+    fetchFormaliaQuota({
+      sessionId: session.session_id,
+      userId: currentUser?.id || null,
+      userEmail: currentUser?.email || null,
+      fallbackTurns: session.turns_count || 0
+    }).then((q) => {
+      if (!cancelled && q) setQuota(q);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [clientHydrated, session.session_id, isAuthenticated, currentUser?.id, currentUser?.email]);
 
   useEffect(() => {
     if (!clientHydrated || session.session_id === 'FIA-2026-INIT') return;
@@ -342,8 +365,20 @@ export default function FormalIAWorkspace({
     if (!cleanName || !isAuthenticated) return;
 
     setWorkspaceBusy(true);
+    setErrorMsg('');
     try {
+      const slug = cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 28);
+      const proposedId = `ws_${slug || 'neg'}_${Date.now().toString(36).slice(-4)}`;
+      const fresh = await startFormaliaSession({
+        workspaceId: proposedId,
+        workspaceName: cleanName,
+        projectId: null,
+        canvasTitle: 'Lienzo principal',
+        creatingNewWorkspace: true,
+        currentUser
+      });
       const createdWs = saveLocalWorkspace({
+        workspace_id: proposedId,
         workspace_name: cleanName,
         category: 'negocio'
       });
@@ -351,18 +386,12 @@ export default function FormalIAWorkspace({
       setNewWorkspaceName('');
       setIsCreatingWorkspace(false);
       setActiveWorkspaceId(createdWs.workspace_id);
-
-      const fresh = await startFormaliaSession({
-        workspaceId: createdWs.workspace_id,
-        workspaceName: createdWs.workspace_name,
-        projectId: null,
-        canvasTitle: 'Lienzo principal',
-        currentUser
-      });
       setSession(fresh);
       setSessionSaved(true);
       setAccountSessions((prev) => [fresh, ...prev.filter((s) => s.session_id !== fresh.session_id)]);
       onSessionListChanged?.();
+    } catch (err) {
+      setErrorMsg(err.message || 'No se pudo crear el espacio de trabajo.');
     } finally {
       setWorkspaceBusy(false);
     }
@@ -390,6 +419,8 @@ export default function FormalIAWorkspace({
       setDiagramUpdatedBadge(false);
       setAccountSessions((prev) => [fresh, ...prev.filter((s) => s.session_id !== fresh.session_id)]);
       onSessionListChanged?.();
+    } catch (err) {
+      setErrorMsg(err.message || 'No se pudo abrir el nuevo lienzo.');
     } finally {
       setWorkspaceBusy(false);
     }
@@ -525,7 +556,8 @@ export default function FormalIAWorkspace({
         conversationHistory: session.messages || [],
         existingVersions: session.versions || [],
         existingFiles: session.generated_files || [],
-        accountLink: effectiveLink
+        accountLink: effectiveLink,
+        maxTurnsAllowed: quota?.daily_limit || (isAuthenticated ? 15 : 5)
       });
 
       const assistantMsg = {
@@ -548,6 +580,7 @@ export default function FormalIAWorkspace({
         ...currentMeta,
         process_graph: preservedGraph,
         turns_count: res.turns_count,
+        max_turns: res.max_turns || prev.max_turns,
         versions: res.versions || prev.versions || [],
         generated_files: res.generated_files || prev.generated_files || [],
         messages: [...prev.messages, assistantMsg],
@@ -561,12 +594,38 @@ export default function FormalIAWorkspace({
           : {})
       }));
 
+      if (res.quota) {
+        setQuota(res.quota);
+      } else {
+        setQuota((prev) =>
+          prev
+            ? {
+                ...prev,
+                used_turns: (prev.used_turns || 0) + 1,
+                remaining_turns: Math.max(0, (prev.remaining_turns ?? prev.daily_limit ?? 5) - 1)
+              }
+            : prev
+        );
+      }
+
       setDiagramUpdatedBadge(true);
     } catch (err) {
       setErrorMsg(err.message || 'Ocurrió un error al procesar tu mensaje.');
+      if (err.quota) {
+        setQuota(err.quota);
+      } else if (err.code === 'AI_QUOTA_EXCEEDED') {
+        setQuota((prev) => (prev ? { ...prev, remaining_turns: 0, allowed: false } : { remaining_turns: 0, daily_limit: isAuthenticated ? 15 : 5, is_authenticated: isAuthenticated, allowed: false }));
+      }
     } finally {
       setIsExtracting(false);
     }
+  };
+
+  const handleManualPatch = (patches, summaryLabel) => {
+    setErrorMsg('');
+    const updated = applyManualGraphPatches(session, patches, summaryLabel);
+    setSession(updated);
+    setDiagramUpdatedBadge(true);
   };
 
   const handleResetSession = async () => {
@@ -684,14 +743,21 @@ export default function FormalIAWorkspace({
     setDiagramUpdatedBadge(true);
   };
 
-  const handleApplyToQuote = async (graph) => {
+  const handleApplyToQuote = async (graph, preloadedOverride = null) => {
+    setIsExpanded(false);
+    if (preloadedOverride && preloadedOverride.configuration) {
+      onPreloadQuote?.(preloadedOverride);
+      const el = document.getElementById('cotizador');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
     const targetGraph = graph || session.process_graph;
     const preloadedConfig = await convertFormaliaToQuote({
       sessionId: session.session_id,
       graph: targetGraph
     });
 
-    setIsExpanded(false);
     onPreloadQuote?.({
       ...preloadedConfig,
       process_graph: targetGraph,
@@ -794,7 +860,17 @@ export default function FormalIAWorkspace({
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setShowBlueprintModal(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] border border-[#D9DADC]/25 bg-[#2B2D31] text-[11px] font-medium text-[#D9DADC] hover:border-[#FFC93C] hover:text-[#FFC93C] cursor-pointer transition-colors"
+                title="Transforma tus diagramas en historias por rol, tema visual y maquetas UI"
+              >
+                <AppWindow size={12} className="text-[#FFC93C]" />
+                <span>Implementar en solución web</span>
+              </button>
+
               {!isAuthenticated && (
                 <button
                   type="button"
@@ -1100,7 +1176,8 @@ export default function FormalIAWorkspace({
                 completenessScore={session.process_graph?.completeness_score || 0}
                 currentPhase={session.process_graph?.phase || '1_context'}
                 turnsCount={session.turns_count || 0}
-                maxTurns={session.max_turns || 15}
+                maxTurns={quota?.daily_limit || session.max_turns || (isAuthenticated ? 15 : 5)}
+                quota={quota}
                 isExtracting={isExtracting}
                 errorMessage={errorMsg}
                 hasUnsavedContent={hasUserMessages && !isSavedToAccount}
@@ -1133,6 +1210,7 @@ export default function FormalIAWorkspace({
                 onApplyToQuote={handleApplyToQuote}
                 onRecordArtifact={handleRecordArtifact}
                 onRestoreVersion={handleRestoreVersion}
+                onManualPatch={handleManualPatch}
               />
             </div>
 
@@ -1142,13 +1220,13 @@ export default function FormalIAWorkspace({
       </div>
     </section>
 
-    {/* Modal Guardar Sesión FORMALIA */}
+    {/* Modal Guardar / Claim Sesión FORMALIA */}
     {showSaveModal && (
       <FormalIASaveModal
         session={session}
         currentUser={currentUser}
         onClose={() => setShowSaveModal(false)}
-        onSaved={({ session: savedSess }) => {
+        onSaved={({ session: savedSess, quota: updatedQuota }) => {
           if (savedSess) {
             const normalizedSaved = normalizeSessionWorkspace(savedSess);
             setSession(normalizedSaved);
@@ -1156,6 +1234,9 @@ export default function FormalIAWorkspace({
               normalizedSaved,
               ...prev.filter((s) => s.session_id !== normalizedSaved.session_id)
             ]);
+          }
+          if (updatedQuota) {
+            setQuota(updatedQuota);
           }
           setSessionSaved(true);
           onSessionListChanged?.();
@@ -1172,6 +1253,23 @@ export default function FormalIAWorkspace({
         }}
       />
     )}
+
+    {/* Flujo "Implementar en Solución Web" (3 Pasos) */}
+    <WebBlueprintModal
+      isOpen={showBlueprintModal}
+      onClose={() => setShowBlueprintModal(false)}
+      workspace={activeWorkspace || { workspace_id: session.workspace_id || 'ws_general', workspace_name: session.workspace_name || 'Mi Negocio / General' }}
+      canvases={activeWorkspaceCanvases.length > 0 ? activeWorkspaceCanvases : [session]}
+      activeSession={session}
+      currentUser={currentUser}
+      quota={quota}
+      onQuotaUpdated={setQuota}
+      onPreloadQuote={(data) => handleApplyToQuote(null, data)}
+      onOpenSaveLogin={() => {
+        setShowBlueprintModal(false);
+        setShowSaveModal(true);
+      }}
+    />
     </>
   );
 }

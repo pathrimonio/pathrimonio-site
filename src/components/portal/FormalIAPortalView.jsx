@@ -27,6 +27,7 @@ export default function FormalIAPortalView({
   onSaveToProjectFiles,
   onPromoteGraphToProject,
   onNavigatePortalTab,
+  onPreloadQuote,
   onNotify
 }) {
   const [portalMode, setPortalMode] = useState('studio'); // 'studio' | 'archive'
@@ -314,6 +315,7 @@ export default function FormalIAPortalView({
           activeProjectId={activeProjectId}
           initialSessionOverride={studioOverrideSession}
           onPromoteToProject={handleMaterializeGraph}
+          onPreloadQuote={onPreloadQuote}
           onSessionListChanged={loadSessions}
         />
       </div>

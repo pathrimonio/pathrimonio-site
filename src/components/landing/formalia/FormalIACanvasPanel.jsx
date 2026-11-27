@@ -31,7 +31,11 @@ import {
   Copy,
   Check,
   Rocket,
-  ExternalLink
+  ExternalLink,
+  Plus,
+  Pencil,
+  Trash2,
+  X
 } from 'lucide-react';
 import {
   generateEngineeringHandoff,
@@ -138,20 +142,53 @@ function ProcessStepNode({ data }) {
         {data.label}
       </p>
 
-      <div className="flex flex-wrap items-center gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-1">
         <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] border text-[10px] font-medium ${ch.tone}`}>
           <ChannelIcon size={10} />
           <span>{ch.label}</span>
         </span>
-        {(data.artifacts || []).slice(0, 2).map((art, i) => (
-          <span
-            key={i}
-            className="px-1.5 py-0.5 rounded-[4px] bg-[var(--bg-page)] border border-[var(--border-subtle)] font-mono text-[9px] text-[var(--text-secondary)]"
-          >
-            {art}
-          </span>
-        ))}
+        <div className="flex items-center gap-0.5">
+          {data.onQuickEditStep && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onQuickEditStep(data);
+              }}
+              className="p-1 rounded hover:bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-[#FFC93C] cursor-pointer"
+              title="Editar paso manualmente (0 turnos IA)"
+            >
+              <Pencil size={10} />
+            </button>
+          )}
+          {data.onQuickDeleteStep && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onQuickDeleteStep(data.id);
+              }}
+              className="p-1 rounded hover:bg-red-500/15 text-[var(--text-muted)] hover:text-red-400 cursor-pointer"
+              title="Eliminar paso (0 turnos IA)"
+            >
+              <Trash2 size={10} />
+            </button>
+          )}
+        </div>
       </div>
+
+      {(data.artifacts || []).length > 0 && (
+        <div className="flex flex-wrap items-center gap-1 mt-1.5">
+          {(data.artifacts || []).slice(0, 2).map((art, i) => (
+            <span
+              key={i}
+              className="px-1.5 py-0.5 rounded-[4px] bg-[var(--bg-page)] border border-[var(--border-subtle)] font-mono text-[9px] text-[var(--text-secondary)]"
+            >
+              {art}
+            </span>
+          ))}
+        </div>
+      )}
 
       <Handle
         type="source"
@@ -181,7 +218,8 @@ export default function FormalIACanvasPanel({
   onOpenInPortal,
   onApplyToQuote,
   onRecordArtifact,
-  onRestoreVersion
+  onRestoreVersion,
+  onManualPatch
 }) {
   const [activeView, setActiveView] = useState('swimlanes'); // 'swimlanes' | 'macro' | 'bottlenecks' | 'stories'
   const [isExporting, setIsExporting] = useState(false);
@@ -189,6 +227,14 @@ export default function FormalIACanvasPanel({
   const [modalInitialTab, setModalInitialTab] = useState('plantuml');
   const [isClientMounted, setIsClientMounted] = useState(false);
   const [copiedBacklog, setCopiedBacklog] = useState(false);
+  const [manualMode, setManualMode] = useState(null); // null | 'role' | 'step' | 'edit_step'
+  const [manualRoleName, setManualRoleName] = useState('');
+  const [manualRoleType, setManualRoleType] = useState('INTERNAL_ADMIN_ROLE');
+  const [manualStepId, setManualStepId] = useState(null);
+  const [manualStepLabel, setManualStepLabel] = useState('');
+  const [manualStepActorId, setManualStepActorId] = useState('');
+  const [manualStepChannel, setManualStepChannel] = useState('web_portal');
+  const [manualStepBottleneck, setManualStepBottleneck] = useState(false);
   const canvasCaptureRef = useRef(null);
 
   const handoff = useMemo(() => generateEngineeringHandoff(graph), [graph]);
@@ -235,6 +281,20 @@ export default function FormalIACanvasPanel({
       });
     });
 
+    const openQuickEditStep = (stepData) => {
+      setManualMode('edit_step');
+      setManualStepId(stepData.id);
+      setManualStepLabel(stepData.label || '');
+      setManualStepActorId(stepData.actor_id || '');
+      setManualStepChannel(stepData.channel || 'web_portal');
+      setManualStepBottleneck(Boolean(stepData.is_manual_bottleneck));
+    };
+
+    const quickDeleteStep = (stepId) => {
+      if (!onManualPatch) return;
+      onManualPatch([{ op: 'remove_step', id: stepId }], `Paso eliminado manualmente (${stepId})`);
+    };
+
     // 2. Nodos de pasos dentro de su carril correspondiente
     steps.forEach((step, idx) => {
       const laneIdx = actorIndexMap.has(step.actor_id) ? actorIndexMap.get(step.actor_id) : 0;
@@ -248,7 +308,8 @@ export default function FormalIACanvasPanel({
         zIndex: 10,
         data: {
           ...step,
-          orderIndex: idx + 1
+          orderIndex: idx + 1,
+          ...(onManualPatch ? { onQuickEditStep: openQuickEditStep, onQuickDeleteStep: quickDeleteStep } : {})
         }
       });
     });
@@ -328,10 +389,86 @@ export default function FormalIACanvasPanel({
     }
   };
 
+  const handleManualAddRoleSubmit = (e) => {
+    e.preventDefault();
+    const clean = manualRoleName.trim();
+    if (!clean || !onManualPatch) return;
+    const slug = clean.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 18);
+    const id = `${manualRoleType === 'EXTERNAL_CUSTOMER' ? 'act' : 'role'}_${slug || 'op'}_${Date.now().toString(36).slice(-3)}`;
+    onManualPatch(
+      [
+        {
+          op: 'add_role',
+          actor: { id, name: clean, type: manualRoleType, is_field_role: false }
+        }
+      ],
+      `Rol agregado manualmente: ${clean}`
+    );
+    setManualRoleName('');
+    setManualMode(null);
+  };
+
+  const handleManualStepSubmit = (e) => {
+    e.preventDefault();
+    const cleanLabel = manualStepLabel.trim();
+    if (!cleanLabel || !onManualPatch) return;
+    const patches = [];
+    let actorId = manualStepActorId;
+
+    if (!actorId) {
+      if (actors.length > 0) {
+        actorId = actors[0].id;
+      } else {
+        actorId = `role_op_${Date.now().toString(36).slice(-3)}`;
+        patches.push({
+          op: 'add_role',
+          actor: { id: actorId, name: 'Operador', type: 'INTERNAL_ADMIN_ROLE', is_field_role: false }
+        });
+      }
+    }
+
+    if (manualMode === 'edit_step' && manualStepId) {
+      patches.push({
+        op: 'update_step',
+        id: manualStepId,
+        actor_id: actorId,
+        label: cleanLabel,
+        channel: manualStepChannel,
+        is_manual_bottleneck: manualStepBottleneck
+      });
+      onManualPatch(patches, `Paso editado manualmente: ${cleanLabel}`);
+    } else {
+      const newStepId = `stp_m_${Date.now().toString(36).slice(-5)}`;
+      const prevStep = steps.length > 0 ? steps[steps.length - 1] : null;
+      patches.push({
+        op: 'add_step',
+        step: {
+          id: newStepId,
+          actor_id: actorId,
+          label: cleanLabel,
+          step_type: steps.length === 0 ? 'TRIGGER' : 'TASK',
+          channel: manualStepChannel,
+          artifacts: [],
+          is_manual_bottleneck: manualStepBottleneck,
+          automation_opportunity: manualStepBottleneck ? 'Digitalizar este paso manual' : null
+        }
+      });
+      if (prevStep) {
+        patches.push({ op: 'add_edge', from: prevStep.id, to: newStepId });
+      }
+      onManualPatch(patches, `Paso agregado manualmente: ${cleanLabel}`);
+    }
+
+    setManualStepId(null);
+    setManualStepLabel('');
+    setManualStepBottleneck(false);
+    setManualMode(null);
+  };
+
   return (
     <div className="flex flex-col h-full bg-[var(--bg-page)]">
 
-      {/* ── Selector Superior de 4 Vistas Sincronizadas ── */}
+      {/* ── Selector Superior de 4 Vistas Sincronizadas + Herramientas Manuales Libres ── */}
       <div className="px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex items-center gap-1 p-1 rounded-[8px] bg-[var(--bg-page)] border border-[var(--border-subtle)] overflow-x-auto no-scrollbar max-w-full">
           {[
@@ -360,12 +497,150 @@ export default function FormalIACanvasPanel({
           })}
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-secondary)]">
+        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[var(--text-secondary)] flex-wrap">
+          {onManualPatch && activeView === 'swimlanes' && (
+            <>
+              <button
+                type="button"
+                onClick={() => setManualMode(manualMode === 'role' ? null : 'role')}
+                title="Agregar carril/rol manualmente (0 turnos de IA)"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-page)] hover:border-[#FFC93C] text-[11px] font-sans font-medium text-[var(--text-primary)] cursor-pointer"
+              >
+                <Plus size={12} className="text-[#FFC93C]" />
+                <span>Rol manual</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setManualStepId(null);
+                  setManualStepLabel('');
+                  setManualStepActorId(actors[0]?.id || '');
+                  setManualStepBottleneck(false);
+                  setManualMode(manualMode === 'step' ? null : 'step');
+                }}
+                title="Agregar paso manualmente al flujo (0 turnos de IA)"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-page)] hover:border-[#FFC93C] text-[11px] font-sans font-medium text-[var(--text-primary)] cursor-pointer"
+              >
+                <Plus size={12} className="text-[#FFC93C]" />
+                <span>Paso manual</span>
+              </button>
+            </>
+          )}
           <span className="px-2 py-0.5 rounded bg-[var(--bg-page)] border border-[var(--border-subtle)]">
             {actors.length} roles · {steps.length} pasos
           </span>
         </div>
       </div>
+
+      {/* Barra Inline de Edición Manual Libre (0 turnos IA) */}
+      {manualMode === 'role' && onManualPatch && (
+        <form
+          onSubmit={handleManualAddRoleSubmit}
+          className="px-4 py-2.5 border-b border-[#FFC93C]/40 bg-[#FFC93C]/5 flex flex-wrap items-center gap-2"
+        >
+          <span className="text-[11px] font-mono text-[#FFC93C] font-semibold">Nuevo carril (0 turnos IA):</span>
+          <input
+            type="text"
+            autoFocus
+            value={manualRoleName}
+            onChange={(e) => setManualRoleName(e.target.value)}
+            placeholder="Ej: Almacén, Caja, Chofer..."
+            className="h-8 px-2.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#FFC93C] w-44"
+          />
+          <select
+            value={manualRoleType}
+            onChange={(e) => setManualRoleType(e.target.value)}
+            className="h-8 px-2 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs text-[var(--text-primary)]"
+          >
+            <option value="INTERNAL_ADMIN_ROLE">Rol Interno ($1/día)</option>
+            <option value="EXTERNAL_CUSTOMER">Cliente Externo</option>
+          </select>
+          <button
+            type="submit"
+            disabled={!manualRoleName.trim()}
+            className="h-8 px-3 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] text-xs font-bold cursor-pointer disabled:opacity-50"
+          >
+            Agregar Rol
+          </button>
+          <button
+            type="button"
+            onClick={() => setManualMode(null)}
+            className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        </form>
+      )}
+
+      {(manualMode === 'step' || manualMode === 'edit_step') && onManualPatch && (
+        <form
+          onSubmit={handleManualStepSubmit}
+          className="px-4 py-2.5 border-b border-[#FFC93C]/40 bg-[#FFC93C]/5 flex flex-wrap items-center gap-2"
+        >
+          <span className="text-[11px] font-mono text-[#FFC93C] font-semibold">
+            {manualMode === 'edit_step' ? 'Editar paso:' : 'Nuevo paso (0 turnos IA):'}
+          </span>
+          <select
+            value={manualStepActorId}
+            onChange={(e) => setManualStepActorId(e.target.value)}
+            className="h-8 px-2 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs text-[var(--text-primary)] max-w-[140px]"
+          >
+            {actors.length === 0 ? (
+              <option value="">Operador (auto)</option>
+            ) : (
+              actors.map((a) => (
+                <option key={a.id} value={a.id}>{a.name}</option>
+              ))
+            )}
+          </select>
+          <input
+            type="text"
+            autoFocus
+            value={manualStepLabel}
+            onChange={(e) => setManualStepLabel(e.target.value)}
+            placeholder="Acción operativa (ej: Verifica pago y emite guía)"
+            className="h-8 px-2.5 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[#FFC93C] flex-1 min-w-[200px]"
+          />
+          <select
+            value={manualStepChannel}
+            onChange={(e) => setManualStepChannel(e.target.value)}
+            className="h-8 px-2 rounded-[6px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs text-[var(--text-primary)]"
+          >
+            <option value="web_portal">Web / Sistema</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="excel_manual">Excel Manual</option>
+            <option value="cuaderno_papel">Papel / Cuaderno</option>
+            <option value="app_movil">App Móvil</option>
+            <option value="sistema_externo">SUNAT / ERP</option>
+          </select>
+          <label className="inline-flex items-center gap-1 text-[11px] text-[var(--text-primary)] cursor-pointer">
+            <input
+              type="checkbox"
+              checked={manualStepBottleneck}
+              onChange={(e) => setManualStepBottleneck(e.target.checked)}
+              className="accent-[#FFC93C]"
+            />
+            <span>Cuello manual</span>
+          </label>
+          <button
+            type="submit"
+            disabled={!manualStepLabel.trim()}
+            className="h-8 px-3 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] text-xs font-bold cursor-pointer disabled:opacity-50"
+          >
+            {manualMode === 'edit_step' ? 'Guardar' : 'Añadir Paso'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setManualMode(null);
+              setManualStepId(null);
+            }}
+            className="p-1 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        </form>
+      )}
 
       {/* ── Lienzo Central Vivo (Instantánea < 100ms entre vistas) ── */}
       <div

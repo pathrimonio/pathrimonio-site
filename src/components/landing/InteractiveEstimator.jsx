@@ -280,6 +280,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
     const payload = {
       quote_id: quoteId,
       formalia_session_id: preloadedFormaliaData?.formalia_session_id || null,
+      web_blueprint_id: preloadedFormaliaData?.web_blueprint_id || null,
       timestamp: acceptedAt,
       privacy_policy_accepted: true,
       privacy_policy_version: PRIVACY_POLICY_VERSION,
@@ -356,7 +357,12 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
             <div className="flex items-center gap-2.5 text-xs text-[var(--text-primary)]">
               <Sparkles size={16} className="text-[var(--accent-text)] shrink-0" />
               <span>
-                <strong>Configuración precargada desde tu mapa en FORMALIA.</strong> Puedes ajustar cualquier rol o módulo libremente.
+                <strong>
+                  {preloadedFormaliaData?.web_blueprint_id
+                    ? `Solución Web (${preloadedFormaliaData.web_blueprint_id}) y roles precargados desde FORMALIA.`
+                    : 'Configuración precargada desde tu mapa en FORMALIA.'}
+                </strong>{' '}
+                Puedes ajustar cualquier rol o módulo libremente.
               </span>
             </div>
             <a

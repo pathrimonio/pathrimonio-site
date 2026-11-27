@@ -1,7 +1,15 @@
 import { applyGraphPatches, createInitialProcessGraph } from '../../../../../src/lib/formalia/schema.js';
 import { extractProcessTurn } from '../../../../../src/lib/formalia/extractorEngine.js';
 import { graphToPlantUML } from '../../../../../src/lib/formalia/compilers.js';
-import { getSession, saveSession, saveArtifactVersion, recordApiUsageEvent, MAX_TURNS_PER_SESSION } from '../../../../_lib/store.js';
+import {
+  getSession,
+  saveSession,
+  saveArtifactVersion,
+  recordApiUsageEvent,
+  getClientIp,
+  getAiQuotaStatus,
+  recordAiQuotaTurn
+} from '../../../../_lib/store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,6 +17,7 @@ export default async function handler(req, res) {
   }
 
   const { id } = req.query;
+  const ip = getClientIp(req);
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   const userMessage = (body.message || '').trim();
   const clientGraph = body.process_graph || null;
@@ -41,10 +50,27 @@ export default async function handler(req, res) {
     }
   }
 
-  if (session.turns_count >= MAX_TURNS_PER_SESSION) {
+  const effectiveUserId = body.account_link?.user_id || session.user_id || null;
+  const effectiveUserEmail = body.account_link?.user_email || session.user_email || null;
+
+  // Validación estricta de cuota de IA ANTES de invocar el LLM (5 anon / 15 día autenticado)
+  const quotaBefore = await getAiQuotaStatus({
+    userId: effectiveUserId,
+    userEmail: effectiveUserEmail,
+    ip,
+    sessionId: id
+  });
+
+  if (!quotaBefore.allowed) {
+    const errMsg = quotaBefore.is_authenticated
+      ? 'Usaste tus 15 turnos de IA de hoy; se renuevan mañana (00:00 UTC). Puedes seguir editando tus diagramas, historias y maquetas manualmente.'
+      : 'Alcanzaste los 5 turnos gratuitos de IA de esta sesión. Inicia sesión gratis para conservar tu diagrama y obtener 15 turnos diarios de IA.';
     return res.status(429).json({
-      error: `Límite máximo de ${MAX_TURNS_PER_SESSION} turnos por sesión anónima alcanzado. Descarga tu diagrama o cotiza tu sistema.`,
-      turns_count: session.turns_count,
+      error: errMsg,
+      code: 'AI_QUOTA_EXCEEDED',
+      reset_at: quotaBefore.reset_at,
+      quota: quotaBefore,
+      turns_count: session.turns_count || 0,
       process_graph: session.process_graph
     });
   }
@@ -126,6 +152,22 @@ export default async function handler(req, res) {
     created_at: versionSnapshot.created_at
   });
 
+  await recordAiQuotaTurn({
+    userId: effectiveUserId,
+    userEmail: effectiveUserEmail,
+    ip,
+    sessionId: id,
+    workspaceId: session.workspace_id || updatedGraph?.workspace_meta?.workspace_id || null,
+    actionType: 'PROCESS_CHAT'
+  });
+
+  const quotaAfter = await getAiQuotaStatus({
+    userId: effectiveUserId,
+    userEmail: effectiveUserEmail,
+    ip,
+    sessionId: id
+  });
+
   return res.status(200).json({
     session_id: id,
     assistant_message: extraction.assistant_message,
@@ -134,7 +176,8 @@ export default async function handler(req, res) {
     completeness_score: updatedGraph.completeness_score,
     phase: updatedGraph.phase,
     turns_count: nextTurn,
-    max_turns: MAX_TURNS_PER_SESSION,
+    max_turns: quotaAfter.daily_limit,
+    quota: quotaAfter,
     process_graph: updatedGraph,
     version: versionSnapshot,
     versions: session.versions,

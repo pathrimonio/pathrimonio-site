@@ -48,7 +48,8 @@ export default function FormalIAChatPanel({
   completenessScore = 0,
   currentPhase = '1_context',
   turnsCount = 0,
-  maxTurns = 15,
+  maxTurns = 5,
+  quota = null,
   isExtracting = false,
   errorMessage = '',
   hasUnsavedContent = false,
@@ -69,22 +70,33 @@ export default function FormalIAChatPanel({
     }
   }, [messages, isExtracting]);
 
+  const effectiveLimit = quota?.daily_limit || maxTurns || 5;
+  const remainingTurns =
+    typeof quota?.remaining_turns === 'number'
+      ? quota.remaining_turns
+      : Math.max(0, effectiveLimit - (turnsCount || 0));
+  const usedTurns =
+    typeof quota?.used_turns === 'number'
+      ? quota.used_turns
+      : (turnsCount || 0);
+  const isAuthenticatedQuota = Boolean(quota?.is_authenticated || isSavedToAccount);
+  const isLimitReached = remainingTurns <= 0;
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const clean = inputText.trim();
-    if (!clean || isExtracting || turnsCount >= maxTurns) return;
+    if (!clean || isExtracting || isLimitReached) return;
     setInputText('');
     onSendMessage(clean);
   };
 
   const handleQuickReply = (replyText) => {
-    if (isExtracting || turnsCount >= maxTurns) return;
+    if (isExtracting || isLimitReached) return;
     onSendMessage(replyText);
   };
 
   const latestAssistantMsg = [...messages].reverse().find((m) => m.role === 'assistant');
   const activeQuickReplies = latestAssistantMsg?.quick_replies || [];
-  const isLimitReached = turnsCount >= maxTurns;
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-[var(--bg-surface)] border-b lg:border-b-0 lg:border-r border-[var(--border-subtle)]">
@@ -101,8 +113,19 @@ export default function FormalIAChatPanel({
                 <h3 className="text-sm font-semibold text-[var(--text-primary)] tracking-tight truncate">
                   Entrevistador FORMALIA
                 </h3>
-                <span className="px-1.5 py-0.5 rounded bg-[var(--accent-soft)] border border-[var(--accent-border)] text-[var(--accent-text)] font-mono text-[10px] font-medium">
-                  {turnsCount}/{maxTurns} turnos
+                <span
+                  title={
+                    isAuthenticatedQuota
+                      ? `Cuota diaria de IA (se reinicia a las 00:00 UTC). Edición manual ilimitada.`
+                      : `Modo prueba anónimo (${effectiveLimit} turnos IA). Inicia sesión para 15 turnos/día.`
+                  }
+                  className={`px-1.5 py-0.5 rounded border font-mono text-[10px] font-medium ${
+                    isLimitReached
+                      ? 'bg-red-500/15 border-red-500/40 text-red-300'
+                      : 'bg-[var(--accent-soft)] border-[var(--accent-border)] text-[var(--accent-text)]'
+                  }`}
+                >
+                  {remainingTurns}/{effectiveLimit} IA disp.
                 </span>
               </div>
               <p className="text-[11px] text-[var(--text-secondary)] truncate">
@@ -346,6 +369,29 @@ export default function FormalIAChatPanel({
           </div>
         )}
 
+        {isLimitReached && (
+          <div className="p-3 rounded-[8px] bg-[#FFC93C]/10 border border-[#FFC93C]/40 flex flex-col gap-2">
+            <div className="flex items-start gap-2 text-xs text-[var(--text-primary)]">
+              <AlertTriangle size={14} className="text-[#FFC93C] shrink-0 mt-0.5" />
+              <span>
+                {isAuthenticatedQuota
+                  ? `Usaste tus ${effectiveLimit} turnos de IA de hoy (${usedTurns}/${effectiveLimit}); se renuevan mañana (00:00 UTC). Puedes seguir editando tus diagramas, historias y maquetas manualmente.`
+                  : 'Agotaste los 5 turnos de prueba con IA en esta sesión. Inicia sesión gratis para conservar tu diagrama y obtener 15 turnos diarios de IA, o edita tu diagrama manualmente.'}
+              </span>
+            </div>
+            {!isAuthenticatedQuota && onSaveSession && (
+              <button
+                type="button"
+                onClick={onSaveSession}
+                className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[#FFC93C] text-[#2B2D31] text-[11px] font-bold hover:bg-[#FFD561] cursor-pointer"
+              >
+                <Save size={12} />
+                <span>Iniciar sesión para 15 turnos diarios</span>
+              </button>
+            )}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <input
             type="text"
@@ -354,7 +400,9 @@ export default function FormalIAChatPanel({
             disabled={isExtracting || isLimitReached}
             placeholder={
               isLimitReached
-                ? 'Límite de 15 turnos alcanzado — descarga tu diagrama o cotiza'
+                ? isAuthenticatedQuota
+                  ? 'Turnos de IA de hoy agotados — usa las herramientas manuales sin límite'
+                  : '5 turnos gratuitos usados — inicia sesión para 15/día o edita manualmente'
                 : 'Cuéntame qué proceso quieres graficar o detalla un rol, paso o cambio...'
             }
             className="flex-1 min-w-0 h-10 px-3.5 rounded-[8px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[#FFC93C] transition-colors disabled:opacity-60"

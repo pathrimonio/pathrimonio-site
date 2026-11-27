@@ -1,13 +1,45 @@
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'node:crypto';
+import {
+  createDefaultWebBlueprint,
+  sanitizeUiScreensPayload,
+  ANON_SESSION_AI_LIMIT,
+  ANON_IP_DAILY_AI_LIMIT,
+  AUTH_USER_DAILY_AI_LIMIT,
+  MAX_WORKSPACES_FREE,
+  MAX_CANVASES_PER_WORKSPACE_FREE
+} from '../../src/lib/formalia/blueprintSchema.js';
 
 // Memoria por instancia serverless para resiliencia en frío / sin Supabase configurado
 const memorySessions = new Map();
 const memoryQuotes = new Map();
 const memoryComplaints = new Map();
+const memoryAiQuotaLedger = [];
+const memoryBlueprints = new Map();
 const ipRateLimits = new Map();
 
-const MAX_TURNS_PER_SESSION = 15;
-const MAX_SESSIONS_PER_IP_HOUR = 10; // Tolerante para demos; Turnstile/IP guard aplicable
+const MAX_TURNS_PER_SESSION = ANON_SESSION_AI_LIMIT;
+const MAX_SESSIONS_PER_IP_HOUR = 15; // Tolerante para demos; Turnstile/IP guard aplicable
+const QUOTA_LEDGER_FALLBACK_ID = 'SYS-AI-QUOTA-V2';
+const PRIVILEGED_QUOTA_ROLES = new Set(['Admin', 'Desarrollador', 'Fintech Lead', 'Auditora de Impacto']);
+
+export function hashClientIp(ip = 'unknown') {
+  const salt = process.env.IP_HASH_SALT || 'pathrimonio-formalia-v2';
+  return crypto
+    .createHash('sha256')
+    .update(`${String(ip || 'unknown')}:${salt}`)
+    .digest('hex')
+    .slice(0, 24);
+}
+
+export function getUtcDateString(inputDate = new Date()) {
+  return new Date(inputDate).toISOString().slice(0, 10);
+}
+
+export function getNextUtcResetIso(inputDate = new Date()) {
+  const d = new Date(inputDate);
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1, 0, 0, 0)).toISOString();
+}
 
 function getSupabaseServerClient() {
   const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -164,7 +196,15 @@ export async function saveSession(record) {
       payload.saved_to_account = Boolean(normalizedRecord.saved_to_account);
       if (normalizedRecord.saved_to_account) {
         payload.expires_at = '2099-12-31T23:59:59Z';
+      } else {
+        payload.expires_at =
+          normalizedRecord.expires_at ||
+          new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       }
+    } else if (!normalizedRecord.saved_to_account) {
+      payload.expires_at =
+        normalizedRecord.expires_at ||
+        new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     }
     try {
       const { error } = await sb.from('formalia_sessions').upsert(payload);
@@ -190,6 +230,29 @@ export async function saveSession(record) {
           } = withoutWorkspaceCols;
           await sb.from('formalia_sessions').upsert(legacyPayload);
         }
+      }
+
+      // Sincronización relacional opcional en workspaces / canvases si la migración v2 está aplicada
+      if (normalizedRecord.saved_to_account && ws.workspace_id) {
+        try {
+          await sb.from('workspaces').upsert({
+            id: ws.workspace_id,
+            owner_user_id: normalizedRecord.user_id || null,
+            owner_email: normalizedRecord.user_email || null,
+            name: ws.workspace_name || 'Mi Negocio / General',
+            industry: syncedGraph?.business_context?.industry || 'otro_sector',
+            project_id: ws.project_id || null,
+            updated_at: new Date().toISOString()
+          });
+          await sb.from('canvases').upsert({
+            id: normalizedRecord.session_id,
+            workspace_id: ws.workspace_id,
+            session_id: normalizedRecord.session_id,
+            title: ws.canvas_title || processName || 'Lienzo principal',
+            process_graph_json: syncedGraph || {},
+            updated_at: new Date().toISOString()
+          });
+        } catch (_) {}
       }
     } catch (_) {}
   }
@@ -345,9 +408,10 @@ export async function saveQuoteWithHandoff(quotePayload) {
   const sb = getSupabaseServerClient();
   if (sb) {
     try {
-      const { error } = await sb.from('quotes').insert({
+      const insertRow = {
         quote_id: quotePayload.quote_id,
         formalia_session_id: quotePayload.formalia_session_id || null,
+        web_blueprint_id: quotePayload.web_blueprint_id || null,
         business_discovery: quotePayload.business_discovery || {},
         configuration: quotePayload.configuration || {},
         pricing_summary: quotePayload.pricing_summary || {},
@@ -357,7 +421,13 @@ export async function saveQuoteWithHandoff(quotePayload) {
         privacy_policy_version: quotePayload.privacy_policy_version || '2026-11',
         accepted_at: quotePayload.accepted_at || new Date().toISOString(),
         status: 'nuevo_lead'
-      });
+      };
+      let { error } = await sb.from('quotes').insert(insertRow);
+      if (error && insertRow.web_blueprint_id) {
+        const { web_blueprint_id: _wbp, ...withoutBp } = insertRow;
+        const retry = await sb.from('quotes').insert(withoutBp);
+        error = retry.error;
+      }
       if (!error && quotePayload.formalia_session_id) {
         await sb
           .from('formalia_sessions')
@@ -969,4 +1039,424 @@ export async function getApiUsageSummary({ days = 7 } = {}) {
   };
 }
 
-export { MAX_TURNS_PER_SESSION };
+// ── Cuotas de IA FormalIA v2, Claim Flow y Web Blueprints ────────────────────
+
+async function readQuotaLedgerFallback(sb) {
+  if (!sb) return [];
+  try {
+    const { data } = await sb
+      .from('formalia_sessions')
+      .select('process_graph')
+      .eq('session_id', QUOTA_LEDGER_FALLBACK_ID)
+      .maybeSingle();
+    return Array.isArray(data?.process_graph?.entries) ? data.process_graph.entries : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeQuotaLedgerFallback(sb, entries) {
+  if (!sb) return;
+  try {
+    await sb.from('formalia_sessions').upsert({
+      session_id: QUOTA_LEDGER_FALLBACK_ID,
+      process_graph: { entries: entries.slice(0, 500) },
+      messages: [],
+      versions: [],
+      generated_files: [],
+      turns_count: 0,
+      completeness_score: 100,
+      expires_at: '2099-12-31T23:59:59Z',
+      updated_at: new Date().toISOString()
+    });
+  } catch (_) {}
+}
+
+export async function recordAiQuotaTurn({
+  userId = null,
+  userEmail = null,
+  ip = 'unknown',
+  sessionId = null,
+  workspaceId = null,
+  actionType = 'PROCESS_CHAT'
+}) {
+  const nowIso = new Date().toISOString();
+  const usageDateUtc = getUtcDateString(nowIso);
+  const cleanEmail = userEmail ? String(userEmail).trim().toLowerCase() : null;
+  const entry = {
+    id: `aiq_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`,
+    user_id: userId ? String(userId) : null,
+    user_email: cleanEmail,
+    ip_hash: hashClientIp(ip),
+    session_id: sessionId || null,
+    workspace_id: workspaceId || null,
+    action_type: actionType,
+    usage_date_utc: usageDateUtc,
+    created_at: nowIso
+  };
+
+  memoryAiQuotaLedger.unshift(entry);
+  if (memoryAiQuotaLedger.length > 600) memoryAiQuotaLedger.length = 600;
+
+  const sb = getSupabaseServerClient();
+  if (sb) {
+    let savedToTable = false;
+    try {
+      const { error } = await sb.from('ai_usage_ledger').insert(entry);
+      if (!error) savedToTable = true;
+    } catch (_) {}
+
+    if (!savedToTable) {
+      const prev = await readQuotaLedgerFallback(sb);
+      const next = [entry, ...prev.filter((e) => e.id !== entry.id)].slice(0, 500);
+      await writeQuotaLedgerFallback(sb, next);
+    }
+  }
+
+  return entry;
+}
+
+export async function getAiQuotaStatus({
+  userId = null,
+  userEmail = null,
+  ip = 'unknown',
+  sessionId = null
+} = {}) {
+  const todayUtc = getUtcDateString();
+  const resetAt = getNextUtcResetIso();
+  const ipHash = hashClientIp(ip);
+  const cleanEmail = userEmail ? String(userEmail).trim().toLowerCase() : null;
+  const isAuthenticated = Boolean(userId || cleanEmail);
+
+  let entries = memoryAiQuotaLedger.filter((e) => e.usage_date_utc === todayUtc);
+  const sb = getSupabaseServerClient();
+  if (sb) {
+    let loadedDedicated = false;
+    try {
+      const { data, error } = await sb
+        .from('ai_usage_ledger')
+        .select('*')
+        .eq('usage_date_utc', todayUtc)
+        .limit(500);
+      if (!error && Array.isArray(data)) {
+        loadedDedicated = true;
+        const seen = new Set(data.map((d) => d.id));
+        entries = [...data, ...entries.filter((m) => !seen.has(m.id))];
+      }
+    } catch (_) {}
+
+    if (!loadedDedicated) {
+      const fallbackEntries = (await readQuotaLedgerFallback(sb)).filter(
+        (e) => e.usage_date_utc === todayUtc
+      );
+      const seen = new Set(fallbackEntries.map((d) => d.id));
+      entries = [...fallbackEntries, ...entries.filter((m) => !seen.has(m.id))];
+    }
+  }
+
+  const ipUsedToday = entries.filter((e) => e.ip_hash === ipHash && !e.user_id && !e.user_email).length;
+
+  if (isAuthenticated) {
+    const userUsedToday = entries.filter(
+      (e) =>
+        (userId && e.user_id && e.user_id === String(userId)) ||
+        (cleanEmail && e.user_email && String(e.user_email).toLowerCase() === cleanEmail)
+    ).length;
+
+    const remainingTurns = Math.max(0, AUTH_USER_DAILY_AI_LIMIT - userUsedToday);
+    return {
+      allowed: remainingTurns > 0,
+      code: remainingTurns > 0 ? null : 'AI_QUOTA_EXCEEDED',
+      remaining_turns: remainingTurns,
+      used_turns: userUsedToday,
+      daily_limit: AUTH_USER_DAILY_AI_LIMIT,
+      session_turns_used: userUsedToday,
+      session_limit: AUTH_USER_DAILY_AI_LIMIT,
+      ip_used_today: ipUsedToday,
+      ip_limit: AUTH_USER_DAILY_AI_LIMIT,
+      reset_at: resetAt,
+      is_authenticated: true
+    };
+  }
+
+  let sessionTurnsUsed = 0;
+  if (sessionId) {
+    const ledgerSessionCount = entries.filter((e) => e.session_id === sessionId).length;
+    const sessRecord = await getSession(sessionId);
+    sessionTurnsUsed = Math.max(sessRecord?.turns_count || 0, ledgerSessionCount);
+  }
+
+  const remainingSession = Math.max(0, ANON_SESSION_AI_LIMIT - sessionTurnsUsed);
+  const remainingIp = Math.max(0, ANON_IP_DAILY_AI_LIMIT - ipUsedToday);
+  const remainingTurns = Math.min(remainingSession, remainingIp);
+
+  return {
+    allowed: remainingTurns > 0,
+    code: remainingTurns > 0 ? null : 'AI_QUOTA_EXCEEDED',
+    remaining_turns: remainingTurns,
+    used_turns: sessionTurnsUsed,
+    daily_limit: ANON_SESSION_AI_LIMIT,
+    session_turns_used: sessionTurnsUsed,
+    session_limit: ANON_SESSION_AI_LIMIT,
+    ip_used_today: ipUsedToday,
+    ip_limit: ANON_IP_DAILY_AI_LIMIT,
+    reset_at: resetAt,
+    is_authenticated: false
+  };
+}
+
+export async function checkUserWorkspaceCaps({
+  userId = null,
+  userEmail = null,
+  userRole = null,
+  workspaceId = null,
+  projectId = null,
+  creatingNewWorkspace = false
+} = {}) {
+  if (!userId && !userEmail) return { allowed: true };
+  if (userRole && PRIVILEGED_QUOTA_ROLES.has(userRole)) return { allowed: true };
+  if (projectId) return { allowed: true };
+
+  const sessions = await listFormaliaSessionsArchive({
+    userId,
+    userEmail,
+    mineOnly: true
+  });
+
+  const nonProjectWorkspaces = new Set();
+  const canvasesInTarget = new Set();
+
+  sessions.forEach((s) => {
+    const ws = resolveWorkspaceFields(s);
+    if (!ws.project_id && ws.workspace_id && ws.workspace_id !== 'ws_general') {
+      nonProjectWorkspaces.add(ws.workspace_id);
+    }
+    if (workspaceId && ws.workspace_id === workspaceId) {
+      canvasesInTarget.add(s.session_id);
+    }
+  });
+
+  if (creatingNewWorkspace && workspaceId && !nonProjectWorkspaces.has(workspaceId)) {
+    if (nonProjectWorkspaces.size >= MAX_WORKSPACES_FREE) {
+      return {
+        allowed: false,
+        code: 'WORKSPACE_LIMIT_EXCEEDED',
+        limit: MAX_WORKSPACES_FREE,
+        error: `Alcanzaste el límite técnico de ${MAX_WORKSPACES_FREE} espacios de trabajo en cuenta gratuita.`
+      };
+    }
+  }
+
+  if (workspaceId && canvasesInTarget.size >= MAX_CANVASES_PER_WORKSPACE_FREE) {
+    return {
+      allowed: false,
+      code: 'CANVAS_LIMIT_EXCEEDED',
+      limit: MAX_CANVASES_PER_WORKSPACE_FREE,
+      error: `Este espacio alcanzó el máximo de ${MAX_CANVASES_PER_WORKSPACE_FREE} lienzos en plan gratuito.`
+    };
+  }
+
+  return { allowed: true };
+}
+
+export async function claimAnonymousSessionToAccount({
+  anonymousSessionId,
+  userId = null,
+  userEmail = null,
+  userName = null,
+  workspaceId = null,
+  workspaceName = null,
+  fallbackSession = null
+} = {}) {
+  if (!anonymousSessionId && !fallbackSession?.session_id) {
+    return { ok: false, error: 'anonymous_session_id es requerido' };
+  }
+  const cleanEmail = userEmail ? String(userEmail).trim().toLowerCase() : null;
+  if (!userId && !cleanEmail) {
+    return { ok: false, error: 'Debes autenticarte para reclamar el lienzo.' };
+  }
+
+  const targetSessionId = anonymousSessionId || fallbackSession.session_id;
+  const existing = (await getSession(targetSessionId)) || fallbackSession;
+  if (!existing) {
+    return { ok: false, error: 'Sesión anónima no encontrada.' };
+  }
+
+  const wsSlug = String(
+    workspaceName ||
+      existing.process_graph?.business_context?.company_name ||
+      'mi_negocio'
+  )
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 24);
+
+  const assignedWsId =
+    workspaceId ||
+    (existing.workspace_id && existing.workspace_id !== 'ws_general'
+      ? existing.workspace_id
+      : `ws_${wsSlug || 'negocio'}`);
+  const assignedWsName =
+    workspaceName ||
+    existing.workspace_name ||
+    existing.process_graph?.business_context?.company_name ||
+    'Mi Negocio / General';
+  const assignedCanvasTitle =
+    existing.canvas_title ||
+    existing.process_graph?.business_context?.process_name ||
+    existing.process_name ||
+    'Lienzo principal';
+
+  const nextGraph = {
+    ...(existing.process_graph || {}),
+    workspace_meta: {
+      workspace_id: assignedWsId,
+      workspace_name: assignedWsName,
+      project_id: null,
+      canvas_title: assignedCanvasTitle
+    }
+  };
+
+  const claimed = await saveSession({
+    ...existing,
+    session_id: targetSessionId,
+    user_id: userId || existing.user_id || null,
+    user_email: cleanEmail || existing.user_email || null,
+    user_name: userName || existing.user_name || null,
+    workspace_id: assignedWsId,
+    workspace_name: assignedWsName,
+    project_id: null,
+    canvas_title: assignedCanvasTitle,
+    process_name: assignedCanvasTitle,
+    saved_to_account: true,
+    expires_at: '2099-12-31T23:59:59Z',
+    process_graph: nextGraph
+  });
+
+  return {
+    ok: true,
+    workspace_id: assignedWsId,
+    workspace_name: assignedWsName,
+    session: claimed
+  };
+}
+
+export async function getWorkspaceBlueprint(workspaceId = 'ws_general') {
+  const cleanId = String(workspaceId || 'ws_general');
+  if (memoryBlueprints.has(cleanId)) {
+    return memoryBlueprints.get(cleanId);
+  }
+
+  const sb = getSupabaseServerClient();
+  if (sb) {
+    try {
+      const { data, error } = await sb
+        .from('web_blueprints')
+        .select('*')
+        .eq('workspace_id', cleanId)
+        .maybeSingle();
+      if (!error && data) {
+        const bp = {
+          blueprint_id: data.id,
+          workspace_id: data.workspace_id,
+          source_canvas_ids: data.source_canvas_ids || [],
+          user_stories: data.user_stories_json || [],
+          theme_config: data.theme_config_json || createDefaultWebBlueprint(cleanId).theme_config,
+          ui_screens: data.ui_screens_json || [],
+          updated_at: data.updated_at
+        };
+        memoryBlueprints.set(cleanId, bp);
+        return bp;
+      }
+    } catch (_) {}
+
+    // Fallback JSONB en formalia_sessions si la tabla web_blueprints aún no existe
+    try {
+      const { data } = await sb
+        .from('formalia_sessions')
+        .select('process_graph, updated_at')
+        .eq('session_id', `SYS-BP-${cleanId}`)
+        .maybeSingle();
+      if (data?.process_graph?.blueprint_id) {
+        memoryBlueprints.set(cleanId, data.process_graph);
+        return data.process_graph;
+      }
+    } catch (_) {}
+  }
+
+  return createDefaultWebBlueprint(cleanId);
+}
+
+export async function saveWorkspaceBlueprint(workspaceId = 'ws_general', patch = {}) {
+  const cleanId = String(workspaceId || 'ws_general');
+  const prev = await getWorkspaceBlueprint(cleanId);
+
+  const sanitizedScreens =
+    patch.ui_screens !== undefined
+      ? sanitizeUiScreensPayload(patch.ui_screens)
+      : prev.ui_screens || [];
+
+  const next = {
+    ...prev,
+    ...(patch.blueprint_id ? { blueprint_id: patch.blueprint_id } : {}),
+    workspace_id: cleanId,
+    source_canvas_ids:
+      patch.source_canvas_ids !== undefined ? patch.source_canvas_ids : (prev.source_canvas_ids || []),
+    user_stories:
+      patch.user_stories !== undefined ? patch.user_stories : (prev.user_stories || []),
+    theme_config:
+      patch.theme_config !== undefined ? { ...(prev.theme_config || {}), ...patch.theme_config } : prev.theme_config,
+    ui_screens: sanitizedScreens,
+    updated_at: new Date().toISOString()
+  };
+
+  memoryBlueprints.set(cleanId, next);
+
+  const sb = getSupabaseServerClient();
+  if (sb) {
+    let savedDedicated = false;
+    try {
+      const { error } = await sb.from('web_blueprints').upsert(
+        {
+          id: next.blueprint_id,
+          workspace_id: cleanId,
+          source_canvas_ids: next.source_canvas_ids,
+          user_stories_json: next.user_stories,
+          theme_config_json: next.theme_config,
+          ui_screens_json: next.ui_screens,
+          updated_at: next.updated_at
+        },
+        { onConflict: 'workspace_id' }
+      );
+      if (!error) savedDedicated = true;
+    } catch (_) {}
+
+    if (!savedDedicated) {
+      try {
+        await sb.from('formalia_sessions').upsert({
+          session_id: `SYS-BP-${cleanId}`,
+          process_graph: next,
+          messages: [],
+          versions: [],
+          generated_files: [],
+          turns_count: 0,
+          completeness_score: 100,
+          expires_at: '2099-12-31T23:59:59Z',
+          updated_at: next.updated_at
+        });
+      } catch (_) {}
+    }
+  }
+
+  return next;
+}
+
+export {
+  MAX_TURNS_PER_SESSION,
+  ANON_SESSION_AI_LIMIT,
+  ANON_IP_DAILY_AI_LIMIT,
+  AUTH_USER_DAILY_AI_LIMIT,
+  MAX_WORKSPACES_FREE,
+  MAX_CANVASES_PER_WORKSPACE_FREE
+};

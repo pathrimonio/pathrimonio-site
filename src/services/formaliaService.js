@@ -5,6 +5,16 @@ import {
   generateFormaliaSessionId,
   normalizeWorkspaceMeta
 } from '../lib/formalia/schema.js';
+import {
+  ANON_SESSION_AI_LIMIT,
+  AUTH_USER_DAILY_AI_LIMIT,
+  createDefaultWebBlueprint,
+  sanitizeUiScreensPayload
+} from '../lib/formalia/blueprintSchema.js';
+import {
+  generateBlueprintStories,
+  generateBlueprintLayout
+} from '../lib/formalia/blueprintGenerator.js';
 import { extractProcessTurn } from '../lib/formalia/extractorEngine.js';
 import {
   generateEngineeringHandoff,
@@ -16,7 +26,8 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 const FORMALIA_STORAGE_KEY = 'pathrimonio_formalia_session_v1';
 const FORMALIA_ARCHIVE_KEY = 'pathrimonio_formalia_archive_v1';
 const FORMALIA_WORKSPACES_KEY = 'pathrimonio_formalia_workspaces_v1';
-const MAX_TURNS = 15;
+const FORMALIA_BLUEPRINTS_KEY = 'pathrimonio_formalia_blueprints_v1';
+const MAX_TURNS = ANON_SESSION_AI_LIMIT;
 
 export function createWelcomeMessage() {
   return {
@@ -313,7 +324,8 @@ export async function startFormaliaSession(options = {}) {
     workspaceName = null,
     projectId = null,
     canvasTitle = null,
-    currentUser = null
+    currentUser = null,
+    creatingNewWorkspace = false
   } = options || {};
 
   const hasWorkspace = Boolean(workspaceId || workspaceName || projectId || canvasTitle);
@@ -335,6 +347,7 @@ export async function startFormaliaSession(options = {}) {
   const userId = currentUser?.id && UUID_REGEX.test(String(currentUser.id)) ? String(currentUser.id) : null;
   const userEmail = currentUser?.email ? String(currentUser.email).trim().toLowerCase() : null;
   const userName = currentUser?.name || currentUser?.full_name || null;
+  const defaultLimit = currentUser ? AUTH_USER_DAILY_AI_LIMIT : ANON_SESSION_AI_LIMIT;
 
   const apiRes = await tryApiJson('/api/v1/formalia/sessions', {
     method: 'POST',
@@ -344,9 +357,17 @@ export async function startFormaliaSession(options = {}) {
       ...(userId ? { user_id: userId } : {}),
       ...(userEmail ? { user_email: userEmail } : {}),
       ...(userName ? { user_name: userName } : {}),
+      ...(currentUser?.role ? { user_role: currentUser.role } : {}),
+      ...(creatingNewWorkspace ? { creating_new_workspace: true } : {}),
       ...(currentUser ? { saved_to_account: true } : {})
     })
   });
+
+  if (apiRes?._apiError && apiRes.code) {
+    const err = new Error(apiRes.error || 'No se pudo abrir un nuevo lienzo.');
+    err.code = apiRes.code;
+    throw err;
+  }
 
   if (apiRes && !apiRes._apiError && apiRes.session_id) {
     const session = normalizeSessionWorkspace({
@@ -356,7 +377,7 @@ export async function startFormaliaSession(options = {}) {
       versions: [],
       generated_files: [],
       turns_count: apiRes.turns_count || 0,
-      max_turns: apiRes.max_turns || MAX_TURNS,
+      max_turns: apiRes.max_turns || defaultLimit,
       ...(workspaceMeta || {}),
       ...(userId ? { user_id: userId } : {}),
       ...(userEmail ? { user_email: userEmail } : {}),
@@ -384,7 +405,7 @@ export async function startFormaliaSession(options = {}) {
     versions: [],
     generated_files: [],
     turns_count: 0,
-    max_turns: MAX_TURNS,
+    max_turns: defaultLimit,
     ...(workspaceMeta || {}),
     ...(userId ? { user_id: userId } : {}),
     ...(userEmail ? { user_email: userEmail } : {}),
@@ -407,10 +428,14 @@ export async function sendFormaliaMessage({
   conversationHistory,
   existingVersions = [],
   existingFiles = [],
-  accountLink = null
+  accountLink = null,
+  maxTurnsAllowed = null
 }) {
-  if (turnsCount >= MAX_TURNS) {
-    throw new Error(`Alcanzaste el límite de ${MAX_TURNS} turnos para esta sesión gratuita. Descarga tu diagrama o cotiza tu sistema.`);
+  const effectiveMax = maxTurnsAllowed || (accountLink?.user_email || accountLink?.user_id ? AUTH_USER_DAILY_AI_LIMIT : ANON_SESSION_AI_LIMIT);
+  if (turnsCount >= effectiveMax && !accountLink?.user_email && !accountLink?.user_id) {
+    const err = new Error('Alcanzaste los 5 turnos gratuitos de IA de esta sesión. Inicia sesión para conservar tu diagrama y obtener 15 turnos diarios.');
+    err.code = 'AI_QUOTA_EXCEEDED';
+    throw err;
   }
 
   const rawHistory = Array.isArray(conversationHistory)
@@ -434,6 +459,17 @@ export async function sendFormaliaMessage({
       ...(accountLink ? { account_link: accountLink } : {})
     })
   });
+
+  if (apiRes?._apiError) {
+    const err = new Error(apiRes.error || 'Se alcanzó el límite de turnos de IA.');
+    err.code = apiRes.code || (apiRes.status === 429 ? 'AI_QUOTA_EXCEEDED' : 'API_ERROR');
+    err.status = apiRes.status;
+    err.quota = apiRes.quota || null;
+    err.reset_at = apiRes.reset_at || null;
+    if (apiRes.status === 429 || apiRes.code === 'AI_QUOTA_EXCEEDED' || apiRes.status === 400) {
+      throw err;
+    }
+  }
 
   if (apiRes && !apiRes._apiError && apiRes.process_graph) {
     const nextVersion = apiRes.version || buildVersionSnapshot(
@@ -495,13 +531,280 @@ export async function sendFormaliaMessage({
     completeness_score: updatedGraph.completeness_score,
     phase: updatedGraph.phase,
     turns_count: nextTurn,
-    max_turns: MAX_TURNS,
+    max_turns: effectiveMax,
     process_graph: updatedGraph,
     version: snapshot,
     versions: [...existingVersions, snapshot],
     generated_files: [...existingFiles.filter((f) => f.id !== pumlArtifact.id), pumlArtifact],
     engine_source: extraction.engine_source
   };
+}
+
+export async function fetchFormaliaQuota({ sessionId = null, userId = null, userEmail = null, fallbackTurns = 0 } = {}) {
+  const params = new URLSearchParams();
+  if (sessionId) params.set('session_id', sessionId);
+  if (userId) params.set('user_id', userId);
+  if (userEmail) params.set('user_email', String(userEmail).trim().toLowerCase());
+  const qs = params.toString() ? `?${params.toString()}` : '';
+
+  const apiRes = await tryApiJson(`/api/v1/formalia/quota${qs}`, { method: 'GET' });
+  if (apiRes && !apiRes._apiError && typeof apiRes.remaining_turns === 'number') {
+    return apiRes;
+  }
+
+  const isAuth = Boolean(userId || userEmail);
+  const limit = isAuth ? AUTH_USER_DAILY_AI_LIMIT : ANON_SESSION_AI_LIMIT;
+  const used = isAuth ? 0 : Math.min(limit, Number(fallbackTurns) || 0);
+  const now = new Date();
+  const nextUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0)).toISOString();
+  return {
+    allowed: used < limit,
+    code: used < limit ? null : 'AI_QUOTA_EXCEEDED',
+    remaining_turns: Math.max(0, limit - used),
+    used_turns: used,
+    daily_limit: limit,
+    session_turns_used: used,
+    session_limit: limit,
+    reset_at: nextUtc,
+    is_authenticated: isAuth
+  };
+}
+
+export async function claimFormaliaSession({ anonymousSession, account = {}, workspaceName = null }) {
+  if (!anonymousSession || !anonymousSession.session_id) {
+    return { ok: false, error: 'Sesión anónima inválida' };
+  }
+  const userId = account.userId && UUID_REGEX.test(String(account.userId)) ? String(account.userId) : null;
+  const userEmail = account.email ? String(account.email).trim().toLowerCase() : null;
+  const userName = account.name ? String(account.name).trim() : null;
+
+  const apiRes = await tryApiJson('/api/v1/formalia/sessions/claim', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      anonymous_session_id: anonymousSession.session_id,
+      user_id: userId,
+      user_email: userEmail,
+      user_name: userName,
+      workspace_name: workspaceName || undefined,
+      fallback_session: anonymousSession
+    })
+  });
+
+  if (apiRes && !apiRes._apiError && apiRes.ok && apiRes.session) {
+    const normalized = normalizeSessionWorkspace(apiRes.session);
+    saveLocalFormaliaSession(normalized);
+    if (normalized.workspace_id && normalized.workspace_name) {
+      saveLocalWorkspace({
+        workspace_id: normalized.workspace_id,
+        workspace_name: normalized.workspace_name,
+        category: 'negocio'
+      });
+    }
+    return {
+      ok: true,
+      session: normalized,
+      workspace_id: normalized.workspace_id,
+      workspace_name: normalized.workspace_name,
+      quota: apiRes.quota || null
+    };
+  }
+
+  return saveFormaliaSessionToAccount(
+    {
+      ...anonymousSession,
+      ...(workspaceName ? { workspace_name: workspaceName } : {})
+    },
+    account
+  );
+}
+
+/**
+ * Aplica modificaciones manuales (agregar/editar/borrar roles, pasos, conexiones) sin consumir turnos de IA.
+ */
+export function applyManualGraphPatches(session, patches = [], summaryLabel = 'Edición manual del diagrama') {
+  if (!session || !session.process_graph) return session;
+  const nextGraph = applyGraphPatches(session.process_graph, patches);
+  const { snapshot, pumlArtifact } = buildVersionSnapshot(
+    nextGraph,
+    session.versions || [],
+    summaryLabel,
+    session.turns_count || 0
+  );
+  const nextSession = normalizeSessionWorkspace({
+    ...session,
+    process_graph: nextGraph,
+    versions: [...(session.versions || []), snapshot],
+    generated_files: [
+      ...(session.generated_files || []).filter((f) => f.id !== pumlArtifact.id),
+      pumlArtifact
+    ],
+    updated_at: new Date().toISOString()
+  });
+  saveLocalFormaliaSession(nextSession);
+  return nextSession;
+}
+
+// ── Persistencia & Generación "Implementar en Solución Web" (Web Blueprints) ─
+
+function loadLocalBlueprintsMap() {
+  try {
+    const raw = localStorage.getItem(FORMALIA_BLUEPRINTS_KEY);
+    if (raw) return JSON.parse(raw) || {};
+  } catch (_) {}
+  return {};
+}
+
+function saveLocalBlueprintEntry(workspaceId, bp) {
+  try {
+    const all = loadLocalBlueprintsMap();
+    all[workspaceId] = bp;
+    localStorage.setItem(FORMALIA_BLUEPRINTS_KEY, JSON.stringify(all));
+  } catch (_) {}
+}
+
+export async function fetchWorkspaceBlueprint(workspaceId = 'ws_general') {
+  const cleanId = String(workspaceId || 'ws_general');
+  const localMap = loadLocalBlueprintsMap();
+  const apiRes = await tryApiJson(`/api/v1/workspaces/${encodeURIComponent(cleanId)}/blueprint`, {
+    method: 'GET'
+  });
+  if (apiRes && !apiRes._apiError && apiRes.blueprint) {
+    saveLocalBlueprintEntry(cleanId, apiRes.blueprint);
+    return apiRes.blueprint;
+  }
+  return localMap[cleanId] || createDefaultWebBlueprint(cleanId);
+}
+
+export async function saveManualBlueprint(workspaceId = 'ws_general', patch = {}) {
+  const cleanId = String(workspaceId || 'ws_general');
+  const localMap = loadLocalBlueprintsMap();
+  const prev = localMap[cleanId] || createDefaultWebBlueprint(cleanId);
+  const nextLocal = {
+    ...prev,
+    ...patch,
+    workspace_id: cleanId,
+    ...(patch.ui_screens !== undefined ? { ui_screens: sanitizeUiScreensPayload(patch.ui_screens) } : {}),
+    updated_at: new Date().toISOString()
+  };
+  saveLocalBlueprintEntry(cleanId, nextLocal);
+
+  const apiRes = await tryApiJson(`/api/v1/workspaces/${encodeURIComponent(cleanId)}/blueprint`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch)
+  });
+
+  if (apiRes && !apiRes._apiError && apiRes.blueprint) {
+    saveLocalBlueprintEntry(cleanId, apiRes.blueprint);
+    return apiRes.blueprint;
+  }
+  return nextLocal;
+}
+
+export async function generateWorkspaceBlueprintStories({
+  workspaceId = 'ws_general',
+  workspaceName = 'Mi Negocio',
+  canvases = [],
+  userId = null,
+  userEmail = null,
+  useAi = true
+}) {
+  const cleanId = String(workspaceId || 'ws_general');
+  const apiRes = await tryApiJson(`/api/v1/workspaces/${encodeURIComponent(cleanId)}/blueprint/stories`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      workspace_name: workspaceName,
+      canvas_ids: canvases.map((c) => c.session_id).filter(Boolean),
+      canvases,
+      user_id: userId,
+      user_email: userEmail,
+      use_ai: useAi
+    })
+  });
+
+  if (apiRes?._apiError) {
+    const err = new Error(apiRes.error || 'No se pudieron generar historias.');
+    err.code = apiRes.code || 'API_ERROR';
+    err.quota = apiRes.quota || null;
+    if (apiRes.status === 429 || apiRes.code === 'AI_QUOTA_EXCEEDED') throw err;
+  }
+
+  if (apiRes && !apiRes._apiError && apiRes.blueprint) {
+    saveLocalBlueprintEntry(cleanId, apiRes.blueprint);
+    return apiRes;
+  }
+
+  // Fallback dev local
+  const gen = await generateBlueprintStories({ workspaceName, canvases, useAi: false });
+  const bp = await saveManualBlueprint(cleanId, {
+    source_canvas_ids: canvases.map((c) => c.session_id).filter(Boolean),
+    user_stories: gen.stories
+  });
+  return { blueprint: bp, user_stories: bp.user_stories, source: gen.source };
+}
+
+export async function generateWorkspaceBlueprintLayout({
+  workspaceId = 'ws_general',
+  workspaceName = 'Mi Negocio',
+  stories = [],
+  canvases = [],
+  themeConfig = {},
+  targetRole = null,
+  refinementPrompt = '',
+  existingScreens = [],
+  userId = null,
+  userEmail = null,
+  useAi = true
+}) {
+  const cleanId = String(workspaceId || 'ws_general');
+  const apiRes = await tryApiJson(`/api/v1/workspaces/${encodeURIComponent(cleanId)}/blueprint/layout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      workspace_name: workspaceName,
+      user_stories: stories,
+      theme_config: themeConfig,
+      target_role: targetRole,
+      refinement_prompt: refinementPrompt,
+      existing_screens: existingScreens,
+      canvases,
+      user_id: userId,
+      user_email: userEmail,
+      use_ai: useAi
+    })
+  });
+
+  if (apiRes?._apiError) {
+    const err = new Error(apiRes.error || 'No se pudo maquetar la interfaz.');
+    err.code = apiRes.code || 'API_ERROR';
+    err.quota = apiRes.quota || null;
+    if (apiRes.status === 429 || apiRes.code === 'AI_QUOTA_EXCEEDED') throw err;
+  }
+
+  if (apiRes && !apiRes._apiError && apiRes.blueprint) {
+    saveLocalBlueprintEntry(cleanId, apiRes.blueprint);
+    return apiRes;
+  }
+
+  // Fallback dev local
+  const layoutRes = await generateBlueprintLayout({
+    workspaceName,
+    stories,
+    canvases,
+    themeConfig,
+    targetRole,
+    refinementPrompt,
+    existingScreens,
+    useAi: false
+  });
+  const bp = await saveManualBlueprint(cleanId, {
+    user_stories: stories,
+    theme_config: themeConfig,
+    ui_screens: layoutRes.ui_screens
+  });
+  return { blueprint: bp, ui_screens: bp.ui_screens, source: layoutRes.source };
 }
 
 export async function registerGeneratedArtifact(artifact) {

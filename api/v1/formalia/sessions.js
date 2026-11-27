@@ -1,21 +1,84 @@
-import { createInitialProcessGraph, generateFormaliaSessionId, normalizeWorkspaceMeta } from '../../../src/lib/formalia/schema.js';
-import { saveSession, getClientIp, checkIpSessionQuota } from '../../_lib/store.js';
+import {
+  createInitialProcessGraph,
+  generateFormaliaSessionId,
+  normalizeWorkspaceMeta
+} from '../../../src/lib/formalia/schema.js';
+import {
+  saveSession,
+  getClientIp,
+  checkIpSessionQuota,
+  getAiQuotaStatus,
+  claimAnonymousSessionToAccount,
+  checkUserWorkspaceCaps,
+  ANON_SESSION_AI_LIMIT,
+  AUTH_USER_DAILY_AI_LIMIT
+} from '../../_lib/store.js';
 
 export default async function handler(req, res) {
+  const action = req.query?.action || req.body?.action || null;
+  const ip = getClientIp(req);
+
+  // GET /api/v1/formalia/quota (rewritten to ?action=quota)
+  if (req.method === 'GET' && action === 'quota') {
+    const quota = await getAiQuotaStatus({
+      userId: req.query?.user_id || null,
+      userEmail: req.query?.user_email || null,
+      ip,
+      sessionId: req.query?.session_id || null
+    });
+    return res.status(200).json(quota);
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+
+  // POST /api/v1/formalia/sessions/claim (rewritten to ?action=claim)
+  if (action === 'claim') {
+    const result = await claimAnonymousSessionToAccount({
+      anonymousSessionId: body.anonymous_session_id,
+      userId: body.user_id || null,
+      userEmail: body.user_email || null,
+      userName: body.user_name || null,
+      workspaceId: body.workspace_id || null,
+      workspaceName: body.workspace_name || null,
+      fallbackSession: body.fallback_session || null
+    });
+    if (!result.ok) {
+      return res.status(400).json(result);
+    }
+    const quota = await getAiQuotaStatus({
+      userId: body.user_id || null,
+      userEmail: body.user_email || null,
+      ip,
+      sessionId: result.session?.session_id
+    });
+    return res.status(200).json({ ...result, quota });
+  }
+
+  // POST /api/v1/formalia/sessions (Crear nuevo lienzo / sesión)
   const isAuthenticated = Boolean(body.user_id || body.user_email);
 
   if (!isAuthenticated) {
-    const ip = getClientIp(req);
     const quota = checkIpSessionQuota(ip);
     if (!quota.allowed) {
       return res.status(429).json({
         error: 'Límite temporal de sesiones alcanzado. Intenta nuevamente más tarde.'
       });
+    }
+  } else {
+    const caps = await checkUserWorkspaceCaps({
+      userId: body.user_id || null,
+      userEmail: body.user_email || null,
+      userRole: body.user_role || null,
+      workspaceId: body.workspace_id || null,
+      projectId: body.project_id || null,
+      creatingNewWorkspace: Boolean(body.creating_new_workspace)
+    });
+    if (!caps.allowed) {
+      return res.status(429).json(caps);
     }
   }
 
@@ -61,10 +124,18 @@ export default async function handler(req, res) {
     ...(body.user_name ? { user_name: body.user_name } : {}),
     ...(isAuthenticated || body.saved_to_account ? { saved_to_account: true } : {}),
     ...(workspaceMeta || {}),
-    process_name: workspaceMeta?.canvas_title && workspaceMeta.canvas_title !== 'Lienzo principal'
-      ? workspaceMeta.canvas_title
-      : initialGraph.business_context.process_name,
+    process_name:
+      workspaceMeta?.canvas_title && workspaceMeta.canvas_title !== 'Lienzo principal'
+        ? workspaceMeta.canvas_title
+        : initialGraph.business_context.process_name,
     created_at: new Date().toISOString()
+  });
+
+  const quotaStatus = await getAiQuotaStatus({
+    userId: body.user_id || null,
+    userEmail: body.user_email || null,
+    ip,
+    sessionId: record.session_id
   });
 
   return res.status(201).json({
@@ -76,6 +147,7 @@ export default async function handler(req, res) {
     project_id: record.project_id || null,
     canvas_title: record.canvas_title || null,
     turns_count: record.turns_count,
-    max_turns: 15
+    max_turns: isAuthenticated ? AUTH_USER_DAILY_AI_LIMIT : ANON_SESSION_AI_LIMIT,
+    quota: quotaStatus
   });
 }

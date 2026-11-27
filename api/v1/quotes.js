@@ -32,6 +32,7 @@ export default async function handler(req, res) {
     privacy_policy_version: privacyVersion,
     accepted_at: acceptedAt,
     formalia_session_id: formaliaSessionId,
+    web_blueprint_id: payload.web_blueprint_id || null,
     engineering_handoff,
     received_at: new Date().toISOString()
   });

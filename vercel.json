@@ -27,6 +27,11 @@
   "rewrites": [
     { "source": "/robots.txt", "destination": "/api/robots" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/api/v1/formalia/quota", "destination": "/api/v1/formalia/sessions?action=quota" },
+    { "source": "/api/v1/formalia/sessions/claim", "destination": "/api/v1/formalia/sessions?action=claim" },
+    { "source": "/api/v1/workspaces/:id/blueprint/stories", "destination": "/api/v1/workspaces?id=:id&action=stories" },
+    { "source": "/api/v1/workspaces/:id/blueprint/layout", "destination": "/api/v1/workspaces?id=:id&action=layout" },
+    { "source": "/api/v1/workspaces/:id/blueprint", "destination": "/api/v1/workspaces?id=:id&action=blueprint" },
     { "source": "/((?!api/|assets/|archify/|legal/).*)", "destination": "/index.html" }
   ]
 }
