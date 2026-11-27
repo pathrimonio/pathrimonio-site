@@ -1834,6 +1834,7 @@ function AppContent({ initialPath = '/' }) {
             <FormalIAWorkspace
               isStandalonePage
               currentUser={currentUser}
+              portalProjects={projects}
               onBackHome={() => navigateToPath('/')}
               onOpenInPortal={() => navigateToPortal('login', 'formalia')}
               onPreloadQuote={(data) => {
@@ -2210,6 +2211,7 @@ function AppContent({ initialPath = '/' }) {
                       currentUser={currentUser}
                       activeProjectId={activeProjectId}
                       activeProjectName={activeProject?.shortName || activeProject?.name || 'Proyecto Activo'}
+                      projects={projects}
                       onSaveToProjectFiles={handleSaveFile}
                       onPromoteGraphToProject={handlePromoteFormaliaToProject}
                       onNavigatePortalTab={(tabId) => {

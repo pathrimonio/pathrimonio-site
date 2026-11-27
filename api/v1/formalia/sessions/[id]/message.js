@@ -28,11 +28,17 @@ export default async function handler(req, res) {
     };
   }
 
-  if (body.account_link && (body.account_link.saved_to_account || body.account_link.user_email || body.account_link.user_id)) {
+  if (body.account_link && (body.account_link.saved_to_account || body.account_link.user_email || body.account_link.user_id || body.account_link.workspace_id)) {
     if (body.account_link.user_id) session.user_id = body.account_link.user_id;
     if (body.account_link.user_email) session.user_email = body.account_link.user_email;
     if (body.account_link.user_name) session.user_name = body.account_link.user_name;
-    session.saved_to_account = true;
+    if (body.account_link.workspace_id) session.workspace_id = body.account_link.workspace_id;
+    if (body.account_link.workspace_name) session.workspace_name = body.account_link.workspace_name;
+    if (body.account_link.project_id !== undefined) session.project_id = body.account_link.project_id;
+    if (body.account_link.canvas_title) session.canvas_title = body.account_link.canvas_title;
+    if (body.account_link.saved_to_account || body.account_link.user_id || body.account_link.user_email) {
+      session.saved_to_account = true;
+    }
   }
 
   if (session.turns_count >= MAX_TURNS_PER_SESSION) {

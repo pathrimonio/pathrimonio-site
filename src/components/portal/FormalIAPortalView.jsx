@@ -2,6 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   fetchFormaliaArchive,
   loadLocalFormaliaSession,
+  loadLocalWorkspaces,
+  buildWorkspaceDirectory,
+  normalizeSessionWorkspace,
   downloadChatTranscriptFile,
   downloadPlantUMLFile,
   downloadCanonicalJSONFile
@@ -20,6 +23,7 @@ export default function FormalIAPortalView({
   currentUser = null,
   activeProjectId,
   activeProjectName = 'Proyecto Activo',
+  projects = [],
   onSaveToProjectFiles,
   onPromoteGraphToProject,
   onNavigatePortalTab,
@@ -30,6 +34,7 @@ export default function FormalIAPortalView({
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [workspaceFilter, setWorkspaceFilter] = useState('all');
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [detailTab, setDetailTab] = useState('handoff'); // 'handoff' | 'chat' | 'files'
   const [lastPromotion, setLastPromotion] = useState(null);
@@ -37,11 +42,12 @@ export default function FormalIAPortalView({
   const loadSessions = async () => {
     setLoading(true);
     try {
-      const list = await fetchFormaliaArchive({
+      const rawList = await fetchFormaliaArchive({
         userId: currentUser?.id,
         userEmail: currentUser?.email,
         role: currentUser?.role
       });
+      const list = (rawList || []).map(normalizeSessionWorkspace);
       setSessions(list);
       if (list.length > 0 && !selectedSessionId) {
         setSelectedSessionId(list[0].session_id);
@@ -70,13 +76,26 @@ export default function FormalIAPortalView({
     loadSessions();
   }, [currentUser?.id, currentUser?.email, currentUser?.role]);
 
+  const workspaceDirectory = useMemo(
+    () =>
+      buildWorkspaceDirectory({
+        sessions,
+        portalProjects: projects,
+        customWorkspaces: typeof window !== 'undefined' ? loadLocalWorkspaces() : []
+      }),
+    [sessions, projects]
+  );
+
   const filteredSessions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return sessions;
     return sessions.filter((s) => {
+      if (workspaceFilter !== 'all' && s.workspace_id !== workspaceFilter) return false;
+      if (!q) return true;
       const ctx = s.process_graph?.business_context || {};
       return (
         (s.session_id || '').toLowerCase().includes(q) ||
+        (s.workspace_name || '').toLowerCase().includes(q) ||
+        (s.canvas_title || '').toLowerCase().includes(q) ||
         (ctx.company_name || '').toLowerCase().includes(q) ||
         (ctx.process_name || '').toLowerCase().includes(q) ||
         (s.user_email || '').toLowerCase().includes(q) ||
@@ -84,7 +103,7 @@ export default function FormalIAPortalView({
         (s.linked_quote_id || '').toLowerCase().includes(q)
       );
     });
-  }, [sessions, searchQuery]);
+  }, [sessions, searchQuery, workspaceFilter]);
 
   const selectedSession = useMemo(() => {
     return (
@@ -284,8 +303,11 @@ export default function FormalIAPortalView({
             isPortalEmbedded
             currentUser={currentUser}
             targetProjectName={activeProjectName}
+            portalProjects={projects}
+            activeProjectId={activeProjectId}
             initialSessionOverride={studioOverrideSession}
             onPromoteToProject={handleMaterializeGraph}
+            onSessionListChanged={loadSessions}
           />
         </div>
       )}
@@ -295,9 +317,9 @@ export default function FormalIAPortalView({
       ══════════════════════════════════════════ */}
       {portalMode === 'archive' && (
         <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5 flex flex-col gap-5">
-          {/* Barra de Búsqueda Adaptativa */}
+          {/* Barra de Búsqueda + Filtro por Espacio Adaptativa */}
           <div className="bg-surface-container-low border border-outline-variant rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center gap-2.5 sm:gap-3 shadow-sm">
-            <div className="relative flex-1 min-w-[240px] sm:min-w-[280px] w-full">
+            <div className="relative flex-1 min-w-[220px] sm:min-w-[260px] w-full">
               <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
                 search
               </span>
@@ -305,10 +327,25 @@ export default function FormalIAPortalView({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar sesión FORMALIA por ID (FIA-...), empresa, proceso o cotización..."
+                placeholder="Buscar por lienzo, espacio, ID (FIA-...), empresa o proceso..."
                 className="w-full bg-surface-container-highest border border-outline-variant rounded-xl pl-10 pr-9 py-2 text-xs font-jakarta text-white placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary transition-colors"
               />
             </div>
+
+            <select
+              aria-label="Filtrar archivo por espacio de trabajo"
+              value={workspaceFilter}
+              onChange={(e) => setWorkspaceFilter(e.target.value)}
+              className="bg-surface-container-highest border border-outline-variant rounded-xl px-3 py-2 text-xs font-space text-white focus:outline-none focus:border-primary cursor-pointer"
+            >
+              <option value="all">Todos los espacios ({sessions.length})</option>
+              {workspaceDirectory.map((ws) => (
+                <option key={ws.workspace_id} value={ws.workspace_id}>
+                  {ws.source === 'project' ? 'Proyecto · ' : 'Espacio · '}
+                  {ws.workspace_name} ({ws.canvases.length})
+                </option>
+              ))}
+            </select>
 
             <button
               type="button"
@@ -367,11 +404,16 @@ export default function FormalIAPortalView({
                       </div>
 
                       <div>
+                        <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                          <span className="px-1.5 py-0.2 rounded bg-surface-container-highest border border-outline-variant text-[10px] font-mono text-on-surface-variant">
+                            {sess.workspace_name || 'Mi Negocio / General'}
+                          </span>
+                        </div>
                         <h4 className="font-space text-sm font-bold text-white truncate">
-                          {ctx.company_name || 'Sesión de Comunidad'}
+                          {sess.canvas_title || ctx.process_name || 'Lienzo principal'}
                         </h4>
                         <p className="font-jakarta text-xs text-on-surface-variant truncate">
-                          {ctx.process_name || 'Operación por mapear'}
+                          {ctx.company_name || sess.workspace_name || 'Sesión de Comunidad'}
                         </p>
                       </div>
 
@@ -402,14 +444,17 @@ export default function FormalIAPortalView({
                 <div className="lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-2xl overflow-hidden flex flex-col">
                   <div className="p-4 border-b border-outline-variant bg-surface-container flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-mono text-xs font-bold text-primary">{selectedSession.session_id}</span>
+                        <span className="px-2 py-0.5 rounded bg-surface-container-highest border border-outline-variant text-[11px] font-mono text-on-surface-variant">
+                          Espacio: {selectedSession.workspace_name || 'Mi Negocio / General'}
+                        </span>
                         <h3 className="font-space text-sm sm:text-base font-bold text-white">
-                          {selectedSession.process_graph?.business_context?.company_name || 'Sesión FORMALIA'}
+                          {selectedSession.canvas_title || selectedSession.process_graph?.business_context?.process_name || 'Lienzo FORMALIA'}
                         </h3>
                       </div>
-                      <p className="font-jakarta text-xs text-on-surface-variant">
-                        {selectedSession.process_graph?.business_context?.process_name || 'Proceso operativo'}
+                      <p className="font-jakarta text-xs text-on-surface-variant mt-0.5">
+                        {selectedSession.process_graph?.business_context?.company_name || selectedSession.workspace_name || 'Proceso operativo'}
                       </p>
                     </div>
 

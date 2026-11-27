@@ -71,6 +71,13 @@ export const EngineeringArtifactsSchema = z.object({
   external_apis_needed: z.array(z.string()).default([])
 });
 
+export const WorkspaceMetaSchema = z.object({
+  workspace_id: z.string().optional().nullable(),
+  workspace_name: z.string().optional().nullable(),
+  project_id: z.string().optional().nullable(),
+  canvas_title: z.string().optional().nullable()
+});
+
 export const ProcessGraphSchema = z.object({
   session_id: z.string(),
   phase: z.enum([
@@ -82,6 +89,7 @@ export const ProcessGraphSchema = z.object({
   ]).default('1_context'),
   completeness_score: z.number().min(0).max(100).default(10),
   business_context: BusinessContextSchema,
+  workspace_meta: WorkspaceMetaSchema.optional(),
   actors: z.array(ActorSchema).default([]),
   steps: z.array(StepSchema).default([]),
   transitions: z.array(TransitionSchema).default([]),
@@ -201,17 +209,88 @@ export function generateFormaliaSessionId() {
   return `FIA-2026-${randomSuffix}`;
 }
 
-export function createInitialProcessGraph(sessionId = generateFormaliaSessionId()) {
+export function normalizeWorkspaceMeta(meta = null, fallbackProjectName = '') {
+  if (!meta || typeof meta !== 'object') {
+    const projectId = fallbackProjectName ? null : null;
+    return {
+      workspace_id: 'ws_general',
+      workspace_name: fallbackProjectName || 'Mi Negocio / General',
+      project_id: projectId,
+      canvas_title: 'Lienzo principal'
+    };
+  }
+  const projectId = meta.project_id || null;
+  const workspaceId =
+    meta.workspace_id ||
+    (projectId ? `ws_proj_${projectId}` : 'ws_general');
+  const workspaceName =
+    meta.workspace_name ||
+    meta.workspaceName ||
+    fallbackProjectName ||
+    'Mi Negocio / General';
+  const canvasTitle =
+    meta.canvas_title ||
+    meta.canvasTitle ||
+    meta.process_name ||
+    'Lienzo principal';
+  return {
+    workspace_id: String(workspaceId),
+    workspace_name: String(workspaceName),
+    project_id: projectId ? String(projectId) : null,
+    canvas_title: String(canvasTitle)
+  };
+}
+
+export function extractWorkspaceMeta(sessionOrGraph) {
+  if (!sessionOrGraph || typeof sessionOrGraph !== 'object') {
+    return normalizeWorkspaceMeta(null);
+  }
+  const graph = sessionOrGraph.process_graph || sessionOrGraph;
+  const embedded = graph?.workspace_meta || {};
+  const projectId = sessionOrGraph.project_id ?? embedded.project_id ?? null;
+  const workspaceId =
+    sessionOrGraph.workspace_id ||
+    embedded.workspace_id ||
+    (projectId ? `ws_proj_${projectId}` : 'ws_general');
+  const workspaceName =
+    sessionOrGraph.workspace_name ||
+    embedded.workspace_name ||
+    graph?.business_context?.company_name ||
+    'Mi Negocio / General';
+  const canvasTitle =
+    sessionOrGraph.canvas_title ||
+    embedded.canvas_title ||
+    sessionOrGraph.process_name ||
+    graph?.business_context?.process_name ||
+    'Lienzo principal';
+
+  return {
+    workspace_id: String(workspaceId),
+    workspace_name: String(workspaceName),
+    project_id: projectId ? String(projectId) : null,
+    canvas_title: String(canvasTitle)
+  };
+}
+
+export function createInitialProcessGraph(
+  sessionId = generateFormaliaSessionId(),
+  workspaceMeta = null
+) {
+  const normalizedMeta = workspaceMeta ? normalizeWorkspaceMeta(workspaceMeta) : null;
+  const initialProcessName = normalizedMeta?.canvas_title && normalizedMeta.canvas_title !== 'Lienzo principal'
+    ? normalizedMeta.canvas_title
+    : 'Operación por mapear';
   return {
     session_id: sessionId,
     phase: '1_context',
     completeness_score: 5,
     business_context: {
-      company_name: '',
+      company_name: normalizedMeta?.workspace_name || '',
       industry: 'otro_sector',
       macroprocess_category: 'operativo_core',
-      process_name: 'Operación por mapear'
+      process_name: initialProcessName
     },
+    ...(normalizedMeta ? { workspace_meta: normalizedMeta } : {}),
     actors: [],
     steps: [],
     transitions: [],

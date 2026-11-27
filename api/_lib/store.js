@@ -34,9 +34,70 @@ export function checkIpSessionQuota(ip) {
   return { allowed: true, remaining: MAX_SESSIONS_PER_IP_HOUR - entries.length };
 }
 
+export function resolveWorkspaceFields(record) {
+  if (!record || typeof record !== 'object') return {};
+  const meta = record.process_graph?.workspace_meta || {};
+  const projectId = record.project_id ?? meta.project_id ?? null;
+  const workspaceId =
+    record.workspace_id ||
+    meta.workspace_id ||
+    (projectId ? `ws_proj_${projectId}` : null);
+  const workspaceName =
+    record.workspace_name ||
+    meta.workspace_name ||
+    record.process_graph?.business_context?.company_name ||
+    null;
+  const canvasTitle =
+    record.canvas_title ||
+    meta.canvas_title ||
+    record.process_name ||
+    record.process_graph?.business_context?.process_name ||
+    null;
+  return {
+    workspace_id: workspaceId ? String(workspaceId) : null,
+    workspace_name: workspaceName ? String(workspaceName) : null,
+    project_id: projectId ? String(projectId) : null,
+    canvas_title: canvasTitle ? String(canvasTitle) : null
+  };
+}
+
+function hydrateSessionRecord(data) {
+  if (!data) return null;
+  const ws = resolveWorkspaceFields(data);
+  const graph = data.process_graph ? { ...data.process_graph } : null;
+  if (graph && (ws.workspace_id || ws.workspace_name || ws.project_id || ws.canvas_title)) {
+    graph.workspace_meta = {
+      ...(graph.workspace_meta || {}),
+      ...ws
+    };
+  }
+  return {
+    session_id: data.session_id,
+    user_id: data.user_id || null,
+    user_email: data.user_email || null,
+    user_name: data.user_name || null,
+    process_name: data.process_name || graph?.business_context?.process_name || ws.canvas_title || null,
+    saved_to_account: Boolean(data.saved_to_account),
+    workspace_id: ws.workspace_id,
+    workspace_name: ws.workspace_name,
+    project_id: ws.project_id,
+    canvas_title: ws.canvas_title,
+    process_graph: graph,
+    messages: data.messages || [],
+    versions: data.versions || [],
+    generated_files: data.generated_files || [],
+    turns_count: data.turns_count || 0,
+    completeness_score: data.completeness_score || 0,
+    linked_quote_id: data.linked_quote_id || null,
+    created_at: data.created_at,
+    updated_at: data.updated_at || data.created_at,
+    expires_at: data.expires_at
+  };
+}
+
 export async function getSession(sessionId) {
   if (memorySessions.has(sessionId)) {
-    return memorySessions.get(sessionId);
+    return hydrateSessionRecord(memorySessions.get(sessionId));
   }
   const sb = getSupabaseServerClient();
   if (sb) {
@@ -47,23 +108,7 @@ export async function getSession(sessionId) {
         .eq('session_id', sessionId)
         .maybeSingle();
       if (data) {
-        const record = {
-          session_id: data.session_id,
-          user_id: data.user_id || null,
-          user_email: data.user_email || null,
-          user_name: data.user_name || null,
-          process_name: data.process_name || data.process_graph?.business_context?.process_name || null,
-          saved_to_account: Boolean(data.saved_to_account),
-          process_graph: data.process_graph,
-          messages: data.messages || [],
-          versions: data.versions || [],
-          generated_files: data.generated_files || [],
-          turns_count: data.turns_count || 0,
-          completeness_score: data.completeness_score || 0,
-          linked_quote_id: data.linked_quote_id || null,
-          created_at: data.created_at,
-          expires_at: data.expires_at
-        };
+        const record = hydrateSessionRecord(data);
         memorySessions.set(sessionId, record);
         return record;
       }
@@ -73,51 +118,82 @@ export async function getSession(sessionId) {
 }
 
 export async function saveSession(record) {
-  memorySessions.set(record.session_id, record);
+  const ws = resolveWorkspaceFields(record);
+  const syncedGraph = record.process_graph ? { ...record.process_graph } : null;
+  if (syncedGraph && (ws.workspace_id || ws.workspace_name || ws.project_id || ws.canvas_title)) {
+    syncedGraph.workspace_meta = {
+      ...(syncedGraph.workspace_meta || {}),
+      ...ws
+    };
+  }
+
+  const normalizedRecord = {
+    ...record,
+    ...ws,
+    process_graph: syncedGraph
+  };
+  memorySessions.set(normalizedRecord.session_id, normalizedRecord);
+
   const sb = getSupabaseServerClient();
   if (sb) {
     const processName =
-      record.process_name ||
-      record.process_graph?.business_context?.process_name ||
+      normalizedRecord.process_name ||
+      syncedGraph?.business_context?.process_name ||
+      ws.canvas_title ||
       null;
     const payload = {
-      session_id: record.session_id,
-      process_graph: record.process_graph,
-      messages: record.messages || [],
-      versions: record.versions || [],
-      generated_files: record.generated_files || [],
-      turns_count: record.turns_count || 0,
-      completeness_score: record.completeness_score || 0,
-      linked_quote_id: record.linked_quote_id || null,
+      session_id: normalizedRecord.session_id,
+      process_graph: syncedGraph,
+      messages: normalizedRecord.messages || [],
+      versions: normalizedRecord.versions || [],
+      generated_files: normalizedRecord.generated_files || [],
+      turns_count: normalizedRecord.turns_count || 0,
+      completeness_score: normalizedRecord.completeness_score || 0,
+      linked_quote_id: normalizedRecord.linked_quote_id || null,
       process_name: processName,
       updated_at: new Date().toISOString()
     };
-    if (record.user_id !== undefined) payload.user_id = record.user_id || null;
-    if (record.user_email !== undefined) payload.user_email = record.user_email || null;
-    if (record.user_name !== undefined) payload.user_name = record.user_name || null;
-    if (record.saved_to_account !== undefined) {
-      payload.saved_to_account = Boolean(record.saved_to_account);
-      if (record.saved_to_account) {
+    if (normalizedRecord.user_id !== undefined) payload.user_id = normalizedRecord.user_id || null;
+    if (normalizedRecord.user_email !== undefined) payload.user_email = normalizedRecord.user_email || null;
+    if (normalizedRecord.user_name !== undefined) payload.user_name = normalizedRecord.user_name || null;
+    if (ws.workspace_id) payload.workspace_id = ws.workspace_id;
+    if (ws.workspace_name) payload.workspace_name = ws.workspace_name;
+    if (ws.project_id) payload.project_id = ws.project_id;
+    if (ws.canvas_title) payload.canvas_title = ws.canvas_title;
+    if (normalizedRecord.saved_to_account !== undefined) {
+      payload.saved_to_account = Boolean(normalizedRecord.saved_to_account);
+      if (normalizedRecord.saved_to_account) {
         payload.expires_at = '2099-12-31T23:59:59Z';
       }
     }
     try {
       const { error } = await sb.from('formalia_sessions').upsert(payload);
       if (error) {
-        // Fallback sin columnas extendidas si alguna BD aún no aplicó la migración
+        // Fallback 1: sin columnas workspace si aún no se aplicó migración 20261126000300 (workspace_meta vive en JSONB)
         const {
-          user_id: _uid,
-          user_email: _ue,
-          user_name: _un,
-          process_name: _pn,
-          saved_to_account: _sta,
-          ...legacyPayload
+          workspace_id: _wid,
+          workspace_name: _wn,
+          project_id: _pid,
+          canvas_title: _ct,
+          ...withoutWorkspaceCols
         } = payload;
-        await sb.from('formalia_sessions').upsert(legacyPayload);
+        const { error: err2 } = await sb.from('formalia_sessions').upsert(withoutWorkspaceCols);
+        if (err2) {
+          // Fallback 2: sin columnas extendidas de cuenta
+          const {
+            user_id: _uid,
+            user_email: _ue,
+            user_name: _un,
+            process_name: _pn,
+            saved_to_account: _sta,
+            ...legacyPayload
+          } = withoutWorkspaceCols;
+          await sb.from('formalia_sessions').upsert(legacyPayload);
+        }
       }
     } catch (_) {}
   }
-  return record;
+  return normalizedRecord;
 }
 
 export async function saveArtifactVersion(artifact) {
@@ -192,17 +268,76 @@ export async function listFormaliaSessionsArchive({ userId = null, userEmail = n
           if (!artifactsBySession.has(a.session_id)) artifactsBySession.set(a.session_id, []);
           artifactsBySession.get(a.session_id).push(a);
         });
-        return sessions.filter(matchesOwner).map((s) => ({
-          ...s,
-          generated_files: artifactsBySession.get(s.session_id) || s.generated_files || []
-        }));
+        return sessions.filter(matchesOwner).map((s) =>
+          hydrateSessionRecord({
+            ...s,
+            generated_files: artifactsBySession.get(s.session_id) || s.generated_files || []
+          })
+        );
       }
       if (mineOnly) return [];
     } catch (_) {}
   }
   return Array.from(memorySessions.values())
     .filter((s) => !String(s.session_id || '').startsWith('SYS-'))
-    .filter(matchesOwner);
+    .filter(matchesOwner)
+    .map(hydrateSessionRecord);
+}
+
+export async function updateFormaliaSessionWorkspace(sessionId, updates = {}) {
+  if (!sessionId) return null;
+  const existing = await getSession(sessionId);
+  if (!existing) return null;
+
+  const nextGraph = existing.process_graph ? { ...existing.process_graph } : {};
+  const nextMeta = {
+    ...(nextGraph.workspace_meta || {}),
+    workspace_id: updates.workspace_id !== undefined ? updates.workspace_id : (existing.workspace_id || nextGraph.workspace_meta?.workspace_id || null),
+    workspace_name: updates.workspace_name !== undefined ? updates.workspace_name : (existing.workspace_name || nextGraph.workspace_meta?.workspace_name || null),
+    project_id: updates.project_id !== undefined ? updates.project_id : (existing.project_id ?? nextGraph.workspace_meta?.project_id ?? null),
+    canvas_title: updates.canvas_title !== undefined ? updates.canvas_title : (existing.canvas_title || nextGraph.workspace_meta?.canvas_title || null)
+  };
+  nextGraph.workspace_meta = nextMeta;
+
+  if (updates.canvas_title) {
+    nextGraph.business_context = {
+      ...(nextGraph.business_context || {}),
+      process_name: updates.canvas_title
+    };
+  }
+  if (updates.workspace_name && !nextGraph.business_context?.company_name) {
+    nextGraph.business_context = {
+      ...(nextGraph.business_context || {}),
+      company_name: updates.workspace_name
+    };
+  }
+
+  return saveSession({
+    ...existing,
+    workspace_id: nextMeta.workspace_id,
+    workspace_name: nextMeta.workspace_name,
+    project_id: nextMeta.project_id,
+    canvas_title: nextMeta.canvas_title,
+    process_name: updates.canvas_title || existing.process_name,
+    ...(updates.user_id ? { user_id: updates.user_id } : {}),
+    ...(updates.user_email ? { user_email: updates.user_email } : {}),
+    ...(updates.user_name ? { user_name: updates.user_name } : {}),
+    saved_to_account: updates.saved_to_account !== undefined ? Boolean(updates.saved_to_account) : existing.saved_to_account,
+    process_graph: nextGraph
+  });
+}
+
+export async function deleteFormaliaSessionRecord(sessionId) {
+  if (!sessionId) return false;
+  memorySessions.delete(sessionId);
+  const sb = getSupabaseServerClient();
+  if (sb) {
+    try {
+      await sb.from('formalia_artifact_versions').delete().eq('session_id', sessionId);
+      await sb.from('formalia_sessions').delete().eq('session_id', sessionId);
+    } catch (_) {}
+  }
+  return true;
 }
 
 export async function saveQuoteWithHandoff(quotePayload) {

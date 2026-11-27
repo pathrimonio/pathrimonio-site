@@ -1,18 +1,21 @@
 import {
   applyGraphPatches,
   createInitialProcessGraph,
-  generateFormaliaSessionId
-} from '../lib/formalia/schema';
-import { extractProcessTurn } from '../lib/formalia/extractorEngine';
+  extractWorkspaceMeta,
+  generateFormaliaSessionId,
+  normalizeWorkspaceMeta
+} from '../lib/formalia/schema.js';
+import { extractProcessTurn } from '../lib/formalia/extractorEngine.js';
 import {
   generateEngineeringHandoff,
   graphToPlantUML,
   mapProcessToQuoteConfig
-} from '../lib/formalia/compilers';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+} from '../lib/formalia/compilers.js';
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 
 const FORMALIA_STORAGE_KEY = 'pathrimonio_formalia_session_v1';
 const FORMALIA_ARCHIVE_KEY = 'pathrimonio_formalia_archive_v1';
+const FORMALIA_WORKSPACES_KEY = 'pathrimonio_formalia_workspaces_v1';
 const MAX_TURNS = 15;
 
 export function createWelcomeMessage() {
@@ -96,6 +99,157 @@ export function saveLocalFormaliaSession(session) {
   } catch (_) {}
 }
 
+export function loadLocalWorkspaces() {
+  try {
+    const raw = localStorage.getItem(FORMALIA_WORKSPACES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.filter((w) => w && w.workspace_id);
+    }
+  } catch (_) {}
+  return [];
+}
+
+export function saveLocalWorkspace(ws) {
+  if (!ws || (!ws.workspace_id && !ws.workspace_name)) return null;
+  const cleanName = String(ws.workspace_name || 'Espacio sin nombre').trim();
+  const slug = cleanName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 28);
+  const normalized = {
+    workspace_id: ws.workspace_id || (ws.project_id ? `ws_proj_${ws.project_id}` : `ws_${slug || 'neg'}_${Date.now().toString(36).slice(-4)}`),
+    workspace_name: cleanName,
+    project_id: ws.project_id ? String(ws.project_id) : null,
+    category: ws.category || (ws.project_id ? 'proyecto_portal' : 'negocio'),
+    created_at: ws.created_at || new Date().toISOString()
+  };
+  try {
+    const list = loadLocalWorkspaces();
+    const idx = list.findIndex((item) => item.workspace_id === normalized.workspace_id);
+    if (idx >= 0) {
+      list[idx] = { ...list[idx], ...normalized };
+    } else {
+      list.unshift(normalized);
+    }
+    localStorage.setItem(FORMALIA_WORKSPACES_KEY, JSON.stringify(list.slice(0, 40)));
+  } catch (_) {}
+  return normalized;
+}
+
+export function normalizeSessionWorkspace(sess) {
+  if (!sess || !sess.session_id) return sess;
+  const meta = extractWorkspaceMeta(sess);
+  const nextGraph = sess.process_graph
+    ? {
+        ...sess.process_graph,
+        workspace_meta: {
+          ...(sess.process_graph.workspace_meta || {}),
+          ...meta
+        }
+      }
+    : sess.process_graph;
+  return {
+    ...sess,
+    workspace_id: meta.workspace_id,
+    workspace_name: meta.workspace_name,
+    project_id: meta.project_id,
+    canvas_title: meta.canvas_title,
+    process_name: sess.process_name || nextGraph?.business_context?.process_name || meta.canvas_title,
+    process_graph: nextGraph
+  };
+}
+
+export function buildWorkspaceDirectory({
+  sessions = [],
+  portalProjects = [],
+  customWorkspaces = []
+} = {}) {
+  const wsMap = new Map();
+
+  // 1. Registrar proyectos del Portal como espacios de trabajo automáticos
+  (portalProjects || []).forEach((proj) => {
+    if (!proj || !proj.id) return;
+    const wsId = `ws_proj_${proj.id}`;
+    wsMap.set(wsId, {
+      workspace_id: wsId,
+      workspace_name: proj.name || `Proyecto ${proj.id}`,
+      project_id: String(proj.id),
+      source: 'project',
+      canvases: []
+    });
+  });
+
+  // 2. Registrar espacios personalizados (Negocios / Áreas)
+  const localWs = customWorkspaces.length > 0 ? customWorkspaces : loadLocalWorkspaces();
+  localWs.forEach((w) => {
+    if (!w || !w.workspace_id) return;
+    if (!wsMap.has(w.workspace_id)) {
+      wsMap.set(w.workspace_id, {
+        workspace_id: w.workspace_id,
+        workspace_name: w.workspace_name || 'Espacio de Trabajo',
+        project_id: w.project_id || null,
+        source: w.project_id ? 'project' : 'custom',
+        canvases: []
+      });
+    }
+  });
+
+  // 3. Agrupar todos los lienzos (sesiones FormalIA) en sus espacios
+  (sessions || []).forEach((rawSess) => {
+    if (!rawSess || !rawSess.session_id) return;
+    const s = normalizeSessionWorkspace(rawSess);
+    let targetWsId = s.workspace_id || (s.project_id ? `ws_proj_${s.project_id}` : 'ws_general');
+    if (s.project_id && wsMap.has(`ws_proj_${s.project_id}`)) {
+      targetWsId = `ws_proj_${s.project_id}`;
+    }
+    if (!wsMap.has(targetWsId)) {
+      wsMap.set(targetWsId, {
+        workspace_id: targetWsId,
+        workspace_name: s.workspace_name || 'Mi Negocio / General',
+        project_id: s.project_id || null,
+        source: targetWsId === 'ws_general' ? 'default' : 'custom',
+        canvases: []
+      });
+    }
+    const bucket = wsMap.get(targetWsId);
+    if (!bucket.canvases.some((c) => c.session_id === s.session_id)) {
+      bucket.canvases.push(s);
+    }
+  });
+
+  // Garantizar al menos 1 espacio base para usuarios logueados sin sesiones previas
+  if (wsMap.size === 0) {
+    wsMap.set('ws_general', {
+      workspace_id: 'ws_general',
+      workspace_name: 'Mi Negocio / General',
+      project_id: null,
+      source: 'default',
+      canvases: []
+    });
+  }
+
+  return Array.from(wsMap.values()).map((ws) => ({
+    ...ws,
+    canvases: [...ws.canvases].sort(
+      (a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0)
+    )
+  }));
+}
+
+export function removeSessionFromLocalArchive(sessionId) {
+  if (!sessionId) return;
+  try {
+    const archive = loadLocalFormaliaArchive().filter((s) => s.session_id !== sessionId);
+    localStorage.setItem(FORMALIA_ARCHIVE_KEY, JSON.stringify(archive));
+    const active = loadLocalFormaliaSession();
+    if (active && active.session_id === sessionId) {
+      localStorage.removeItem(FORMALIA_STORAGE_KEY);
+    }
+  } catch (_) {}
+}
+
 export function clearLocalFormaliaSession() {
   try {
     localStorage.removeItem(FORMALIA_STORAGE_KEY);
@@ -153,14 +307,49 @@ export function buildVersionSnapshot(graph, existingVersions = [], summary = '',
   return { snapshot, pumlArtifact };
 }
 
-export async function startFormaliaSession() {
+export async function startFormaliaSession(options = {}) {
+  const {
+    workspaceId = null,
+    workspaceName = null,
+    projectId = null,
+    canvasTitle = null,
+    currentUser = null
+  } = options || {};
+
+  const hasWorkspace = Boolean(workspaceId || workspaceName || projectId || canvasTitle);
+  const workspaceMeta = hasWorkspace
+    ? normalizeWorkspaceMeta({
+        workspace_id: workspaceId,
+        workspace_name: workspaceName,
+        project_id: projectId,
+        canvas_title: canvasTitle || 'Lienzo principal'
+      })
+    : currentUser
+      ? normalizeWorkspaceMeta({
+          workspace_id: 'ws_general',
+          workspace_name: 'Mi Negocio / General',
+          canvas_title: canvasTitle || 'Lienzo principal'
+        })
+      : null;
+
+  const userId = currentUser?.id && UUID_REGEX.test(String(currentUser.id)) ? String(currentUser.id) : null;
+  const userEmail = currentUser?.email ? String(currentUser.email).trim().toLowerCase() : null;
+  const userName = currentUser?.name || currentUser?.full_name || null;
+
   const apiRes = await tryApiJson('/api/v1/formalia/sessions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ...(workspaceMeta || {}),
+      ...(userId ? { user_id: userId } : {}),
+      ...(userEmail ? { user_email: userEmail } : {}),
+      ...(userName ? { user_name: userName } : {}),
+      ...(currentUser ? { saved_to_account: true } : {})
+    })
   });
 
   if (apiRes && !apiRes._apiError && apiRes.session_id) {
-    const session = {
+    const session = normalizeSessionWorkspace({
       session_id: apiRes.session_id,
       process_graph: apiRes.process_graph,
       messages: [apiRes.greeting || createWelcomeMessage()],
@@ -168,25 +357,45 @@ export async function startFormaliaSession() {
       generated_files: [],
       turns_count: apiRes.turns_count || 0,
       max_turns: apiRes.max_turns || MAX_TURNS,
+      ...(workspaceMeta || {}),
+      ...(userId ? { user_id: userId } : {}),
+      ...(userEmail ? { user_email: userEmail } : {}),
+      ...(userName ? { user_name: userName } : {}),
+      ...(currentUser ? { saved_to_account: true } : {}),
       created_at: new Date().toISOString()
-    };
+    });
     saveLocalFormaliaSession(session);
+    if (currentUser) {
+      saveFormaliaSessionToAccount(session, { userId, email: userEmail, name: userName }).catch(() => {});
+    }
     return session;
   }
 
   const sessionId = generateFormaliaSessionId();
-  const graph = createInitialProcessGraph(sessionId);
-  const session = {
+  const graph = createInitialProcessGraph(sessionId, workspaceMeta);
+  const welcome = createWelcomeMessage();
+  if (workspaceMeta && workspaceMeta.canvas_title && workspaceMeta.canvas_title !== 'Lienzo principal') {
+    welcome.content = `Hola, soy FORMALIA. Abrimos el lienzo "${workspaceMeta.canvas_title}" dentro de "${workspaceMeta.workspace_name}". Cuéntame qué flujo o subproceso vas a mapear aquí para ir construyéndolo juntos paso a paso.`;
+  }
+  const session = normalizeSessionWorkspace({
     session_id: sessionId,
     process_graph: graph,
-    messages: [createWelcomeMessage()],
+    messages: [welcome],
     versions: [],
     generated_files: [],
     turns_count: 0,
     max_turns: MAX_TURNS,
+    ...(workspaceMeta || {}),
+    ...(userId ? { user_id: userId } : {}),
+    ...(userEmail ? { user_email: userEmail } : {}),
+    ...(userName ? { user_name: userName } : {}),
+    ...(currentUser ? { saved_to_account: true } : {}),
     created_at: new Date().toISOString()
-  };
+  });
   saveLocalFormaliaSession(session);
+  if (currentUser) {
+    saveFormaliaSessionToAccount(session, { userId, email: userEmail, name: userName }).catch(() => {});
+  }
   return session;
 }
 
@@ -367,14 +576,27 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
   const userId = account.userId && UUID_REGEX.test(String(account.userId)) ? String(account.userId) : null;
   const userEmail = account.email ? String(account.email).trim().toLowerCase() : (session.user_email || null);
   const userName = account.name ? String(account.name).trim() : (session.user_name || null);
+  const wsMeta = extractWorkspaceMeta(session);
   const processName =
+    session.canvas_title ||
     session.process_graph?.business_context?.process_name ||
     session.process_graph?.process_name ||
     session.process_name ||
+    wsMeta.canvas_title ||
     null;
+
+  const syncedGraph = {
+    ...(session.process_graph || {}),
+    workspace_meta: wsMeta
+  };
 
   const stampedSession = {
     ...session,
+    process_graph: syncedGraph,
+    workspace_id: wsMeta.workspace_id,
+    workspace_name: wsMeta.workspace_name,
+    project_id: wsMeta.project_id,
+    canvas_title: wsMeta.canvas_title,
     user_id: userId || session.user_id || null,
     user_email: userEmail,
     user_name: userName,
@@ -411,9 +633,25 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
     saved_to_account: true
   };
 
+  const fullWorkspacePayload = {
+    ...extendedPayload,
+    workspace_id: wsMeta.workspace_id,
+    workspace_name: wsMeta.workspace_name,
+    project_id: wsMeta.project_id,
+    canvas_title: wsMeta.canvas_title
+  };
+
   let { error } = await supabase
     .from('formalia_sessions')
-    .upsert(extendedPayload, { onConflict: 'session_id' });
+    .upsert(fullWorkspacePayload, { onConflict: 'session_id' });
+
+  // Si aún falta alguna columna workspace en BD remota, reintentar sin columnas workspace (workspace_meta sigue en process_graph)
+  if (error) {
+    const retryExt = await supabase
+      .from('formalia_sessions')
+      .upsert(extendedPayload, { onConflict: 'session_id' });
+    error = retryExt.error;
+  }
 
   // Si user_id provoca violación FK o aún falta alguna columna en BD remota, reintentar sin user_id
   if (error && stampedSession.user_id) {
@@ -455,6 +693,88 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
   }
 
   return { ok: true, session: stampedSession, cloudSynced: true };
+}
+
+export async function renameOrMoveFormaliaCanvas({
+  session,
+  canvasTitle = null,
+  workspaceId = null,
+  workspaceName = null,
+  projectId = undefined,
+  currentUser = null
+}) {
+  if (!session || !session.session_id) return null;
+  const existingMeta = extractWorkspaceMeta(session);
+  const nextMeta = normalizeWorkspaceMeta({
+    workspace_id: workspaceId !== null ? workspaceId : existingMeta.workspace_id,
+    workspace_name: workspaceName !== null ? workspaceName : existingMeta.workspace_name,
+    project_id: projectId !== undefined ? projectId : existingMeta.project_id,
+    canvas_title: canvasTitle !== null ? canvasTitle : existingMeta.canvas_title
+  });
+
+  const nextGraph = {
+    ...(session.process_graph || {}),
+    workspace_meta: nextMeta,
+    business_context: {
+      ...(session.process_graph?.business_context || {}),
+      ...(canvasTitle ? { process_name: canvasTitle } : {}),
+      ...(workspaceName ? { company_name: workspaceName } : {})
+    }
+  };
+
+  const updated = normalizeSessionWorkspace({
+    ...session,
+    workspace_id: nextMeta.workspace_id,
+    workspace_name: nextMeta.workspace_name,
+    project_id: nextMeta.project_id,
+    canvas_title: nextMeta.canvas_title,
+    process_name: nextMeta.canvas_title,
+    process_graph: nextGraph,
+    updated_at: new Date().toISOString()
+  });
+
+  saveLocalFormaliaSession(updated);
+
+  await tryApiJson('/api/v1/formalia/archive', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      session_id: updated.session_id,
+      ...nextMeta,
+      ...(currentUser?.id ? { user_id: currentUser.id } : {}),
+      ...(currentUser?.email ? { user_email: currentUser.email } : {}),
+      ...(currentUser?.name ? { user_name: currentUser.name } : {}),
+      ...(currentUser ? { saved_to_account: true } : {})
+    })
+  });
+
+  if (currentUser || updated.saved_to_account) {
+    await saveFormaliaSessionToAccount(updated, {
+      userId: currentUser?.id || updated.user_id,
+      email: currentUser?.email || updated.user_email,
+      name: currentUser?.name || currentUser?.full_name || updated.user_name
+    }).catch(() => {});
+  }
+
+  return updated;
+}
+
+export async function deleteFormaliaCanvas(sessionId) {
+  if (!sessionId) return false;
+  removeSessionFromLocalArchive(sessionId);
+
+  await tryApiJson(`/api/v1/formalia/archive?session_id=${encodeURIComponent(sessionId)}`, {
+    method: 'DELETE'
+  });
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase.from('formalia_artifact_versions').delete().eq('session_id', sessionId);
+      await supabase.from('formalia_sessions').delete().eq('session_id', sessionId);
+    } catch (_) {}
+  }
+
+  return true;
 }
 
 /**
@@ -587,7 +907,7 @@ const PRIVILEGED_REVIEWER_ROLES = new Set([
   'Auditora de Impacto'
 ]);
 
-export async function fetchFormaliaArchive({ userId = null, userEmail = null, role = null } = {}) {
+export async function fetchFormaliaArchive({ userId = null, userEmail = null, role = null, workspaceId = null } = {}) {
   const localArchive = loadLocalFormaliaArchive();
   const active = loadLocalFormaliaSession();
   const localIds = new Set();
@@ -595,12 +915,12 @@ export async function fetchFormaliaArchive({ userId = null, userEmail = null, ro
 
   if (active && active.session_id) {
     localIds.add(active.session_id);
-    mergedMap.set(active.session_id, active);
+    mergedMap.set(active.session_id, normalizeSessionWorkspace(active));
   }
   localArchive.forEach((s) => {
     if (s && s.session_id) {
       localIds.add(s.session_id);
-      if (!mergedMap.has(s.session_id)) mergedMap.set(s.session_id, s);
+      if (!mergedMap.has(s.session_id)) mergedMap.set(s.session_id, normalizeSessionWorkspace(s));
     }
   });
 
@@ -682,7 +1002,9 @@ export async function fetchFormaliaArchive({ userId = null, userEmail = null, ro
 
   return Array.from(mergedMap.values())
     .filter((s) => !String(s.session_id || '').startsWith('SYS-'))
+    .map(normalizeSessionWorkspace)
     .filter((s) => !mineOnly || belongsToCurrentUser(s) || localIds.has(s.session_id))
+    .filter((s) => !workspaceId || s.workspace_id === workspaceId)
     .map((s) => ({
       ...s,
       is_mine: belongsToCurrentUser(s)
