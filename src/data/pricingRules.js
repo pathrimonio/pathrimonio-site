@@ -452,6 +452,73 @@ export function generateQuoteId() {
   return `QT-2026-${randomSuffix}`;
 }
 
+export const DEFAULT_QUOTE_STATE = {
+  currentStep: 1,
+  business_discovery: {
+    company_name: '',
+    industry: 'logistica_transporte',
+    current_method: 'excel_y_whatsapp',
+    custom_method_detail: '',
+    main_pain_point: 'desorden_en_despachos_y_caja',
+    custom_pain_detail: ''
+  },
+  configuration: {
+    admin_roles: [
+      { role: 'gerencia', count: 1 },
+      { role: 'almacen', count: 1 },
+      { role: 'despacho', count: 1 }
+    ],
+    end_customers_tier: 'hasta_100_base',
+    interfaces: ['web_operativa', 'portal_clientes'],
+    data_and_apis: ['historial_ilimitado'],
+    custom_requirements_note: ''
+  },
+  commitment_plan: 'semestral_setup_gratis',
+  lead_contact: { name: '', whatsapp: '', email: '' }
+};
+
+export function buildQuotePayload({
+  quoteState,
+  pricing,
+  tarifaSocio,
+  preloadedFormaliaData,
+  currentUser,
+  privacyVersion
+}) {
+  const acceptedAt = new Date().toISOString();
+  return {
+    quote_id: generateQuoteId(),
+    formalia_session_id: preloadedFormaliaData?.formalia_session_id || null,
+    web_blueprint_id: preloadedFormaliaData?.web_blueprint_id || null,
+    user_email: quoteState.lead_contact?.email || currentUser?.email || null,
+    user_id: currentUser?.id || null,
+    timestamp: acceptedAt,
+    privacy_policy_accepted: true,
+    privacy_policy_version: privacyVersion,
+    accepted_at: acceptedAt,
+    business_discovery: quoteState.business_discovery,
+    configuration: {
+      admin_roles: quoteState.configuration.admin_roles,
+      total_admin_users: pricing.totalAdminUsers,
+      end_customers_tier: quoteState.configuration.end_customers_tier,
+      interfaces: quoteState.configuration.interfaces,
+      data_and_apis: quoteState.configuration.data_and_apis,
+      custom_requirements_note: quoteState.configuration.custom_requirements_note
+    },
+    pricing_summary: {
+      tarifa_socio_activa: tarifaSocio,
+      commitment_plan: quoteState.commitment_plan,
+      currency: 'USD',
+      monthly_total: pricing.monthlyTotal,
+      daily_equivalent: pricing.dailyEquivalent,
+      setup_fee: pricing.setupFee,
+      setup_fee_savings: pricing.setupFeeSavings,
+      is_enterprise: pricing.isEnterprise
+    },
+    lead_contact: quoteState.lead_contact
+  };
+}
+
 // Formateador de mensaje para WhatsApp
 export function formatWhatsAppMessage(payload) {
   const { quote_id, business_discovery, configuration, pricing_summary, lead_contact } = payload;

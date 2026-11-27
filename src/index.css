@@ -344,6 +344,21 @@
   }
 }
 
+@keyframes stepEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-step-enter {
+  animation: stepEnter 180ms ease-out both;
+}
+
 .hero-enter {
   animation: heroRise var(--duration-very-slow) var(--ease-smooth-out) both;
   animation-delay: calc(var(--duration-stagger) * var(--stagger-idx, 0));

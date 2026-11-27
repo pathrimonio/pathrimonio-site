@@ -46,7 +46,7 @@ import RolesSection from './components/landing/RolesSection';
 import FormalIAShowcaseSection from './components/landing/FormalIAShowcaseSection';
 import PartnershipSection from './components/landing/PartnershipSection';
 import FormalIAWorkspace from './components/landing/formalia/FormalIAWorkspace';
-import InteractiveEstimator from './components/landing/InteractiveEstimator';
+import InteractiveEstimator from './components/estimator/InteractiveEstimator';
 import FAQSection from './components/landing/FAQSection';
 import Footer from './components/landing/Footer';
 import ContactModal from './components/landing/ContactModal';
