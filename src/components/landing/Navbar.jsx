@@ -57,8 +57,10 @@ export default function Navbar({
                 : '/assets/images/logo_blanco_pathrimonio.png'
             }
             alt="Pathrimonio"
-            className={`h-9 sm:h-10 w-auto aspect-square rounded-[6px] shrink-0 transition-transform group-hover:scale-105 shadow-xs border border-[var(--border-subtle)] ${
-              isDarkTheme ? 'object-cover' : 'object-contain bg-white'
+            className={`h-9 sm:h-10 w-auto aspect-square rounded-[6px] shrink-0 transition-transform group-hover:scale-105 ${
+              isDarkTheme
+                ? 'object-cover shadow-xs border border-[var(--border-subtle)]'
+                : 'object-contain bg-white border border-transparent'
             }`}
           />
           <img
