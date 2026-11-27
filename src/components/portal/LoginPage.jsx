@@ -318,25 +318,18 @@ export default function LoginPage({
       <div className={`relative w-full ${mode === 'register' ? 'max-w-xl' : 'max-w-sm'} flex flex-col gap-6 transition-all duration-300`}>
         
         {/* Brand Header */}
-        <div className="flex flex-col items-center gap-2.5 text-center">
+        <div className="flex flex-col items-center gap-3 text-center">
           <img 
             src="/assets/images/logo.png" 
             alt="Pathrimonio" 
             className="w-[108px] h-[108px] object-contain select-none" 
           />
-          <div>
-            <h1 className="font-space text-2xl font-bold text-white tracking-tight">
-              PATH<span className="text-primary">RIMONIO</span>
-            </h1>
-            <p className="font-space text-xs tracking-wider text-primary font-medium mt-0.5">
-              Impulsamos el desarrollo comunitario
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-space text-[10px]">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-            <span>Portal de Requerimientos &amp; Desarrollo de Software</span>
-          </div>
+          <h1 className="sr-only">Pathrimonio Company</h1>
+          <img
+            src="/assets/images/Banner_PATHRIMONIO_COMPANY.png"
+            alt="Pathrimonio Company"
+            className="h-14 w-auto max-w-full object-contain rounded-[8px] bg-black px-2 py-1 border border-outline-variant/60 shadow-sm select-none"
+          />
         </div>
 
         {/* Main Card */}

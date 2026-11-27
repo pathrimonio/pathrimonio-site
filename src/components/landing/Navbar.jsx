@@ -53,7 +53,7 @@ export default function Navbar({
           <img
             src="/assets/images/icono_202609011609.jpg"
             alt="Pathrimonio"
-            className="w-8 h-8 rounded-[6px] object-cover shrink-0 transition-transform group-hover:scale-105 shadow-xs border border-[var(--border-subtle)]"
+            className="h-9 sm:h-10 w-auto aspect-square rounded-[6px] object-cover shrink-0 transition-transform group-hover:scale-105 shadow-xs border border-[var(--border-subtle)]"
           />
           <img
             src="/assets/images/Banner_PATHRIMONIO_COMPANY.png"
