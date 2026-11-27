@@ -559,10 +559,15 @@ export async function fetchImplementationRequests(user) {
       }
       const { data, error } = await query;
       if (!error && Array.isArray(data)) {
-        const merged = new Map();
-        data.forEach((r) => merged.set(r.id, r));
-        local.forEach((r) => { if (!merged.has(r.id)) merged.set(r.id, r); });
-        list = Array.from(merged.values());
+        list = data;
+        if (isStaff) {
+          safeWriteJson(IMPL_LOCAL_KEY, data);
+        } else if (cleanEmail) {
+          const otherUsers = local.filter(
+            (r) => String(r.user_email || '').trim().toLowerCase() !== cleanEmail
+          );
+          safeWriteJson(IMPL_LOCAL_KEY, [...data, ...otherUsers]);
+        }
       }
     } catch (_) {}
   }

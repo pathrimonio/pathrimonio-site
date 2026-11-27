@@ -19,6 +19,8 @@ export default function UserMenu({ user, onLogout }) {
     'Desarrollador': 'text-purple-400',
     'Auditora de Impacto': 'text-teal-400',
     'Colaborador': 'text-amber-400',
+    'Socio / Cliente': 'text-emerald-400',
+    'Usuario Registrado': 'text-sky-400',
     'Product Owner': 'text-emerald-400',
     'Cliente': 'text-cyan-400'
   };
@@ -29,6 +31,8 @@ export default function UserMenu({ user, onLogout }) {
     'Desarrollador': 'bg-purple-500/20 border-purple-500/40 text-purple-400',
     'Auditora de Impacto': 'bg-teal-500/20 border-teal-500/40 text-teal-400',
     'Colaborador': 'bg-amber-500/20 border-amber-500/40 text-amber-300',
+    'Socio / Cliente': 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300',
+    'Usuario Registrado': 'bg-sky-500/20 border-sky-500/40 text-sky-300',
     'Product Owner': 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300',
     'Cliente': 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
   };
@@ -39,6 +43,8 @@ export default function UserMenu({ user, onLogout }) {
     'Desarrollador': 'bg-purple-500',
     'Auditora de Impacto': 'bg-teal-500',
     'Colaborador': 'bg-amber-600',
+    'Socio / Cliente': 'bg-emerald-600',
+    'Usuario Registrado': 'bg-sky-600',
     'Product Owner': 'bg-emerald-600',
     'Cliente': 'bg-cyan-600'
   };
