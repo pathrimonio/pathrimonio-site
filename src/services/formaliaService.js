@@ -8,6 +8,7 @@ import {
 import {
   ANON_SESSION_AI_LIMIT,
   AUTH_USER_DAILY_AI_LIMIT,
+  getAiDailyLimitForRole,
   createDefaultWebBlueprint,
   sanitizeUiScreensPayload
 } from '../lib/formalia/blueprintSchema.js';
@@ -347,7 +348,7 @@ export async function startFormaliaSession(options = {}) {
   const userId = currentUser?.id && UUID_REGEX.test(String(currentUser.id)) ? String(currentUser.id) : null;
   const userEmail = currentUser?.email ? String(currentUser.email).trim().toLowerCase() : null;
   const userName = currentUser?.name || currentUser?.full_name || null;
-  const defaultLimit = currentUser ? AUTH_USER_DAILY_AI_LIMIT : ANON_SESSION_AI_LIMIT;
+  const defaultLimit = getAiDailyLimitForRole(currentUser?.role, Boolean(currentUser));
 
   const apiRes = await tryApiJson('/api/v1/formalia/sessions', {
     method: 'POST',
@@ -540,11 +541,12 @@ export async function sendFormaliaMessage({
   };
 }
 
-export async function fetchFormaliaQuota({ sessionId = null, userId = null, userEmail = null, fallbackTurns = 0 } = {}) {
+export async function fetchFormaliaQuota({ sessionId = null, userId = null, userEmail = null, userRole = null, fallbackTurns = 0 } = {}) {
   const params = new URLSearchParams();
   if (sessionId) params.set('session_id', sessionId);
   if (userId) params.set('user_id', userId);
   if (userEmail) params.set('user_email', String(userEmail).trim().toLowerCase());
+  if (userRole) params.set('user_role', String(userRole).trim());
   const qs = params.toString() ? `?${params.toString()}` : '';
 
   const apiRes = await tryApiJson(`/api/v1/formalia/quota${qs}`, { method: 'GET' });
@@ -553,7 +555,7 @@ export async function fetchFormaliaQuota({ sessionId = null, userId = null, user
   }
 
   const isAuth = Boolean(userId || userEmail);
-  const limit = isAuth ? AUTH_USER_DAILY_AI_LIMIT : ANON_SESSION_AI_LIMIT;
+  const limit = getAiDailyLimitForRole(userRole, isAuth);
   const used = isAuth ? 0 : Math.min(limit, Number(fallbackTurns) || 0);
   const now = new Date();
   const nextUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0)).toISOString();
@@ -708,6 +710,7 @@ export async function generateWorkspaceBlueprintStories({
   canvases = [],
   userId = null,
   userEmail = null,
+  userRole = null,
   useAi = true
 }) {
   const cleanId = String(workspaceId || 'ws_general');
@@ -720,6 +723,7 @@ export async function generateWorkspaceBlueprintStories({
       canvases,
       user_id: userId,
       user_email: userEmail,
+      user_role: userRole,
       use_ai: useAi
     })
   });
@@ -756,6 +760,7 @@ export async function generateWorkspaceBlueprintLayout({
   existingScreens = [],
   userId = null,
   userEmail = null,
+  userRole = null,
   useAi = true
 }) {
   const cleanId = String(workspaceId || 'ws_general');
@@ -772,6 +777,7 @@ export async function generateWorkspaceBlueprintLayout({
       canvases,
       user_id: userId,
       user_email: userEmail,
+      user_role: userRole,
       use_ai: useAi
     })
   });

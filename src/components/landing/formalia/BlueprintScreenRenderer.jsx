@@ -95,26 +95,28 @@ export default function BlueprintScreenRenderer({
         style={{ borderColor: vars['--bp-border'] }}
         className="pb-3 border-b flex flex-wrap items-center justify-between gap-2"
       >
-        <div>
-          <div className="flex items-center gap-2">
-            <span
-              style={{
-                background: vars['--bp-primary'],
-                color: vars['--bp-on-primary'],
-                borderRadius: vars['--bp-radius']
-              }}
-              className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-            >
-              {screen.role}
-            </span>
-            <h4 className="text-sm sm:text-base font-bold">{screen.title}</h4>
+          <div>
+            <div className="flex items-center gap-2">
+              <span
+                style={{
+                  background: vars['--bp-primary'],
+                  color: vars['--bp-on-primary'],
+                  borderRadius: vars['--bp-radius']
+                }}
+                className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+              >
+                {screen.role}
+              </span>
+              <h4 style={{ color: vars['--bp-text'] }} className="text-sm sm:text-base font-bold">
+                {screen.title}
+              </h4>
+            </div>
+            {screen.subtitle && (
+              <p style={{ color: vars['--bp-muted'] }} className="text-xs mt-1">
+                {screen.subtitle}
+              </p>
+            )}
           </div>
-          {screen.subtitle && (
-            <p style={{ color: vars['--bp-muted'] }} className="text-xs mt-1">
-              {screen.subtitle}
-            </p>
-          )}
-        </div>
 
         <span
           style={{
@@ -230,7 +232,7 @@ export default function BlueprintScreenRenderer({
               {block.type === 'action_form' && (
                 <div style={panelStyle} className="p-4 border space-y-3 shadow-xs">
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <h5 className="text-xs sm:text-sm font-bold">{block.title}</h5>
+                    <h5 style={{ color: vars['--bp-text'] }} className="text-xs sm:text-sm font-bold">{block.title}</h5>
                     {editable && (
                       <div className="flex items-center gap-1">
                         <input
@@ -317,7 +319,7 @@ export default function BlueprintScreenRenderer({
                     style={{ borderColor: vars['--bp-border'] }}
                     className="px-4 py-3 border-b flex flex-wrap items-center justify-between gap-2"
                   >
-                    <h5 className="text-xs sm:text-sm font-bold">{block.title}</h5>
+                    <h5 style={{ color: vars['--bp-text'] }} className="text-xs sm:text-sm font-bold">{block.title}</h5>
                     <div className="flex flex-wrap items-center gap-1.5">
                       {(block.toolbar_actions || []).map((act, aIdx) => (
                         <span
@@ -419,7 +421,7 @@ export default function BlueprintScreenRenderer({
               {/* 4. status_board */}
               {block.type === 'status_board' && (
                 <div style={panelStyle} className="p-4 border space-y-3 shadow-xs">
-                  <h5 className="text-xs sm:text-sm font-bold">{block.title}</h5>
+                  <h5 style={{ color: vars['--bp-text'] }} className="text-xs sm:text-sm font-bold">{block.title}</h5>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {(block.columns || []).map((col, colIdx) => (
                       <div

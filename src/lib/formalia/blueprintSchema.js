@@ -1,12 +1,37 @@
 import { z } from 'zod';
 
-// ── Constantes de Cuotas y Techos Anti-Abuso (SDD FormalIA v2) ────────────────
+// ── Constantes de Cuotas y Techos Anti-Abuso (SDD FormalIA v2 + RBAC 5 Roles) ─
 
 export const ANON_SESSION_AI_LIMIT = 5;
 export const ANON_IP_DAILY_AI_LIMIT = 10;
 export const AUTH_USER_DAILY_AI_LIMIT = 15;
+export const PARTNER_DAILY_AI_LIMIT = 45;
+export const COLLABORATOR_DAILY_AI_LIMIT = 120;
+export const ADMIN_DAILY_AI_LIMIT = 999;
+
 export const MAX_WORKSPACES_FREE = 5;
 export const MAX_CANVASES_PER_WORKSPACE_FREE = 20;
+export const MAX_WORKSPACES_PARTNER = 50;
+export const MAX_CANVASES_PER_WORKSPACE_PARTNER = 200;
+
+export function getAiDailyLimitForRole(role = null, isAuthenticated = false) {
+  if (!isAuthenticated) return ANON_SESSION_AI_LIMIT;
+  const r = String(role || '').trim().toLowerCase();
+  if (r === 'admin' || r === 'administrador' || r === 'superadmin') return ADMIN_DAILY_AI_LIMIT;
+  if (
+    r === 'colaborador' ||
+    r === 'collaborator' ||
+    r === 'desarrollador' ||
+    r === 'fintech lead' ||
+    r === 'auditora de impacto'
+  ) {
+    return COLLABORATOR_DAILY_AI_LIMIT;
+  }
+  if (r === 'socio / cliente' || r === 'socio' || r === 'partner' || r === 'cliente') {
+    return PARTNER_DAILY_AI_LIMIT;
+  }
+  return AUTH_USER_DAILY_AI_LIMIT;
+}
 
 export const ALLOWED_AI_ACTION_TYPES = ['PROCESS_CHAT', 'STORY_GEN', 'UI_LAYOUT'];
 export const ALLOWED_UI_BLOCK_TYPES = ['kpi_row', 'data_table', 'action_form', 'status_board'];

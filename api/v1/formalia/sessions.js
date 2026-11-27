@@ -23,6 +23,7 @@ export default async function handler(req, res) {
     const quota = await getAiQuotaStatus({
       userId: req.query?.user_id || null,
       userEmail: req.query?.user_email || null,
+      userRole: req.query?.user_role || null,
       ip,
       sessionId: req.query?.session_id || null
     });
@@ -52,6 +53,7 @@ export default async function handler(req, res) {
     const quota = await getAiQuotaStatus({
       userId: body.user_id || null,
       userEmail: body.user_email || null,
+      userRole: body.user_role || null,
       ip,
       sessionId: result.session?.session_id
     });

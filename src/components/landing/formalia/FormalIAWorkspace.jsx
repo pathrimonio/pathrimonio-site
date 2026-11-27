@@ -72,6 +72,7 @@ export default function FormalIAWorkspace({
   activeProjectId = null,
   initialSessionOverride = null,
   onPromoteToProject,
+  onSubmitImplementation,
   onOpenInPortal,
   onBackHome,
   onSessionListChanged
@@ -204,7 +205,7 @@ export default function FormalIAWorkspace({
     };
   }, [isAuthenticated, currentUser?.id, currentUser?.email]);
 
-  // Sincroniza cuota real de IA (5 por sesión anónima / 15 por día usuario registrado)
+  // Sincroniza cuota real de IA (5 anónima / 15 usuario / 45 socio / 120 colab / 999 admin)
   useEffect(() => {
     if (!clientHydrated || session.session_id === 'FIA-2026-INIT') return;
     let cancelled = false;
@@ -212,6 +213,7 @@ export default function FormalIAWorkspace({
       sessionId: session.session_id,
       userId: currentUser?.id || null,
       userEmail: currentUser?.email || null,
+      userRole: currentUser?.role || null,
       fallbackTurns: session.turns_count || 0
     }).then((q) => {
       if (!cancelled && q) setQuota(q);
@@ -219,7 +221,7 @@ export default function FormalIAWorkspace({
     return () => {
       cancelled = true;
     };
-  }, [clientHydrated, session.session_id, isAuthenticated, currentUser?.id, currentUser?.email]);
+  }, [clientHydrated, session.session_id, isAuthenticated, currentUser?.id, currentUser?.email, currentUser?.role]);
 
   useEffect(() => {
     if (!clientHydrated || session.session_id === 'FIA-2026-INIT') return;
@@ -540,6 +542,7 @@ export default function FormalIAWorkspace({
             user_id: session.user_id || currentUser?.id || null,
             user_email: session.user_email || currentUser?.email || null,
             user_name: session.user_name || currentUser?.name || null,
+            user_role: currentUser?.role || null,
             saved_to_account: true,
             workspace_id: currentMeta.workspace_id,
             workspace_name: currentMeta.workspace_name,
@@ -776,9 +779,12 @@ export default function FormalIAWorkspace({
       ? session.versions[session.versions.length - 1].version_label
       : 'v0';
   const hasUserMessages =
-    (session.turns_count || 0) > 0 || (session.messages || []).some((m) => m.role === 'user');
-  const isSavedToAccount = Boolean(sessionSaved || session.saved_to_account);
-  const savedAccountEmail = session.user_email || (isPortalEmbedded ? currentUser?.email : '') || '';
+    (session.turns_count || 0) > 0 ||
+    (session.messages || []).some((m) => m.role === 'user') ||
+    (session.process_graph?.steps?.length || 0) > 0 ||
+    (session.process_graph?.actors?.length || 0) > 0;
+  const isSavedToAccount = Boolean(isAuthenticated && (sessionSaved || session.saved_to_account));
+  const savedAccountEmail = isAuthenticated ? (session.user_email || currentUser?.email || '') : '';
 
   return (
     <>
@@ -874,9 +880,9 @@ export default function FormalIAWorkspace({
               {!isAuthenticated && (
                 <button
                   type="button"
-                  onClick={() => (onOpenInPortal ? onOpenInPortal(session.process_graph) : setShowSaveModal(true))}
+                  onClick={() => (!isPortalEmbedded ? setShowSaveModal(true) : onOpenInPortal?.(session.process_graph))}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] border border-[#FFC93C]/40 bg-[#FFC93C]/10 text-[11px] font-medium text-[#FFC93C] hover:bg-[#FFC93C]/20 cursor-pointer transition-colors"
-                  title="Inicia sesión para organizar múltiples lienzos por proyecto o negocio"
+                  title="Inicia sesión para conservar tu diagrama, acceder a + lienzos por espacio y obtener 15 turnos diarios de IA"
                 >
                   <Lock size={12} />
                   <span className="hidden sm:inline">Inicia sesión para + lienzos por espacio</span>
@@ -1265,6 +1271,19 @@ export default function FormalIAWorkspace({
       quota={quota}
       onQuotaUpdated={setQuota}
       onPreloadQuote={(data) => handleApplyToQuote(null, data)}
+      onSubmitImplementation={async (payload) => {
+        if (onSubmitImplementation) {
+          return onSubmitImplementation(payload);
+        }
+        if (onPromoteToProject) {
+          return onPromoteToProject(payload.combinedGraph || session.process_graph, payload);
+        }
+        if (onOpenInPortal) {
+          onOpenInPortal(payload.combinedGraph || session.process_graph, payload);
+        } else {
+          window.location.href = '/#portal?tab=implementationStatus';
+        }
+      }}
       onOpenSaveLogin={() => {
         setShowBlueprintModal(false);
         setShowSaveModal(true);

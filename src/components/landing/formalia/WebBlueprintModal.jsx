@@ -19,9 +19,10 @@ import {
 } from 'lucide-react';
 import {
   THEME_PRESETS,
-  createDefaultWebBlueprint
+  createDefaultWebBlueprint,
+  getAiDailyLimitForRole
 } from '../../../lib/formalia/blueprintSchema';
-import { mergeCanvasGraphs } from '../../../lib/formalia/blueprintGenerator';
+import { mergeCanvasGraphs, generateBlueprintStories, generateBlueprintLayout } from '../../../lib/formalia/blueprintGenerator';
 import {
   fetchWorkspaceBlueprint,
   saveManualBlueprint,
@@ -43,6 +44,7 @@ export default function WebBlueprintModal({
   quota = null,
   onQuotaUpdated,
   onPreloadQuote,
+  onSubmitImplementation,
   onOpenSaveLogin
 }) {
   const workspaceId = workspace?.workspace_id || activeSession?.workspace_id || 'ws_general';
@@ -58,6 +60,7 @@ export default function WebBlueprintModal({
   const [step, setStep] = useState(1); // 1: Historias | 2: Theme Studio | 3: UI Blueprint
   const [loading, setLoading] = useState(true);
   const [aiBusy, setAiBusy] = useState(false);
+  const [submittingPortal, setSubmittingPortal] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [statusNotice, setStatusNotice] = useState('');
 
@@ -131,8 +134,9 @@ export default function WebBlueprintModal({
 
   if (!isOpen) return null;
 
-  const remainingTurns = typeof quota?.remaining_turns === 'number' ? quota.remaining_turns : (currentUser ? 15 : 5);
-  const dailyLimit = quota?.daily_limit || (currentUser ? 15 : 5);
+  const roleDefaultLimit = getAiDailyLimitForRole(currentUser?.role, Boolean(currentUser));
+  const remainingTurns = typeof quota?.remaining_turns === 'number' ? quota.remaining_turns : roleDefaultLimit;
+  const dailyLimit = quota?.daily_limit || roleDefaultLimit;
   const isQuotaExhausted = remainingTurns <= 0;
 
   const persistManualPatch = async (patch, noticeText = '') => {
@@ -174,6 +178,7 @@ export default function WebBlueprintModal({
         canvases: selectedCanvases,
         userId: currentUser?.id || null,
         userEmail: currentUser?.email || null,
+        userRole: currentUser?.role || null,
         useAi
       });
       setBlueprint(res.blueprint);
@@ -288,6 +293,7 @@ export default function WebBlueprintModal({
         existingScreens: blueprint.ui_screens || [],
         userId: currentUser?.id || null,
         userEmail: currentUser?.email || null,
+        userRole: currentUser?.role || null,
         useAi
       });
       setBlueprint(res.blueprint);
@@ -396,6 +402,61 @@ export default function WebBlueprintModal({
     onPreloadQuote?.(enriched);
   };
 
+  const handleSubmitToPortalImplementation = async () => {
+    setErrorMsg('');
+    if (!currentUser?.email) {
+      setErrorMsg('Inicia sesión o regístrate en 15 segundos para crear tu proyecto y habilitar tus subvistas en el Portal.');
+      onOpenSaveLogin?.();
+      return;
+    }
+
+    setSubmittingPortal(true);
+    try {
+      let effectiveBlueprint = blueprint;
+      // Si el usuario aún no generó historias o pantallas, garantizamos compilación determinista sin consumir turnos IA
+      if (!effectiveBlueprint.user_stories || effectiveBlueprint.user_stories.length === 0) {
+        const genStories = await generateBlueprintStories({
+          workspaceName,
+          canvases: selectedCanvases,
+          useAi: false
+        });
+        effectiveBlueprint = await saveManualBlueprint(workspaceId, {
+          source_canvas_ids: selectedCanvases.map((c) => c.session_id).filter(Boolean),
+          user_stories: genStories.stories
+        });
+      }
+      if (!effectiveBlueprint.ui_screens || effectiveBlueprint.ui_screens.length === 0) {
+        const genLayout = await generateBlueprintLayout({
+          workspaceName,
+          stories: effectiveBlueprint.user_stories || [],
+          canvases: selectedCanvases,
+          themeConfig: effectiveBlueprint.theme_config,
+          useAi: false
+        });
+        effectiveBlueprint = await saveManualBlueprint(workspaceId, {
+          ui_screens: genLayout.ui_screens
+        });
+      }
+      setBlueprint(effectiveBlueprint);
+
+      await onSubmitImplementation?.({
+        workspaceId,
+        workspaceName,
+        canvases: selectedCanvases,
+        activeSession,
+        blueprint: effectiveBlueprint,
+        editedStories: effectiveBlueprint.user_stories || [],
+        combinedGraph,
+        currentUser
+      });
+      onClose();
+    } catch (err) {
+      setErrorMsg(err.message || 'No se pudo enviar la implementación al Portal.');
+    } finally {
+      setSubmittingPortal(false);
+    }
+  };
+
   const theme = blueprint.theme_config || {};
 
   return (
@@ -476,11 +537,12 @@ export default function WebBlueprintModal({
                   key={item.id}
                   type="button"
                   onClick={() => setStep(item.id)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                    active
-                      ? 'bg-[#FFC93C] border-[#FFC93C] text-[#2B2D31]'
-                      : 'bg-[var(--bg-page)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                  }`}
+                  style={{
+                    backgroundColor: active ? '#FFC93C' : '#2B2D31',
+                    color: active ? '#09090B' : '#E4E4E7',
+                    borderColor: active ? '#FFC93C' : 'rgba(217, 218, 220, 0.2)'
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer"
                 >
                   <Icon size={13} />
                   <span>{item.label}</span>
@@ -1105,20 +1167,30 @@ export default function WebBlueprintModal({
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="hidden md:inline text-[11px] text-[var(--text-secondary)]">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="hidden xl:inline text-[11px] text-[var(--text-secondary)]">
               Ediciones manuales guardadas automáticamente sin consumo de IA.
             </span>
             {onPreloadQuote && (
               <button
                 type="button"
                 onClick={handleBridgeToQuote}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[8px] border border-[#FFC93C]/50 bg-[#FFC93C]/10 hover:bg-[#FFC93C] hover:text-[#2B2D31] text-[#FFC93C] text-xs font-semibold transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border border-[var(--border-strong)] bg-[var(--bg-page)] hover:border-[#FFC93C] text-[var(--text-primary)] text-xs font-semibold transition-colors cursor-pointer"
               >
-                <span>Cotizar desarrollo con Pathrimonio</span>
+                <span>Cotizar desarrollo</span>
                 <ArrowRight size={13} />
               </button>
             )}
+            <button
+              type="button"
+              onClick={handleSubmitToPortalImplementation}
+              disabled={submittingPortal}
+              data-testid="submit-web-implementation-btn"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[8px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-bold transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+            >
+              {submittingPortal ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+              <span>{submittingPortal ? 'Creando en Portal...' : 'Implementar en Portal'}</span>
+            </button>
           </div>
         </div>
       </div>

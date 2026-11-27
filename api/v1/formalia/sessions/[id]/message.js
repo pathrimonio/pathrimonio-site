@@ -52,18 +52,20 @@ export default async function handler(req, res) {
 
   const effectiveUserId = body.account_link?.user_id || session.user_id || null;
   const effectiveUserEmail = body.account_link?.user_email || session.user_email || null;
+  const effectiveUserRole = body.account_link?.user_role || body.user_role || session.user_role || null;
 
-  // Validación estricta de cuota de IA ANTES de invocar el LLM (5 anon / 15 día autenticado)
+  // Validación estricta de cuota de IA ANTES de invocar el LLM (5 anon / 15 user / 45 socio)
   const quotaBefore = await getAiQuotaStatus({
     userId: effectiveUserId,
     userEmail: effectiveUserEmail,
+    userRole: effectiveUserRole,
     ip,
     sessionId: id
   });
 
   if (!quotaBefore.allowed) {
     const errMsg = quotaBefore.is_authenticated
-      ? 'Usaste tus 15 turnos de IA de hoy; se renuevan mañana (00:00 UTC). Puedes seguir editando tus diagramas, historias y maquetas manualmente.'
+      ? `Usaste tus ${quotaBefore.daily_limit} turnos de IA de hoy; se renuevan mañana (00:00 UTC). Puedes seguir editando tus diagramas, historias y maquetas manualmente.`
       : 'Alcanzaste los 5 turnos gratuitos de IA de esta sesión. Inicia sesión gratis para conservar tu diagrama y obtener 15 turnos diarios de IA.';
     return res.status(429).json({
       error: errMsg,
@@ -164,6 +166,7 @@ export default async function handler(req, res) {
   const quotaAfter = await getAiQuotaStatus({
     userId: effectiveUserId,
     userEmail: effectiveUserEmail,
+    userRole: effectiveUserRole,
     ip,
     sessionId: id
   });

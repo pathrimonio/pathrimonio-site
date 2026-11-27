@@ -94,7 +94,7 @@ test('Anti-abuse caps limit free user to max 5 non-project workspaces', async ()
 
   const sixthCheck = await checkUserWorkspaceCaps({
     userEmail: email,
-    userRole: 'Colaborador',
+    userRole: 'Usuario Gratis',
     workspaceId: 'ws_neg_6',
     creatingNewWorkspace: true
   });

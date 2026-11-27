@@ -116,7 +116,7 @@ export default function FormalIAChatPanel({
                 <span
                   title={
                     isAuthenticatedQuota
-                      ? `Cuota diaria de IA (se reinicia a las 00:00 UTC). Edición manual ilimitada.`
+                      ? `Cuota diaria de IA (${effectiveLimit}/día · se reinicia a las 00:00 UTC). Edición manual ilimitada.`
                       : `Modo prueba anónimo (${effectiveLimit} turnos IA). Inicia sesión para 15 turnos/día.`
                   }
                   className={`px-1.5 py-0.5 rounded border font-mono text-[10px] font-medium ${

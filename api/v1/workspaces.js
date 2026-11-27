@@ -40,6 +40,7 @@ export default async function handler(req, res) {
 
   const userId = body.user_id || null;
   const userEmail = body.user_email || null;
+  const userRole = body.user_role || null;
   const useAi = body.use_ai !== false;
 
   // Resolver lienzos del Workspace (desde payload o archive del servidor)
@@ -60,13 +61,14 @@ export default async function handler(req, res) {
       const quotaBefore = await getAiQuotaStatus({
         userId,
         userEmail,
+        userRole,
         ip,
         sessionId: canvases[0]?.session_id || null
       });
       if (!quotaBefore.allowed) {
         return res.status(429).json({
           error: quotaBefore.is_authenticated
-            ? 'Usaste tus 15 turnos de IA de hoy; se renuevan mañana. Puedes agregar o editar historias manualmente sin gastar turnos.'
+            ? `Usaste tus ${quotaBefore.daily_limit} turnos de IA de hoy; se renuevan mañana. Puedes agregar o editar historias manualmente sin gastar turnos.`
             : 'Agotaste los 5 turnos de prueba de IA. Inicia sesión para obtener 15 turnos diarios o edita historias manualmente.',
           code: 'AI_QUOTA_EXCEEDED',
           reset_at: quotaBefore.reset_at,
@@ -106,6 +108,7 @@ export default async function handler(req, res) {
     const quotaAfter = await getAiQuotaStatus({
       userId,
       userEmail,
+      userRole,
       ip,
       sessionId: canvases[0]?.session_id || null
     });
@@ -124,13 +127,14 @@ export default async function handler(req, res) {
       const quotaBefore = await getAiQuotaStatus({
         userId,
         userEmail,
+        userRole,
         ip,
         sessionId: canvases[0]?.session_id || null
       });
       if (!quotaBefore.allowed) {
         return res.status(429).json({
           error: quotaBefore.is_authenticated
-            ? 'Usaste tus 15 turnos de IA de hoy; se renuevan mañana. Puedes editar los bloques de interfaz manualmente.'
+            ? `Usaste tus ${quotaBefore.daily_limit} turnos de IA de hoy; se renuevan mañana. Puedes editar los bloques de interfaz manualmente.`
             : 'Agotaste los 5 turnos de prueba de IA. Inicia sesión para obtener 15 turnos diarios o ajusta la maqueta manualmente.',
           code: 'AI_QUOTA_EXCEEDED',
           reset_at: quotaBefore.reset_at,
@@ -184,6 +188,7 @@ export default async function handler(req, res) {
     const quotaAfter = await getAiQuotaStatus({
       userId,
       userEmail,
+      userRole,
       ip,
       sessionId: canvases[0]?.session_id || null
     });

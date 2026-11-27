@@ -6,9 +6,25 @@ import {
   ANON_SESSION_AI_LIMIT,
   ANON_IP_DAILY_AI_LIMIT,
   AUTH_USER_DAILY_AI_LIMIT,
+  PARTNER_DAILY_AI_LIMIT,
   MAX_WORKSPACES_FREE,
-  MAX_CANVASES_PER_WORKSPACE_FREE
+  MAX_CANVASES_PER_WORKSPACE_FREE,
+  MAX_WORKSPACES_PARTNER,
+  MAX_CANVASES_PER_WORKSPACE_PARTNER,
+  getAiDailyLimitForRole
 } from '../../src/lib/formalia/blueprintSchema.js';
+
+export {
+  ANON_SESSION_AI_LIMIT,
+  ANON_IP_DAILY_AI_LIMIT,
+  AUTH_USER_DAILY_AI_LIMIT,
+  PARTNER_DAILY_AI_LIMIT,
+  MAX_WORKSPACES_FREE,
+  MAX_CANVASES_PER_WORKSPACE_FREE,
+  MAX_WORKSPACES_PARTNER,
+  MAX_CANVASES_PER_WORKSPACE_PARTNER,
+  getAiDailyLimitForRole
+};
 
 // Memoria por instancia serverless para resiliencia en frío / sin Supabase configurado
 const memorySessions = new Map();
@@ -21,7 +37,25 @@ const ipRateLimits = new Map();
 const MAX_TURNS_PER_SESSION = ANON_SESSION_AI_LIMIT;
 const MAX_SESSIONS_PER_IP_HOUR = 15; // Tolerante para demos; Turnstile/IP guard aplicable
 const QUOTA_LEDGER_FALLBACK_ID = 'SYS-AI-QUOTA-V2';
-const PRIVILEGED_QUOTA_ROLES = new Set(['Admin', 'Desarrollador', 'Fintech Lead', 'Auditora de Impacto']);
+const PRIVILEGED_QUOTA_ROLES = new Set(['Admin', 'Administrador', 'Colaborador', 'Desarrollador', 'Fintech Lead', 'Auditora de Impacto']);
+
+async function resolveUserRoleFromDb({ sb, userEmail = null, providedRole = null }) {
+  if (providedRole && String(providedRole).trim()) {
+    return String(providedRole).trim();
+  }
+  if (!sb || !userEmail) return null;
+  try {
+    const cleanEmail = String(userEmail).trim().toLowerCase();
+    const { data } = await sb
+      .from('portal_users')
+      .select('role')
+      .ilike('email', cleanEmail)
+      .maybeSingle();
+    return data?.role || null;
+  } catch (_) {
+    return null;
+  }
+}
 
 export function hashClientIp(ip = 'unknown') {
   const salt = process.env.IP_HASH_SALT || 'pathrimonio-formalia-v2';
@@ -412,6 +446,8 @@ export async function saveQuoteWithHandoff(quotePayload) {
         quote_id: quotePayload.quote_id,
         formalia_session_id: quotePayload.formalia_session_id || null,
         web_blueprint_id: quotePayload.web_blueprint_id || null,
+        user_email: quotePayload.user_email || quotePayload.lead_contact?.email || null,
+        user_id: quotePayload.user_id || null,
         business_discovery: quotePayload.business_discovery || {},
         configuration: quotePayload.configuration || {},
         pricing_summary: quotePayload.pricing_summary || {},
@@ -1119,6 +1155,7 @@ export async function recordAiQuotaTurn({
 export async function getAiQuotaStatus({
   userId = null,
   userEmail = null,
+  userRole = null,
   ip = 'unknown',
   sessionId = null
 } = {}) {
@@ -1130,6 +1167,11 @@ export async function getAiQuotaStatus({
 
   let entries = memoryAiQuotaLedger.filter((e) => e.usage_date_utc === todayUtc);
   const sb = getSupabaseServerClient();
+  const resolvedRole = isAuthenticated
+    ? await resolveUserRoleFromDb({ sb, userEmail: cleanEmail, providedRole: userRole })
+    : null;
+  const authDailyLimit = getAiDailyLimitForRole(resolvedRole, isAuthenticated);
+
   if (sb) {
     let loadedDedicated = false;
     try {
@@ -1163,18 +1205,19 @@ export async function getAiQuotaStatus({
         (cleanEmail && e.user_email && String(e.user_email).toLowerCase() === cleanEmail)
     ).length;
 
-    const remainingTurns = Math.max(0, AUTH_USER_DAILY_AI_LIMIT - userUsedToday);
+    const remainingTurns = Math.max(0, authDailyLimit - userUsedToday);
     return {
       allowed: remainingTurns > 0,
       code: remainingTurns > 0 ? null : 'AI_QUOTA_EXCEEDED',
       remaining_turns: remainingTurns,
       used_turns: userUsedToday,
-      daily_limit: AUTH_USER_DAILY_AI_LIMIT,
+      daily_limit: authDailyLimit,
       session_turns_used: userUsedToday,
-      session_limit: AUTH_USER_DAILY_AI_LIMIT,
+      session_limit: authDailyLimit,
       ip_used_today: ipUsedToday,
-      ip_limit: AUTH_USER_DAILY_AI_LIMIT,
+      ip_limit: authDailyLimit,
       reset_at: resetAt,
+      role: resolvedRole || 'Usuario Registrado',
       is_authenticated: true
     };
   }
@@ -1201,6 +1244,7 @@ export async function getAiQuotaStatus({
     ip_used_today: ipUsedToday,
     ip_limit: ANON_IP_DAILY_AI_LIMIT,
     reset_at: resetAt,
+    role: 'Visitante',
     is_authenticated: false
   };
 }
@@ -1214,8 +1258,15 @@ export async function checkUserWorkspaceCaps({
   creatingNewWorkspace = false
 } = {}) {
   if (!userId && !userEmail) return { allowed: true };
-  if (userRole && PRIVILEGED_QUOTA_ROLES.has(userRole)) return { allowed: true };
+  const sb = getSupabaseServerClient();
+  const resolvedRole = await resolveUserRoleFromDb({ sb, userEmail, providedRole: userRole });
+  if (resolvedRole && PRIVILEGED_QUOTA_ROLES.has(resolvedRole)) return { allowed: true };
   if (projectId) return { allowed: true };
+
+  const normalizedRoleLower = String(resolvedRole || '').trim().toLowerCase();
+  const isPartner = ['socio / cliente', 'socio', 'partner', 'cliente'].includes(normalizedRoleLower);
+  const maxWorkspaces = isPartner ? MAX_WORKSPACES_PARTNER : MAX_WORKSPACES_FREE;
+  const maxCanvases = isPartner ? MAX_CANVASES_PER_WORKSPACE_PARTNER : MAX_CANVASES_PER_WORKSPACE_FREE;
 
   const sessions = await listFormaliaSessionsArchive({
     userId,
@@ -1237,22 +1288,22 @@ export async function checkUserWorkspaceCaps({
   });
 
   if (creatingNewWorkspace && workspaceId && !nonProjectWorkspaces.has(workspaceId)) {
-    if (nonProjectWorkspaces.size >= MAX_WORKSPACES_FREE) {
+    if (nonProjectWorkspaces.size >= maxWorkspaces) {
       return {
         allowed: false,
         code: 'WORKSPACE_LIMIT_EXCEEDED',
-        limit: MAX_WORKSPACES_FREE,
-        error: `Alcanzaste el límite técnico de ${MAX_WORKSPACES_FREE} espacios de trabajo en cuenta gratuita.`
+        limit: maxWorkspaces,
+        error: `Alcanzaste el límite técnico de ${maxWorkspaces} espacios de trabajo para tu plan actual.`
       };
     }
   }
 
-  if (workspaceId && canvasesInTarget.size >= MAX_CANVASES_PER_WORKSPACE_FREE) {
+  if (workspaceId && canvasesInTarget.size >= maxCanvases) {
     return {
       allowed: false,
       code: 'CANVAS_LIMIT_EXCEEDED',
-      limit: MAX_CANVASES_PER_WORKSPACE_FREE,
-      error: `Este espacio alcanzó el máximo de ${MAX_CANVASES_PER_WORKSPACE_FREE} lienzos en plan gratuito.`
+      limit: maxCanvases,
+      error: `Este espacio alcanzó el máximo de ${maxCanvases} lienzos para tu plan actual.`
     };
   }
 
@@ -1452,11 +1503,4 @@ export async function saveWorkspaceBlueprint(workspaceId = 'ws_general', patch =
   return next;
 }
 
-export {
-  MAX_TURNS_PER_SESSION,
-  ANON_SESSION_AI_LIMIT,
-  ANON_IP_DAILY_AI_LIMIT,
-  AUTH_USER_DAILY_AI_LIMIT,
-  MAX_WORKSPACES_FREE,
-  MAX_CANVASES_PER_WORKSPACE_FREE
-};
+export { MAX_TURNS_PER_SESSION };
