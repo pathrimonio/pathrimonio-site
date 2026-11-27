@@ -14,7 +14,7 @@ export default function Footer({ onOpenContact, onNavigate }) {
 
   return (
     <footer className="w-full bg-[#232529] text-[#D9DADC] border-t border-[#D9DADC]/15 py-16 transition-colors">
-      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+      <div className="site-container">
         {/* 4 Columnas Compactas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-[#D9DADC]/15">
           {/* Columna 1: Brand & Misión */}

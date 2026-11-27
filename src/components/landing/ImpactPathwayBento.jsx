@@ -23,9 +23,9 @@ export default function ImpactPathwayBento({ communityImpact = null }) {
       id="impacto"
       className="w-full py-20 lg:py-28 bg-[var(--bg-silver)] text-[var(--text-on-silver)] border-b border-[var(--border-silver)] transition-colors"
     >
-      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+      <div className="site-container">
         {/* Encabezado (Sobre Silver #D9DADC -> Tinta #2B2D31) */}
-        <div className="max-w-2xl mb-14">
+        <div className="max-w-3xl mb-14">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#2B2D31] text-[#D9DADC] text-xs font-mono mb-3">
             <span className="font-semibold">IMPACTO Y PATHWAY</span>
           </div>

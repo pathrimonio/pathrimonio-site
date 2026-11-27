@@ -108,7 +108,7 @@ export default function ArchitectureSection() {
 
   return (
     <section id="arquitectura" className="w-full py-20 lg:py-28 bg-[var(--bg-page)] border-b border-[var(--border-subtle)] transition-colors">
-      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+      <div className="site-container">
 
         {/* Encabezado de Sección */}
         <div className="max-w-3xl mb-14">
@@ -167,7 +167,10 @@ export default function ArchitectureSection() {
         </div>
 
         {/* Visor Técnico Expandido: Explicación + Código en Vivo */}
-        <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[10px] p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12">
+        <div
+          key={activePillar.id}
+          className="tab-panel-enter bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-[10px] p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start mb-12"
+        >
 
           {/* Lado Izquierdo: Descripción y Especificaciones (5/12 cols) */}
           <div className="lg:col-span-5 min-w-0 flex flex-col justify-between h-full gap-6">

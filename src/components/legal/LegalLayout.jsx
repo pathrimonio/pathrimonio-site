@@ -44,7 +44,8 @@ export default function LegalLayout({
       <main className="flex-1 w-full">
         {/* Top bar / Breadcrumb + índice de documentos legales */}
         <div className="w-full border-b border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-          <div className="max-w-3xl mx-auto px-6 py-8 sm:py-10">
+          <div className="site-container py-8 sm:py-10">
+            <div className="max-w-4xl">
             <div className="flex flex-wrap items-center gap-3 mb-5">
               <a
                 href="/"
@@ -94,13 +95,16 @@ export default function LegalLayout({
                 );
               })}
             </nav>
+            </div>
           </div>
         </div>
 
-        {/* Contenido principal centrado max-w-3xl */}
-        <article className="max-w-3xl mx-auto px-6 py-10 sm:py-14 flex flex-col gap-8 text-sm text-[var(--text-secondary)] leading-relaxed">
-          {children}
-        </article>
+        {/* Contenido principal alineado al contenedor global con medida de lectura cómoda */}
+        <div className="site-container py-10 sm:py-14">
+          <article className="max-w-4xl flex flex-col gap-8 text-sm text-[var(--text-secondary)] leading-relaxed">
+            {children}
+          </article>
+        </div>
       </main>
 
       <Footer onOpenContact={onOpenContact} onNavigate={onNavigate} />

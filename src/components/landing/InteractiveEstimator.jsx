@@ -350,9 +350,9 @@ export default function InteractiveEstimator({
 
   return (
     <section id="cotizador" className="w-full py-20 lg:py-28 bg-[var(--bg-page)] border-b border-[var(--border-subtle)] transition-colors">
-      <div className="max-w-6xl mx-auto px-6 lg:px-8">
+      <div className="site-container">
         {/* Encabezado */}
-        <div className="max-w-2xl mb-12">
+        <div className="max-w-3xl mb-12">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-primary)] text-xs font-mono mb-3">
             <span className="font-semibold">COTIZADOR INTERACTIVO</span>
           </div>

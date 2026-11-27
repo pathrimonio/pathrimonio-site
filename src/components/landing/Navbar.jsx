@@ -38,7 +38,7 @@ export default function Navbar({
           : 'bg-white border-black/10 text-[#2B2D31]'
       }`}
     >
-      <div className="max-w-6xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="site-container h-16 flex items-center justify-between gap-4">
         {/* Brand */}
         <a
           href="/"
@@ -79,7 +79,7 @@ export default function Navbar({
               key={link.name}
               href={link.href}
               onClick={handleNavClick(link.href)}
-              className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              className="nav-link-draw text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               {link.name}
             </a>
@@ -94,7 +94,7 @@ export default function Navbar({
             onClick={onToggleTheme}
             aria-label={theme === 'dark' ? 'Cambiar a contraste Silver' : 'Cambiar a primario Gray'}
             title={theme === 'dark' ? 'Alternar contraste Silver' : 'Activar base Gray #2B2D31'}
-            className="p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] rounded-[6px] transition-all cursor-pointer"
+            className="btn-secondary-ghost p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
           >
             {theme === 'dark' ? (
               <Sun size={15} strokeWidth={1.75} className="text-[#FFC93C]" />
@@ -105,17 +105,17 @@ export default function Navbar({
 
           <button
             onClick={onOpenPortal}
-            className="px-3.5 py-1.5 text-xs font-medium text-[var(--text-primary)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] hover:border-[var(--border-strong)] hover:bg-[var(--bg-subtle)] rounded-[6px] transition-all cursor-pointer"
+            className="btn-secondary-ghost px-3.5 py-1.5 text-xs font-medium cursor-pointer"
           >
             Portal Operativo
           </button>
           <a
             href={isSubpage ? '/#cotizador' : '#cotizador'}
             onClick={handleNavClick(isSubpage ? '/#cotizador' : '#cotizador')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#2B2D31] bg-[#FFC93C] hover:bg-[#FFD561] active:scale-[0.98] rounded-[6px] transition-all shadow-sm cursor-pointer"
+            className="btn-accent group inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs shadow-sm cursor-pointer"
           >
             <span>Cotizar ($1/día)</span>
-            <ArrowRight size={13} strokeWidth={1.75} />
+            <ArrowRight size={13} strokeWidth={1.75} className="transition-transform duration-150 group-hover:translate-x-[3px]" />
           </a>
         </div>
 
