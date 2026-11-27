@@ -14,7 +14,7 @@ import {
   isActionAllowedForRole
 } from '../src/auth/permissionsConfig.js';
 import { calculateQuotePricing } from '../src/data/pricingRules.js';
-import { getAiQuotaStatus, checkUserWorkspaceCaps } from '../api/_lib/store.js';
+import { getAiQuotaStatus, checkUserWorkspaceCaps, claimAnonymousSessionToAccount } from '../api/_lib/store.js';
 import {
   createOrUpdateImplementationRequest,
   computeLiveDiffsAgainstBaseline,
@@ -145,4 +145,27 @@ test('Project-scoped FORMALIA bundle IDs avoid cross-project PK collisions & set
   assert.ok(settings.communityImpact && settings.community_impact);
   assert.ok(settings.pricingConfig && settings.pricing_config);
   assert.equal(settings.communityImpact.education.metric, settings.community_impact.education.metric);
+});
+
+test('Claiming anonymous FORMALIA session binds owner user AND project_id cleanly', async () => {
+  const claimed = await claimAnonymousSessionToAccount({
+    anonymousSessionId: 'FIA-ANON-CLAIM-01',
+    userId: 'u-pyme-906',
+    userEmail: 'pyme@test.pe',
+    userName: 'Carlos Test',
+    projectId: 'smat',
+    workspaceName: 'SMAT',
+    fallbackSession: {
+      session_id: 'FIA-ANON-CLAIM-01',
+      process_graph: SDD_EXAMPLE_LOGISTICS_GRAPH,
+      messages: [{ role: 'user', content: 'Hola quiero mapear despachos' }],
+      turns_count: 1
+    }
+  });
+  assert.equal(claimed.ok, true);
+  assert.equal(claimed.project_id, 'smat');
+  assert.equal(claimed.workspace_id, 'ws_proj_smat');
+  assert.equal(claimed.session.user_email, 'pyme@test.pe');
+  assert.equal(claimed.session.project_id, 'smat');
+  assert.equal(claimed.session.saved_to_account, true);
 });

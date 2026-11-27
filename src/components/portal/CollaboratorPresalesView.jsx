@@ -38,6 +38,7 @@ export default function CollaboratorPresalesView({
   const [loadingDossiers, setLoadingDossiers] = useState(true);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [selectedDossier, setSelectedDossier] = useState(null);
+  const [dossierOriginFilter, setDossierOriginFilter] = useState('all'); // 'all' | 'anonymous' | 'account'
   const [quoteNotesDraft, setQuoteNotesDraft] = useState('');
   const [expandedDiffReqId, setExpandedDiffReqId] = useState(null);
 
@@ -468,42 +469,86 @@ export default function CollaboratorPresalesView({
       {subTab === 'dossiers' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           <div className="lg:col-span-4 space-y-2 max-h-[540px] overflow-y-auto pr-1">
-            {loadingDossiers ? (
-              <p className="text-xs text-on-surface-variant">Cargando expedientes FORMALIA...</p>
-            ) : dossiers.length === 0 ? (
-              <div className="rounded-2xl border border-outline-variant bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
-                No hay sesiones FORMALIA archivadas todavía.
-              </div>
-            ) : (
-              dossiers.map((d) => (
+            <div className="flex flex-wrap gap-1 p-1 rounded-xl bg-surface-container border border-outline-variant mb-2">
+              {[
+                { id: 'all', label: `Todos (${dossiers.length})` },
+                { id: 'anonymous', label: `Visitantes anónimos (${dossiers.filter((d) => !d.user_email && !d.saved_to_account).length})` },
+                { id: 'account', label: `Con cuenta (${dossiers.filter((d) => Boolean(d.user_email || d.saved_to_account)).length})` }
+              ].map((opt) => (
                 <button
-                  key={d.session_id}
+                  key={opt.id}
                   type="button"
-                  onClick={() => setSelectedDossier(d)}
-                  className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                    selectedDossier?.session_id === d.session_id
-                      ? 'bg-primary/10 border-primary'
-                      : 'bg-surface-container-low border-outline-variant hover:border-primary/50'
+                  onClick={() => setDossierOriginFilter(opt.id)}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-space font-semibold transition-colors cursor-pointer ${
+                    dossierOriginFilter === opt.id
+                      ? 'bg-primary text-[#18181b]'
+                      : 'text-on-surface-variant hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-[10px] text-primary font-bold">{d.session_id}</span>
-                    <span className="text-[10px] font-mono text-on-surface-variant">{d.completeness_score || 0}%</span>
-                  </div>
-                  <div className="text-xs font-bold text-white mt-1 truncate">
-                    {d.process_graph?.business_context?.company_name || d.workspace_name || 'Empresa'} — {d.canvas_title || d.process_name || 'Proceso'}
-                  </div>
-                  <div className="text-[11px] text-on-surface-variant mt-0.5 truncate">
-                    {d.user_email || 'Visitante / Local'} · {(d.process_graph?.actors || []).length} actores · {(d.process_graph?.steps || []).length} pasos
-                  </div>
+                  {opt.label}
                 </button>
-              ))
+              ))}
+            </div>
+
+            {loadingDossiers ? (
+              <p className="text-xs text-on-surface-variant">Cargando expedientes FORMALIA...</p>
+            ) : dossiers.filter((d) => {
+              const isAnon = !d.user_email && !d.saved_to_account;
+              if (dossierOriginFilter === 'anonymous') return isAnon;
+              if (dossierOriginFilter === 'account') return !isAnon;
+              return true;
+            }).length === 0 ? (
+              <div className="rounded-2xl border border-outline-variant bg-surface-container-low p-6 text-center text-xs text-on-surface-variant">
+                No hay sesiones FORMALIA archivadas en este filtro.
+              </div>
+            ) : (
+              dossiers
+                .filter((d) => {
+                  const isAnon = !d.user_email && !d.saved_to_account;
+                  if (dossierOriginFilter === 'anonymous') return isAnon;
+                  if (dossierOriginFilter === 'account') return !isAnon;
+                  return true;
+                })
+                .map((d) => {
+                  const isAnon = !d.user_email && !d.saved_to_account;
+                  return (
+                    <button
+                      key={d.session_id}
+                      type="button"
+                      onClick={() => setSelectedDossier(d)}
+                      className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                        selectedDossier?.session_id === d.session_id
+                          ? 'bg-primary/10 border-primary'
+                          : 'bg-surface-container-low border-outline-variant hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-[10px] text-primary font-bold">{d.session_id}</span>
+                        <div className="flex items-center gap-1.5">
+                          {isAnon && (
+                            <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/35 text-[9px] font-mono font-bold">
+                              Sin sesión
+                            </span>
+                          )}
+                          <span className="text-[10px] font-mono text-on-surface-variant">{d.completeness_score || 0}%</span>
+                        </div>
+                      </div>
+                      <div className="text-xs font-bold text-white mt-1 truncate">
+                        {d.process_graph?.business_context?.company_name || d.workspace_name || 'Empresa'} — {d.canvas_title || d.process_name || 'Proceso'}
+                      </div>
+                      <div className="text-[11px] text-on-surface-variant mt-0.5 truncate">
+                        {d.user_email || 'Visitante anónimo (recopilado)'}
+                        {d.project_id ? ` · ${d.project_id}` : ''} · {(d.messages || []).length} msgs · {(d.process_graph?.steps || []).length} pasos
+                      </div>
+                    </button>
+                  );
+                })
             )}
           </div>
 
           <div className="lg:col-span-8 rounded-2xl border border-outline-variant bg-surface-container-low p-5 space-y-4">
             {!selectedDossier ? (
-              <p className="text-xs text-on-surface-variant">Selecciona un expediente para inspeccionar su JSON, .puml y Web Blueprint.</p>
+              <p className="text-xs text-on-surface-variant">Selecciona un expediente para inspeccionar su chat, JSON, .puml y Web Blueprint.</p>
             ) : (
               <>
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-outline-variant pb-3">
@@ -512,7 +557,8 @@ export default function CollaboratorPresalesView({
                       {selectedDossier.process_graph?.business_context?.company_name || selectedDossier.workspace_name || 'Expediente FORMALIA'}
                     </h3>
                     <p className="text-[11px] text-on-surface-variant">
-                      {selectedDossier.session_id} · Usuario: {selectedDossier.user_email || 'Visitante'}
+                      {selectedDossier.session_id} · Usuario: {selectedDossier.user_email || 'Visitante sin sesión (Recopilado)'}
+                      {selectedDossier.project_id ? ` · Proyecto: ${selectedDossier.project_id}` : ''}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -543,6 +589,24 @@ export default function CollaboratorPresalesView({
                     </button>
                   </div>
                 </div>
+
+                {(selectedDossier.messages || []).length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-mono text-primary font-bold">
+                      Chat Recopilado ({selectedDossier.messages.length} mensajes)
+                    </div>
+                    <div className="p-3 rounded-xl bg-surface-container border border-outline-variant space-y-2 max-h-48 overflow-y-auto">
+                      {selectedDossier.messages.map((m, idx) => (
+                        <div key={m.id || idx} className="text-xs">
+                          <span className={`font-mono font-bold mr-1.5 ${m.role === 'user' ? 'text-amber-300' : 'text-cyan-300'}`}>
+                            {m.role === 'user' ? 'Usuario:' : 'FORMALIA:'}
+                          </span>
+                          <span className="text-on-surface-variant">{m.content}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <div className="text-[11px] font-mono text-primary font-bold">PlantUML Generado</div>

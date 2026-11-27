@@ -70,6 +70,8 @@ async function syncPortalUserRow(userObj) {
 export default function FormalIASaveModal({
   session,
   currentUser = null,
+  portalProjects = [],
+  activeProjectId = null,
   onClose,
   onSaved,
   onGoToPortal
@@ -82,6 +84,9 @@ export default function FormalIASaveModal({
   const [mode, setMode] = useState('register'); // 'register' | 'login'
   const [name, setName] = useState('');
   const [organization, setOrganization] = useState(initialCompany);
+  const [selectedProjectId, setSelectedProjectId] = useState(
+    activeProjectId && activeProjectId !== 'all' ? String(activeProjectId) : ''
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
@@ -93,6 +98,7 @@ export default function FormalIASaveModal({
   const [resendOkMsg, setResendOkMsg] = useState('');
   const [success, setSuccess] = useState(false);
   const [savedUser, setSavedUser] = useState(null);
+  const [savedProjectName, setSavedProjectName] = useState('');
 
   useEffect(() => {
     if (currentUser) {
@@ -115,29 +121,61 @@ export default function FormalIASaveModal({
     session?.process_name ||
     'Mi proceso';
 
+  const resolveTargetProjectForEmail = async (targetEmail, preferredId = selectedProjectId) => {
+    const cleanEmail = String(targetEmail || '').trim().toLowerCase();
+    const list = Array.isArray(portalProjects) ? portalProjects : [];
+    if (preferredId) {
+      const matchPref = list.find((p) => p && p.id === preferredId);
+      if (matchPref) return matchPref;
+    }
+    if (cleanEmail) {
+      const ownedLocal = list.find((p) => String(p?.owner_email || '').trim().toLowerCase() === cleanEmail);
+      if (ownedLocal) return ownedLocal;
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data } = await supabase
+            .from('projects')
+            .select('id, name, short_name, owner_email')
+            .ilike('owner_email', cleanEmail)
+            .limit(10);
+          if (Array.isArray(data) && data.length > 0) {
+            return (preferredId && data.find((p) => p.id === preferredId)) || data[0];
+          }
+        } catch (_) {}
+      }
+    }
+    return list[0] || null;
+  };
+
   const handleSaveWithActiveSession = async () => {
     if (!activeAuthUser) return;
     setError('');
     setLoading(true);
     try {
+      const targetProj = await resolveTargetProjectForEmail(activeAuthUser.email);
       const saveResult = await claimFormaliaSession({
         anonymousSession: session,
         account: {
           userId: activeAuthUser.id,
           email: activeAuthUser.email,
           name: activeAuthUser.name
-        }
+        },
+        projectId: targetProj?.id || null,
+        workspaceId: targetProj?.id ? `ws_proj_${targetProj.id}` : undefined,
+        workspaceName: targetProj?.name || organization.trim() || undefined
       });
       if (!saveResult.ok) {
         throw new Error(saveResult.error || 'No se pudo guardar la conversación.');
       }
       setSavedUser(activeAuthUser);
+      setSavedProjectName(targetProj?.name || saveResult.workspace_name || '');
       setNeedsEmailConfirm(false);
       setSuccess(true);
       onSaved?.({
         user: activeAuthUser,
         session: saveResult.session,
         quota: saveResult.quota || null,
+        project: targetProj || null,
         needsEmailConfirm: false
       });
     } catch (err) {
@@ -270,6 +308,7 @@ export default function FormalIASaveModal({
         requiresConfirm = false;
       }
 
+      const targetProj = await resolveTargetProjectForEmail(mappedUser.email);
       const saveResult = await claimFormaliaSession({
         anonymousSession: session,
         account: {
@@ -277,7 +316,9 @@ export default function FormalIASaveModal({
           email: mappedUser.email,
           name: mappedUser.name
         },
-        workspaceName: organization.trim() || undefined
+        projectId: targetProj?.id || null,
+        workspaceId: targetProj?.id ? `ws_proj_${targetProj.id}` : undefined,
+        workspaceName: targetProj?.name || organization.trim() || undefined
       });
 
       if (!saveResult.ok) {
@@ -285,12 +326,14 @@ export default function FormalIASaveModal({
       }
 
       setSavedUser(mappedUser);
+      setSavedProjectName(targetProj?.name || saveResult.workspace_name || '');
       setNeedsEmailConfirm(requiresConfirm);
       setSuccess(true);
       onSaved?.({
         user: mappedUser,
         session: saveResult.session,
         quota: saveResult.quota || null,
+        project: targetProj || null,
         needsEmailConfirm: requiresConfirm
       });
     } catch (err) {
@@ -369,7 +412,13 @@ export default function FormalIASaveModal({
               </p>
               <p className="text-xs text-[var(--text-secondary)] mt-1 leading-relaxed">
                 Tu conversación FORMALIA ({userMessagesCount} mensajes, {session?.process_graph?.actors?.length || 0} roles) ha sido guardada en{' '}
-                <strong className="text-[var(--text-primary)]">{savedUser?.email}</strong>.
+                <strong className="text-[var(--text-primary)]">{savedUser?.email}</strong>
+                {savedProjectName ? (
+                  <>
+                    {' '}y asignada a <strong className="text-[var(--text-primary)]">{savedProjectName}</strong>
+                  </>
+                ) : null}
+                .
               </p>
             </div>
 

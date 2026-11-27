@@ -18,6 +18,7 @@ import {
 import {
   createInitialProcessGraph,
   extractWorkspaceMeta,
+  generateFormaliaSessionId,
   SDD_EXAMPLE_LOGISTICS_GRAPH
 } from '../../../lib/formalia/schema';
 import { getAiDailyLimitForRole } from '../../../lib/formalia/blueprintSchema';
@@ -32,6 +33,7 @@ import {
   buildVersionSnapshot,
   registerGeneratedArtifact,
   syncLinkedFormaliaSession,
+  persistFormaliaSessionDraft,
   saveFormaliaSessionToAccount,
   fetchFormaliaArchive,
   loadLocalWorkspaces,
@@ -148,7 +150,7 @@ export default function FormalIAWorkspace({
       clearLocalFormaliaSession();
     }
 
-    if (saved && !isForeignSavedSession) {
+    if (saved && saved.session_id && saved.session_id !== 'FIA-2026-INIT' && !isForeignSavedSession) {
       const normalizedSaved = normalizeSessionWorkspace(saved);
       const normalizedMessages =
         (normalizedSaved.turns_count || 0) === 0 && (normalizedSaved.messages || []).length <= 1
@@ -188,6 +190,26 @@ export default function FormalIAWorkspace({
       });
     }
   }, [initialSessionOverride]);
+
+  // Escucha reclamo automático de sesión anónima tras iniciar sesión en el Portal
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const onClaimed = (ev) => {
+      const claimedSess = ev?.detail;
+      if (!claimedSess?.session_id) return;
+      const normalized = normalizeSessionWorkspace(claimedSess);
+      setSession(normalized);
+      setSessionSaved(true);
+      if (normalized.workspace_id) setActiveWorkspaceId(normalized.workspace_id);
+      setAccountSessions((prev) => [
+        normalized,
+        ...prev.filter((s) => s.session_id !== normalized.session_id)
+      ]);
+      onSessionListChanged?.();
+    };
+    window.addEventListener('pathrimonio-formalia-claimed', onClaimed);
+    return () => window.removeEventListener('pathrimonio-formalia-claimed', onClaimed);
+  }, []);
 
   // Al iniciar sesión (en Portal o en /formalia), carga todos sus espacios y lienzos en la nube/local
   useEffect(() => {
@@ -538,6 +560,14 @@ export default function FormalIAWorkspace({
 
   const handleSendMessage = async (text) => {
     setErrorMsg('');
+    const effectiveSessionId =
+      session.session_id && session.session_id !== 'FIA-2026-INIT'
+        ? session.session_id
+        : generateFormaliaSessionId();
+    const baseGraph = {
+      ...(session.process_graph || createInitialProcessGraph(effectiveSessionId)),
+      session_id: effectiveSessionId
+    };
     const userMsg = {
       id: `msg_${Date.now()}_u`,
       role: 'user',
@@ -547,12 +577,14 @@ export default function FormalIAWorkspace({
 
     setSession((prev) => ({
       ...prev,
+      session_id: effectiveSessionId,
+      process_graph: baseGraph,
       messages: [...prev.messages, userMsg]
     }));
 
     setIsExtracting(true);
     try {
-      const currentMeta = extractWorkspaceMeta(session);
+      const currentMeta = extractWorkspaceMeta({ ...session, session_id: effectiveSessionId, process_graph: baseGraph });
       const effectiveLink = (sessionSaved || session.saved_to_account || isAuthenticated)
         ? {
             user_id: session.user_id || currentUser?.id || null,
@@ -568,9 +600,9 @@ export default function FormalIAWorkspace({
         : null;
 
       const res = await sendFormaliaMessage({
-        sessionId: session.session_id,
+        sessionId: effectiveSessionId,
         message: text,
-        currentGraph: session.process_graph,
+        currentGraph: baseGraph,
         turnsCount: session.turns_count,
         conversationHistory: session.messages || [],
         existingVersions: session.versions || [],
@@ -591,12 +623,14 @@ export default function FormalIAWorkspace({
 
       const preservedGraph = {
         ...res.process_graph,
+        session_id: res.session_id || effectiveSessionId,
         workspace_meta: res.process_graph?.workspace_meta || currentMeta
       };
 
       setSession((prev) => ({
         ...prev,
         ...currentMeta,
+        session_id: res.session_id || effectiveSessionId,
         process_graph: preservedGraph,
         turns_count: res.turns_count,
         max_turns: res.max_turns || prev.max_turns,
@@ -643,9 +677,21 @@ export default function FormalIAWorkspace({
 
   const handleManualPatch = (patches, summaryLabel) => {
     setErrorMsg('');
-    const updated = applyManualGraphPatches(session, patches, summaryLabel);
+    const effectiveId =
+      session.session_id && session.session_id !== 'FIA-2026-INIT'
+        ? session.session_id
+        : generateFormaliaSessionId();
+    const baseSession = effectiveId === session.session_id
+      ? session
+      : {
+          ...session,
+          session_id: effectiveId,
+          process_graph: { ...(session.process_graph || createInitialProcessGraph(effectiveId)), session_id: effectiveId }
+        };
+    const updated = applyManualGraphPatches(baseSession, patches, summaryLabel);
     setSession(updated);
     setDiagramUpdatedBadge(true);
+    persistFormaliaSessionDraft(updated).catch(() => {});
   };
 
   const handleResetSession = async () => {
@@ -678,7 +724,18 @@ export default function FormalIAWorkspace({
   };
 
   const handleLoadExample = () => {
-    const exampleGraph = structuredClone(SDD_EXAMPLE_LOGISTICS_GRAPH);
+    const targetSessionId =
+      session.session_id && session.session_id !== 'FIA-2026-INIT'
+        ? session.session_id
+        : generateFormaliaSessionId();
+    const existingMeta = extractWorkspaceMeta({ ...session, session_id: targetSessionId });
+    const exampleGraph = {
+      ...structuredClone(SDD_EXAMPLE_LOGISTICS_GRAPH),
+      session_id: targetSessionId,
+      ...(isAuthenticated && (existingMeta.workspace_id || existingMeta.project_id)
+        ? { workspace_meta: existingMeta }
+        : {})
+    };
     const exampleMessages = [
       createWelcomeMessage(),
       {
@@ -714,12 +771,12 @@ export default function FormalIAWorkspace({
       exampleGraph,
       [],
       'Ejemplo SDD cargado: Transportes del Norte SAC (5 roles, 5 pasos)',
-      1
+      0
     );
 
-    setSessionSaved(false);
-    setSession({
-      session_id: exampleGraph.session_id,
+    const nextExampleSession = normalizeSessionWorkspace({
+      ...session,
+      session_id: targetSessionId,
       process_graph: exampleGraph,
       messages: exampleMessages,
       versions: [snapshot],
@@ -727,7 +784,9 @@ export default function FormalIAWorkspace({
       turns_count: 0,
       max_turns: getAiDailyLimitForRole(currentUser?.role, isAuthenticated)
     });
-    registerGeneratedArtifact(pumlArtifact).catch(() => {});
+    setSessionSaved(Boolean(isAuthenticated && nextExampleSession.saved_to_account));
+    setSession(nextExampleSession);
+    persistFormaliaSessionDraft(nextExampleSession).catch(() => {});
     setDiagramUpdatedBadge(true);
     setErrorMsg('');
   };
@@ -1248,11 +1307,16 @@ export default function FormalIAWorkspace({
       <FormalIASaveModal
         session={session}
         currentUser={currentUser}
+        portalProjects={portalProjects}
+        activeProjectId={activeProjectId}
         onClose={() => setShowSaveModal(false)}
         onSaved={({ session: savedSess, quota: updatedQuota }) => {
           if (savedSess) {
             const normalizedSaved = normalizeSessionWorkspace(savedSess);
             setSession(normalizedSaved);
+            if (normalizedSaved.workspace_id) {
+              setActiveWorkspaceId(normalizedSaved.workspace_id);
+            }
             setAccountSessions((prev) => [
               normalizedSaved,
               ...prev.filter((s) => s.session_id !== normalizedSaved.session_id)

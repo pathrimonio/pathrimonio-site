@@ -46,6 +46,7 @@ export default async function handler(req, res) {
       userName: body.user_name || null,
       workspaceId: body.workspace_id || null,
       workspaceName: body.workspace_name || null,
+      projectId: body.project_id || null,
       fallbackSession: body.fallback_session || null
     });
     if (!result.ok) {

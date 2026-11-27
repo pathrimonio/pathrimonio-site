@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { INITIAL_STORIES } from './data/initialStories';
 import { INITIAL_INTERFACES, INTERFACE_MODULE_OPTIONS } from './data/initialInterfaces';
 import { INITIAL_PROJECTS } from './data/initialProjects';
@@ -96,7 +96,12 @@ import ImplementationTrackerView from './components/portal/ImplementationTracker
 import PartnerDashboardView from './components/portal/PartnerDashboardView';
 import CollaboratorPresalesView from './components/portal/CollaboratorPresalesView';
 import { compileProcessToPortalBundle } from './lib/formalia/compilers';
-import { clearLocalFormaliaSession } from './services/formaliaService';
+import {
+  clearLocalFormaliaSession,
+  findClaimableAnonymousSession,
+  claimFormaliaSession,
+  saveLocalFormaliaSession
+} from './services/formaliaService';
 import { DEFAULT_PRICING_CONFIG } from './data/pricingRules';
 import {
   DEFAULT_COMMUNITY_IMPACT,
@@ -210,6 +215,7 @@ function AppContent({ initialPath = '/' }) {
   const [workspaceReady, setWorkspaceReady] = useState(!isSupabaseConfigured);
   const [showLogin, setShowLogin] = useState(false);
   const [loginMode, setLoginMode] = useState('login');
+  const claimedAnonSessionsRef = useRef(new Set());
 
   // ── Portal nav
   const [activePortalTab, setActivePortalTab] = useState('actors');
@@ -1057,6 +1063,114 @@ function AppContent({ initialPath = '/' }) {
   };
 
   // ── Auth handlers
+  const resolveDefaultProjectForUser = (targetUser, candidateProjects = projects, preferredProject = null) => {
+    if (preferredProject && preferredProject.id) return preferredProject;
+    const cleanEmail = String(targetUser?.email || '').trim().toLowerCase();
+    const list = Array.isArray(candidateProjects) ? candidateProjects : [];
+    const staff = isInternalStaffRole(targetUser);
+    const ownedOrMember = list.filter((p) => {
+      if (!p) return false;
+      if (cleanEmail && String(p.owner_email || '').trim().toLowerCase() === cleanEmail) return true;
+      if (targetUser?.id && projectMembers.some((m) => m.projectId === p.id && m.userId === targetUser.id)) return true;
+      return staff && !p.owner_email;
+    });
+    const scopedPool = ownedOrMember.length > 0 ? ownedOrMember : (staff ? list : []);
+    if (activeProjectId && activeProjectId !== 'all') {
+      const activeMatch = scopedPool.find((p) => p.id === activeProjectId);
+      if (activeMatch) return activeMatch;
+    }
+    return scopedPool[0] || null;
+  };
+
+  const autoClaimPendingFormaliaForUser = async (targetUser, preferredProject = null, candidateProjects = projects) => {
+    const cleanEmail = String(targetUser?.email || '').trim().toLowerCase();
+    if (!cleanEmail) return null;
+    const pendingAnon = findClaimableAnonymousSession(cleanEmail);
+    if (!pendingAnon || claimedAnonSessionsRef.current.has(pendingAnon.session_id)) {
+      return null;
+    }
+    claimedAnonSessionsRef.current.add(pendingAnon.session_id);
+
+    let targetProj = resolveDefaultProjectForUser(targetUser, candidateProjects, preferredProject);
+    if (!targetProj && isSupabaseConfigured && supabase) {
+      try {
+        const { data: ownedRows } = await supabase
+          .from('projects')
+          .select('id, name, short_name, owner_email')
+          .ilike('owner_email', cleanEmail)
+          .limit(5);
+        if (Array.isArray(ownedRows) && ownedRows.length > 0) {
+          targetProj = ownedRows[0];
+        }
+      } catch (_) {}
+    }
+
+    const nextWsId = targetProj?.id ? `ws_proj_${targetProj.id}` : undefined;
+    const nextWsName = targetProj?.name || targetUser.organization || undefined;
+
+    // Pre-estampar síncronamente en localStorage antes del mount de FormalIAWorkspace para evitar condiciones de carrera
+    if (nextWsId) {
+      saveLocalFormaliaSession({
+        ...pendingAnon,
+        user_id: targetUser.id || null,
+        user_email: cleanEmail,
+        user_name: targetUser.name || cleanEmail,
+        project_id: targetProj.id,
+        workspace_id: nextWsId,
+        workspace_name: nextWsName,
+        saved_to_account: true,
+        process_graph: {
+          ...(pendingAnon.process_graph || {}),
+          workspace_meta: {
+            ...(pendingAnon.process_graph?.workspace_meta || {}),
+            workspace_id: nextWsId,
+            workspace_name: nextWsName,
+            project_id: targetProj.id,
+            canvas_title:
+              pendingAnon.canvas_title ||
+              pendingAnon.process_graph?.business_context?.process_name ||
+              'Lienzo principal'
+          }
+        }
+      });
+      setActiveProjectId(targetProj.id);
+    }
+
+    const res = await claimFormaliaSession({
+      anonymousSession: pendingAnon,
+      account: {
+        userId: targetUser.id || null,
+        email: cleanEmail,
+        name: targetUser.name || cleanEmail
+      },
+      projectId: targetProj?.id || null,
+      workspaceId: nextWsId,
+      workspaceName: nextWsName
+    }).catch(() => null);
+
+    if (res?.ok) {
+      if (targetProj?.id) {
+        setActiveProjectId(targetProj.id);
+      }
+      if (typeof window !== 'undefined' && res.session) {
+        window.dispatchEvent(new CustomEvent('pathrimonio-formalia-claimed', { detail: res.session }));
+      }
+      notify(
+        `Lienzo FORMALIA (${pendingAnon.session_id}) asignado a tu cuenta${
+          targetProj?.name ? ` y al proyecto "${targetProj.name}"` : ''
+        }.`
+      );
+      return res;
+    }
+    claimedAnonSessionsRef.current.delete(pendingAnon.session_id);
+    return null;
+  };
+
+  useEffect(() => {
+    if (!authReady || !workspaceReady || !currentUser?.email) return;
+    autoClaimPendingFormaliaForUser(currentUser);
+  }, [authReady, workspaceReady, currentUser?.email]);
+
   const handleLoginSuccess = (user) => {
     const cleanEmail = String(user?.email || '').trim().toLowerCase();
     const existingDbUser = (portalUsers || []).find(
@@ -1077,8 +1191,12 @@ function AppContent({ initialPath = '/' }) {
     setShowLogin(false);
     const hashQuery = window.location.hash.split('?')[1] || '';
     const requestedTab = new URLSearchParams(hashQuery).get('tab');
-    const defaultTab = reconciledUser?.source === 'formalia' ? 'formalia' : 'actors';
+    const pendingAnon = findClaimableAnonymousSession(cleanEmail);
+    const defaultTab = (reconciledUser?.source === 'formalia' || pendingAnon) ? 'formalia' : 'actors';
     setActivePortalTab(requestedTab || defaultTab);
+
+    let nextProjectsSnapshot = projects;
+    let resolvedProject = null;
 
     if (reconciledUser.initialProjectName && (!reconciledUser.initialProject || !projects.some(p => p.id === reconciledUser.initialProject))) {
       const slug = (reconciledUser.initialProject || reconciledUser.initialProjectName)
@@ -1102,11 +1220,23 @@ function AppContent({ initialPath = '/' }) {
         owner_user_id: reconciledUser.id || null,
         source_type: 'client_web'
       };
+      nextProjectsSnapshot = [...projects, newProj];
+      resolvedProject = newProj;
       setProjects(prev => [...prev, newProj]);
       setActiveProjectId(newProj.id);
       persist(saveProject(newProj), 'proyecto');
     } else if (reconciledUser.initialProject && projects.some(p => p.id === reconciledUser.initialProject)) {
+      resolvedProject = projects.find(p => p.id === reconciledUser.initialProject) || null;
       setActiveProjectId(reconciledUser.initialProject);
+    } else {
+      resolvedProject = resolveDefaultProjectForUser(reconciledUser, nextProjectsSnapshot, null);
+      if (resolvedProject?.id) {
+        setActiveProjectId(resolvedProject.id);
+      }
+    }
+
+    if (pendingAnon && (workspaceReady || resolvedProject)) {
+      autoClaimPendingFormaliaForUser(reconciledUser, resolvedProject, nextProjectsSnapshot);
     }
 
     const portalRecord = {
@@ -2164,6 +2294,7 @@ function AppContent({ initialPath = '/' }) {
               isStandalonePage
               currentUser={currentUser}
               portalProjects={visibleProjects}
+              activeProjectId={activeProjectId}
               onBackHome={() => navigateToPath('/')}
               onOpenInPortal={() => navigateToPortal('login', 'formalia')}
               onSubmitImplementation={handleSubmitWebImplementation}

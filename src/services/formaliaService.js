@@ -521,8 +521,40 @@ export async function sendFormaliaMessage({
     nextTurn
   );
 
-  // Persistir archivo de versión también en servidor/Supabase si está disponible
-  registerGeneratedArtifact(pumlArtifact).catch(() => {});
+  // Persistir archivo de versión y registro completo de chat + grafo también si está anónimo
+  const nextMessages = [
+    ...(Array.isArray(conversationHistory) ? conversationHistory : []),
+    { id: `msg_${Date.now()}_u`, role: 'user', content: message, timestamp: new Date().toISOString() },
+    {
+      id: `msg_${Date.now()}_a`,
+      role: 'assistant',
+      content: extraction.assistant_message,
+      quick_replies: extraction.quick_replies,
+      graph_patch: extraction.graph_patch,
+      phase: updatedGraph.phase,
+      timestamp: new Date().toISOString()
+    }
+  ];
+  const nextVersions = [...existingVersions, snapshot];
+  const nextFiles = [...existingFiles.filter((f) => f.id !== pumlArtifact.id), pumlArtifact];
+
+  persistFormaliaSessionDraft({
+    session_id: sessionId,
+    process_graph: updatedGraph,
+    messages: nextMessages,
+    turns_count: nextTurn,
+    completeness_score: updatedGraph.completeness_score,
+    versions: nextVersions,
+    generated_files: nextFiles,
+    ...(accountLink?.user_id ? { user_id: accountLink.user_id } : {}),
+    ...(accountLink?.user_email ? { user_email: accountLink.user_email } : {}),
+    ...(accountLink?.user_name ? { user_name: accountLink.user_name } : {}),
+    ...(accountLink?.workspace_id ? { workspace_id: accountLink.workspace_id } : {}),
+    ...(accountLink?.workspace_name ? { workspace_name: accountLink.workspace_name } : {}),
+    ...(accountLink?.project_id !== undefined ? { project_id: accountLink.project_id } : {}),
+    ...(accountLink?.canvas_title ? { canvas_title: accountLink.canvas_title } : {}),
+    saved_to_account: Boolean(accountLink?.saved_to_account || accountLink?.user_email || accountLink?.user_id)
+  }).catch(() => {});
 
   return {
     session_id: sessionId,
@@ -535,8 +567,8 @@ export async function sendFormaliaMessage({
     max_turns: effectiveMax,
     process_graph: updatedGraph,
     version: snapshot,
-    versions: [...existingVersions, snapshot],
-    generated_files: [...existingFiles.filter((f) => f.id !== pumlArtifact.id), pumlArtifact],
+    versions: nextVersions,
+    generated_files: nextFiles,
     engine_source: extraction.engine_source
   };
 }
@@ -572,13 +604,48 @@ export async function fetchFormaliaQuota({ sessionId = null, userId = null, user
   };
 }
 
-export async function claimFormaliaSession({ anonymousSession, account = {}, workspaceName = null }) {
+export function findClaimableAnonymousSession(targetEmail = null) {
+  const cleanEmail = targetEmail ? String(targetEmail).trim().toLowerCase() : null;
+  const active = loadLocalFormaliaSession();
+  const candidates = [active, ...loadLocalFormaliaArchive()].filter(
+    (s) => s && s.session_id && s.session_id !== 'FIA-2026-INIT'
+  );
+
+  for (const sess of candidates) {
+    const owner = String(sess.user_email || '').trim().toLowerCase();
+    if (owner && cleanEmail && owner !== cleanEmail) continue;
+    const isUnclaimed = !sess.saved_to_account || !owner;
+    const hasWork =
+      (sess.turns_count || 0) > 0 ||
+      (sess.messages || []).some((m) => m.role === 'user') ||
+      (sess.process_graph?.actors || []).length > 0 ||
+      (sess.process_graph?.steps || []).length > 0 ||
+      (sess.versions || []).length > 0 ||
+      (sess.generated_files || []).length > 0;
+    if (isUnclaimed && hasWork) {
+      return sess;
+    }
+  }
+  return null;
+}
+
+export async function claimFormaliaSession({
+  anonymousSession,
+  account = {},
+  workspaceId = null,
+  workspaceName = null,
+  projectId = null
+}) {
   if (!anonymousSession || !anonymousSession.session_id) {
     return { ok: false, error: 'Sesión anónima inválida' };
   }
   const userId = account.userId && UUID_REGEX.test(String(account.userId)) ? String(account.userId) : null;
   const userEmail = account.email ? String(account.email).trim().toLowerCase() : null;
   const userName = account.name ? String(account.name).trim() : null;
+  const cleanProjectId = projectId && String(projectId).trim() && String(projectId).trim() !== 'all'
+    ? String(projectId).trim()
+    : null;
+  const effectiveWsId = workspaceId || (cleanProjectId ? `ws_proj_${cleanProjectId}` : undefined);
 
   const apiRes = await tryApiJson('/api/v1/formalia/sessions/claim', {
     method: 'POST',
@@ -588,7 +655,9 @@ export async function claimFormaliaSession({ anonymousSession, account = {}, wor
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      workspace_name: workspaceName || undefined,
+      ...(effectiveWsId ? { workspace_id: effectiveWsId } : {}),
+      ...(workspaceName ? { workspace_name: workspaceName } : {}),
+      ...(cleanProjectId ? { project_id: cleanProjectId } : {}),
       fallback_session: anonymousSession
     })
   });
@@ -600,7 +669,8 @@ export async function claimFormaliaSession({ anonymousSession, account = {}, wor
       saveLocalWorkspace({
         workspace_id: normalized.workspace_id,
         workspace_name: normalized.workspace_name,
-        category: 'negocio'
+        project_id: normalized.project_id || cleanProjectId || null,
+        category: cleanProjectId ? 'proyecto_portal' : 'negocio'
       });
     }
     return {
@@ -608,14 +678,27 @@ export async function claimFormaliaSession({ anonymousSession, account = {}, wor
       session: normalized,
       workspace_id: normalized.workspace_id,
       workspace_name: normalized.workspace_name,
+      project_id: normalized.project_id || cleanProjectId || null,
       quota: apiRes.quota || null
     };
   }
 
+  const nextMeta = normalizeWorkspaceMeta({
+    ...(anonymousSession.process_graph?.workspace_meta || {}),
+    workspace_id: effectiveWsId || anonymousSession.workspace_id,
+    workspace_name: workspaceName || anonymousSession.workspace_name,
+    project_id: cleanProjectId !== null ? cleanProjectId : anonymousSession.project_id,
+    canvas_title: anonymousSession.canvas_title || anonymousSession.process_graph?.business_context?.process_name || 'Lienzo principal'
+  });
+
   return saveFormaliaSessionToAccount(
     {
       ...anonymousSession,
-      ...(workspaceName ? { workspace_name: workspaceName } : {})
+      ...nextMeta,
+      process_graph: {
+        ...(anonymousSession.process_graph || {}),
+        workspace_meta: nextMeta
+      }
     },
     account
   );
@@ -878,14 +961,15 @@ let supabaseWorkspaceColsUnsupported = false;
  * Vincula y persiste una sesión FORMALIA completa (chat + grafo + versiones + archivos)
  * a una cuenta de usuario para que nunca expire y sea retomable en el Portal.
  */
-export async function saveFormaliaSessionToAccount(session, account = {}) {
-  if (!session || !session.session_id) {
+async function persistSessionToCloud(session, { account = {}, savedToAccount = true } = {}) {
+  if (!session || !session.session_id || session.session_id === 'FIA-2026-INIT') {
     return { ok: false, error: 'Sesión FORMALIA inválida' };
   }
 
-  const userId = account.userId && UUID_REGEX.test(String(account.userId)) ? String(account.userId) : null;
+  const userId = account.userId && UUID_REGEX.test(String(account.userId)) ? String(account.userId) : (session.user_id || null);
   const userEmail = account.email ? String(account.email).trim().toLowerCase() : (session.user_email || null);
   const userName = account.name ? String(account.name).trim() : (session.user_name || null);
+  const isAccount = Boolean(savedToAccount && (userEmail || userId));
   const wsMeta = extractWorkspaceMeta(session);
   const processName =
     session.canvas_title ||
@@ -903,16 +987,18 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
   const stampedSession = {
     ...session,
     process_graph: syncedGraph,
-    workspace_id: wsMeta.workspace_id,
-    workspace_name: wsMeta.workspace_name,
-    project_id: wsMeta.project_id,
+    workspace_id: isAccount ? wsMeta.workspace_id : (session.workspace_id || null),
+    workspace_name: isAccount ? wsMeta.workspace_name : (session.workspace_name || null),
+    project_id: isAccount ? wsMeta.project_id : (session.project_id || null),
     canvas_title: wsMeta.canvas_title,
-    user_id: userId || session.user_id || null,
-    user_email: userEmail,
-    user_name: userName,
+    user_id: userId || null,
+    user_email: userEmail || null,
+    user_name: userName || null,
     process_name: processName,
-    saved_to_account: true,
-    expires_at: '2099-12-31T23:59:59Z',
+    saved_to_account: isAccount,
+    expires_at: isAccount
+      ? '2099-12-31T23:59:59Z'
+      : (session.expires_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()),
     updated_at: new Date().toISOString()
   };
 
@@ -924,11 +1010,14 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       session_id: stampedSession.session_id,
-      ...wsMeta,
-      user_id: stampedSession.user_id,
-      user_email: stampedSession.user_email,
-      user_name: stampedSession.user_name,
-      saved_to_account: true,
+      ...(stampedSession.workspace_id ? { workspace_id: stampedSession.workspace_id } : {}),
+      ...(stampedSession.workspace_name ? { workspace_name: stampedSession.workspace_name } : {}),
+      project_id: stampedSession.project_id,
+      canvas_title: stampedSession.canvas_title,
+      ...(stampedSession.user_id ? { user_id: stampedSession.user_id } : {}),
+      ...(stampedSession.user_email ? { user_email: stampedSession.user_email } : {}),
+      ...(stampedSession.user_name ? { user_name: stampedSession.user_name } : {}),
+      saved_to_account: isAccount,
       session: stampedSession
     })
   });
@@ -958,15 +1047,15 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
     user_email: stampedSession.user_email,
     user_name: stampedSession.user_name,
     process_name: processName,
-    saved_to_account: true
+    saved_to_account: isAccount
   };
 
   const fullWorkspacePayload = {
     ...extendedPayload,
-    workspace_id: wsMeta.workspace_id,
-    workspace_name: wsMeta.workspace_name,
-    project_id: wsMeta.project_id,
-    canvas_title: wsMeta.canvas_title
+    workspace_id: stampedSession.workspace_id,
+    workspace_name: stampedSession.workspace_name,
+    project_id: stampedSession.project_id,
+    canvas_title: stampedSession.canvas_title
   };
 
   let error = null;
@@ -1033,6 +1122,19 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
   }
 
   return { ok: true, session: stampedSession, cloudSynced: true };
+}
+
+/**
+ * Persiste borradores anónimos (chat fallback, ejemplo o ediciones manuales) en BD
+ * para recopilar toda actividad de visitantes incluso antes de iniciar sesión.
+ */
+export async function persistFormaliaSessionDraft(session) {
+  const isSaved = Boolean(session?.saved_to_account && (session?.user_email || session?.user_id));
+  return persistSessionToCloud(session, { savedToAccount: isSaved });
+}
+
+export async function saveFormaliaSessionToAccount(session, account = {}) {
+  return persistSessionToCloud(session, { account, savedToAccount: true });
 }
 
 export async function renameOrMoveFormaliaCanvas({

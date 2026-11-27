@@ -1317,6 +1317,7 @@ export async function claimAnonymousSessionToAccount({
   userName = null,
   workspaceId = null,
   workspaceName = null,
+  projectId = null,
   fallbackSession = null
 } = {}) {
   if (!anonymousSessionId && !fallbackSession?.session_id) {
@@ -1343,8 +1344,14 @@ export async function claimAnonymousSessionToAccount({
     .replace(/^_+|_+$/g, '')
     .slice(0, 24);
 
+  const assignedProjectId =
+    projectId !== undefined && projectId !== null && String(projectId).trim() && String(projectId).trim() !== 'all'
+      ? String(projectId).trim()
+      : (existing.project_id || null);
+
   const assignedWsId =
     workspaceId ||
+    (assignedProjectId ? `ws_proj_${assignedProjectId}` : null) ||
     (existing.workspace_id && existing.workspace_id !== 'ws_general'
       ? existing.workspace_id
       : `ws_${wsSlug || 'negocio'}`);
@@ -1352,7 +1359,7 @@ export async function claimAnonymousSessionToAccount({
     workspaceName ||
     existing.workspace_name ||
     existing.process_graph?.business_context?.company_name ||
-    'Mi Negocio / General';
+    (assignedProjectId ? `Proyecto ${assignedProjectId}` : 'Mi Negocio / General');
   const assignedCanvasTitle =
     existing.canvas_title ||
     existing.process_graph?.business_context?.process_name ||
@@ -1364,7 +1371,7 @@ export async function claimAnonymousSessionToAccount({
     workspace_meta: {
       workspace_id: assignedWsId,
       workspace_name: assignedWsName,
-      project_id: null,
+      project_id: assignedProjectId,
       canvas_title: assignedCanvasTitle
     }
   };
@@ -1377,7 +1384,7 @@ export async function claimAnonymousSessionToAccount({
     user_name: userName || existing.user_name || null,
     workspace_id: assignedWsId,
     workspace_name: assignedWsName,
-    project_id: null,
+    project_id: assignedProjectId,
     canvas_title: assignedCanvasTitle,
     process_name: assignedCanvasTitle,
     saved_to_account: true,
@@ -1389,6 +1396,7 @@ export async function claimAnonymousSessionToAccount({
     ok: true,
     workspace_id: assignedWsId,
     workspace_name: assignedWsName,
+    project_id: assignedProjectId,
     session: claimed
   };
 }

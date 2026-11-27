@@ -37,6 +37,7 @@ export default function FormalIAPortalView({
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [workspaceFilter, setWorkspaceFilter] = useState('all');
+  const [originFilter, setOriginFilter] = useState('all'); // 'all' | 'anonymous' | 'account'
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [detailTab, setDetailTab] = useState('handoff'); // 'handoff' | 'chat' | 'files'
   const [lastPromotion, setLastPromotion] = useState(null);
@@ -61,16 +62,23 @@ export default function FormalIAPortalView({
       const localOwner = String(localSess?.user_email || '').trim().toLowerCase();
       const activeEmail = String(currentUser?.email || '').trim().toLowerCase();
       const isForeignLocal = Boolean(localSess && localOwner && activeEmail && localOwner !== activeEmail);
-      const localHasTurns = !isForeignLocal && (
-        (localSess?.turns_count || 0) > 0 ||
-        (localSess?.messages || []).some((m) => m.role === 'user')
+      const localHasWork = !isForeignLocal && Boolean(
+        localSess &&
+          localSess.session_id &&
+          localSess.session_id !== 'FIA-2026-INIT' &&
+          ((localSess.turns_count || 0) > 0 ||
+            (localSess.messages || []).some((m) => m.role === 'user') ||
+            (localSess.process_graph?.actors || []).length > 0 ||
+            (localSess.process_graph?.steps || []).length > 0 ||
+            (localSess.versions || []).length > 0)
       );
       const hasExplicitWorkspaceCanvas = !isForeignLocal && Boolean(
         localSess &&
           localSess.session_id &&
+          localSess.session_id !== 'FIA-2026-INIT' &&
           (localSess.saved_to_account || localSess.workspace_id || localSess.canvas_title)
       );
-      if (!studioOverrideSession && (!localHasTurns || isForeignLocal) && !hasExplicitWorkspaceCanvas && list.length > 0) {
+      if (!studioOverrideSession && !localHasWork && !hasExplicitWorkspaceCanvas && list.length > 0) {
         const ownedSession =
           list.find((s) => s.is_mine && ((s.turns_count || 0) > 0 || (s.messages || []).length > 1)) ||
           list.find((s) => s.saved_to_account && ((s.turns_count || 0) > 0 || (s.messages || []).length > 1));
@@ -97,15 +105,29 @@ export default function FormalIAPortalView({
     [sessions, projects]
   );
 
+  const anonymousSessionsCount = useMemo(
+    () => sessions.filter((s) => !s.user_email && !s.saved_to_account).length,
+    [sessions]
+  );
+
+  const accountSessionsCount = useMemo(
+    () => sessions.filter((s) => Boolean(s.user_email || s.saved_to_account)).length,
+    [sessions]
+  );
+
   const filteredSessions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return sessions.filter((s) => {
+      const isAnon = !s.user_email && !s.saved_to_account;
+      if (originFilter === 'anonymous' && !isAnon) return false;
+      if (originFilter === 'account' && isAnon) return false;
       if (workspaceFilter !== 'all' && s.workspace_id !== workspaceFilter) return false;
       if (!q) return true;
       const ctx = s.process_graph?.business_context || {};
       return (
         (s.session_id || '').toLowerCase().includes(q) ||
         (s.workspace_name || '').toLowerCase().includes(q) ||
+        (s.project_id || '').toLowerCase().includes(q) ||
         (s.canvas_title || '').toLowerCase().includes(q) ||
         (ctx.company_name || '').toLowerCase().includes(q) ||
         (ctx.process_name || '').toLowerCase().includes(q) ||
@@ -114,7 +136,7 @@ export default function FormalIAPortalView({
         (s.linked_quote_id || '').toLowerCase().includes(q)
       );
     });
-  }, [sessions, searchQuery, workspaceFilter]);
+  }, [sessions, searchQuery, workspaceFilter, originFilter]);
 
   const selectedSession = useMemo(() => {
     return (
@@ -361,6 +383,27 @@ export default function FormalIAPortalView({
               ))}
             </select>
 
+            <div className="flex items-center gap-1 bg-surface-container-highest p-1 rounded-xl border border-outline-variant">
+              {[
+                { id: 'all', label: `Todas (${sessions.length})` },
+                { id: 'anonymous', label: `Visitantes sin sesión (${anonymousSessionsCount})` },
+                { id: 'account', label: `Con cuenta (${accountSessionsCount})` }
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setOriginFilter(opt.id)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-space font-semibold transition-colors cursor-pointer ${
+                    originFilter === opt.id
+                      ? 'bg-primary text-[#18181b]'
+                      : 'text-on-surface-variant hover:text-white'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
             <button
               type="button"
               onClick={loadSessions}
@@ -437,9 +480,18 @@ export default function FormalIAPortalView({
                         <span>{(sess.process_graph?.steps || []).length} pasos</span>
                         <span>•</span>
                         <span>{(sess.generated_files || []).length} archivos</span>
-                        {(sess.is_mine || sess.saved_to_account) && (
+                        {(sess.is_mine || sess.saved_to_account || sess.user_email) ? (
                           <span className="px-1.5 py-0.5 rounded bg-[#FFC93C]/15 text-[#FFC93C] border border-[#FFC93C]/30">
                             {sess.user_email || 'Guardada'}
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/35">
+                            Visitante sin sesión · Recopilado
+                          </span>
+                        )}
+                        {sess.project_id && (
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                            Proyecto: {sess.project_id}
                           </span>
                         )}
                         {sess.linked_quote_id && (
