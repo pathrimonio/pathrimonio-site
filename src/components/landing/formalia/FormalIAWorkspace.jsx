@@ -85,7 +85,7 @@ export default function FormalIAWorkspace({
     versions: [],
     generated_files: [],
     turns_count: 0,
-    max_turns: currentUser ? 15 : 5
+    max_turns: getAiDailyLimitForRole(currentUser?.role, Boolean(currentUser && (currentUser.id || currentUser.email)))
   });
   const [clientHydrated, setClientHydrated] = useState(false);
 
@@ -139,7 +139,11 @@ export default function FormalIAWorkspace({
     const saved = loadLocalFormaliaSession();
     const savedOwner = String(saved?.user_email || '').trim().toLowerCase();
     const activeEmail = String(currentUser?.email || '').trim().toLowerCase();
-    const isForeignSavedSession = Boolean(saved && isAuthenticated && savedOwner && activeEmail && savedOwner !== activeEmail);
+    const isForeignSavedSession = Boolean(
+      saved &&
+        ((isAuthenticated && savedOwner && activeEmail && savedOwner !== activeEmail) ||
+          (!isAuthenticated && (saved.saved_to_account || savedOwner)))
+    );
     if (isForeignSavedSession) {
       clearLocalFormaliaSession();
     }
@@ -219,7 +223,7 @@ export default function FormalIAWorkspace({
 
   // Sincroniza cuota real de IA (5 anónima / 15 usuario / 45 socio / 120 colab / 999 admin)
   useEffect(() => {
-    if (!clientHydrated || session.session_id === 'FIA-2026-INIT') return;
+    if (!clientHydrated) return;
     let cancelled = false;
     fetchFormaliaQuota({
       sessionId: session.session_id,
@@ -572,7 +576,7 @@ export default function FormalIAWorkspace({
         existingVersions: session.versions || [],
         existingFiles: session.generated_files || [],
         accountLink: effectiveLink,
-        maxTurnsAllowed: quota?.daily_limit || (isAuthenticated ? 15 : 5)
+        maxTurnsAllowed: quota?.daily_limit || getAiDailyLimitForRole(currentUser?.role, isAuthenticated)
       });
 
       const assistantMsg = {
@@ -629,7 +633,8 @@ export default function FormalIAWorkspace({
       if (err.quota) {
         setQuota(err.quota);
       } else if (err.code === 'AI_QUOTA_EXCEEDED') {
-        setQuota((prev) => (prev ? { ...prev, remaining_turns: 0, allowed: false } : { remaining_turns: 0, daily_limit: isAuthenticated ? 15 : 5, is_authenticated: isAuthenticated, allowed: false }));
+        const fallbackLimit = getAiDailyLimitForRole(currentUser?.role, isAuthenticated);
+        setQuota((prev) => (prev ? { ...prev, remaining_turns: 0, allowed: false } : { remaining_turns: 0, daily_limit: fallbackLimit, is_authenticated: isAuthenticated, allowed: false }));
       }
     } finally {
       setIsExtracting(false);
@@ -656,7 +661,7 @@ export default function FormalIAWorkspace({
       versions: [],
       generated_files: [],
       turns_count: 0,
-      max_turns: 15
+      max_turns: getAiDailyLimitForRole(currentUser?.role, isAuthenticated)
     });
     const fresh = await startFormaliaSession(
       keepWs
@@ -719,8 +724,8 @@ export default function FormalIAWorkspace({
       messages: exampleMessages,
       versions: [snapshot],
       generated_files: [pumlArtifact],
-      turns_count: 1,
-      max_turns: 15
+      turns_count: 0,
+      max_turns: getAiDailyLimitForRole(currentUser?.role, isAuthenticated)
     });
     registerGeneratedArtifact(pumlArtifact).catch(() => {});
     setDiagramUpdatedBadge(true);
@@ -809,7 +814,7 @@ export default function FormalIAWorkspace({
           : `${isStandalonePage ? 'py-10 lg:py-14' : 'py-20 lg:py-24'} bg-[var(--bg-page)] border-b border-[var(--border-subtle)]`
       } transition-colors`}
     >
-      <div className={isPortalEmbedded ? 'w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'}>
+      <div className={isPortalEmbedded ? 'w-full' : 'site-container'}>
 
         {/* Encabezado de Sección (solo en vista pública / standalone) */}
         {!isPortalEmbedded && (
@@ -1194,7 +1199,7 @@ export default function FormalIAWorkspace({
                 completenessScore={session.process_graph?.completeness_score || 0}
                 currentPhase={session.process_graph?.phase || '1_context'}
                 turnsCount={session.turns_count || 0}
-                maxTurns={quota?.daily_limit || session.max_turns || (isAuthenticated ? 15 : 5)}
+                maxTurns={quota?.daily_limit || getAiDailyLimitForRole(currentUser?.role, isAuthenticated) || session.max_turns}
                 quota={quota}
                 isExtracting={isExtracting}
                 errorMessage={errorMsg}

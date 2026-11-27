@@ -17,8 +17,10 @@ import { calculateQuotePricing } from '../src/data/pricingRules.js';
 import { getAiQuotaStatus, checkUserWorkspaceCaps } from '../api/_lib/store.js';
 import {
   createOrUpdateImplementationRequest,
-  computeLiveDiffsAgainstBaseline
+  computeLiveDiffsAgainstBaseline,
+  fetchPlatformSettings
 } from '../src/services/platformService.js';
+import { compileProcessToPortalBundle } from '../src/lib/formalia/compilers.js';
 import { SDD_EXAMPLE_LOGISTICS_GRAPH } from '../src/lib/formalia/schema.js';
 
 test('RBAC 5-Role Quota Policies & Daily Limits (5 / 15 / 45)', async () => {
@@ -130,4 +132,17 @@ test('Web Implementation Package returns full Portal bundle & computes post-subm
   assert.equal(diffs.length, 1);
   assert.equal(diffs[0].change_kind, 'updated');
   assert.equal(diffs[0].review_status, 'pending');
+});
+
+test('Project-scoped FORMALIA bundle IDs avoid cross-project PK collisions & settings preserve both casings', async () => {
+  const b1 = compileProcessToPortalBundle(SDD_EXAMPLE_LOGISTICS_GRAPH, 'cli-transnorte-fia-4410');
+  const b2 = compileProcessToPortalBundle(SDD_EXAMPLE_LOGISTICS_GRAPH, 'cli-ferreteria-fia-4410');
+  assert.notEqual(b1.dataModels[0].id, b2.dataModels[0].id);
+  assert.notEqual(b1.stories[0].id, b2.stories[0].id);
+  assert.notEqual(b1.actors[0].id, b2.actors[0].id);
+
+  const settings = await fetchPlatformSettings();
+  assert.ok(settings.communityImpact && settings.community_impact);
+  assert.ok(settings.pricingConfig && settings.pricing_config);
+  assert.equal(settings.communityImpact.education.metric, settings.community_impact.education.metric);
 });

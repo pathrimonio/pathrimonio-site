@@ -105,30 +105,60 @@ export function getNextUtcResetLabel() {
 
 export async function fetchPlatformSettings() {
   const cached = safeReadJson(SETTINGS_LOCAL_KEY, {});
-  const base = {
-    pricing_config: { ...DEFAULT_PRICING_CONFIG, ...(cached.pricing_config || {}) },
-    community_impact: { ...DEFAULT_COMMUNITY_IMPACT, ...(cached.community_impact || {}) },
-    partner_workshops: Array.isArray(cached.partner_workshops) ? cached.partner_workshops : DEFAULT_PARTNER_WORKSHOPS
+  const mergeCommunityImpact = (raw = {}) => ({
+    ...DEFAULT_COMMUNITY_IMPACT,
+    ...(raw || {}),
+    education: { ...DEFAULT_COMMUNITY_IMPACT.education, ...(raw?.education || {}) },
+    sports: { ...DEFAULT_COMMUNITY_IMPACT.sports, ...(raw?.sports || {}) },
+    values: { ...DEFAULT_COMMUNITY_IMPACT.values, ...(raw?.values || {}) },
+    pathway: { ...DEFAULT_COMMUNITY_IMPACT.pathway, ...(raw?.pathway || {}) }
+  });
+
+  const basePricing = {
+    ...DEFAULT_PRICING_CONFIG,
+    ...(cached.pricing_config || cached.pricingConfig || {})
   };
+  const baseImpact = mergeCommunityImpact(cached.community_impact || cached.communityImpact || {});
+  const baseWorkshops = Array.isArray(cached.partner_workshops || cached.partnerWorkshops)
+    ? (cached.partner_workshops || cached.partnerWorkshops)
+    : DEFAULT_PARTNER_WORKSHOPS;
+
+  const formatResult = (pricingCfg, impactCfg, workshops) => ({
+    pricing_config: pricingCfg,
+    pricingConfig: pricingCfg,
+    community_impact: impactCfg,
+    communityImpact: impactCfg,
+    partner_workshops: workshops,
+    partnerWorkshops: workshops
+  });
+
+  const base = formatResult(basePricing, baseImpact, baseWorkshops);
 
   if (!isSupabaseConfigured || !supabase) return base;
 
   try {
     const { data, error } = await supabase.from('platform_settings').select('key, value, updated_by, updated_at');
     if (!error && Array.isArray(data)) {
-      const next = { ...base };
+      let nextPricing = basePricing;
+      let nextImpact = baseImpact;
+      let nextWorkshops = baseWorkshops;
       data.forEach((row) => {
         if (row.key === 'pricing_config' && row.value) {
-          next.pricing_config = { ...DEFAULT_PRICING_CONFIG, ...row.value };
+          nextPricing = { ...DEFAULT_PRICING_CONFIG, ...row.value };
         }
         if (row.key === 'community_impact' && row.value) {
-          next.community_impact = { ...DEFAULT_COMMUNITY_IMPACT, ...row.value };
+          nextImpact = mergeCommunityImpact(row.value);
         }
         if (row.key === 'partner_workshops' && Array.isArray(row.value)) {
-          next.partner_workshops = row.value;
+          nextWorkshops = row.value;
         }
       });
-      safeWriteJson(SETTINGS_LOCAL_KEY, next);
+      const next = formatResult(nextPricing, nextImpact, nextWorkshops);
+      safeWriteJson(SETTINGS_LOCAL_KEY, {
+        pricing_config: nextPricing,
+        community_impact: nextImpact,
+        partner_workshops: nextWorkshops
+      });
       return next;
     }
   } catch (_) {}

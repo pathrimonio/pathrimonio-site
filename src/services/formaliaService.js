@@ -378,7 +378,7 @@ export async function startFormaliaSession(options = {}) {
       versions: [],
       generated_files: [],
       turns_count: apiRes.turns_count || 0,
-      max_turns: apiRes.max_turns || defaultLimit,
+      max_turns: apiRes.quota?.daily_limit || apiRes.max_turns || defaultLimit,
       ...(workspaceMeta || {}),
       ...(userId ? { user_id: userId } : {}),
       ...(userEmail ? { user_email: userEmail } : {}),

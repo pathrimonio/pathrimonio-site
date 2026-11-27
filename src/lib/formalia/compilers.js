@@ -582,7 +582,13 @@ export function compileProcessToPortalBundle(graph, targetProjectId = 'pathway')
   const handoff = generateEngineeringHandoff(graph);
   const rawActors = graph?.actors || [];
   const rawSteps = graph?.steps || [];
-  const sessToken = slugifyToken(graph?.session_id || 'fia').slice(-8) || 'fia';
+  const rawSessToken = slugifyToken(graph?.session_id || 'fia').slice(-8) || 'fia';
+  const cleanProjToken = slugifyToken(String(targetProjectId || '').replace(/^cli[-_]/i, ''));
+  const projSuffix =
+    targetProjectId && targetProjectId !== 'pathway'
+      ? `_${cleanProjToken.slice(0, 5)}${cleanProjToken.slice(-3)}`
+      : '';
+  const sessToken = `${rawSessToken}${projSuffix}`;
   const todayIso = new Date().toISOString();
   const todayDate = todayIso.split('T')[0];
 

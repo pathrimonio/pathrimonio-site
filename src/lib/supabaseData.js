@@ -445,7 +445,7 @@ export async function deleteInterface(id) {
 export async function saveDataModel(model, validStoryIds, validInterfaceIds) {
   const db = requireSupabase();
 
-  // Reuse existing ID if the table already exists in this project to prevent unique constraint conflicts
+  // Reuse existing ID if the table already exists in this project; isolate ID if another project owns the same key
   let targetId = model.id;
   try {
     const { data: existing } = await db
@@ -457,6 +457,19 @@ export async function saveDataModel(model, validStoryIds, validInterfaceIds) {
 
     if (existing?.id) {
       targetId = existing.id;
+    } else if (targetId) {
+      const { data: idOwner } = await db
+        .from('data_models')
+        .select('id, project_id')
+        .eq('id', targetId)
+        .maybeSingle();
+      if (idOwner?.id && idOwner.project_id !== model.projectId) {
+        const projTag = String(model.projectId || 'proj')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '')
+          .slice(-6) || 'cli';
+        targetId = `${targetId}-${projTag}`;
+      }
     }
   } catch (_) {}
 
@@ -480,7 +493,7 @@ export async function saveDataModel(model, validStoryIds, validInterfaceIds) {
     author: orNull(model.author),
     approved_at: dateOnly(model.approvedAt),
     version: orNull(model.version)
-  }, { onConflict: 'project_id, table_name' }));
+  }, { onConflict: 'id' }));
 
   check(await db.from('data_model_attributes').delete().eq('data_model_id', targetId));
 

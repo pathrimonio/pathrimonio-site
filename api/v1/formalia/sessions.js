@@ -11,7 +11,8 @@ import {
   claimAnonymousSessionToAccount,
   checkUserWorkspaceCaps,
   ANON_SESSION_AI_LIMIT,
-  AUTH_USER_DAILY_AI_LIMIT
+  AUTH_USER_DAILY_AI_LIMIT,
+  getAiDailyLimitForRole
 } from '../../_lib/store.js';
 
 export default async function handler(req, res) {
@@ -136,6 +137,7 @@ export default async function handler(req, res) {
   const quotaStatus = await getAiQuotaStatus({
     userId: body.user_id || null,
     userEmail: body.user_email || null,
+    userRole: body.user_role || null,
     ip,
     sessionId: record.session_id
   });
@@ -149,7 +151,7 @@ export default async function handler(req, res) {
     project_id: record.project_id || null,
     canvas_title: record.canvas_title || null,
     turns_count: record.turns_count,
-    max_turns: isAuthenticated ? AUTH_USER_DAILY_AI_LIMIT : ANON_SESSION_AI_LIMIT,
+    max_turns: quotaStatus?.daily_limit || getAiDailyLimitForRole(body.user_role, isAuthenticated),
     quota: quotaStatus
   });
 }

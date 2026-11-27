@@ -685,8 +685,10 @@ function AppContent({ initialPath = '/' }) {
     let cancelled = false;
     fetchPlatformSettings().then((res) => {
       if (cancelled || !res) return;
-      if (res.pricingConfig) setPricingConfig(res.pricingConfig);
-      if (res.communityImpact) setCommunityImpact(res.communityImpact);
+      const nextPricing = res.pricingConfig || res.pricing_config;
+      const nextImpact = res.communityImpact || res.community_impact;
+      if (nextPricing) setPricingConfig(nextPricing);
+      if (nextImpact) setCommunityImpact(nextImpact);
     });
     return () => { cancelled = true; };
   }, []);
@@ -1136,8 +1138,6 @@ function AppContent({ initialPath = '/' }) {
   };
 
   const handleLogout = async () => {
-    setCurrentUser(null);
-    setImplementationRequests([]);
     clearLocalFormaliaSession();
     if (supabase) {
       try {
@@ -1146,6 +1146,8 @@ function AppContent({ initialPath = '/' }) {
         console.warn('[Supabase] signOut', error);
       }
     }
+    setCurrentUser(null);
+    setImplementationRequests([]);
     navigateToHome();
     notify('Sesión cerrada correctamente. Hasta pronto.');
   };
