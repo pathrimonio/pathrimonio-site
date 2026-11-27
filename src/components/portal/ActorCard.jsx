@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 
 export default function ActorCard({
   actor,
+  diffInfo = null,
   onEdit,
   onDuplicate,
   onDelete,
@@ -135,6 +136,24 @@ export default function ActorCard({
             {actor.isPrimaryRole && (
               <span className="px-2 py-0.5 rounded bg-primary/20 text-primary border border-primary/40 font-space text-[10px] font-bold uppercase tracking-wider">
                 Rol Principal
+              </span>
+            )}
+            {diffInfo && (
+              <span
+                className={`px-2 py-0.5 rounded border font-space text-[10px] font-bold uppercase tracking-wider ${
+                  diffInfo.review_status === 'approved'
+                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                    : diffInfo.review_status === 'observed'
+                      ? 'bg-rose-500/15 text-rose-300 border-rose-500/40'
+                      : 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                }`}
+              >
+                {diffInfo.change_kind === 'created' ? 'Nuevo post-envío' : 'Editado post-envío'} ·{' '}
+                {diffInfo.review_status === 'approved'
+                  ? 'Aprobado'
+                  : diffInfo.review_status === 'observed'
+                    ? 'Observado'
+                    : 'Pend. revisión'}
               </span>
             )}
           </div>

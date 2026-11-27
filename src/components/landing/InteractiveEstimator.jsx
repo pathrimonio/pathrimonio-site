@@ -81,7 +81,17 @@ const DEFAULT_QUOTE_STATE = {
   }
 };
 
-export default function InteractiveEstimator({ onOpenContact, onNavigate, preloadedFormaliaData = null }) {
+export default function InteractiveEstimator({
+  onOpenContact,
+  onNavigate,
+  preloadedFormaliaData = null,
+  pricingConfig = null,
+  currentUser = null
+}) {
+  const unitSocioPrice = Number(pricingConfig?.admin_role_monthly_usd ?? 30);
+  const unitTradPrice = Number(pricingConfig?.traditional_role_monthly_usd ?? 90);
+  const tradSetupFee = Number(pricingConfig?.traditional_setup_fee_usd ?? pricingConfig?.setup_fee_no_permanence_usd ?? 500);
+  const dailySocioLabel = Number((unitSocioPrice / 30).toFixed(2).replace(/\.00$/, ''));
   // ── 1. Estado inicial determinista (SSR-safe; hidrata borrador tras montar)
   const [quoteState, setQuoteState] = useState(DEFAULT_QUOTE_STATE);
   const [draftHydrated, setDraftHydrated] = useState(false);
@@ -140,30 +150,32 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
 
   // ── 2. Cálculo de Precios reactivo
   const pricing = useMemo(() => {
-    const base = calculateQuotePricing({
-      admin_roles: quoteState.configuration.admin_roles,
-      end_customers_tier: quoteState.configuration.end_customers_tier,
-      interfaces: quoteState.configuration.interfaces,
-      data_and_apis: quoteState.configuration.data_and_apis,
-      commitment_plan: quoteState.commitment_plan
-    });
+    const base = calculateQuotePricing(
+      {
+        admin_roles: quoteState.configuration.admin_roles,
+        end_customers_tier: quoteState.configuration.end_customers_tier,
+        interfaces: quoteState.configuration.interfaces,
+        data_and_apis: quoteState.configuration.data_and_apis,
+        commitment_plan: quoteState.commitment_plan
+      },
+      pricingConfig
+    );
 
     if (!tarifaSocio) {
-      // Tarifa mercado tradicional (ej: $90/mes por rol y setup obligatorio de $500)
-      const traditionalRolesTotal = base.totalAdminUsers * 90;
+      const traditionalRolesTotal = base.totalAdminUsers * unitTradPrice;
       const traditionalMonthly = traditionalRolesTotal + base.monthlyCustomersExtra + base.monthlyInterfaces + base.monthlyDataAndApis;
       return {
         ...base,
         monthlyRolesBase: traditionalRolesTotal,
         monthlyTotal: traditionalMonthly,
         dailyEquivalent: Number((traditionalMonthly / 30).toFixed(2)),
-        setupFee: 500,
+        setupFee: tradSetupFee,
         setupFeeSavings: 0
       };
     }
 
     return base;
-  }, [quoteState, tarifaSocio]);
+  }, [quoteState, tarifaSocio, pricingConfig, unitTradPrice, tradSetupFee]);
 
   // ── 3. Acciones de usuario
   const handleUpdateDiscovery = (field, value) => {
@@ -281,6 +293,8 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
       quote_id: quoteId,
       formalia_session_id: preloadedFormaliaData?.formalia_session_id || null,
       web_blueprint_id: preloadedFormaliaData?.web_blueprint_id || null,
+      user_email: quoteState.lead_contact?.email || currentUser?.email || null,
+      user_id: currentUser?.id || null,
       timestamp: acceptedAt,
       privacy_policy_accepted: true,
       privacy_policy_version: PRIVACY_POLICY_VERSION,
@@ -649,7 +663,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-bold text-[var(--text-primary)]">{role.name}</span>
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded-[4px] bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-secondary)]">
-                              $30/mes
+                              ${unitSocioPrice}/mes
                             </span>
                           </div>
                           <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">{role.desc}</p>
@@ -1032,7 +1046,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                     className="w-4 h-4 rounded cursor-pointer accent-[#2B2D31]"
                   />
                   <label htmlFor="tarifaSocioSwitch" className="text-xs font-semibold text-[var(--text-on-silver)] cursor-pointer">
-                    Tarifa Socio ($1/día)
+                    Tarifa Socio (${dailySocioLabel}/día)
                   </label>
                 </div>
                 <span
@@ -1058,7 +1072,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
                 )}
                 {tarifaSocio && (
                   <span className="text-xs font-mono text-[var(--text-secondary-on-silver)] line-through">
-                    ${(pricing.totalAdminUsers * 90) + (pricing.monthlyCustomersExtra + pricing.monthlyInterfaces + pricing.monthlyDataAndApis)} USD
+                    ${(pricing.totalAdminUsers * unitTradPrice) + (pricing.monthlyCustomersExtra + pricing.monthlyInterfaces + pricing.monthlyDataAndApis)} USD
                   </span>
                 )}
               </div>
@@ -1080,7 +1094,7 @@ export default function InteractiveEstimator({ onOpenContact, onNavigate, preloa
               <span className="text-[#B8BAC0]">Implementación (Setup):</span>
               <div className="flex items-center gap-2 font-mono tabular-nums">
                 {pricing.setupFeeSavings > 0 && (
-                  <span className="text-[#9699A1] line-through">$500 USD</span>
+                  <span className="text-[#9699A1] line-through">${tradSetupFee} USD</span>
                 )}
                 <span className={`font-bold ${pricing.setupFee === 0 ? 'text-[#FFC93C]' : 'text-[#D9DADC]'}`}>
                   ${pricing.setupFee} USD

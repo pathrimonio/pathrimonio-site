@@ -351,29 +351,69 @@ export const COMMITMENT_MODES = [
   }
 ];
 
-// Helper para calcular precios según el estado de la cotización
-export function calculateQuotePricing(config) {
-  // 1. Roles administrativos ($30/mes = $1/día por usuario)
+export const DEFAULT_PRICING_CONFIG = {
+  admin_role_monthly_usd: 30,
+  traditional_role_monthly_usd: 90,
+  traditional_setup_fee_usd: 500,
+  setup_fee_no_permanence_usd: 350,
+  permanence_months: 6,
+  referral_credit_rule: {
+    referrals_required: 2,
+    bonus_role_months: 2,
+    usd_per_credit_month: 30
+  },
+  customer_tiers: {
+    hasta_100_base: 0,
+    hasta_300: 15,
+    hasta_500: 30,
+    hasta_1000: 60,
+    hasta_2000: 120,
+    mas_2000_enterprise: 180
+  },
+  interface_prices: {
+    web_operativa: 0,
+    portal_clientes: 35,
+    app_movil: 45,
+    bot_whatsapp: 30,
+    dashboard_bi: 25
+  },
+  api_prices: {
+    historial_ilimitado: 15,
+    validacion_ruc_dni: 20,
+    pasarela_pagos: 25,
+    almacenamiento_cloud: 15,
+    integracion_hardware_erp: 0
+  }
+};
+
+// Helper para calcular precios según el estado de la cotización y pricing-config global
+export function calculateQuotePricing(config, pricingConfig = DEFAULT_PRICING_CONFIG) {
+  const cfg = pricingConfig || DEFAULT_PRICING_CONFIG;
+  const roleUnitPrice = Number(cfg.admin_role_monthly_usd ?? 30);
+
+  // 1. Roles administrativos (por defecto $30/mes = $1/día por usuario)
   const adminRoles = config.admin_roles || [];
   const totalAdminUsers = adminRoles.reduce((sum, r) => sum + (Number(r.count) || 0), 0);
-  const monthlyRolesBase = totalAdminUsers * 30;
+  const monthlyRolesBase = totalAdminUsers * roleUnitPrice;
 
   // 2. Clientes finales
   const tierObj = END_CUSTOMER_TIERS.find(t => t.id === config.end_customers_tier) || END_CUSTOMER_TIERS[0];
-  const monthlyCustomersExtra = tierObj.monthlyPrice;
+  const monthlyCustomersExtra = Number(cfg.customer_tiers?.[tierObj.id] ?? tierObj.monthlyPrice);
 
   // 3. Interfaces adicionales
   const selectedInterfaces = config.interfaces || ['web_operativa'];
   const monthlyInterfaces = selectedInterfaces.reduce((sum, intId) => {
     const opt = INTERFACE_OPTIONS.find(i => i.id === intId);
-    return sum + (opt ? opt.monthlyPrice : 0);
+    const override = cfg.interface_prices?.[intId];
+    return sum + (override !== undefined ? Number(override) : (opt ? opt.monthlyPrice : 0));
   }, 0);
 
   // 4. Paquetes de datos y APIs
   const selectedData = config.data_and_apis || [];
   const monthlyDataAndApis = selectedData.reduce((sum, dataId) => {
     const opt = DATA_AND_APIS_OPTIONS.find(d => d.id === dataId);
-    return sum + (opt ? opt.monthlyPrice : 0);
+    const override = cfg.api_prices?.[dataId];
+    return sum + (override !== undefined ? Number(override) : (opt ? opt.monthlyPrice : 0));
   }, 0);
 
   // 5. Total mensual
@@ -382,8 +422,9 @@ export function calculateQuotePricing(config) {
 
   // 6. Setup fee
   const commitment = COMMITMENT_MODES.find(c => c.id === config.commitment_plan) || COMMITMENT_MODES[0];
-  const setupFee = commitment.setupPrice;
-  const setupFeeSavings = commitment.originalSetupPrice - commitment.setupPrice;
+  const baseSetup = Number(cfg.setup_fee_no_permanence_usd ?? commitment.originalSetupPrice);
+  const setupFee = commitment.id === 'semestral_setup_gratis' ? 0 : baseSetup;
+  const setupFeeSavings = baseSetup - setupFee;
 
   // 7. Regla Enterprise
   const hasHardwareCustom = selectedData.includes('integracion_hardware_erp');
@@ -391,6 +432,7 @@ export function calculateQuotePricing(config) {
 
   return {
     totalAdminUsers,
+    roleUnitPrice,
     monthlyRolesBase,
     monthlyCustomersExtra,
     monthlyInterfaces,

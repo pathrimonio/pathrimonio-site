@@ -26,7 +26,10 @@ const mapProject = (row) => ({
   status: row.status,
   client: row.client,
   version: row.version,
-  modules: row.modules || []
+  modules: row.modules || [],
+  owner_email: row.owner_email || null,
+  owner_user_id: row.owner_user_id || null,
+  source_type: row.source_type || 'internal'
 });
 
 const mapPortalUser = (row) => ({
@@ -34,6 +37,13 @@ const mapPortalUser = (row) => ({
   email: row.email,
   name: row.name,
   role: row.role,
+  organization: row.organization || null,
+  status: row.status || 'active',
+  referral_code: row.referral_code || null,
+  referred_by_code: row.referred_by_code || null,
+  credit_balance_usd: Number(row.credit_balance_usd || 0),
+  bonus_role_months: Number(row.bonus_role_months || 0),
+  source: row.source || null,
   avatar: row.avatar,
   color: row.color,
   permissions: row.permissions || []
@@ -668,8 +678,35 @@ export async function saveProject(project) {
     status: orNull(project.status),
     client: orNull(project.client),
     version: orNull(project.version),
-    modules: project.modules || []
+    modules: project.modules || [],
+    owner_email: orNull(project.owner_email),
+    owner_user_id: orNull(project.owner_user_id),
+    source_type: project.source_type || 'internal'
   }, { onConflict: 'id' }));
+}
+
+export async function upsertPortalUserRecord(user) {
+  const db = requireSupabase();
+  check(await db.from('portal_users').upsert({
+    id: user.id,
+    email: String(user.email || '').trim().toLowerCase(),
+    name: user.name || user.email,
+    role: user.role || 'Usuario Registrado',
+    organization: orNull(user.organization),
+    status: user.status || 'active',
+    referral_code: orNull(user.referral_code),
+    credit_balance_usd: Number(user.credit_balance_usd || 0),
+    bonus_role_months: Number(user.bonus_role_months || 0),
+    source: orNull(user.source),
+    avatar: orNull(user.avatar),
+    color: orNull(user.color),
+    permissions: user.permissions || ['read', 'write']
+  }, { onConflict: 'id' }));
+}
+
+export async function deletePortalUserRecord(userId) {
+  const db = requireSupabase();
+  check(await db.from('portal_users').delete().eq('id', userId));
 }
 
 // ── Interface module catalog ──────────────────────────────────

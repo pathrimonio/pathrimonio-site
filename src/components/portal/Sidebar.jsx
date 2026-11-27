@@ -1,5 +1,6 @@
 import React from 'react';
 import ProjectSelector from './ProjectSelector';
+import { getRoleDefinition, normalizeRoleCode } from '../../auth/permissionsConfig';
 
 export default function Sidebar({ 
   activeTab, 
@@ -19,19 +20,23 @@ export default function Sidebar({
     { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US' },
     { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX' },
     { id: 'formalia', label: 'FORMALIA (Flujos → HUs)', icon: 'auto_awesome', badge: 'IA' },
+    { id: 'implementationStatus', label: 'Estado & Diffs Web', icon: 'rocket_launch', badge: 'DIFF' },
+    { id: 'partnerPanel', label: 'Panel de Socio', icon: 'workspace_premium', badge: 'SOCIO' },
+    { id: 'presalesReview', label: 'Preventa & Cotizaciones', icon: 'assignment_turned_in', badge: 'TECH' },
     { id: 'architecture', label: 'Arquitectura de Software', icon: 'account_tree', badge: 'ARCH' },
     { id: 'dataModel', label: 'Arquitectura de Datos', icon: 'database', badge: 'DB' },
     { id: 'files', label: 'Archivos & Manifiestos', icon: 'folder_open', badge: 'FILES' },
     { id: 'backlog', label: 'Backlog', icon: 'format_list_bulleted' },
     { id: 'sprints', label: 'Sprints & Ciclos', icon: 'timelapse' },
     { id: 'docs', label: 'Docs de Arquitectura', icon: 'article', badge: 'DOCS' },
-    { id: 'settings', label: 'Administración & Usuarios', icon: 'admin_panel_settings', badge: 'ADMIN' }
+    { id: 'settings', label: 'Administración & RBAC', icon: 'admin_panel_settings', badge: 'ADMIN' }
   ];
 
-  // Restricción según el rol y permisos configurados
-  const userRole = currentUser?.role || 'Colaborador';
-  const roleConfig = roleDefinitions?.[userRole] || roleDefinitions?.['Colaborador'];
-  const allowedTabs = roleConfig?.allowedTabs || ['actors', 'stories', 'interfaces'];
+  // Restricción estricta según el rol y matriz de permisos
+  const userRole = currentUser?.role || 'Usuario Registrado';
+  const roleCode = normalizeRoleCode(userRole);
+  const roleConfig = getRoleDefinition(userRole, roleDefinitions);
+  const allowedTabs = roleConfig?.allowedTabs || ['actors', 'stories', 'interfaces', 'formalia', 'implementationStatus'];
 
   const navItems = allNavItems.filter(item => allowedTabs.includes(item.id));
 
@@ -88,11 +93,17 @@ export default function Sidebar({
             />
           </div>
 
-          {/* Navigation Items */}
-          {userRole === 'Colaborador' && (
+          {/* Role Identity Banner */}
+          {roleCode !== 'admin' && (
             <div className="mx-1 my-1 p-2 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-amber-300 font-space text-[10px]">
               <span className="material-symbols-outlined text-[15px] shrink-0">shield_person</span>
-              <span className="font-semibold leading-tight">Comunidad SDD: Roles, HUs, UI &amp; FORMALIA</span>
+              <span className="font-semibold leading-tight">
+                {roleCode === 'partner'
+                  ? 'Socio / Cliente · 45 IA/día + Billetera'
+                  : roleCode === 'collaborator'
+                    ? 'Colaborador · Preventa, Archifly & Files'
+                    : 'Cuenta PYME · 4 Vistas + Tracking Web'}
+              </span>
             </div>
           )}
           <nav className="flex flex-col gap-y-1 pt-1">

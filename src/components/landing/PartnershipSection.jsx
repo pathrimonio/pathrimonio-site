@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { Check, X, Gift, ArrowRight } from 'lucide-react';
 
-export default function PartnershipSection() {
+export default function PartnershipSection({ pricingConfig = null }) {
   const [referralsCount, setReferralsCount] = useState(2);
 
-  // Regla del micro-simulador: 2 referidos = 1 rol x 2 meses o 2 roles x 1 mes
-  const creditValue = Math.floor(referralsCount / 2) * 60 + (referralsCount % 2 === 1 ? 15 : 0);
-  const monthsBonifiedSingleRole = Math.floor(referralsCount / 2) * 2;
-  const rolesBonifiedSingleMonth = Math.floor(referralsCount / 2) * 2;
+  const unitRolePrice = Number(pricingConfig?.admin_role_monthly_usd ?? 30);
+  const dailyRateLabel = Number((unitRolePrice / 30).toFixed(2).replace(/\.00$/, ''));
+  const reqPartners = Math.max(1, Number(pricingConfig?.referral_credit_rule?.referrals_required ?? 2));
+  const rewardMonths = Math.max(1, Number(pricingConfig?.referral_credit_rule?.bonus_role_months ?? 2));
+  const fullPairs = Math.floor(referralsCount / reqPartners);
+  const creditValue =
+    fullPairs * unitRolePrice * rewardMonths +
+    (referralsCount % reqPartners === 1 ? Math.round((unitRolePrice * rewardMonths) / (reqPartners * 2)) : 0);
+  const monthsBonifiedSingleRole = fullPairs * rewardMonths;
+  const rolesBonifiedSingleMonth = fullPairs * rewardMonths;
 
   return (
     <section id="socios" className="w-full py-20 lg:py-28 bg-[var(--bg-page)] border-b border-[var(--border-subtle)] transition-colors">
@@ -88,13 +94,13 @@ export default function PartnershipSection() {
                   <h3 className="text-xl font-bold text-[var(--text-on-silver)]">Programa de Socios</h3>
                 </div>
                 <span className="text-xs font-mono px-2.5 py-1 bg-[#2B2D31] text-[#FFC93C] rounded-[4px] font-semibold">
-                  $1 USD / día
+                  ${dailyRateLabel} USD / día
                 </span>
               </div>
 
               <div className="mb-6">
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-3xl font-bold text-[var(--text-on-silver)] font-mono tabular-nums">$30 USD</span>
+                  <span className="text-3xl font-bold text-[var(--text-on-silver)] font-mono tabular-nums">${unitRolePrice} USD</span>
                   <span className="text-sm text-[var(--text-secondary-on-silver)]">/ mes por rol activo</span>
                 </div>
                 <p className="text-xs text-[var(--text-on-silver)] font-medium">

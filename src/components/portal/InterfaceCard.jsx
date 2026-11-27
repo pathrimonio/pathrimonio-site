@@ -7,6 +7,7 @@ import { formatInterfaceModifiedAt, formatInterfaceModifiedFull } from '../../ut
 
 export default function InterfaceCard({
   item,
+  diffInfo = null,
   onEdit,
   onDuplicate,
   onDelete,
@@ -252,6 +253,25 @@ export default function InterfaceCard({
               <span className="material-symbols-outlined text-[15px]">{statusMeta.icon}</span>
               <span>{statusMeta.label}</span>
             </div>
+
+            {diffInfo && (
+              <span
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-space font-bold uppercase ${
+                  diffInfo.review_status === 'approved'
+                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                    : diffInfo.review_status === 'observed'
+                      ? 'bg-rose-500/15 text-rose-300 border-rose-500/40'
+                      : 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                }`}
+              >
+                {diffInfo.change_kind === 'created' ? 'Nuevo post-envío' : 'Editado post-envío'} ·{' '}
+                {diffInfo.review_status === 'approved'
+                  ? 'Aprobado'
+                  : diffInfo.review_status === 'observed'
+                    ? 'Observado'
+                    : 'Pend. revisión'}
+              </span>
+            )}
 
             {/* Botón de Colapsar / Extender hacia derecha e izquierda */}
             <button

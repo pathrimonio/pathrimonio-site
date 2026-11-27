@@ -110,10 +110,10 @@ export default function LoginPage({
         id: `u_${Date.now()}`,
         email: loginEmail.trim(),
         name: loginEmail.split('@')[0],
-        role: 'Colaborador',
+        role: 'Usuario Registrado',
         avatar: loginEmail.slice(0, 2).toUpperCase(),
-        color: 'bg-primary',
-        permissions: ['read', 'write']
+        color: 'bg-amber-600',
+        permissions: ['read', 'write', 'create_workspace', 'implement_web', 'send_quote']
       };
       onLoginSuccess(fallbackUser);
       return;
@@ -196,14 +196,14 @@ export default function LoginPage({
     const userMetadata = {
       name: registerName.trim(),
       organization: registerOrganization.trim(),
-      role: 'Colaborador', // Las cuentas creadas desde el login se inicializan estrictamente como Colaborador
+      role: 'Usuario Registrado', // Todo registro público ingresa como Usuario Registrado (Colaborador solo lo asigna Admin)
       jobTitle: registerRole,
       softwareNeeds: registerSoftwareNeeds,
       initialProject: projectSlug,
       initialProjectName: trimmedProjectName,
       avatar: initials,
       color: 'bg-amber-600',
-      permissions: ['create_role', 'create_story', 'create_interface']
+      permissions: ['read', 'write', 'create_workspace', 'implement_web', 'send_quote']
     };
 
     try {
@@ -512,11 +512,11 @@ export default function LoginPage({
                     <span className="material-symbols-outlined text-[16px]">groups</span>
                   </span>
                   <h2 className="font-space text-sm font-bold text-white">
-                    Cuenta de Colaborador en Software
+                    Cuenta de Usuario Registrado (PYME)
                   </h2>
                 </div>
                 <p className="font-jakarta text-[11px] text-on-surface-variant leading-relaxed">
-                  Regístrate como colaborador o cliente de Pathrimonio para consultar y definir los <strong className="text-white">roles del negocio</strong>, las <strong className="text-white">historias de usuario (HU)</strong> y las <strong className="text-white">interfaces interactivas</strong> de tu proyecto.
+                  Regístrate para acceder a <strong className="text-white">Workspaces y lienzos FORMALIA permanentes</strong> (15 turnos IA diarios), <strong className="text-white">Implementar en solución web</strong> y las <strong className="text-white">4 subvistas iniciales del portal</strong> con seguimiento de tu solicitud.
                 </p>
               </div>
 
@@ -726,19 +726,19 @@ export default function LoginPage({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-white font-space font-semibold">
                       <span className="material-symbols-outlined text-[16px] text-amber-400">shield_person</span>
-                      <span>Perfil de Acceso: Colaborador</span>
+                      <span>Perfil de Acceso: Usuario Registrado</span>
                     </div>
                     <span className="px-1.5 py-0.2 rounded font-mono text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
-                      ACOTADO
+                      15 TURNOS/DÍA
                     </span>
                   </div>
                   <p className="font-jakarta text-[11px] text-on-surface-variant leading-tight">
-                    Tu cuenta tendrá permisos exclusivos para <strong className="text-white">crear roles</strong>, <strong className="text-white">crear historias de usuario</strong> y <strong className="text-white">crear interfaces</strong>. Los demás módulos del software quedan reservados y pueden ser autorizados por un Administrador en la gestión de usuarios.
+                    Incluye hasta <strong className="text-white">5 Workspaces y 20 lienzos</strong>, edición manual ilimitada, <strong className="text-white">Implementar en solución web</strong> y seguimiento de revisión técnica. Los roles de <strong className="text-white">Socio</strong> y <strong className="text-white">Colaborador</strong> los asigna un Administrador.
                   </p>
                   <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px] pt-1">
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">✓ Crear Roles</span>
-                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">✓ Crear Historias</span>
-                    <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">✓ Crear Interfaces</span>
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">✓ 5 Workspaces / 20 Lienzos</span>
+                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">✓ Solución Web &amp; HUs</span>
+                    <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">✓ 4 Subvistas Portal</span>
                   </div>
                 </div>
 

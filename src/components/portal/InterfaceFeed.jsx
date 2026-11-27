@@ -10,6 +10,7 @@ import {
 export default function InterfaceFeed({
   interfaces = [],
   projectActors = [],
+  diffByInterfaceId = {},
   modules = INTERFACE_MODULE_OPTIONS.filter(m => m !== 'Todos'),
   onEditInterface,
   onDuplicateInterface,
@@ -418,6 +419,7 @@ export default function InterfaceFeed({
                 <InterfaceCard
                   key={item.id}
                   item={item}
+                  diffInfo={diffByInterfaceId[item.id] || null}
                   onEdit={onEditInterface}
                   onDuplicate={onDuplicateInterface}
                   onDelete={onDeleteInterface}
@@ -436,6 +438,7 @@ export default function InterfaceFeed({
               <InterfaceCard
                 key={item.id}
                 item={item}
+                diffInfo={diffByInterfaceId[item.id] || null}
                 onEdit={onEditInterface}
                 onDuplicate={onDuplicateInterface}
                 onDelete={onDeleteInterface}

@@ -83,6 +83,17 @@ export function clearSession() {
   } catch (e) {}
 }
 
+const KNOWN_SYSTEM_ROLES = new Set([
+  'Admin',
+  'Administrador',
+  'Colaborador',
+  'Desarrollador',
+  'Fintech Lead',
+  'Auditora de Impacto',
+  'Socio / Cliente',
+  'Usuario Registrado'
+]);
+
 // Convierte el usuario de Supabase Auth al shape que consume el portal.
 // Los metadatos se crean junto con el usuario (name, role, avatar, color, permissions).
 export function mapSupabaseUser(user) {
@@ -91,18 +102,23 @@ export function mapSupabaseUser(user) {
   const demo = DEMO_USERS.find(
     (candidate) => candidate.email.toLowerCase() === String(user.email || '').toLowerCase()
   );
+  const rawRole = meta.role || demo?.role || 'Usuario Registrado';
+  const normalizedRole = KNOWN_SYSTEM_ROLES.has(rawRole) ? rawRole : 'Usuario Registrado';
   return {
     id: user.id,
     email: user.email,
     name: meta.name || meta.full_name || demo?.name || user.email,
-    role: meta.role || demo?.role || 'Colaborador',
+    role: normalizedRole,
+    jobTitle: meta.jobTitle || (!KNOWN_SYSTEM_ROLES.has(rawRole) ? rawRole : null),
     source: meta.source || null,
     organization: meta.organization || null,
     softwareNeeds: meta.softwareNeeds || null,
     initialProject: meta.initialProject || null,
+    initialProjectName: meta.initialProjectName || null,
+    referral_code: meta.referral_code || null,
     avatar: meta.avatar || demo?.avatar || String(meta.name || meta.full_name || user.email || '?').slice(0, 2).toUpperCase(),
     color: meta.color || demo?.color || 'bg-primary',
-    permissions: meta.permissions || demo?.permissions || ['read', 'write']
+    permissions: meta.permissions || demo?.permissions || ['read', 'write', 'create_workspace', 'implement_web']
   };
 }
 

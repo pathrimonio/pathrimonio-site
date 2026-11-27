@@ -26,6 +26,7 @@ export default function FormalIAPortalView({
   projects = [],
   onSaveToProjectFiles,
   onPromoteGraphToProject,
+  onSubmitImplementation,
   onNavigatePortalTab,
   onPreloadQuote,
   onNotify
@@ -315,6 +316,7 @@ export default function FormalIAPortalView({
           activeProjectId={activeProjectId}
           initialSessionOverride={studioOverrideSession}
           onPromoteToProject={handleMaterializeGraph}
+          onSubmitImplementation={onSubmitImplementation}
           onPreloadQuote={onPreloadQuote}
           onSessionListChanged={loadSessions}
         />

@@ -34,7 +34,9 @@ import {
   addProjectMember,
   removeProjectMember,
   fetchProjectArchitectureArtifacts,
-  upsertProjectArchitectureArtifact
+  upsertProjectArchitectureArtifact,
+  upsertPortalUserRecord,
+  deletePortalUserRecord
 } from './lib/supabaseData';
 
 // Landing Components (Minimalist Modern SDD)
@@ -91,13 +93,29 @@ import InviteProjectMemberModal from './components/portal/InviteProjectMemberMod
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 import FormalIAPortalView from './components/portal/FormalIAPortalView';
 import AdminUsersView from './components/portal/AdminUsersView';
+import ImplementationTrackerView from './components/portal/ImplementationTrackerView';
+import PartnerDashboardView from './components/portal/PartnerDashboardView';
+import CollaboratorPresalesView from './components/portal/CollaboratorPresalesView';
 import { compileProcessToPortalBundle } from './lib/formalia/compilers';
+import { DEFAULT_PRICING_CONFIG } from './data/pricingRules';
+import {
+  DEFAULT_COMMUNITY_IMPACT,
+  fetchPlatformSettings,
+  savePlatformSetting,
+  fetchImplementationRequests,
+  createOrUpdateImplementationRequest,
+  computeLiveDiffsAgainstBaseline,
+  advanceImplementationStatus,
+  reviewLiveModification
+} from './services/platformService';
 import { 
   loadRoleDefinitions, 
   saveRoleDefinitions, 
   PORTAL_USERS_STORAGE_KEY,
   isTabAllowedForRole,
-  isActionAllowedForRole
+  isActionAllowedForRole,
+  getRoleDefinition,
+  isInternalStaffRole
 } from './auth/permissionsConfig';
 
 const STORAGE_KEY = 'pathrimonio_stories_v3';
@@ -182,6 +200,9 @@ function AppContent({ initialPath = '/' }) {
         : 'landing'
   );
   const [preloadedFormaliaData, setPreloadedFormaliaData] = useState(null);
+  const [pricingConfig, setPricingConfig] = useState(DEFAULT_PRICING_CONFIG);
+  const [communityImpact, setCommunityImpact] = useState(DEFAULT_COMMUNITY_IMPACT);
+  const [implementationRequests, setImplementationRequests] = useState([]);
 
   // ── Auth state (Supabase Auth)
   const [currentUser, setCurrentUser] = useState(null);
@@ -343,16 +364,53 @@ function AppContent({ initialPath = '/' }) {
       localStorage.setItem(PORTAL_USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
     } catch (_) {}
 
+    if (isSupabaseConfigured) {
+      updatedUsers.forEach((u) => {
+        if (u?.id && u?.email) {
+          upsertPortalUserRecord(u).catch(() => {});
+        }
+      });
+    }
+
     // Si el usuario actual fue actualizado en el directorio, sincronizar su sesión viva
     if (currentUser) {
       const matching = updatedUsers.find(u => u.email?.toLowerCase() === currentUser.email?.toLowerCase());
-      if (matching && matching.role !== currentUser.role) {
+      if (matching) {
         setCurrentUser(prev => ({
           ...prev,
-          role: matching.role
+          role: matching.role || prev.role,
+          credit_balance_usd: matching.credit_balance_usd ?? prev.credit_balance_usd ?? 0,
+          bonus_role_months: matching.bonus_role_months ?? prev.bonus_role_months ?? 0,
+          referral_code: matching.referral_code || prev.referral_code || null,
+          organization: matching.organization || prev.organization || null
         }));
       }
     }
+  };
+
+  const handleDeletePortalUser = async (targetUser) => {
+    if (!targetUser?.id) return;
+    const next = portalUsers.filter((u) => u.id !== targetUser.id);
+    setPortalUsers(next);
+    try {
+      localStorage.setItem(PORTAL_USERS_STORAGE_KEY, JSON.stringify(next));
+    } catch (_) {}
+    if (isSupabaseConfigured) {
+      try { await deletePortalUserRecord(targetUser.id); } catch (_) {}
+    }
+    notify(`Usuario "${targetUser.name || targetUser.email}" eliminado.`);
+  };
+
+  const handleSavePricingConfig = async (nextConfig, actorUser) => {
+    const saved = await savePlatformSetting('pricing_config', nextConfig, actorUser || currentUser);
+    setPricingConfig({ ...DEFAULT_PRICING_CONFIG, ...saved });
+    return saved;
+  };
+
+  const handleSaveCommunityImpact = async (nextImpact, actorUser) => {
+    const saved = await savePlatformSetting('community_impact', nextImpact, actorUser || currentUser);
+    setCommunityImpact({ ...DEFAULT_COMMUNITY_IMPACT, ...saved });
+    return saved;
   };
 
   const handleUpdateRoleDefinitions = (updatedDefs) => {
@@ -608,18 +666,70 @@ function AppContent({ initialPath = '/' }) {
     }
   }, [currentView, currentUser, authReady]);
 
-  // Restricción estricta de navegación según rol (Colaborador solo puede ver roles, historias e interfaces)
+  // Restricción estricta de navegación según rol RBAC
   useEffect(() => {
     if (currentView === 'portal' && currentUser) {
-      const userRole = currentUser.role || 'Colaborador';
+      const userRole = currentUser.role || 'Usuario Registrado';
       const isAllowed = isTabAllowedForRole(userRole, activePortalTab, roleDefinitions);
       if (!isAllowed) {
-        const allowed = roleDefinitions[userRole]?.allowedTabs || ['actors', 'stories', 'interfaces'];
+        const allowed = getRoleDefinition(userRole, roleDefinitions)?.allowedTabs || ['actors', 'stories', 'interfaces', 'formalia', 'implementationStatus'];
         const fallbackTab = allowed.includes('actors') ? 'actors' : (allowed.includes('stories') ? 'stories' : allowed[0]);
         setActivePortalTab(fallbackTab);
       }
     }
   }, [currentView, currentUser, activePortalTab, roleDefinitions]);
+
+  // Cargar settings globales (Landing pricing-config e Impacto Comunitario)
+  useEffect(() => {
+    let cancelled = false;
+    fetchPlatformSettings().then((res) => {
+      if (cancelled || !res) return;
+      if (res.pricingConfig) setPricingConfig(res.pricingConfig);
+      if (res.communityImpact) setCommunityImpact(res.communityImpact);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Reconciliar rol/billetera de currentUser con directorio DB portal_users al cargar workspace
+  useEffect(() => {
+    if (!currentUser?.email || !Array.isArray(portalUsers) || portalUsers.length === 0) return;
+    const match = portalUsers.find(
+      (u) => String(u.email || '').trim().toLowerCase() === String(currentUser.email || '').trim().toLowerCase()
+    );
+    if (!match) return;
+    if (
+      match.role !== currentUser.role ||
+      Number(match.credit_balance_usd || 0) !== Number(currentUser.credit_balance_usd || 0) ||
+      Number(match.bonus_role_months || 0) !== Number(currentUser.bonus_role_months || 0) ||
+      (match.referral_code && match.referral_code !== currentUser.referral_code)
+    ) {
+      setCurrentUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              role: match.role || prev.role,
+              credit_balance_usd: Number(match.credit_balance_usd ?? prev.credit_balance_usd ?? 0),
+              bonus_role_months: Number(match.bonus_role_months ?? prev.bonus_role_months ?? 0),
+              referral_code: match.referral_code || prev.referral_code || null,
+              organization: match.organization || prev.organization || null
+            }
+          : prev
+      );
+    }
+  }, [portalUsers, currentUser?.email]);
+
+  // Cargar solicitudes de Implementación Web & Diffs según rol
+  useEffect(() => {
+    if (!currentUser?.email) {
+      setImplementationRequests([]);
+      return;
+    }
+    let cancelled = false;
+    fetchImplementationRequests(currentUser).then((reqs) => {
+      if (!cancelled) setImplementationRequests(reqs || []);
+    });
+    return () => { cancelled = true; };
+  }, [currentUser?.email, currentUser?.role]);
 
   const notify = (msg) => {
     setToastMessage(msg);
@@ -946,54 +1056,82 @@ function AppContent({ initialPath = '/' }) {
 
   // ── Auth handlers
   const handleLoginSuccess = (user) => {
-    setCurrentUser(user);
+    const cleanEmail = String(user?.email || '').trim().toLowerCase();
+    const existingDbUser = (portalUsers || []).find(
+      (u) => String(u.email || '').trim().toLowerCase() === cleanEmail
+    );
+    const reconciledUser = existingDbUser
+      ? {
+          ...user,
+          role: existingDbUser.role || user.role,
+          credit_balance_usd: Number(existingDbUser.credit_balance_usd ?? user.credit_balance_usd ?? 0),
+          bonus_role_months: Number(existingDbUser.bonus_role_months ?? user.bonus_role_months ?? 0),
+          referral_code: existingDbUser.referral_code || user.referral_code || null,
+          organization: existingDbUser.organization || user.organization || null
+        }
+      : user;
+
+    setCurrentUser(reconciledUser);
     setShowLogin(false);
     const hashQuery = window.location.hash.split('?')[1] || '';
     const requestedTab = new URLSearchParams(hashQuery).get('tab');
-    const defaultTab = user?.source === 'formalia' ? 'formalia' : 'actors';
+    const defaultTab = reconciledUser?.source === 'formalia' ? 'formalia' : 'actors';
     setActivePortalTab(requestedTab || defaultTab);
 
-    if (user.initialProjectName && (!user.initialProject || !projects.some(p => p.id === user.initialProject))) {
-      const slug = (user.initialProject || user.initialProjectName)
+    if (reconciledUser.initialProjectName && (!reconciledUser.initialProject || !projects.some(p => p.id === reconciledUser.initialProject))) {
+      const slug = (reconciledUser.initialProject || reconciledUser.initialProjectName)
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)/g, '') || `proj-${Date.now().toString().slice(-4)}`;
       const newProj = {
         id: slug,
-        name: user.initialProjectName,
-        shortName: user.initialProjectName,
-        subtitle: `Proyecto de ${user.organization || user.name}`,
-        description: `Espacio de trabajo creado por ${user.name} (${user.organization || 'Organización'})`,
+        name: reconciledUser.initialProjectName,
+        shortName: reconciledUser.initialProjectName,
+        subtitle: `Proyecto de ${reconciledUser.organization || reconciledUser.name}`,
+        description: `Espacio de trabajo creado por ${reconciledUser.name} (${reconciledUser.organization || 'Organización'})`,
         category: 'Software a Medida',
-        client: user.organization || user.name,
+        client: reconciledUser.organization || reconciledUser.name,
         icon: 'rocket_launch',
         color: 'amber',
         status: 'Fase Inicial / Requerimientos',
         version: 'v0.1.0',
-        modules: ['General', 'Autenticación', 'Módulo Principal']
+        modules: ['General', 'Autenticación', 'Módulo Principal'],
+        owner_email: cleanEmail,
+        owner_user_id: reconciledUser.id || null,
+        source_type: 'client_web'
       };
       setProjects(prev => [...prev, newProj]);
       setActiveProjectId(newProj.id);
       persist(saveProject(newProj), 'proyecto');
-    } else if (user.initialProject && projects.some(p => p.id === user.initialProject)) {
-      setActiveProjectId(user.initialProject);
+    } else if (reconciledUser.initialProject && projects.some(p => p.id === reconciledUser.initialProject)) {
+      setActiveProjectId(reconciledUser.initialProject);
     }
 
-    setPortalUsers(prev => {
-      if (prev.some(u => u.email.toLowerCase() === user.email.toLowerCase())) return prev;
-      return [...prev, {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        organization: user.organization || null,
-        role: user.role || 'Colaborador',
-        avatar: user.avatar,
-        color: user.color || 'bg-primary',
-        permissions: user.permissions || ['read', 'write']
-      }];
-    });
+    const portalRecord = {
+      id: reconciledUser.id,
+      email: cleanEmail,
+      name: reconciledUser.name,
+      organization: reconciledUser.organization || null,
+      role: reconciledUser.role || 'Usuario Registrado',
+      status: 'active',
+      referral_code: reconciledUser.referral_code || null,
+      credit_balance_usd: Number(reconciledUser.credit_balance_usd || 0),
+      bonus_role_months: Number(reconciledUser.bonus_role_months || 0),
+      source: reconciledUser.source || 'portal_signup',
+      avatar: reconciledUser.avatar,
+      color: reconciledUser.color || 'bg-amber-600',
+      permissions: reconciledUser.permissions || ['read', 'write', 'create_workspace', 'implement_web', 'send_quote']
+    };
 
-    notify(`¡Bienvenido al Portal, ${user.name}! Acceso concedido a roles e historias de usuario.`);
+    setPortalUsers(prev => {
+      if (prev.some(u => u.email.toLowerCase() === cleanEmail)) return prev;
+      return [...prev, portalRecord];
+    });
+    if (!existingDbUser && isSupabaseConfigured) {
+      upsertPortalUserRecord(portalRecord).catch(() => {});
+    }
+
+    notify(`¡Bienvenido al Portal, ${reconciledUser.name}! Rol activo: ${reconciledUser.role}.`);
   };
 
   const handleLogout = async () => {
@@ -1254,15 +1392,53 @@ function AppContent({ initialPath = '/' }) {
     );
   };
 
-  // ── Project Handlers & Scoping
+  // ── Project Handlers & Scoping por Rol (user/partner solo ven sus propios proyectos)
+  const isStaffUser = isInternalStaffRole(currentUser?.role);
+  const visibleProjects = useMemo(() => {
+    if (!currentUser || isStaffUser) return projects;
+    const cleanEmail = String(currentUser.email || '').trim().toLowerCase();
+    const ownedReqProjectIds = new Set(
+      implementationRequests
+        .filter((r) => String(r.user_email || '').trim().toLowerCase() === cleanEmail)
+        .map((r) => r.project_id)
+    );
+    const memberProjectIds = new Set(
+      projectMembers
+        .filter((m) => m.userId === currentUser.id)
+        .map((m) => m.projectId)
+    );
+    return projects.filter(
+      (p) =>
+        String(p.owner_email || '').trim().toLowerCase() === cleanEmail ||
+        ownedReqProjectIds.has(p.id) ||
+        memberProjectIds.has(p.id) ||
+        (currentUser.initialProject && p.id === currentUser.initialProject)
+    );
+  }, [projects, currentUser, isStaffUser, implementationRequests, projectMembers]);
+
+  useEffect(() => {
+    if (!currentUser || isStaffUser) return;
+    if (visibleProjects.length > 0 && !visibleProjects.some((p) => p.id === activeProjectId)) {
+      setActiveProjectId(visibleProjects[0].id);
+    }
+  }, [currentUser, isStaffUser, visibleProjects, activeProjectId]);
+
   const handleCreateProject = (newProject) => {
-    setProjects(prev => [...prev, newProject]);
-    setActiveProjectId(newProject.id);
-    persist(saveProject(newProject), 'proyecto');
-    notify(`Software "${newProject.name}" creado y activado.`);
+    const ownedProj = isStaffUser
+      ? newProject
+      : {
+          ...newProject,
+          owner_email: String(currentUser?.email || '').trim().toLowerCase() || null,
+          owner_user_id: currentUser?.id || null,
+          source_type: 'client_web'
+        };
+    setProjects(prev => [...prev, ownedProj]);
+    setActiveProjectId(ownedProj.id);
+    persist(saveProject(ownedProj), 'proyecto');
+    notify(`Software "${ownedProj.name}" creado y activado.`);
   };
 
-  const activeProject = activeProjectId === 'all'
+  const activeProject = (activeProjectId === 'all' && isStaffUser)
     ? {
         id: 'all',
         name: 'Todos los Proyectos',
@@ -1271,47 +1447,87 @@ function AppContent({ initialPath = '/' }) {
         icon: 'folder_copy',
         category: 'Visión Global'
       }
-    : (projects.find(p => p.id === activeProjectId) || projects[0]);
+    : (visibleProjects.find(p => p.id === activeProjectId) || visibleProjects[0] || {
+        id: 'personal-draft',
+        name: 'Mi Espacio PYME (Sin proyecto aún)',
+        shortName: 'Mi Espacio PYME',
+        subtitle: 'Genera tu proyecto desde FORMALIA -> Implementar en solución web',
+        status: 'Pendiente',
+        icon: 'rocket_launch',
+        category: 'Solución Web'
+      });
+
+  const effectiveScopedProjectId = (!isStaffUser && visibleProjects.length === 0)
+    ? '__none__'
+    : (activeProject?.id || activeProjectId);
 
   // Stories scoped to active project
-  const projectStories = activeProjectId === 'all'
+  const projectStories = (effectiveScopedProjectId === 'all' && isStaffUser)
     ? stories
     : stories.filter(s => {
         const pId = s.projectId || (s.id === 'US-301' ? 'portal-admin' : (s.id.startsWith('US-1') ? 'core-hub' : 'pathway'));
-        return pId === activeProjectId;
+        return pId === effectiveScopedProjectId;
       });
 
   // Interfaces scoped to active project
-  const projectInterfaces = activeProjectId === 'all'
+  const projectInterfaces = (effectiveScopedProjectId === 'all' && isStaffUser)
     ? interfaces
     : interfaces.filter(i => {
         const pId = i.projectId || (i.id === 'INT-04' ? 'portal-admin' : i.id === 'INT-07' ? 'core-hub' : 'pathway');
-        return pId === activeProjectId;
+        return pId === effectiveScopedProjectId;
       });
 
   // Data Models scoped to active project
-  const projectDataModels = activeProjectId === 'all'
+  const projectDataModels = (effectiveScopedProjectId === 'all' && isStaffUser)
     ? dataModels
     : dataModels.filter(t => {
         const pId = t.projectId || (t.id === 'TBL-04' || t.id === 'TBL-05' ? 'portal-admin' : (t.id === 'TBL-06' || t.id === 'TBL-07' ? 'core-hub' : 'pathway'));
-        return pId === activeProjectId;
+        return pId === effectiveScopedProjectId;
       });
 
   // Business Actors scoped to active project
-  const projectActors = activeProjectId === 'all'
+  const projectActors = (effectiveScopedProjectId === 'all' && isStaffUser)
     ? actors
     : actors.filter(a => {
         const pId = a.projectId || (a.id === 'ACT-04' || a.id === 'ACT-05' || a.id === 'ACT-06' ? 'portal-admin' : (a.id === 'ACT-07' || a.id === 'ACT-08' || a.id === 'ACT-09' ? 'core-hub' : 'pathway'));
-        return pId === activeProjectId;
+        return pId === effectiveScopedProjectId;
       });
 
   // Files & Deliverables scoped to active project
-  const projectFiles = activeProjectId === 'all'
+  const projectFiles = (effectiveScopedProjectId === 'all' && isStaffUser)
     ? files
     : files.filter(f => {
         const pId = f.projectId || (f.id === 'FILE-05' || f.id === 'FILE-06' || f.id === 'FILE-07' || f.id === 'FILE-08' ? 'portal-admin' : (f.id === 'FILE-09' || f.id === 'FILE-10' ? 'core-hub' : 'pathway'));
-        return pId === activeProjectId;
+        return pId === effectiveScopedProjectId;
       });
+
+  // Diffs post-envío en vivo respecto al snapshot enviado desde "Implementar en solución web"
+  const activeImplementationRequest = useMemo(() => {
+    return (
+      implementationRequests.find((r) => r.project_id === effectiveScopedProjectId) ||
+      null
+    );
+  }, [implementationRequests, effectiveScopedProjectId]);
+
+  const { diffByActorId, diffByStoryId, diffByInterfaceId } = useMemo(() => {
+    const byActor = {};
+    const byStory = {};
+    const byInterface = {};
+    if (activeImplementationRequest) {
+      const diffs = computeLiveDiffsAgainstBaseline(
+        activeImplementationRequest,
+        actors,
+        stories,
+        interfaces
+      );
+      diffs.forEach((d) => {
+        if (d.entity_type === 'actor') byActor[d.entity_id] = d;
+        else if (d.entity_type === 'story') byStory[d.entity_id] = d;
+        else if (d.entity_type === 'interface') byInterface[d.entity_id] = d;
+      });
+    }
+    return { diffByActorId: byActor, diffByStoryId: byStory, diffByInterfaceId: byInterface };
+  }, [activeImplementationRequest, actors, stories, interfaces]);
 
   // Real team members of the active project (project_members joined with portal_users).
   const projectUsers = useMemo(() => {
@@ -1617,6 +1833,104 @@ function AppContent({ initialPath = '/' }) {
     };
   };
 
+  // ── "Implementar en solución web" -> Crea Proyecto en Portal + Solicitud + Snapshot Inmutable
+  const handleSubmitWebImplementation = async ({
+    activeSession,
+    blueprint,
+    editedStories = null,
+    combinedGraph,
+    currentUser: modalUser
+  }) => {
+    const actorUser = modalUser || currentUser;
+    const {
+      reqRecord,
+      projectObj,
+      bundle,
+      finalStories
+    } = await createOrUpdateImplementationRequest({
+      user: actorUser,
+      session: activeSession,
+      graph: combinedGraph,
+      editedStories,
+      webBlueprint: blueprint
+    });
+
+    const upsertById = (existingList, incomingList) => {
+      const incomingIds = new Set(incomingList.map((item) => item.id));
+      const kept = existingList.filter((item) => !incomingIds.has(item.id));
+      return [...incomingList, ...kept];
+    };
+
+    const nextActors = upsertById(actors, bundle.actors);
+    const nextStories = upsertById(stories, finalStories);
+    const nextModels = upsertById(dataModels, bundle.dataModels);
+    const nextInterfaces = upsertById(interfaces, bundle.interfaces);
+
+    setProjects((prev) => upsertById(prev, [projectObj]));
+    setActiveProjectId(projectObj.id);
+    setActors(nextActors);
+    setStories(nextStories);
+    setDataModels(nextModels);
+    setInterfaces(nextInterfaces);
+    setFiles((prev) => upsertById(prev, [bundle.file]));
+    setImplementationRequests((prev) => [reqRecord, ...prev.filter((r) => r.id !== reqRecord.id)]);
+
+    if (bundle.handoff?.process_name && !interfaceModules.includes(bundle.handoff.process_name)) {
+      handleAddInterfaceModule(bundle.handoff.process_name);
+    }
+
+    const actorIdLookup = (roleName, projId) => {
+      const found = nextActors.find(
+        (a) => a.name === roleName && (!a.projectId || a.projectId === (projId || projectObj.id))
+      );
+      return found?.id || null;
+    };
+    const nextValidStoryIds = new Set(nextStories.map((s) => s.id));
+    const nextValidModelIds = new Set(nextModels.map((m) => m.id));
+    const nextValidInterfaceIds = new Set(nextInterfaces.map((i) => i.id));
+
+    if (isSupabaseConfigured) {
+      (async () => {
+        try {
+          await saveProject(projectObj);
+          for (const a of bundle.actors) await saveActor(a);
+          for (const s of finalStories) await saveStory(s);
+          for (const dm of bundle.dataModels) await saveDataModel(dm, nextValidStoryIds, nextValidInterfaceIds);
+          for (const iface of bundle.interfaces) await saveInterface(iface, actorIdLookup, nextValidModelIds, nextValidStoryIds);
+          await saveFile(bundle.file);
+        } catch (err) {
+          console.warn('[Implementar en solución web] Persistencia parcial:', err?.message || err);
+        }
+      })();
+    }
+
+    setCurrentView('portal');
+    setActivePortalTab('implementationStatus');
+    window.location.hash = `#portal?tab=implementationStatus&project=${encodeURIComponent(projectObj.id)}`;
+    notify(`¡Proyecto "${projectObj.name}" creado! Revisa tus 4 subvistas y el Estado de Solicitud en el Portal.`);
+    return reqRecord;
+  };
+
+  const handleAdvanceRequestStatus = async (reqRecord, nextStatus, note = '') => {
+    const updated = await advanceImplementationStatus(reqRecord, {
+      nextStatus,
+      reviewerUser: currentUser,
+      note
+    });
+    setImplementationRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+    notify(`Solicitud ${updated.id} movida a estado "${nextStatus}".`);
+  };
+
+  const handleReviewRequestDiff = async (reqRecord, liveDiffItem, decision, note = '') => {
+    const updated = await reviewLiveModification(reqRecord, liveDiffItem, {
+      decision,
+      reviewerUser: currentUser,
+      note
+    });
+    setImplementationRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+    notify(`Cambio "${liveDiffItem.entity_label}" marcado como ${decision === 'approved' ? 'Aprobado' : 'Observado'}.`);
+  };
+
   // ── Project File Handlers
   const handleSaveFile = (newFile) => {
     setFiles(prev => [newFile, ...prev]);
@@ -1794,16 +2108,18 @@ function AppContent({ initialPath = '/' }) {
             <ArchitectureSection />
 
             {/* Sección 04: Programa de Socios & Simulador de Créditos */}
-            <PartnershipSection />
+            <PartnershipSection pricingConfig={pricingConfig} />
 
             {/* Sección 05: Impacto y Pathway (Bento Grid) */}
-            <ImpactPathwayBento />
+            <ImpactPathwayBento communityImpact={communityImpact} />
 
           {/* Sección 06: Cotizador Interactivo (Split-Screen 65/35) */}
             <InteractiveEstimator
               onOpenContact={() => setIsContactModalOpen(true)}
               onNavigate={navigateToPath}
               preloadedFormaliaData={preloadedFormaliaData}
+              pricingConfig={pricingConfig}
+              currentUser={currentUser}
             />
 
             {/* Sección 07: FAQ Minimalista */}
@@ -1834,9 +2150,10 @@ function AppContent({ initialPath = '/' }) {
             <FormalIAWorkspace
               isStandalonePage
               currentUser={currentUser}
-              portalProjects={projects}
+              portalProjects={visibleProjects}
               onBackHome={() => navigateToPath('/')}
               onOpenInPortal={() => navigateToPortal('login', 'formalia')}
+              onSubmitImplementation={handleSubmitWebImplementation}
               onPreloadQuote={(data) => {
                 setPreloadedFormaliaData(data);
                 notify('Configuración de roles y canales precargada desde FORMALIA.');
@@ -1900,7 +2217,7 @@ function AppContent({ initialPath = '/' }) {
             onReturnHome={navigateToHome}
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
-            projects={projects}
+            projects={visibleProjects}
             activeProjectId={activeProjectId}
             onSelectProject={setActiveProjectId}
             onOpenNewProjectModal={() => setIsNewProjectModalOpen(true)}
@@ -1925,10 +2242,10 @@ function AppContent({ initialPath = '/' }) {
                     <span className="material-symbols-outlined text-[28px]">lock</span>
                   </div>
                   <h2 className="font-space text-lg text-white font-bold">
-                    Acceso Restringido para Perfil {currentUser?.role || 'Colaborador'}
+                    Acceso Restringido para Perfil {currentUser?.role || 'Usuario Registrado'}
                   </h2>
                   <p className="font-jakarta text-xs text-on-surface-variant leading-relaxed">
-                    Tu cuenta tiene permisos acotados exclusivamente para registrar <strong className="text-white">roles del equipo</strong>, <strong className="text-white">historias de usuario</strong> e <strong className="text-white">interfaces de software</strong>. Para acceder a este módulo, solicita autorización a un Administrador en la gestión de usuarios.
+                    Tu rol actual (<strong className="text-white">{currentUser?.role || 'Usuario Registrado'}</strong>) no tiene permiso para acceder a esta sección. Puedes volver a tus módulos habilitados a continuación.
                   </p>
                   <div className="flex items-center gap-3 pt-2">
                     <button
@@ -1965,6 +2282,7 @@ function AppContent({ initialPath = '/' }) {
                         <div className="w-full flex flex-col gap-y-4">
                           <StoryFeed
                             stories={filteredStories}
+                            diffByStoryId={diffByStoryId}
                             onEditStory={(story) => { setSelectedStory(story); setIsDetailModalOpen(true); }}
                             onDuplicateStory={handleDuplicateStory}
                             onDeleteStory={handleDeleteStory}
@@ -1981,7 +2299,7 @@ function AppContent({ initialPath = '/' }) {
                         onClose={() => setIsCreateStoryModalOpen(false)}
                         onSaveStory={handleSaveStory} 
                         onNotify={notify} 
-                        activeProjectId={activeProjectId}
+                        activeProjectId={effectiveScopedProjectId === '__none__' ? activeProject.id : activeProjectId}
                         projectActors={projectActors}
                         selectedRole={preselectedRoleForStory}
                         onNavigateToActors={() => setActivePortalTab('actors')}
@@ -2002,6 +2320,7 @@ function AppContent({ initialPath = '/' }) {
                             actors={projectActors}
                             stories={projectStories}
                             interfaces={projectInterfaces}
+                            diffByActorId={diffByActorId}
                             onEditActor={(actor) => { setSelectedActor(actor); setIsActorModalOpen(true); }}
                             onDuplicateActor={handleDuplicateActor}
                             onDeleteActor={handleDeleteActor}
@@ -2019,7 +2338,7 @@ function AppContent({ initialPath = '/' }) {
                         onClose={() => setIsCreateActorModalOpen(false)}
                         onSaveActor={handleSaveActor}
                         onNotify={notify}
-                        activeProjectId={activeProjectId}
+                        activeProjectId={effectiveScopedProjectId === '__none__' ? activeProject.id : activeProjectId}
                       />
                     </div>
                   )}
@@ -2039,6 +2358,7 @@ function AppContent({ initialPath = '/' }) {
                           <InterfaceFeed
                             interfaces={projectInterfaces}
                             projectActors={projectActors}
+                            diffByInterfaceId={diffByInterfaceId}
                             modules={interfaceModules}
                             onEditInterface={(item) => { setSelectedInterface(item); setIsInterfaceModalOpen(true); }}
                             onDuplicateInterface={handleDuplicateInterface}
@@ -2059,7 +2379,7 @@ function AppContent({ initialPath = '/' }) {
                         onSaveInterface={handleSaveInterface}
                         onNotify={notify}
                         existingStories={projectStories}
-                        activeProjectId={activeProjectId}
+                        activeProjectId={effectiveScopedProjectId === '__none__' ? activeProject.id : activeProjectId}
                         projectActors={projectActors}
                         modules={interfaceModules}
                         onAddModule={handleAddInterfaceModule}
@@ -2211,9 +2531,10 @@ function AppContent({ initialPath = '/' }) {
                       currentUser={currentUser}
                       activeProjectId={activeProjectId}
                       activeProjectName={activeProject?.shortName || activeProject?.name || 'Proyecto Activo'}
-                      projects={projects}
+                      projects={visibleProjects}
                       onSaveToProjectFiles={handleSaveFile}
                       onPromoteGraphToProject={handlePromoteFormaliaToProject}
+                      onSubmitImplementation={handleSubmitWebImplementation}
                       onPreloadQuote={(data) => {
                         setPreloadedFormaliaData(data);
                         notify('Blueprint web y roles precargados en el Cotizador.');
@@ -2226,6 +2547,72 @@ function AppContent({ initialPath = '/' }) {
                       onNotify={notify}
                     />
                   )}
+                  {activePortalTab === 'implementationStatus' && (
+                    <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
+                      <ImplementationTrackerView
+                        currentUser={currentUser}
+                        requests={implementationRequests}
+                        projects={visibleProjects}
+                        actors={actors}
+                        stories={stories}
+                        interfaces={interfaces}
+                        activeProjectId={activeProjectId}
+                        onSelectProject={setActiveProjectId}
+                        onNavigateTab={(tabId) => {
+                          setActivePortalTab(tabId);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        canReview={isStaffUser}
+                        onAdvanceStatus={handleAdvanceRequestStatus}
+                        onReviewDiff={handleReviewRequestDiff}
+                      />
+                    </div>
+                  )}
+                  {activePortalTab === 'partnerPanel' && (
+                    <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
+                      <PartnerDashboardView
+                        currentUser={currentUser}
+                        portalUsers={portalUsers}
+                        projects={visibleProjects}
+                        implementationRequests={implementationRequests}
+                        pricingConfig={pricingConfig}
+                        onUserUpdated={(patch) => {
+                          setCurrentUser((prev) => (prev ? { ...prev, ...patch } : prev));
+                          const cleanEmail = String(currentUser?.email || '').toLowerCase();
+                          handleUpdatePortalUsers(
+                            portalUsers.map((u) =>
+                              String(u.email || '').toLowerCase() === cleanEmail ? { ...u, ...patch } : u
+                            )
+                          );
+                        }}
+                        onNavigateTab={(tabId) => {
+                          setActivePortalTab(tabId);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        onNotify={notify}
+                      />
+                    </div>
+                  )}
+                  {activePortalTab === 'presalesReview' && (
+                    <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
+                      <CollaboratorPresalesView
+                        currentUser={currentUser}
+                        isAdmin={isActionAllowedForRole(currentUser?.role, 'canEditPricingConfig', roleDefinitions)}
+                        implementationRequests={implementationRequests}
+                        actors={actors}
+                        stories={stories}
+                        interfaces={interfaces}
+                        onAdvanceImplementationStatus={handleAdvanceRequestStatus}
+                        onReviewModification={handleReviewRequestDiff}
+                        onSelectProject={setActiveProjectId}
+                        onNavigateTab={(tabId) => {
+                          setActivePortalTab(tabId);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        onNotify={notify}
+                      />
+                    </div>
+                  )}
                   {activePortalTab === 'backlog'   && <BacklogView stories={projectStories} />}
                   {activePortalTab === 'sprints'   && <SprintsView />}
                   {activePortalTab === 'docs'      && <DocsView />}
@@ -2236,6 +2623,11 @@ function AppContent({ initialPath = '/' }) {
                       onUpdatePortalUsers={handleUpdatePortalUsers}
                       roleDefinitions={roleDefinitions}
                       onUpdateRoleDefinitions={handleUpdateRoleDefinitions}
+                      pricingConfig={pricingConfig}
+                      communityImpact={communityImpact}
+                      onSavePricingConfig={handleSavePricingConfig}
+                      onSaveCommunityImpact={handleSaveCommunityImpact}
+                      onDeletePortalUser={handleDeletePortalUser}
                       onNotify={notify}
                     />
                   )}

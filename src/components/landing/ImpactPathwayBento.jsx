@@ -10,7 +10,14 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-export default function ImpactPathwayBento() {
+export default function ImpactPathwayBento({ communityImpact = null }) {
+  const eduMetric = communityImpact?.education?.metric || '+120 hrs';
+  const eduLabel = communityImpact?.education?.label || 'talleres comunitarios';
+  const sportsMetric = communityImpact?.sports?.metric || '8 ligas';
+  const sportsLabel = communityImpact?.sports?.label || 'equipos respaldados';
+  const valuesMetric = communityImpact?.values?.metric || '0% fees';
+  const valuesLabel = communityImpact?.values?.label || 'cero intermediación';
+  const pathwayTitle = communityImpact?.pathway?.title || 'Pathway: El mapa vivo de desarrollo comunitario';
   return (
     <section
       id="impacto"
@@ -50,8 +57,8 @@ export default function ImpactPathwayBento() {
               </p>
             </div>
             <div className="pt-4 border-t border-[#D9DADC]/15 flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono tabular-nums text-[#D9DADC]">+120 hrs</span>
-              <span className="text-xs text-[#9699A1]">talleres comunitarios</span>
+              <span className="text-2xl font-bold font-mono tabular-nums text-[#D9DADC]">{eduMetric}</span>
+              <span className="text-xs text-[#9699A1]">{eduLabel}</span>
             </div>
           </div>
 
@@ -72,8 +79,8 @@ export default function ImpactPathwayBento() {
               </p>
             </div>
             <div className="pt-4 border-t border-[#D9DADC]/15 flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono tabular-nums text-[#D9DADC]">8 ligas</span>
-              <span className="text-xs text-[#9699A1]">equipos respaldados</span>
+              <span className="text-2xl font-bold font-mono tabular-nums text-[#D9DADC]">{sportsMetric}</span>
+              <span className="text-xs text-[#9699A1]">{sportsLabel}</span>
             </div>
           </div>
 
@@ -94,8 +101,8 @@ export default function ImpactPathwayBento() {
               </p>
             </div>
             <div className="pt-4 border-t border-[#D9DADC]/15 flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono tabular-nums text-[#FFC93C]">0% fees</span>
-              <span className="text-xs text-[#9699A1]">cero intermediación</span>
+              <span className="text-2xl font-bold font-mono tabular-nums text-[#FFC93C]">{valuesMetric}</span>
+              <span className="text-xs text-[#9699A1]">{valuesLabel}</span>
             </div>
           </div>
 
@@ -107,7 +114,7 @@ export default function ImpactPathwayBento() {
                 <span>BENEFICIO VINCULADO · APP MVP</span>
               </div>
               <h3 className="text-2xl font-bold text-[#D9DADC] mb-2 tracking-tight">
-                Pathway: El mapa vivo de desarrollo comunitario
+                {pathwayTitle}
               </h3>
               <p className="text-sm text-[#B8BAC0] leading-relaxed mb-4">
                 Como socio o usuario del software Pathrimonio, tu proyecto puede vincularse a la aplicación móvil{' '}

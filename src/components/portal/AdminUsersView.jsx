@@ -3,10 +3,19 @@ import {
   SYSTEM_MODULES, 
   SYSTEM_ACTIONS, 
   DEFAULT_ROLE_DEFINITIONS,
+  ASSIGNABLE_PRIMARY_ROLES,
+  getRoleDefinition,
+  isActionAllowedForRole,
   saveRoleDefinitions 
 } from '../../auth/permissionsConfig';
 import SectionInfoPopover from './SectionInfoPopover';
 import AdminApiUsageView from './AdminApiUsageView';
+import {
+  AdminPricingPanel,
+  AdminReferralsPanel,
+  AdminImpactPanel,
+  AdminAuditPanel
+} from './AdminGovernancePanels';
 
 export default function AdminUsersView({
   currentUser,
@@ -14,12 +23,17 @@ export default function AdminUsersView({
   onUpdatePortalUsers,
   roleDefinitions,
   onUpdateRoleDefinitions,
+  pricingConfig = null,
+  communityImpact = null,
+  onSavePricingConfig,
+  onSaveCommunityImpact,
+  onDeletePortalUser,
   onNotify
 }) {
-  const [activeAdminTab, setActiveAdminTab] = useState('users'); // 'users' | 'matrix' | 'api_usage'
+  const [activeAdminTab, setActiveAdminTab] = useState('users'); // 'users' | 'pricing' | 'referrals' | 'impact' | 'audit' | 'matrix' | 'api_usage'
   const [searchUser, setSearchUser] = useState('');
   const [roleFilter, setRoleFilter] = useState('Todos');
-  const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState('Colaborador');
+  const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState('Usuario Registrado');
 
   // Modal para agregar nuevo usuario
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
@@ -28,8 +42,18 @@ export default function AdminUsersView({
   const [newUserOrg, setNewUserOrg] = useState('');
   const [newUserRole, setNewUserRole] = useState('Colaborador');
 
+  const canEditPricing = isActionAllowedForRole(currentUser?.role, 'canEditPricingConfig', roleDefinitions);
+  const canApproveReferrals = isActionAllowedForRole(currentUser?.role, 'canApproveReferrals', roleDefinitions);
+  const canPublishImpact = isActionAllowedForRole(currentUser?.role, 'canPublishImpact', roleDefinitions);
+  const canDeletePartners = isActionAllowedForRole(currentUser?.role, 'canDeletePartners', roleDefinitions);
+
   // Roles disponibles
-  const availableRoles = Object.keys(roleDefinitions || DEFAULT_ROLE_DEFINITIONS);
+  const availableRoles = Array.from(
+    new Set([
+      ...ASSIGNABLE_PRIMARY_ROLES,
+      ...Object.keys(roleDefinitions || DEFAULT_ROLE_DEFINITIONS)
+    ])
+  );
 
   // Filtrado de usuarios
   const filteredUsers = portalUsers.filter(u => {
@@ -180,55 +204,69 @@ export default function AdminUsersView({
 
         {/* Tab Switcher */}
         <div className="flex flex-wrap items-center self-start 2xl:self-auto bg-surface-container-low p-1 rounded-lg border border-outline-variant gap-1 max-w-full">
-          <button
-            type="button"
-            onClick={() => setActiveAdminTab('users')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md font-space text-xs font-semibold transition-all cursor-pointer ${
-              activeAdminTab === 'users'
-                ? 'bg-primary text-on-primary shadow-xs'
-                : 'text-on-surface-variant hover:text-white'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">group</span>
-            <span>Manejo de Usuarios</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-black/20 text-current">
-              {portalUsers.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveAdminTab('matrix')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md font-space text-xs font-semibold transition-all cursor-pointer ${
-              activeAdminTab === 'matrix'
-                ? 'bg-primary text-on-primary shadow-xs'
-                : 'text-on-surface-variant hover:text-white'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">security</span>
-            <span>Roles y Permisos de Acceso</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveAdminTab('api_usage')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-md font-space text-xs font-semibold transition-all cursor-pointer ${
-              activeAdminTab === 'api_usage'
-                ? 'bg-primary text-on-primary shadow-xs'
-                : 'text-on-surface-variant hover:text-white'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">monitoring</span>
-            <span>Consumo &amp; Límites API</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-black/20 text-current">
-              API
-            </span>
-          </button>
+          {[
+            { id: 'users', label: 'Usuarios', icon: 'group', badge: portalUsers.length },
+            ...(canEditPricing ? [{ id: 'pricing', label: 'pricing-config', icon: 'payments', badge: 'USD' }] : []),
+            ...(canApproveReferrals ? [{ id: 'referrals', label: 'Referidos & Créditos', icon: 'verified' }] : []),
+            ...(canPublishImpact ? [{ id: 'impact', label: 'Impacto Comunitario', icon: 'volunteer_activism' }] : []),
+            { id: 'matrix', label: 'Matriz RBAC', icon: 'security' },
+            { id: 'audit', label: 'Auditoría', icon: 'history' },
+            { id: 'api_usage', label: 'APIs', icon: 'monitoring', badge: 'API' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveAdminTab(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-space text-xs font-semibold transition-all cursor-pointer ${
+                activeAdminTab === tab.id
+                  ? 'bg-primary text-on-primary shadow-xs'
+                  : 'text-on-surface-variant hover:text-white'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[15px]">{tab.icon}</span>
+              <span>{tab.label}</span>
+              {tab.badge !== undefined && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-black/20 text-current">
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
+      {activeAdminTab === 'pricing' && canEditPricing && (
+        <AdminPricingPanel
+          pricingConfig={pricingConfig}
+          onSavePricingConfig={onSavePricingConfig}
+          currentUser={currentUser}
+          onNotify={onNotify}
+        />
+      )}
+
+      {activeAdminTab === 'referrals' && canApproveReferrals && (
+        <AdminReferralsPanel
+          currentUser={currentUser}
+          portalUsers={portalUsers}
+          pricingConfig={pricingConfig}
+          onUpdatePortalUsers={onUpdatePortalUsers}
+          onNotify={onNotify}
+        />
+      )}
+
+      {activeAdminTab === 'impact' && canPublishImpact && (
+        <AdminImpactPanel
+          communityImpact={communityImpact}
+          onSaveCommunityImpact={onSaveCommunityImpact}
+          currentUser={currentUser}
+          onNotify={onNotify}
+        />
+      )}
+
+      {activeAdminTab === 'audit' && <AdminAuditPanel />}
+
       {/* ══════════════════════════════════════════
-          TAB 3: CONSUMO DIARIO DE API Y LÍMITES DE CLAVES
+          TAB: CONSUMO DIARIO DE API Y LÍMITES DE CLAVES
       ══════════════════════════════════════════ */}
       {activeAdminTab === 'api_usage' && (
         <AdminApiUsageView currentUser={currentUser} onNotify={onNotify} />
@@ -291,17 +329,17 @@ export default function AdminUsersView({
             </button>
           </div>
 
-          {/* Banner de Política de Seguridad: Cuentas de Colaborador */}
+          {/* Banner de Política de Seguridad: 5 Roles RBAC */}
           <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
             <span className="material-symbols-outlined text-amber-400 text-[20px] shrink-0 mt-0.5">
               shield_person
             </span>
             <div className="flex flex-col gap-0.5 text-xs">
               <span className="font-space font-bold text-white">
-                Política de Acceso para Colaboradores Creados desde el Login
+                Política de Acceso RBAC (5 Roles de Pathrimonio)
               </span>
               <p className="font-jakarta text-on-surface-variant leading-relaxed">
-                Las cuentas creadas públicamente se registran por defecto con el rol <strong className="text-amber-300">Colaborador</strong>. Este perfil está acotado exclusivamente a <span className="text-white font-medium">Crear Roles</span>, <span className="text-white font-medium">Crear Historias de Usuario</span> y <span className="text-white font-medium">Crear Interfaces de Software</span>. Como Administrador, puedes reasignar su rol a continuación para conceder permisos adicionales.
+                Los registros públicos (FORMALIA y Login) nacen como <strong className="text-amber-300">Usuario Registrado</strong> (15 turnos/día, Workspaces permanentes, "Implementar en solución web" y 4 subvistas del Portal + Estado/Diff). Como <strong className="text-white">Administrador</strong> puedes promover cuentas a <span className="text-emerald-300 font-medium">Socio / Cliente</span> (45 IA/día + Billetera de Créditos) o asignar perfiles internos <span className="text-sky-300 font-medium">Colaborador</span> (Preventa, Expedientes, Archifly, Files).
               </p>
             </div>
           </div>
@@ -330,7 +368,7 @@ export default function AdminUsersView({
                   ) : (
                     filteredUsers.map(user => {
                       const isSelf = user.email?.toLowerCase() === currentUser?.email?.toLowerCase();
-                      const roleConfig = roleDefinitions[user.role] || roleDefinitions['Colaborador'];
+                      const roleConfig = getRoleDefinition(user.role, roleDefinitions);
                       const isSuspended = user.status === 'suspended';
                       const allowedTabsCount = roleConfig?.allowedTabs?.length || 0;
 
@@ -441,6 +479,20 @@ export default function AdminUsersView({
                               >
                                 <span className="material-symbols-outlined text-[17px]">tune</span>
                               </button>
+                              {!isSelf && canDeletePartners && onDeletePortalUser && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (window.confirm(`¿Eliminar permanentemente a "${user.name}" (${user.role})?`)) {
+                                      onDeletePortalUser(user);
+                                    }
+                                  }}
+                                  title="Eliminar cuenta / socio"
+                                  className="p-1 rounded text-on-surface-variant hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                                >
+                                  <span className="material-symbols-outlined text-[17px]">delete</span>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>

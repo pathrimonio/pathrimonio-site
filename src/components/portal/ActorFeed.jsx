@@ -9,6 +9,7 @@ export default function ActorFeed({
   actors = [],
   stories = [],
   interfaces = [],
+  diffByActorId = {},
   onEditActor,
   onDuplicateActor,
   onDeleteActor,
@@ -226,6 +227,7 @@ export default function ActorFeed({
             <ActorCard
               key={actor.id}
               actor={actor}
+              diffInfo={diffByActorId[actor.id] || null}
               onEdit={onEditActor}
               onDuplicate={onDuplicateActor}
               onDelete={onDeleteActor}

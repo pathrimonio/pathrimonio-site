@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 export default function StoryFeed({ 
   stories, 
+  diffByStoryId = {},
   onEditStory, 
   onDuplicateStory, 
   onDeleteStory,
@@ -198,14 +199,19 @@ export default function StoryFeed({
             const isBlocker = story.priority === 'Bloqueante';
             const isHigh = story.priority === 'Alta';
             const isExpanded = expandedCriteria[story.id];
+            const diffInfo = diffByStoryId[story.id] || null;
 
             return (
               <article 
                 key={story.id}
                 className={`bg-surface-container-low rounded-lg p-4 shadow-sm hover:border-outline transition-colors flex flex-col gap-y-3 group ${
-                  isBlocker ? 'border border-outline-variant hover:border-error/40' :
-                  isHigh ? 'border-l-2 border-l-primary border-y border-r border-outline-variant' :
-                  'border border-outline-variant'
+                  diffInfo
+                    ? 'border border-amber-500/45 ring-1 ring-amber-500/20'
+                    : isBlocker
+                      ? 'border border-outline-variant hover:border-error/40'
+                      : isHigh
+                        ? 'border-l-2 border-l-primary border-y border-r border-outline-variant'
+                        : 'border border-outline-variant'
                 }`}
               >
                 {/* Card Top Meta */}
@@ -229,6 +235,24 @@ export default function StoryFeed({
                       }`}></span>
                       {story.priority.toUpperCase()}
                     </span>
+                    {diffInfo && (
+                      <span
+                        className={`px-2 py-0.5 rounded font-space text-[10px] font-bold border ${
+                          diffInfo.review_status === 'approved'
+                            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+                            : diffInfo.review_status === 'observed'
+                              ? 'bg-rose-500/15 text-rose-300 border-rose-500/40'
+                              : 'bg-amber-500/15 text-amber-300 border-amber-500/40'
+                        }`}
+                      >
+                        {diffInfo.change_kind === 'created' ? 'Nuevo post-envío' : 'Editado post-envío'} ·{' '}
+                        {diffInfo.review_status === 'approved'
+                          ? 'Aprobado'
+                          : diffInfo.review_status === 'observed'
+                            ? 'Observado'
+                            : 'Pend. revisión'}
+                      </span>
+                    )}
                   </div>
 
                   <span className="px-2 py-0.5 rounded bg-surface-container-lowest border border-outline-variant text-primary font-space text-[11px] font-medium flex items-center gap-x-1">
