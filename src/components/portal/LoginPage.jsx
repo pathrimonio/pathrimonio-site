@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { mapSupabaseUser } from '../../auth/authConfig';
+import { mapSupabaseUser, getPortalEmailRedirectUrl } from '../../auth/authConfig';
 import { supabase } from '../../lib/supabase';
 import { registerPortalUserLocally } from '../../auth/permissionsConfig';
 
@@ -76,7 +76,7 @@ export default function LoginPage({
         type: 'signup',
         email: loginEmail.trim().toLowerCase(),
         options: {
-          emailRedirectTo: `${window.location.origin}/#portal`
+          emailRedirectTo: getPortalEmailRedirectUrl('actors')
         }
       });
       if (resendErr) {
@@ -212,6 +212,7 @@ export default function LoginPage({
           email: registerEmail.trim(),
           password: registerPassword,
           options: {
+            emailRedirectTo: getPortalEmailRedirectUrl('actors'),
             data: userMetadata
           }
         });

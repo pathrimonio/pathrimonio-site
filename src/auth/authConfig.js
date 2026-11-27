@@ -105,3 +105,12 @@ export function mapSupabaseUser(user) {
     permissions: meta.permissions || demo?.permissions || ['read', 'write']
   };
 }
+
+export function getPortalEmailRedirectUrl(targetTab = 'actors') {
+  const fallbackOrigin = 'https://www.pathrimonio.site';
+  const origin =
+    typeof window !== 'undefined' && window.location?.origin
+      ? window.location.origin
+      : fallbackOrigin;
+  return `${origin}/?portal_tab=${encodeURIComponent(targetTab)}`;
+}

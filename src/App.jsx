@@ -503,6 +503,14 @@ function AppContent({ initialPath = '/' }) {
 
     const handleRouteSync = () => {
       const hash = window.location.hash || '';
+      const searchParams = new URLSearchParams(window.location.search || '');
+      const portalTabParam = searchParams.get('portal_tab');
+      const hasAuthRedirect =
+        hash.includes('access_token=') ||
+        hash.includes('type=signup') ||
+        hash.includes('error_description=') ||
+        searchParams.has('code') ||
+        searchParams.has('error_description');
       const cleanPath = normalizePathname(window.location.pathname || '/');
       setCurrentPath(cleanPath);
 
@@ -532,6 +540,11 @@ function AppContent({ initialPath = '/' }) {
             setActiveProjectId(projectParam);
           }
         }
+      } else if (portalTabParam || hasAuthRedirect) {
+        setCurrentView('portal');
+        if (portalTabParam) {
+          setActivePortalTab(portalTabParam);
+        }
       } else if (isLegalPathname(cleanPath)) {
         setCurrentView('legal');
         syncSeoHead(cleanPath);
@@ -552,6 +565,39 @@ function AppContent({ initialPath = '/' }) {
       window.removeEventListener('popstate', handleRouteSync);
     };
   }, [projects]);
+
+  // Finaliza callbacks de verificación de correo Supabase Auth una vez authReady === true
+  useEffect(() => {
+    if (!authReady || typeof window === 'undefined') return;
+    const hash = window.location.hash || '';
+    const searchParams = new URLSearchParams(window.location.search || '');
+    const portalTabParam = searchParams.get('portal_tab');
+    const hasTokenCallback = hash.includes('access_token=') || searchParams.has('code');
+    const hasErrorCallback = hash.includes('error_description=') || searchParams.has('error_description');
+
+    if (!portalTabParam && !hasTokenCallback && !hasErrorCallback) return;
+
+    if (hasErrorCallback && !currentUser) {
+      setCurrentView('portal');
+      setLoginMode('login');
+      window.history.replaceState({}, '', '/#portal');
+      notify('El enlace de verificación expiró o ya fue utilizado. Inicia sesión o reenvía el correo.');
+      return;
+    }
+
+    if (currentUser) {
+      const targetTab = portalTabParam || (currentUser.source === 'formalia' ? 'formalia' : 'actors');
+      setActivePortalTab(targetTab);
+      setCurrentView('portal');
+      setShowLogin(false);
+      window.history.replaceState(
+        {},
+        '',
+        `/#portal${targetTab !== 'actors' ? `?tab=${encodeURIComponent(targetTab)}` : ''}`
+      );
+      notify(`¡Correo confirmado! Bienvenido al Portal, ${currentUser.name || currentUser.email}.`);
+    }
+  }, [authReady, currentUser]);
 
   // Show login gate when user enters portal without a session
   useEffect(() => {

@@ -20,7 +20,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../../lib/supabase';
-import { mapSupabaseUser } from '../../../auth/authConfig';
+import { mapSupabaseUser, getPortalEmailRedirectUrl } from '../../../auth/authConfig';
 import { registerPortalUserLocally } from '../../../auth/permissionsConfig';
 import { saveFormaliaSessionToAccount } from '../../../services/formaliaService';
 
@@ -148,7 +148,7 @@ export default function FormalIASaveModal({
         type: 'signup',
         email: cleanEmail,
         options: {
-          emailRedirectTo: `${window.location.origin}/#portal?tab=formalia`
+          emailRedirectTo: getPortalEmailRedirectUrl('formalia')
         }
       });
       if (resendErr) {
@@ -203,7 +203,7 @@ export default function FormalIASaveModal({
           email: userEmail,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/#portal?tab=formalia`,
+            emailRedirectTo: getPortalEmailRedirectUrl('formalia'),
             data: userMetadata
           }
         });
