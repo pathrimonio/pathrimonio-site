@@ -15,6 +15,11 @@ import {
 } from '../src/auth/permissionsConfig.js';
 import { calculateQuotePricing } from '../src/data/pricingRules.js';
 import { getAiQuotaStatus, checkUserWorkspaceCaps } from '../api/_lib/store.js';
+import {
+  createOrUpdateImplementationRequest,
+  computeLiveDiffsAgainstBaseline
+} from '../src/services/platformService.js';
+import { SDD_EXAMPLE_LOGISTICS_GRAPH } from '../src/lib/formalia/schema.js';
 
 test('RBAC 5-Role Quota Policies & Daily Limits (5 / 15 / 45)', async () => {
   assert.equal(ROLE_QUOTA_POLICIES.guest.aiTurnsLimit, ANON_SESSION_AI_LIMIT);
@@ -94,4 +99,35 @@ test('Role Normalization & Dynamic Pricing Config Override', () => {
   );
   assert.equal(pricing.monthlyRolesBase, 80);
   assert.equal(pricing.setupFeeSavings, 600);
+});
+
+test('Web Implementation Package returns full Portal bundle & computes post-submission edit diffs', async () => {
+  const impl = await createOrUpdateImplementationRequest({
+    user: { id: 'u-test-1', email: 'pyme@test.pe', name: 'PYME Test', role: 'Usuario Registrado' },
+    session: { session_id: 'FIA-TEST-8899', workspace_id: 'ws_test' },
+    graph: SDD_EXAMPLE_LOGISTICS_GRAPH,
+    editedStories: [
+      { id: 'US-01', role: 'Despachador', title: 'Confirmar despacho con QR', priority: 'Alta' }
+    ],
+    webBlueprint: { blueprint_id: 'BP-TEST-01', theme_config: { preset: 'minimal_dark' }, ui_screens: [] }
+  });
+
+  assert.ok(impl.reqRecord && impl.request);
+  assert.ok(impl.projectObj && impl.project);
+  assert.ok(Array.isArray(impl.finalStories) && impl.finalStories.length === 1);
+  assert.ok(Array.isArray(impl.bundle.actors) && impl.bundle.actors.length > 0);
+  assert.ok(Array.isArray(impl.bundle.interfaces) && impl.bundle.interfaces.length > 0);
+
+  const modifiedStories = impl.finalStories.map((st, idx) =>
+    idx === 0 ? { ...st, action: 'Confirmar despacho con firma digital y foto' } : st
+  );
+  const diffs = computeLiveDiffsAgainstBaseline(
+    impl.reqRecord,
+    impl.bundle.actors,
+    modifiedStories,
+    impl.bundle.interfaces
+  );
+  assert.equal(diffs.length, 1);
+  assert.equal(diffs[0].change_kind, 'updated');
+  assert.equal(diffs[0].review_status, 'pending');
 });

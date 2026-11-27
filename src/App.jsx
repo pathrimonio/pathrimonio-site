@@ -97,6 +97,7 @@ import ImplementationTrackerView from './components/portal/ImplementationTracker
 import PartnerDashboardView from './components/portal/PartnerDashboardView';
 import CollaboratorPresalesView from './components/portal/CollaboratorPresalesView';
 import { compileProcessToPortalBundle } from './lib/formalia/compilers';
+import { clearLocalFormaliaSession } from './services/formaliaService';
 import { DEFAULT_PRICING_CONFIG } from './data/pricingRules';
 import {
   DEFAULT_COMMUNITY_IMPACT,
@@ -1135,14 +1136,16 @@ function AppContent({ initialPath = '/' }) {
   };
 
   const handleLogout = async () => {
+    setCurrentUser(null);
+    setImplementationRequests([]);
+    clearLocalFormaliaSession();
     if (supabase) {
       try {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: 'local' });
       } catch (error) {
-        console.error('[Supabase] signOut', error);
+        console.warn('[Supabase] signOut', error);
       }
     }
-    setCurrentUser(null);
     navigateToHome();
     notify('Sesión cerrada correctamente. Hasta pronto.');
   };
@@ -1842,12 +1845,7 @@ function AppContent({ initialPath = '/' }) {
     currentUser: modalUser
   }) => {
     const actorUser = modalUser || currentUser;
-    const {
-      reqRecord,
-      projectObj,
-      bundle,
-      finalStories
-    } = await createOrUpdateImplementationRequest({
+    const implResult = await createOrUpdateImplementationRequest({
       user: actorUser,
       session: activeSession,
       graph: combinedGraph,
@@ -1855,16 +1853,29 @@ function AppContent({ initialPath = '/' }) {
       webBlueprint: blueprint
     });
 
-    const upsertById = (existingList, incomingList) => {
-      const incomingIds = new Set(incomingList.map((item) => item.id));
-      const kept = existingList.filter((item) => !incomingIds.has(item.id));
-      return [...incomingList, ...kept];
+    const reqRecord = implResult.reqRecord || implResult.request;
+    const projectObj = implResult.projectObj || implResult.project;
+    const bundle = implResult.bundle || {};
+    const safeActors = Array.isArray(bundle.actors) ? bundle.actors : [];
+    const safeStories = Array.isArray(implResult.finalStories)
+      ? implResult.finalStories
+      : (Array.isArray(bundle.stories) ? bundle.stories : []);
+    const safeModels = Array.isArray(bundle.dataModels) ? bundle.dataModels : [];
+    const safeInterfaces = Array.isArray(bundle.interfaces) ? bundle.interfaces : [];
+    const safeFiles = bundle.file ? [bundle.file] : [];
+
+    const upsertById = (existingList = [], incomingList = []) => {
+      const safeExisting = Array.isArray(existingList) ? existingList : [];
+      const safeIncoming = Array.isArray(incomingList) ? incomingList : [];
+      const incomingIds = new Set(safeIncoming.map((item) => item?.id).filter(Boolean));
+      const kept = safeExisting.filter((item) => !incomingIds.has(item?.id));
+      return [...safeIncoming, ...kept];
     };
 
-    const nextActors = upsertById(actors, bundle.actors);
-    const nextStories = upsertById(stories, finalStories);
-    const nextModels = upsertById(dataModels, bundle.dataModels);
-    const nextInterfaces = upsertById(interfaces, bundle.interfaces);
+    const nextActors = upsertById(actors, safeActors);
+    const nextStories = upsertById(stories, safeStories);
+    const nextModels = upsertById(dataModels, safeModels);
+    const nextInterfaces = upsertById(interfaces, safeInterfaces);
 
     setProjects((prev) => upsertById(prev, [projectObj]));
     setActiveProjectId(projectObj.id);
@@ -1872,7 +1883,9 @@ function AppContent({ initialPath = '/' }) {
     setStories(nextStories);
     setDataModels(nextModels);
     setInterfaces(nextInterfaces);
-    setFiles((prev) => upsertById(prev, [bundle.file]));
+    if (safeFiles.length > 0) {
+      setFiles((prev) => upsertById(prev, safeFiles));
+    }
     setImplementationRequests((prev) => [reqRecord, ...prev.filter((r) => r.id !== reqRecord.id)]);
 
     if (bundle.handoff?.process_name && !interfaceModules.includes(bundle.handoff.process_name)) {
@@ -1890,18 +1903,16 @@ function AppContent({ initialPath = '/' }) {
     const nextValidInterfaceIds = new Set(nextInterfaces.map((i) => i.id));
 
     if (isSupabaseConfigured) {
-      (async () => {
-        try {
-          await saveProject(projectObj);
-          for (const a of bundle.actors) await saveActor(a);
-          for (const s of finalStories) await saveStory(s);
-          for (const dm of bundle.dataModels) await saveDataModel(dm, nextValidStoryIds, nextValidInterfaceIds);
-          for (const iface of bundle.interfaces) await saveInterface(iface, actorIdLookup, nextValidModelIds, nextValidStoryIds);
-          await saveFile(bundle.file);
-        } catch (err) {
-          console.warn('[Implementar en solución web] Persistencia parcial:', err?.message || err);
-        }
-      })();
+      try {
+        await saveProject(projectObj);
+        for (const a of safeActors) await saveActor(a);
+        for (const s of safeStories) await saveStory(s);
+        for (const dm of safeModels) await saveDataModel(dm, nextValidStoryIds, nextValidInterfaceIds);
+        for (const iface of safeInterfaces) await saveInterface(iface, actorIdLookup, nextValidModelIds, nextValidStoryIds);
+        if (bundle.file) await saveFile(bundle.file);
+      } catch (err) {
+        console.warn('[Implementar en solución web] Persistencia parcial:', err?.message || err);
+      }
     }
 
     setCurrentView('portal');

@@ -1,7 +1,7 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { DEFAULT_PRICING_CONFIG } from '../data/pricingRules';
-import { getRoleQuotaPolicy, normalizeRoleCode, isInternalStaffRole } from '../auth/permissionsConfig';
-import { compileProcessToPortalBundle, generateEngineeringHandoff } from '../lib/formalia/compilers';
+import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
+import { DEFAULT_PRICING_CONFIG } from '../data/pricingRules.js';
+import { getRoleQuotaPolicy, normalizeRoleCode, isInternalStaffRole } from '../auth/permissionsConfig.js';
+import { compileProcessToPortalBundle, generateEngineeringHandoff } from '../lib/formalia/compilers.js';
 
 const DAILY_USAGE_LOCAL_KEY = 'pathrimonio_daily_usage_v1';
 const SETTINGS_LOCAL_KEY = 'pathrimonio_platform_settings_v1';
@@ -594,9 +594,10 @@ export async function createOrUpdateImplementationRequest({
   const bundle = compileProcessToPortalBundle(graph, projectId);
 
   // Aplicar HUs validadas/modificadas por el usuario en el modal previo al envío
+  const sessSuffix = String(graph?.session_id || Date.now()).replace(/[^A-Za-z0-9]/g, '').slice(-4) || 'WEB';
   const finalStories = Array.isArray(editedStories) && editedStories.length > 0
     ? editedStories.map((st, idx) => ({
-        id: bundle.stories[idx]?.id || st.id || `US-WEB-${String(idx + 1).padStart(2, '0')}`,
+        id: bundle.stories[idx]?.id || `US-WEB-${sessSuffix}-${String(idx + 1).padStart(2, '0')}`,
         projectId,
         module: st.module || processName,
         priority: st.priority || 'Alta',
@@ -692,8 +693,11 @@ export async function createOrUpdateImplementationRequest({
   }
 
   return {
+    reqRecord,
     request: reqRecord,
+    projectObj,
     project: projectObj,
+    finalStories,
     bundle: {
       ...bundle,
       stories: finalStories

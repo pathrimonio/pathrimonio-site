@@ -137,7 +137,14 @@ export default function FormalIAWorkspace({
     }
 
     const saved = loadLocalFormaliaSession();
-    if (saved) {
+    const savedOwner = String(saved?.user_email || '').trim().toLowerCase();
+    const activeEmail = String(currentUser?.email || '').trim().toLowerCase();
+    const isForeignSavedSession = Boolean(saved && isAuthenticated && savedOwner && activeEmail && savedOwner !== activeEmail);
+    if (isForeignSavedSession) {
+      clearLocalFormaliaSession();
+    }
+
+    if (saved && !isForeignSavedSession) {
       const normalizedSaved = normalizeSessionWorkspace(saved);
       const normalizedMessages =
         (normalizedSaved.turns_count || 0) === 0 && (normalizedSaved.messages || []).length <= 1
@@ -194,8 +201,12 @@ export default function FormalIAWorkspace({
       role: currentUser?.role
     }).then((list) => {
       if (cancelled) return;
+      const cleanCurrentEmail = String(currentUser?.email || '').trim().toLowerCase();
       const ownedOrLocal = (list || []).filter(
-        (s) => s.is_mine || s.saved_to_account || s.session_id === session.session_id
+        (s) =>
+          s.is_mine ||
+          (s.user_email && String(s.user_email).trim().toLowerCase() === cleanCurrentEmail) ||
+          (!s.user_email && s.session_id === session.session_id)
       );
       setAccountSessions(ownedOrLocal.map(normalizeSessionWorkspace));
       setAccountDirectoryReady(true);

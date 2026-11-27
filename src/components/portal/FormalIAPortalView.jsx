@@ -56,17 +56,21 @@ export default function FormalIAPortalView({
       }
 
       // Si el usuario entra desde otro dispositivo o con sesión vacía sin espacio asignado,
-      // retomar automáticamente su última conversación guardada en la cuenta.
+      // o si el borrador local pertenecía a otro usuario, retomar su propia sesión o crear una limpia.
       const localSess = loadLocalFormaliaSession();
-      const localHasTurns =
+      const localOwner = String(localSess?.user_email || '').trim().toLowerCase();
+      const activeEmail = String(currentUser?.email || '').trim().toLowerCase();
+      const isForeignLocal = Boolean(localSess && localOwner && activeEmail && localOwner !== activeEmail);
+      const localHasTurns = !isForeignLocal && (
         (localSess?.turns_count || 0) > 0 ||
-        (localSess?.messages || []).some((m) => m.role === 'user');
-      const hasExplicitWorkspaceCanvas = Boolean(
+        (localSess?.messages || []).some((m) => m.role === 'user')
+      );
+      const hasExplicitWorkspaceCanvas = !isForeignLocal && Boolean(
         localSess &&
           localSess.session_id &&
           (localSess.saved_to_account || localSess.workspace_id || localSess.canvas_title)
       );
-      if (!studioOverrideSession && !localHasTurns && !hasExplicitWorkspaceCanvas && list.length > 0) {
+      if (!studioOverrideSession && (!localHasTurns || isForeignLocal) && !hasExplicitWorkspaceCanvas && list.length > 0) {
         const ownedSession =
           list.find((s) => s.is_mine && ((s.turns_count || 0) > 0 || (s.messages || []).length > 1)) ||
           list.find((s) => s.saved_to_account && ((s.turns_count || 0) > 0 || (s.messages || []).length > 1));

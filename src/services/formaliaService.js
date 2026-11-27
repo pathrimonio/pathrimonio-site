@@ -1254,6 +1254,8 @@ export function downloadChatTranscriptFile(session, format = 'md', versionLabel 
 
 const PRIVILEGED_REVIEWER_ROLES = new Set([
   'Admin',
+  'Administrador',
+  'Colaborador',
   'Desarrollador',
   'Fintech Lead',
   'Auditora de Impacto'
@@ -1355,7 +1357,13 @@ export async function fetchFormaliaArchive({ userId = null, userEmail = null, ro
   return Array.from(mergedMap.values())
     .filter((s) => !String(s.session_id || '').startsWith('SYS-'))
     .map(normalizeSessionWorkspace)
-    .filter((s) => !mineOnly || belongsToCurrentUser(s) || localIds.has(s.session_id))
+    .filter((s) => {
+      if (!mineOnly) return true;
+      if (belongsToCurrentUser(s)) return true;
+      // Permitir sesión local solo si aún es anónima (sin dueño distinto)
+      const sOwner = String(s.user_email || '').trim().toLowerCase();
+      return localIds.has(s.session_id) && (!sOwner || sOwner === cleanEmail);
+    })
     .filter((s) => !workspaceId || s.workspace_id === workspaceId)
     .map((s) => ({
       ...s,
