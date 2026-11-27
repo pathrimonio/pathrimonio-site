@@ -395,7 +395,7 @@ export default function FormalIAPortalView({
                   onClick={() => setOriginFilter(opt.id)}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-space font-semibold transition-colors cursor-pointer ${
                     originFilter === opt.id
-                      ? 'bg-primary text-[#18181b]'
+                      ? 'bg-primary text-on-primary shadow-xs'
                       : 'text-on-surface-variant hover:text-white'
                   }`}
                 >

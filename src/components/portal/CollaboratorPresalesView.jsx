@@ -478,7 +478,18 @@ export default function CollaboratorPresalesView({
                 <button
                   key={opt.id}
                   type="button"
-                  onClick={() => setDossierOriginFilter(opt.id)}
+                  onClick={() => {
+                    setDossierOriginFilter(opt.id);
+                    const matching = dossiers.filter((d) => {
+                      const isAnon = !d.user_email && !d.saved_to_account;
+                      if (opt.id === 'anonymous') return isAnon;
+                      if (opt.id === 'account') return !isAnon;
+                      return true;
+                    });
+                    if (matching.length > 0 && (!selectedDossier || !matching.some((m) => m.session_id === selectedDossier.session_id))) {
+                      setSelectedDossier(matching[0]);
+                    }
+                  }}
                   className={`px-2 py-1 rounded-lg text-[10px] font-space font-semibold transition-colors cursor-pointer ${
                     dossierOriginFilter === opt.id
                       ? 'bg-primary text-[#18181b]'

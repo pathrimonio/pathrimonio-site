@@ -607,26 +607,23 @@ export async function fetchFormaliaQuota({ sessionId = null, userId = null, user
 export function findClaimableAnonymousSession(targetEmail = null) {
   const cleanEmail = targetEmail ? String(targetEmail).trim().toLowerCase() : null;
   const active = loadLocalFormaliaSession();
-  const candidates = [active, ...loadLocalFormaliaArchive()].filter(
-    (s) => s && s.session_id && s.session_id !== 'FIA-2026-INIT'
-  );
-
-  for (const sess of candidates) {
-    const owner = String(sess.user_email || '').trim().toLowerCase();
-    if (owner && cleanEmail && owner !== cleanEmail) continue;
-    const isUnclaimed = !sess.saved_to_account || !owner;
-    const hasWork =
-      (sess.turns_count || 0) > 0 ||
-      (sess.messages || []).some((m) => m.role === 'user') ||
-      (sess.process_graph?.actors || []).length > 0 ||
-      (sess.process_graph?.steps || []).length > 0 ||
-      (sess.versions || []).length > 0 ||
-      (sess.generated_files || []).length > 0;
-    if (isUnclaimed && hasWork) {
-      return sess;
-    }
+  if (!active || !active.session_id || active.session_id === 'FIA-2026-INIT') {
+    return null;
   }
-  return null;
+  const owner = String(active.user_email || '').trim().toLowerCase();
+  if (owner && (!cleanEmail || owner !== cleanEmail)) {
+    return null;
+  }
+  if (active.saved_to_account && owner) {
+    return null;
+  }
+  const hasRealWork =
+    (active.turns_count || 0) > 0 ||
+    (active.messages || []).some((m) => m.role === 'user') ||
+    (active.process_graph?.steps || []).length > 0 ||
+    (active.versions || []).length > 0;
+
+  return hasRealWork ? active : null;
 }
 
 export async function claimFormaliaSession({
