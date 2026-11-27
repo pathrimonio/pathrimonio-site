@@ -1,5 +1,7 @@
 import {
   listFormaliaSessionsArchive,
+  saveSession,
+  saveArtifactVersion,
   updateFormaliaSessionWorkspace,
   deleteFormaliaSessionRecord
 } from '../../_lib/store.js';
@@ -24,10 +26,34 @@ export default async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
 
   if (req.method === 'PATCH') {
-    const sessionId = body.session_id || req.query?.session_id;
+    const sessionId = body.session_id || body.session?.session_id || req.query?.session_id;
     if (!sessionId) {
       return res.status(400).json({ error: 'session_id requerido' });
     }
+
+    if (body.session && typeof body.session === 'object') {
+      const saved = await saveSession({
+        ...body.session,
+        session_id: sessionId,
+        workspace_id: body.workspace_id ?? body.session.workspace_id,
+        workspace_name: body.workspace_name ?? body.session.workspace_name,
+        project_id: body.project_id !== undefined ? body.project_id : body.session.project_id,
+        canvas_title: body.canvas_title ?? body.session.canvas_title,
+        ...(body.user_id ? { user_id: body.user_id } : {}),
+        ...(body.user_email ? { user_email: body.user_email } : {}),
+        ...(body.user_name ? { user_name: body.user_name } : {}),
+        saved_to_account: body.saved_to_account !== undefined ? Boolean(body.saved_to_account) : true
+      });
+      if (Array.isArray(body.session.generated_files) && body.session.generated_files.length > 0) {
+        await Promise.all(
+          body.session.generated_files.slice(0, 12).map((art) =>
+            saveArtifactVersion({ ...art, session_id: sessionId }).catch(() => null)
+          )
+        );
+      }
+      return res.status(200).json({ session: saved });
+    }
+
     const updated = await updateFormaliaSessionWorkspace(sessionId, {
       workspace_id: body.workspace_id,
       workspace_name: body.workspace_name,

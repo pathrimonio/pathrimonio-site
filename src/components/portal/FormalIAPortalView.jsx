@@ -53,13 +53,18 @@ export default function FormalIAPortalView({
         setSelectedSessionId(list[0].session_id);
       }
 
-      // Si el usuario entra desde otro dispositivo o con sesión vacía en localStorage,
+      // Si el usuario entra desde otro dispositivo o con sesión vacía sin espacio asignado,
       // retomar automáticamente su última conversación guardada en la cuenta.
       const localSess = loadLocalFormaliaSession();
       const localHasTurns =
         (localSess?.turns_count || 0) > 0 ||
         (localSess?.messages || []).some((m) => m.role === 'user');
-      if (!studioOverrideSession && !localHasTurns && list.length > 0) {
+      const hasExplicitWorkspaceCanvas = Boolean(
+        localSess &&
+          localSess.session_id &&
+          (localSess.saved_to_account || localSess.workspace_id || localSess.canvas_title)
+      );
+      if (!studioOverrideSession && !localHasTurns && !hasExplicitWorkspaceCanvas && list.length > 0) {
         const ownedSession =
           list.find((s) => s.is_mine && ((s.turns_count || 0) > 0 || (s.messages || []).length > 1)) ||
           list.find((s) => s.saved_to_account && ((s.turns_count || 0) > 0 || (s.messages || []).length > 1));
@@ -297,20 +302,21 @@ export default function FormalIAPortalView({
       {/* ══════════════════════════════════════════
           MODO 1: ESTUDIO EN VIVO INTEGRADO EN EL PORTAL
       ══════════════════════════════════════════ */}
-      {portalMode === 'studio' && (
-        <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
-          <FormalIAWorkspace
-            isPortalEmbedded
-            currentUser={currentUser}
-            targetProjectName={activeProjectName}
-            portalProjects={projects}
-            activeProjectId={activeProjectId}
-            initialSessionOverride={studioOverrideSession}
-            onPromoteToProject={handleMaterializeGraph}
-            onSessionListChanged={loadSessions}
-          />
-        </div>
-      )}
+      {/* ══════════════════════════════════════════
+          MODO 1: ESTUDIO EN VIVO INTEGRADO EN EL PORTAL (mantener montado para preservar espacio/lienzo)
+      ══════════════════════════════════════════ */}
+      <div className={portalMode === 'studio' ? 'w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5' : 'hidden'}>
+        <FormalIAWorkspace
+          isPortalEmbedded
+          currentUser={currentUser}
+          targetProjectName={activeProjectName}
+          portalProjects={projects}
+          activeProjectId={activeProjectId}
+          initialSessionOverride={studioOverrideSession}
+          onPromoteToProject={handleMaterializeGraph}
+          onSessionListChanged={loadSessions}
+        />
+      </div>
 
       {/* ══════════════════════════════════════════
           MODO 2: ARCHIVO HISTÓRICO & HANDOFF SDD
@@ -462,7 +468,7 @@ export default function FormalIAPortalView({
                       <button
                         type="button"
                         onClick={() => {
-                          setStudioOverrideSession(selectedSession);
+                          setStudioOverrideSession({ ...selectedSession, _resumeAt: Date.now() });
                           setPortalMode('studio');
                         }}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-container-highest border border-outline-variant hover:border-primary text-xs font-space font-semibold text-white cursor-pointer"

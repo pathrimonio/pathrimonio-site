@@ -563,6 +563,7 @@ export async function registerGeneratedArtifact(artifact) {
 }
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+let supabaseWorkspaceColsUnsupported = false;
 
 /**
  * Vincula y persiste una sesión FORMALIA completa (chat + grafo + versiones + archivos)
@@ -608,6 +609,24 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
 
   saveLocalFormaliaSession(stampedSession);
 
+  // 1. Sincronizar primero por endpoint serverless (service_role, fallback de columnas transparente en backend sin errores 400 en consola)
+  const apiSync = await tryApiJson('/api/v1/formalia/archive', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      session_id: stampedSession.session_id,
+      ...wsMeta,
+      user_id: stampedSession.user_id,
+      user_email: stampedSession.user_email,
+      user_name: stampedSession.user_name,
+      saved_to_account: true,
+      session: stampedSession
+    })
+  });
+  if (apiSync && !apiSync._apiError && apiSync.session) {
+    return { ok: true, session: stampedSession, cloudSynced: true };
+  }
+
   if (!isSupabaseConfigured || !supabase) {
     return { ok: true, session: stampedSession, cloudSynced: false };
   }
@@ -641,9 +660,21 @@ export async function saveFormaliaSessionToAccount(session, account = {}) {
     canvas_title: wsMeta.canvas_title
   };
 
-  let { error } = await supabase
-    .from('formalia_sessions')
-    .upsert(fullWorkspacePayload, { onConflict: 'session_id' });
+  let error = null;
+  if (!supabaseWorkspaceColsUnsupported) {
+    const firstTry = await supabase
+      .from('formalia_sessions')
+      .upsert(fullWorkspacePayload, { onConflict: 'session_id' });
+    error = firstTry.error;
+    if (error) {
+      supabaseWorkspaceColsUnsupported = true;
+    }
+  } else {
+    const directExt = await supabase
+      .from('formalia_sessions')
+      .upsert(extendedPayload, { onConflict: 'session_id' });
+    error = directExt.error;
+  }
 
   // Si aún falta alguna columna workspace en BD remota, reintentar sin columnas workspace (workspace_meta sigue en process_graph)
   if (error) {
@@ -722,6 +753,20 @@ export async function renameOrMoveFormaliaCanvas({
     }
   };
 
+  const updatedMessages =
+    (session.turns_count || 0) === 0 &&
+    Array.isArray(session.messages) &&
+    session.messages.length === 1 &&
+    session.messages[0]?.role === 'assistant' &&
+    canvasTitle
+      ? [
+          {
+            ...session.messages[0],
+            content: `Hola, soy FORMALIA. Abrimos el lienzo "${nextMeta.canvas_title}" dentro de "${nextMeta.workspace_name}". Cuéntame qué flujo o subproceso vas a mapear aquí para ir construyéndolo juntos paso a paso.`
+          }
+        ]
+      : session.messages;
+
   const updated = normalizeSessionWorkspace({
     ...session,
     workspace_id: nextMeta.workspace_id,
@@ -730,23 +775,11 @@ export async function renameOrMoveFormaliaCanvas({
     canvas_title: nextMeta.canvas_title,
     process_name: nextMeta.canvas_title,
     process_graph: nextGraph,
+    messages: updatedMessages,
     updated_at: new Date().toISOString()
   });
 
   saveLocalFormaliaSession(updated);
-
-  await tryApiJson('/api/v1/formalia/archive', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      session_id: updated.session_id,
-      ...nextMeta,
-      ...(currentUser?.id ? { user_id: currentUser.id } : {}),
-      ...(currentUser?.email ? { user_email: currentUser.email } : {}),
-      ...(currentUser?.name ? { user_name: currentUser.name } : {}),
-      ...(currentUser ? { saved_to_account: true } : {})
-    })
-  });
 
   if (currentUser || updated.saved_to_account) {
     await saveFormaliaSessionToAccount(updated, {
@@ -754,6 +787,16 @@ export async function renameOrMoveFormaliaCanvas({
       email: currentUser?.email || updated.user_email,
       name: currentUser?.name || currentUser?.full_name || updated.user_name
     }).catch(() => {});
+  } else {
+    await tryApiJson('/api/v1/formalia/archive', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: updated.session_id,
+        ...nextMeta,
+        session: updated
+      })
+    });
   }
 
   return updated;
