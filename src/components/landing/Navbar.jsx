@@ -51,15 +51,25 @@ export default function Navbar({
           className="flex items-center gap-2.5 text-[var(--text-primary)] font-semibold tracking-tight text-lg group"
         >
           <img
-            src="/assets/images/icono_202609011609.jpg"
+            src={
+              isDarkTheme
+                ? '/assets/images/icono_202609011609.jpg'
+                : '/assets/images/logo_blanco_pathrimonio.png'
+            }
             alt="Pathrimonio"
-            className="h-9 sm:h-10 w-auto aspect-square rounded-[6px] object-cover shrink-0 transition-transform group-hover:scale-105 shadow-xs border border-[var(--border-subtle)]"
+            className={`h-9 sm:h-10 w-auto aspect-square rounded-[6px] shrink-0 transition-transform group-hover:scale-105 shadow-xs border border-[var(--border-subtle)] ${
+              isDarkTheme ? 'object-cover' : 'object-contain bg-white'
+            }`}
           />
           <img
-            src="/assets/images/Banner_PATHRIMONIO_COMPANY.png"
+            src={
+              isDarkTheme
+                ? '/assets/images/Banner_PATHRIMONIO_COMPANY.png'
+                : '/assets/images/Banner_Blanco_PATHRIMONIO_COMPANY.png'
+            }
             alt="Pathrimonio Company"
-            className={`h-9 sm:h-10 w-auto object-contain rounded-[6px] bg-black shrink-0 transition-transform group-hover:scale-[1.02] ${
-              isDarkTheme ? 'px-0 border border-transparent' : 'px-1.5 border border-black/15 shadow-xs'
+            className={`h-9 sm:h-10 w-auto object-contain rounded-[6px] shrink-0 transition-transform group-hover:scale-[1.02] px-0 border border-transparent ${
+              isDarkTheme ? 'bg-black' : 'bg-white'
             }`}
           />
         </a>
