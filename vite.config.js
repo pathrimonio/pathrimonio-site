@@ -1,8 +1,9 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { execFile } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
@@ -310,10 +311,149 @@ function seoLocalPlugin() {
   };
 }
 
-export default defineConfig({
-  plugins: [react(), archifyLocalDevPlugin(), seoLocalPlugin()],
-  server: {
-    port: 3000,
-    open: false
+function resolveApiV1Route(pathname) {
+  if (pathname === '/api/v1/formalia/quota') {
+    return { file: 'api/v1/formalia/sessions.js', params: { action: 'quota' } };
   }
+  if (pathname === '/api/v1/formalia/sessions/claim') {
+    return { file: 'api/v1/formalia/sessions.js', params: { action: 'claim' } };
+  }
+  if (pathname === '/api/v1/formalia/sessions') {
+    return { file: 'api/v1/formalia/sessions.js', params: {} };
+  }
+  if (pathname === '/api/v1/formalia/archive') {
+    return { file: 'api/v1/formalia/archive.js', params: {} };
+  }
+  if (pathname === '/api/v1/quotes') {
+    return { file: 'api/v1/quotes.js', params: {} };
+  }
+  if (pathname === '/api/v1/complaints') {
+    return { file: 'api/v1/complaints.js', params: {} };
+  }
+  if (pathname === '/api/v1/admin/api-usage') {
+    return { file: 'api/v1/admin/api-usage.js', params: {} };
+  }
+
+  const sessSubMatch = pathname.match(/^\/api\/v1\/formalia\/sessions\/([^/]+)\/(message|artifacts|export|to-quote)$/);
+  if (sessSubMatch) {
+    return {
+      file: `api/v1/formalia/sessions/[id]/${sessSubMatch[2]}.js`,
+      params: { id: decodeURIComponent(sessSubMatch[1]) }
+    };
+  }
+
+  const wsBpSubMatch = pathname.match(/^\/api\/v1\/workspaces\/([^/]+)\/blueprint(?:\/(stories|layout))?$/);
+  if (wsBpSubMatch) {
+    return {
+      file: 'api/v1/workspaces.js',
+      params: {
+        id: decodeURIComponent(wsBpSubMatch[1]),
+        action: wsBpSubMatch[2] || 'blueprint'
+      }
+    };
+  }
+
+  return null;
+}
+
+function apiV1LocalPlugin() {
+  return {
+    name: 'pathrimonio-vercel-api-local',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const rawUrl = req.url || '/';
+        const parsedUrl = new URL(rawUrl, 'http://localhost');
+        if (!parsedUrl.pathname.startsWith('/api/v1/')) {
+          return next();
+        }
+
+        const matched = resolveApiV1Route(parsedUrl.pathname);
+        if (!matched) {
+          return next();
+        }
+
+        const absHandler = resolve(server.config.root, matched.file);
+        if (!existsSync(absHandler)) {
+          return next();
+        }
+
+        try {
+          const query = {};
+          parsedUrl.searchParams.forEach((v, k) => {
+            query[k] = v;
+          });
+          req.query = { ...query, ...matched.params };
+
+          if (req.method !== 'GET' && req.method !== 'HEAD' && req.body === undefined) {
+            req.body = await readJsonBody(req).catch(() => ({}));
+          }
+
+          let ended = false;
+          const wrappedRes = {
+            statusCode: 200,
+            setHeader: (k, v) => res.setHeader(k, v),
+            status(code) {
+              res.statusCode = code;
+              this.statusCode = code;
+              return this;
+            },
+            json(payload) {
+              if (ended) return this;
+              ended = true;
+              if (!res.getHeader('Content-Type')) {
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              }
+              res.end(JSON.stringify(payload));
+              return this;
+            },
+            send(body) {
+              if (ended) return this;
+              ended = true;
+              if (typeof body === 'object' && body !== null && !Buffer.isBuffer(body)) {
+                if (!res.getHeader('Content-Type')) {
+                  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                }
+                res.end(JSON.stringify(body));
+              } else {
+                res.end(body ?? '');
+              }
+              return this;
+            }
+          };
+
+          const mod = await import(pathToFileURL(absHandler).href);
+          if (typeof mod?.default === 'function') {
+            await mod.default(req, wrappedRes);
+            if (!ended && !res.writableEnded) {
+              res.end();
+            }
+            return;
+          }
+          return next();
+        } catch (err) {
+          res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.end(JSON.stringify({ error: err?.message || 'Local API bridge error' }));
+        }
+      });
+    }
+  };
+}
+
+export default defineConfig(({ mode }) => {
+  const rootDir = process.cwd();
+  const loaded = loadEnv(mode, rootDir, '');
+  Object.entries(loaded).forEach(([k, v]) => {
+    if (process.env[k] === undefined && v !== undefined) {
+      process.env[k] = v;
+    }
+  });
+
+  return {
+    plugins: [react(), archifyLocalDevPlugin(), seoLocalPlugin(), apiV1LocalPlugin()],
+    server: {
+      port: 3000,
+      open: false
+    }
+  };
 });
