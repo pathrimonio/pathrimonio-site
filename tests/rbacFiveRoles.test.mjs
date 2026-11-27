@@ -14,7 +14,7 @@ import {
   isActionAllowedForRole
 } from '../src/auth/permissionsConfig.js';
 import { calculateQuotePricing } from '../src/data/pricingRules.js';
-import { getAiQuotaStatus, checkUserWorkspaceCaps, claimAnonymousSessionToAccount } from '../api/_lib/store.js';
+import { getAiQuotaStatus, checkUserWorkspaceCaps, claimAnonymousSessionToAccount, saveSession } from '../api/_lib/store.js';
 import {
   createOrUpdateImplementationRequest,
   computeLiveDiffsAgainstBaseline,
@@ -168,4 +168,30 @@ test('Claiming anonymous FORMALIA session binds owner user AND project_id cleanl
   assert.equal(claimed.session.user_email, 'pyme@test.pe');
   assert.equal(claimed.session.project_id, 'smat');
   assert.equal(claimed.session.saved_to_account, true);
+
+  // Simular cache frío en otra lambda donde memorySessions tenía 0 turnos pero fallback trae chat y diagramas reales
+  await saveSession({ session_id: 'FIA-LAMBDA-STALE-01', turns_count: 0, messages: [{ role: 'assistant', content: 'Hola' }], process_graph: { actors: [], steps: [], completeness_score: 5 } });
+  const richerClaim = await claimAnonymousSessionToAccount({
+    anonymousSessionId: 'FIA-LAMBDA-STALE-01',
+    userId: 'u-pyme-906',
+    userEmail: 'pyme@test.pe',
+    userName: 'Carlos Test',
+    projectId: 'smat',
+    workspaceName: 'SMAT',
+    fallbackSession: {
+      session_id: 'FIA-LAMBDA-STALE-01',
+      process_graph: SDD_EXAMPLE_LOGISTICS_GRAPH,
+      messages: [
+        { role: 'assistant', content: 'Hola' },
+        { role: 'user', content: 'Somos Bodega Central' },
+        { role: 'assistant', content: 'Entendido, Bodega Central' }
+      ],
+      versions: [{ version_number: 1, version_label: 'v1' }],
+      turns_count: 1,
+      completeness_score: 35
+    }
+  });
+  assert.equal(richerClaim.session.turns_count, 1);
+  assert.equal(richerClaim.session.messages.length, 3);
+  assert.ok((richerClaim.session.process_graph?.steps || []).length > 0);
 });

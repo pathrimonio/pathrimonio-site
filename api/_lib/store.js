@@ -162,9 +162,6 @@ function hydrateSessionRecord(data) {
 }
 
 export async function getSession(sessionId) {
-  if (memorySessions.has(sessionId)) {
-    return hydrateSessionRecord(memorySessions.get(sessionId));
-  }
   const sb = getSupabaseServerClient();
   if (sb) {
     try {
@@ -179,6 +176,9 @@ export async function getSession(sessionId) {
         return record;
       }
     } catch (_) {}
+  }
+  if (memorySessions.has(sessionId)) {
+    return hydrateSessionRecord(memorySessions.get(sessionId));
   }
   return null;
 }
@@ -1329,7 +1329,22 @@ export async function claimAnonymousSessionToAccount({
   }
 
   const targetSessionId = anonymousSessionId || fallbackSession.session_id;
-  const existing = (await getSession(targetSessionId)) || fallbackSession;
+  const remoteExisting = await getSession(targetSessionId);
+  const scoreRichness = (s) => {
+    if (!s || typeof s !== 'object') return -1;
+    const msgs = Array.isArray(s.messages) ? s.messages.length : 0;
+    const turns = Number(s.turns_count || 0);
+    const vers = Array.isArray(s.versions) ? s.versions.length : 0;
+    const steps = Array.isArray(s.process_graph?.steps) ? s.process_graph.steps.length : 0;
+    const actors = Array.isArray(s.process_graph?.actors) ? s.process_graph.actors.length : 0;
+    return turns * 100 + msgs * 15 + vers * 20 + steps * 10 + actors * 5 + Number(s.completeness_score || 0);
+  };
+  const existing =
+    remoteExisting && fallbackSession
+      ? (scoreRichness(fallbackSession) > scoreRichness(remoteExisting)
+          ? { ...remoteExisting, ...fallbackSession }
+          : { ...fallbackSession, ...remoteExisting })
+      : (remoteExisting || fallbackSession);
   if (!existing) {
     return { ok: false, error: 'Sesión anónima no encontrada.' };
   }
@@ -1403,10 +1418,6 @@ export async function claimAnonymousSessionToAccount({
 
 export async function getWorkspaceBlueprint(workspaceId = 'ws_general') {
   const cleanId = String(workspaceId || 'ws_general');
-  if (memoryBlueprints.has(cleanId)) {
-    return memoryBlueprints.get(cleanId);
-  }
-
   const sb = getSupabaseServerClient();
   if (sb) {
     try {
@@ -1442,6 +1453,10 @@ export async function getWorkspaceBlueprint(workspaceId = 'ws_general') {
         return data.process_graph;
       }
     } catch (_) {}
+  }
+
+  if (memoryBlueprints.has(cleanId)) {
+    return memoryBlueprints.get(cleanId);
   }
 
   return createDefaultWebBlueprint(cleanId);
