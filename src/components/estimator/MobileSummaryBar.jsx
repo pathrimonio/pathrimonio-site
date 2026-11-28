@@ -8,7 +8,7 @@ export default function MobileSummaryBar({
   onClose,
   summaryProps
 }) {
-  const { pricing, tarifaSocio } = summaryProps;
+  const { tarifaSocio } = summaryProps;
 
   return (
     <div className="lg:hidden">
@@ -32,7 +32,7 @@ export default function MobileSummaryBar({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-base font-bold font-mono tabular-nums text-[var(--text-primary)]">
-                ${pricing.monthlyTotal} USD/mes
+                $1 USD / día
               </span>
               {tarifaSocio && (
                 <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)]">
@@ -40,9 +40,8 @@ export default function MobileSummaryBar({
                 </span>
               )}
             </div>
-            <span className="text-[11px] font-mono tabular-nums text-[var(--text-secondary)] block">
-              ≈ ${pricing.dailyEquivalent}/día · {pricing.totalAdminUsers}{' '}
-              {pricing.totalAdminUsers === 1 ? 'rol' : 'roles'}
+            <span className="text-[11px] font-mono text-[var(--text-secondary)] block">
+              por usuario*
             </span>
           </div>
 
