@@ -748,9 +748,9 @@ function AppContent({ initialPath = '/' }) {
     return () => { cancelled = true; };
   }, [currentUser?.email, currentUser?.role]);
 
-  const notify = (msg) => {
+  const notify = (msg, durationMs = 4000) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(prev => prev === msg ? null : prev), 4000);
+    setTimeout(() => setToastMessage(prev => prev === msg ? null : prev), durationMs);
   };
 
   // ── Supabase: hydrate workspace once on mount (anon read)
@@ -1216,7 +1216,8 @@ function AppContent({ initialPath = '/' }) {
         if (res?.syncedIds?.length > 0) {
           applyProjectSyncState(res.nextState);
           notify(
-            `Catálogo actualizado automáticamente (${res.syncedIds.join(', ')}) a ${PLATFORM_IMPLEMENTED_VERSION}.`
+            `Catálogo actualizado automáticamente (${res.syncedIds.join(', ')}) a ${PLATFORM_IMPLEMENTED_VERSION}.`,
+            7000
           );
         }
       })

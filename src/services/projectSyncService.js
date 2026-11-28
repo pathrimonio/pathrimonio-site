@@ -21,6 +21,7 @@ import {
 
 export const PLATFORM_IMPLEMENTED_VERSION = PATHRIMONIO_SITE_PROJECT.version || 'v1.2.0';
 const AUTO_SYNC_PREF_KEY = 'pathrimonio_projects_autosync_v1';
+const AUTO_SYNC_LOCK_KEY = 'pathrimonio_projects_autosync_lock_v1';
 
 export function getAutoSyncEnabled() {
   if (typeof localStorage === 'undefined') return true;
@@ -425,6 +426,17 @@ export async function autoSyncExistingCatalogProjects(workspaceState, actorUser)
     return { syncedIds: [], nextState: workspaceState };
   }
 
+  // Evita que múltiples pestañas abiertas del mismo origen disparen upsert/auditoría duplicados al unísono
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const lockUntil = Number(localStorage.getItem(AUTO_SYNC_LOCK_KEY) || 0);
+      if (Number.isFinite(lockUntil) && lockUntil > Date.now()) {
+        return { syncedIds: [], nextState: workspaceState };
+      }
+      localStorage.setItem(AUTO_SYNC_LOCK_KEY, String(Date.now() + 15000));
+    } catch (_) {}
+  }
+
   const reports = buildProjectSyncReports({
     dbProjects: workspaceState.projects,
     dbActors: workspaceState.actors,
@@ -437,6 +449,9 @@ export async function autoSyncExistingCatalogProjects(workspaceState, actorUser)
 
   const targets = reports.filter((r) => r.isCatalogProject && r.isInDb && r.needsSync);
   if (targets.length === 0) {
+    if (typeof localStorage !== 'undefined') {
+      try { localStorage.removeItem(AUTO_SYNC_LOCK_KEY); } catch (_) {}
+    }
     return { syncedIds: [], nextState: workspaceState };
   }
 
