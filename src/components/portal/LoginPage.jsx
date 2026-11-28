@@ -328,7 +328,7 @@ export default function LoginPage({
           <img
             src="/assets/images/Banner_PATHRIMONIO_COMPANY.png"
             alt="Pathrimonio Company"
-            className="h-14 w-auto max-w-full object-contain rounded-[8px] bg-black px-2 py-1 border border-outline-variant/60 shadow-sm select-none"
+            className="h-10 sm:h-11 w-auto max-w-full object-contain select-none"
           />
         </div>
 
