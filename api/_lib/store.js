@@ -517,7 +517,7 @@ export const DEFAULT_KEY_QUOTA_PROFILES = {
   server_gemini: {
     key_id: 'server_gemini',
     provider: 'gemini',
-    label: 'Google Gemini API (Servidor FormalIA)',
+    label: 'Google Gemini API (Servidor Formalia)',
     env_names: ['GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY'],
     scope: 'server',
     tier: 'free',

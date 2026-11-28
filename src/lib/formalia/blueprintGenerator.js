@@ -72,7 +72,7 @@ async function requestStructuredJsonFromLlm({ systemPrompt, userPrompt }) {
         if (!res.ok) {
           attemptLogs.push({
             key_id: 'server_gemini',
-            key_label: 'Google Gemini API (Servidor FormalIA)',
+            key_label: 'Google Gemini API (Servidor Formalia)',
             key_fingerprint: maskKey(creds.apiKey),
             provider: 'gemini',
             model,
@@ -90,7 +90,7 @@ async function requestStructuredJsonFromLlm({ systemPrompt, userPrompt }) {
         const parsed = JSON.parse(clean);
         attemptLogs.push({
           key_id: 'server_gemini',
-          key_label: 'Google Gemini API (Servidor FormalIA)',
+          key_label: 'Google Gemini API (Servidor Formalia)',
           key_fingerprint: maskKey(creds.apiKey),
           provider: 'gemini',
           model,
@@ -164,7 +164,7 @@ async function requestStructuredJsonFromLlm({ systemPrompt, userPrompt }) {
 /**
  * Fusiona múltiples lienzos de un mismo Espacio de Trabajo en una vista unificada para Handoff/Blueprint.
  */
-export function mergeCanvasGraphs(canvases = [], workspaceName = 'Espacio FormalIA') {
+export function mergeCanvasGraphs(canvases = [], workspaceName = 'Espacio Formalia') {
   const validCanvases = (canvases || []).filter((c) => c && (c.process_graph || c.actors || c.steps));
   const actorMap = new Map();
   const actorIdRedirect = new Map();

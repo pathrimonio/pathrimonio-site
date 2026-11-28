@@ -98,7 +98,7 @@ export default function Hero({ onOpenPortal, onNavigate, theme = 'dark' }) {
                 <span className="w-5 h-5 rounded-full bg-[var(--hsl-dark-card)] text-[var(--accent-primary)] flex items-center justify-center shrink-0 transition-transform duration-150 group-hover:scale-105">
                   <Sparkles size={11} strokeWidth={2} />
                 </span>
-                <span>Mapear mi negocio gratis con FormalIA</span>
+                <span>Mapear mi negocio gratis con Formalia</span>
               </a>
             </div>
 

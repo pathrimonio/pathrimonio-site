@@ -17,6 +17,6 @@ export const FAQS = [
   },
   {
     q: '¿Qué hago si todavía no tengo claros mis procesos antes de cotizar?',
-    a: 'Puedes entrar gratis a FormalIA antes de cotizar nada. Solo cuentas en palabras simples cómo trabaja hoy tu equipo y obtienes al instante un diagrama ordenado por roles para entender qué pantallas necesitas realmente.'
+    a: 'Puedes entrar gratis a Formalia antes de cotizar nada. Solo cuentas en palabras simples cómo trabaja hoy tu equipo y obtienes al instante un diagrama ordenado por roles para entender qué pantallas necesitas realmente.'
   }
 ];

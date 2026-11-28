@@ -13,7 +13,7 @@ export default function Navbar({
 
   const navLinks = [
     { name: 'Roles', href: isSubpage ? '/#roles' : '#roles' },
-    { name: 'FormalIA', href: isSubpage ? '/formalia' : '#formalia-demo' },
+    { name: 'Formalia', href: isSubpage ? '/formalia' : '#formalia-demo' },
     { name: 'Socios', href: isSubpage ? '/#socios' : '#socios' },
     { name: 'Cotizador', href: isSubpage ? '/#cotizador' : '#cotizador' },
     { name: 'FAQ', href: isSubpage ? '/#faq' : '#faq' },

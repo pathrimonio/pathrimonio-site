@@ -181,7 +181,7 @@ export default function FormalIAShowcaseSection({ onNavigate }) {
                 }}
                 className="btn-accent group inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold shrink-0 cursor-pointer"
               >
-                <span>Mapear mi negocio gratis con FormalIA</span>
+                <span>Mapear mi negocio gratis con Formalia</span>
                 <ArrowRight size={14} strokeWidth={2} className="transition-transform duration-150 group-hover:translate-x-[3px]" />
               </a>
             </div>

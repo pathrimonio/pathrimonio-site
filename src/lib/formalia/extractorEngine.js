@@ -1073,7 +1073,7 @@ async function callGeminiConversational({ apiKey, userMessage, currentGraph, tur
         lastErr = errPayload?.error?.message || `HTTP ${response.status} (${model})`;
         attemptLogs.push({
           key_id: 'server_gemini',
-          key_label: 'Google Gemini API (Servidor FormalIA)',
+          key_label: 'Google Gemini API (Servidor Formalia)',
           key_fingerprint: keyFingerprint,
           provider: 'gemini',
           model,
@@ -1102,7 +1102,7 @@ async function callGeminiConversational({ apiKey, userMessage, currentGraph, tur
         lastErr = `Respuesta vacía en ${model}`;
         attemptLogs.push({
           key_id: 'server_gemini',
-          key_label: 'Google Gemini API (Servidor FormalIA)',
+          key_label: 'Google Gemini API (Servidor Formalia)',
           key_fingerprint: keyFingerprint,
           provider: 'gemini',
           model,
@@ -1127,7 +1127,7 @@ async function callGeminiConversational({ apiKey, userMessage, currentGraph, tur
       const parsed = sanitizeExtractorPayload(JSON.parse(cleanJsonText), currentGraph);
       attemptLogs.push({
         key_id: 'server_gemini',
-        key_label: 'Google Gemini API (Servidor FormalIA)',
+        key_label: 'Google Gemini API (Servidor Formalia)',
         key_fingerprint: keyFingerprint,
         provider: 'gemini',
         model,
@@ -1151,7 +1151,7 @@ async function callGeminiConversational({ apiKey, userMessage, currentGraph, tur
       lastErr = err?.message || `Error invocando ${model}`;
       attemptLogs.push({
         key_id: 'server_gemini',
-        key_label: 'Google Gemini API (Servidor FormalIA)',
+        key_label: 'Google Gemini API (Servidor Formalia)',
         key_fingerprint: keyFingerprint,
         provider: 'gemini',
         model,

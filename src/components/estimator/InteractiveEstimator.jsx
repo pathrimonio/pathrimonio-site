@@ -203,12 +203,12 @@ export default function InteractiveEstimator({
             <Sparkles size={15} className="text-[var(--accent-text)] shrink-0" />
             <span>
               {isPreloadedFromFormalia
-                ? <><strong>{preloadedFormaliaData?.web_blueprint_id ? `Solución Web (${preloadedFormaliaData.web_blueprint_id}) y roles precargados desde FormalIA.` : 'Configuración precargada desde tu mapa en FormalIA.'}</strong> Puedes ajustar cualquier rol libremente.</>
-                : <>¿Todavía no tienes claros qué roles necesitas? Describe tu operación en <strong className="text-[var(--text-primary)]">FormalIA</strong> y obtén tu diagrama gratis primero.</>}
+                ? <><strong>{preloadedFormaliaData?.web_blueprint_id ? `Solución Web (${preloadedFormaliaData.web_blueprint_id}) y roles precargados desde Formalia.` : 'Configuración precargada desde tu mapa en Formalia.'}</strong> Puedes ajustar cualquier rol libremente.</>
+                : <>¿Todavía no tienes claros qué roles necesitas? Describe tu operación en <strong className="text-[var(--text-primary)]">Formalia</strong> y obtén tu diagrama gratis primero.</>}
             </span>
           </div>
           <a href="/formalia" onClick={handleFormaliaLink} className={isPreloadedFromFormalia ? 'text-xs font-medium text-[var(--accent-text)] hover:underline whitespace-nowrap' : 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-[var(--bg-silver)] hover:bg-[var(--bg-silver-hover)] border border-[var(--border-silver)] text-[var(--text-on-silver)] text-xs font-semibold transition-colors whitespace-nowrap'}>
-            <span>{isPreloadedFromFormalia ? 'Volver a editar en FormalIA →' : 'Mapear mi negocio gratis con FormalIA'}</span>
+            <span>{isPreloadedFromFormalia ? 'Volver a editar en Formalia →' : 'Mapear mi negocio gratis con Formalia'}</span>
             {!isPreloadedFromFormalia && <ArrowRight size={13} />}
           </a>
         </div>

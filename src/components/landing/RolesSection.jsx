@@ -194,7 +194,7 @@ export default function RolesSection({ onNavigate }) {
               className="group inline-flex items-center gap-2 px-4 py-2 rounded-[6px] bg-[var(--hsl-dark-card)] hover:bg-[var(--hsl-dark-subtle)] border border-[var(--hsl-dark-border)] text-[var(--hsl-dark-text)] text-xs font-semibold transition-colors cursor-pointer"
             >
               <Sparkles size={13} className="text-[var(--accent-primary)]" />
-              <span>Ordenar roles en FormalIA</span>
+              <span>Ordenar roles en Formalia</span>
             </a>
             <a
               href="#cotizador"

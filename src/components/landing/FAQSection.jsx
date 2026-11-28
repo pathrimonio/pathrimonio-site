@@ -45,7 +45,7 @@ export default function FAQSection() {
                   href="/formalia"
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[6px] bg-[var(--bg-page)] border border-[var(--border-strong)] hover:border-[var(--accent-primary)] text-[var(--text-primary)] text-xs font-semibold transition-colors cursor-pointer"
                 >
-                  <span>Probar FormalIA</span>
+                  <span>Probar Formalia</span>
                 </a>
               </div>
             </div>

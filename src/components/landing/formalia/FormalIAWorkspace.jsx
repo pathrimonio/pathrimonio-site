@@ -990,7 +990,7 @@ export default function FormalIAWorkspace({
                   </span>
 
                   <select
-                    aria-label="Seleccionar espacio de trabajo FormalIA"
+                    aria-label="Seleccionar espacio de trabajo Formalia"
                     value={activeWorkspace.workspace_id}
                     onChange={(e) => handleSelectWorkspace(e.target.value)}
                     disabled={workspaceBusy}

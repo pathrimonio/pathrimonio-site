@@ -164,7 +164,7 @@ function buildOfflineSummary(days = 7) {
       {
         key_id: 'server_gemini',
         provider: 'gemini',
-        label: 'Google Gemini API (Servidor FormalIA)',
+        label: 'Google Gemini API (Servidor Formalia)',
         scope: 'server',
         connected: false,
         active_env_var: 'GEMINI_API_KEY (Solo entorno Vercel)',
