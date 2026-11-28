@@ -22,6 +22,7 @@ import {
 } from '../src/services/platformService.js';
 import { compileProcessToPortalBundle } from '../src/lib/formalia/compilers.js';
 import { SDD_EXAMPLE_LOGISTICS_GRAPH } from '../src/lib/formalia/schema.js';
+import { PATHRIMONIO_SITE_ACTORS, PATHRIMONIO_SITE_STORIES } from '../src/data/pathrimonioSiteData.js';
 
 test('RBAC 5-Role Quota Policies & Daily Limits (5 / 15 / 45)', async () => {
   assert.equal(ROLE_QUOTA_POLICIES.guest.aiTurnsLimit, ANON_SESSION_AI_LIMIT);
@@ -194,4 +195,20 @@ test('Claiming anonymous FORMALIA session binds owner user AND project_id cleanl
   assert.equal(richerClaim.session.turns_count, 1);
   assert.equal(richerClaim.session.messages.length, 3);
   assert.ok((richerClaim.session.process_graph?.steps || []).length > 0);
+});
+
+test('Pathrimonio Site registers all 5 RBAC system roles as project Actors and Stories', () => {
+  const expectedNames = [
+    'Visitante (guest)',
+    'Usuario Registrado (user)',
+    'Socio / Cliente (partner)',
+    'Colaborador (collaborator)',
+    'Administrador (admin)'
+  ];
+  const actorNames = new Set(PATHRIMONIO_SITE_ACTORS.map((a) => a.name));
+  const storyRoles = new Set(PATHRIMONIO_SITE_STORIES.map((s) => s.role));
+  expectedNames.forEach((roleLabel) => {
+    assert.ok(actorNames.has(roleLabel), `Falta actor ${roleLabel} en pathrimonio-site`);
+    assert.ok(storyRoles.has(roleLabel), `Falta historia HU para ${roleLabel} en pathrimonio-site`);
+  });
 });
