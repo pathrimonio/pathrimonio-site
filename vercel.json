@@ -29,9 +29,20 @@
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/api/v1/formalia/quota", "destination": "/api/v1/formalia/sessions?action=quota" },
     { "source": "/api/v1/formalia/sessions/claim", "destination": "/api/v1/formalia/sessions?action=claim" },
+    { "source": "/api/v1/formalia/sessions/:id/export", "destination": "/api/v1/formalia/sessions/:id/artifacts?action=export" },
+    { "source": "/api/v1/formalia/sessions/:id/to-quote", "destination": "/api/v1/formalia/sessions/:id/artifacts?action=to-quote" },
     { "source": "/api/v1/workspaces/:id/blueprint/stories", "destination": "/api/v1/workspaces?id=:id&action=stories" },
     { "source": "/api/v1/workspaces/:id/blueprint/layout", "destination": "/api/v1/workspaces?id=:id&action=layout" },
     { "source": "/api/v1/workspaces/:id/blueprint", "destination": "/api/v1/workspaces?id=:id&action=blueprint" },
+    { "source": "/api/v1/pathcom/chat", "destination": "/api/v1/pathcom?action=chat" },
+    { "source": "/api/v1/pathcom/approvals", "destination": "/api/v1/pathcom?action=approvals" },
+    { "source": "/api/v1/pathcom/projects", "destination": "/api/v1/pathcom?action=site_projects" },
+    { "source": "/api/v1/pathcom/pathway-sync", "destination": "/api/v1/pathcom?action=pathway_sync" },
+    { "source": "/api/v1/pathcom/history", "destination": "/api/v1/pathcom?action=history" },
+    { "source": "/api/v1/paths/:userId/timeline", "destination": "/api/v1/pathcom?action=timeline&userId=:userId" },
+    { "source": "/api/v1/paths/logs", "destination": "/api/v1/pathcom?action=logs" },
+    { "source": "/api/v1/market/paths/:id/validate", "destination": "/api/v1/pathcom?action=validate&id=:id" },
+    { "source": "/api/v1/market/paths", "destination": "/api/v1/pathcom?action=market_list" },
     { "source": "/((?!api/|assets/|archify/|legal/).*)", "destination": "/index.html" }
   ]
 }

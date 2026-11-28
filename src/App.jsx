@@ -91,6 +91,8 @@ import NewProjectModal from './components/portal/NewProjectModal';
 import InviteProjectMemberModal from './components/portal/InviteProjectMemberModal';
 import { BacklogView, SprintsView, DocsView, SettingsView } from './components/portal/ExtraViews';
 import FormalIAPortalView from './components/portal/FormalIAPortalView';
+import PathcomConsole from './components/pathcom/PathcomConsole';
+import { fetchPublishedSiteProjects } from './services/pathcomService';
 import AdminUsersView from './components/portal/AdminUsersView';
 import ImplementationTrackerView from './components/portal/ImplementationTrackerView';
 import PartnerDashboardView from './components/portal/PartnerDashboardView';
@@ -203,18 +205,21 @@ function AppContent({ initialPath = '/' }) {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // ── Path & View state: 'landing' | 'formalia' | 'legal' | 'portal'
+  // ── Path & View state: 'landing' | 'formalia' | 'pathcom' | 'legal' | 'portal'
   const [currentPath, setCurrentPath] = useState(initialCleanPath);
   const [currentView, setCurrentView] = useState(() =>
     isLegalPathname(initialCleanPath)
       ? 'legal'
       : initialCleanPath === '/formalia'
         ? 'formalia'
-        : 'landing'
+        : initialCleanPath === '/pathcom'
+          ? 'pathcom'
+          : 'landing'
   );
   const [preloadedFormaliaData, setPreloadedFormaliaData] = useState(null);
   const [pricingConfig, setPricingConfig] = useState(DEFAULT_PRICING_CONFIG);
   const [communityImpact, setCommunityImpact] = useState(DEFAULT_COMMUNITY_IMPACT);
+  const [publishedSiteProjects, setPublishedSiteProjects] = useState([]);
   const [implementationRequests, setImplementationRequests] = useState([]);
 
   // ── Auth state (Supabase Auth)
@@ -624,6 +629,9 @@ function AppContent({ initialPath = '/' }) {
       } else if (cleanPath === '/formalia') {
         setCurrentView('formalia');
         syncSeoHead('/formalia');
+      } else if (cleanPath === '/pathcom') {
+        setCurrentView('pathcom');
+        syncSeoHead('/pathcom');
       } else {
         setCurrentView('landing');
         syncSeoHead('/');
@@ -694,7 +702,7 @@ function AppContent({ initialPath = '/' }) {
     }
   }, [currentView, currentUser, activePortalTab, roleDefinitions]);
 
-  // Cargar settings globales (Landing pricing-config e Impacto Comunitario)
+  // Cargar settings globales (Landing pricing-config, Impacto Comunitario y proyectos Pathcom CMS)
   useEffect(() => {
     let cancelled = false;
     fetchPlatformSettings().then((res) => {
@@ -703,6 +711,11 @@ function AppContent({ initialPath = '/' }) {
       const nextImpact = res.communityImpact || res.community_impact;
       if (nextPricing) setPricingConfig(nextPricing);
       if (nextImpact) setCommunityImpact(nextImpact);
+    });
+    fetchPublishedSiteProjects().then((projectsList) => {
+      if (!cancelled && Array.isArray(projectsList)) {
+        setPublishedSiteProjects(projectsList.filter((p) => p.is_published));
+      }
     });
     return () => { cancelled = true; };
   }, []);
@@ -1019,6 +1032,9 @@ function AppContent({ initialPath = '/' }) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (cleanPath === '/formalia') {
       setCurrentView('formalia');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (cleanPath === '/pathcom') {
+      setCurrentView('pathcom');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       setCurrentView('landing');
@@ -2424,7 +2440,12 @@ function AppContent({ initialPath = '/' }) {
             <FormalIAShowcaseSection onNavigate={navigateToPath} />
 
             {/* Bloque 4: Programa de Socios + Propósito */}
-            <PartnershipSection pricingConfig={pricingConfig} communityImpact={communityImpact} />
+            <PartnershipSection
+              pricingConfig={pricingConfig}
+              communityImpact={communityImpact}
+              publishedProjects={publishedSiteProjects}
+              onNavigate={navigateToPath}
+            />
 
             {/* Bloque 5: El Cotizador Interactivo */}
             <InteractiveEstimator
@@ -2473,6 +2494,38 @@ function AppContent({ initialPath = '/' }) {
                 notify('Configuración de roles y canales precargada desde FORMALIA.');
                 navigateToPath('/#cotizador');
               }}
+            />
+          </main>
+
+          <Footer onOpenContact={() => setIsContactModalOpen(true)} onNavigate={navigateToPath} />
+          <ContactModal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} onNavigate={navigateToPath} />
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════
+          VIEW: PATHCOM (/pathcom — SSG + SPA)
+      ══════════════════════════════════════════ */}
+      {currentView === 'pathcom' && (
+        <div className="flex flex-col w-full bg-[var(--bg-page)] text-[var(--text-primary)] min-h-screen selection:bg-[var(--accent-soft)] selection:text-[var(--text-primary)] transition-colors duration-200">
+          <Navbar
+            isSubpage
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            onNavigate={navigateToPath}
+            onOpenPortal={() => navigateToPortal('login')}
+            onOpenRegister={navigateToRegister}
+          />
+
+          <main className="w-full flex-1">
+            <PathcomConsole
+              isStandalonePage
+              currentUser={currentUser}
+              onBackHome={() => navigateToPath('/')}
+              onOpenPortal={() => navigateToPortal('login', 'pathcom')}
+              onSiteProjectsChange={(list) =>
+                setPublishedSiteProjects((list || []).filter((p) => p.is_published))
+              }
+              onNotify={notify}
             />
           </main>
 
@@ -2859,6 +2912,16 @@ function AppContent({ initialPath = '/' }) {
                         setActivePortalTab(tabId);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
+                      onNotify={notify}
+                    />
+                  )}
+                  {activePortalTab === 'pathcom' && (
+                    <PathcomConsole
+                      currentUser={currentUser}
+                      onOpenPortal={() => navigateToPortal('login', 'pathcom')}
+                      onSiteProjectsChange={(list) =>
+                        setPublishedSiteProjects((list || []).filter((p) => p.is_published))
+                      }
                       onNotify={notify}
                     />
                   )}

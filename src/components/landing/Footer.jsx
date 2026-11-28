@@ -36,6 +36,14 @@ export default function Footer({ onNavigate }) {
 
           <div className="flex flex-wrap items-center gap-3">
             <a
+              href="/pathcom"
+              onClick={handleLinkClick('/pathcom')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[6px] bg-[var(--hsl-dark-card)] border border-[var(--hsl-dark-border)] hover:border-[var(--accent-primary)]/60 text-xs font-medium text-[var(--hsl-dark-text)] transition-colors"
+            >
+              <span>Pathcom &amp; Market</span>
+            </a>
+
+            <a
               href="https://play.google.com/store/apps/details?id=com.pathrimonio.pathway"
               target="_blank"
               rel="noopener noreferrer"

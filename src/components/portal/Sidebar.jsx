@@ -21,6 +21,7 @@ export default function Sidebar({
     { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US' },
     { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX' },
     { id: 'formalia', label: 'FORMALIA (Flujos → HUs)', icon: 'auto_awesome', badge: 'IA' },
+    { id: 'pathcom', label: 'Pathcom & Market', icon: 'route', badge: 'OPS' },
     { id: 'implementationStatus', label: 'Estado & Diffs Web', icon: 'rocket_launch', badge: 'DIFF' },
     { id: 'partnerPanel', label: 'Panel de Socio', icon: 'workspace_premium', badge: 'SOCIO' },
     { id: 'presalesReview', label: 'Preventa & Cotizaciones', icon: 'assignment_turned_in', badge: 'TECH' },

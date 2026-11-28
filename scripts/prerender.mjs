@@ -159,7 +159,7 @@ async function run() {
   const template = readFileSync(templatePath, 'utf8');
   const { render } = await import(pathToFileURL(ssrEntry).href);
 
-  const routesToPrerender = ['/', '/formalia', ...LEGAL_ROUTES.map((r) => r.path)];
+  const routesToPrerender = ['/', '/formalia', '/pathcom', ...LEGAL_ROUTES.map((r) => r.path)];
 
   for (const routePath of routesToPrerender) {
     const seo = getSeoForPath(routePath);

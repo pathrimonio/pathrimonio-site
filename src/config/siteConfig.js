@@ -84,6 +84,14 @@ export const FORMALIA_SEO = {
   ogImage: `${SITE_URL}/assets/images/icono_202609011609.jpg`
 };
 
+export const PATHCOM_SEO = {
+  path: '/pathcom',
+  metaTitle: 'Pathcom — Rutas Cronológicas, Pathrimonio Market y Operaciones | Pathrimonio',
+  metaDescription:
+    'Consola operativa Pathcom de Pathrimonio: registra avances con hora exacta verificada, explora guías validadas en Pathrimonio Market y sincroniza tus metas de Pathway.',
+  ogImage: `${SITE_URL}/assets/images/icono_202609011609.jpg`
+};
+
 export const COOKIE_INVENTORY = [
   {
     name: 'pathrimonio-consent',
@@ -159,6 +167,17 @@ export function getSeoForPath(pathname = '/') {
       description: FORMALIA_SEO.metaDescription,
       canonical: `${SITE_URL}${FORMALIA_SEO.path}`,
       ogImage: FORMALIA_SEO.ogImage,
+      isLegal: false,
+      legalRoute: null
+    };
+  }
+  if (cleanPath === '/pathcom') {
+    return {
+      path: PATHCOM_SEO.path,
+      title: PATHCOM_SEO.metaTitle,
+      description: PATHCOM_SEO.metaDescription,
+      canonical: `${SITE_URL}${PATHCOM_SEO.path}`,
+      ogImage: PATHCOM_SEO.ogImage,
       isLegal: false,
       legalRoute: null
     };

@@ -8,6 +8,7 @@ export const SYSTEM_MODULES = [
   { id: 'stories', label: 'Historias de Usuario', icon: 'view_kanban', badge: 'US', desc: 'Requerimientos funcionales y criterios de aceptación' },
   { id: 'interfaces', label: 'Interfaces de Software', icon: 'devices', badge: 'UI/UX', desc: 'Fichas de interfaces, mockups y puntos interactivos' },
   { id: 'formalia', label: 'FORMALIA (Flujos → HUs)', icon: 'auto_awesome', badge: 'IA', desc: 'Workspaces, lienzos permanentes, chats y solución web' },
+  { id: 'pathcom', label: 'Pathcom & Market', icon: 'route', badge: 'OPS', desc: 'Consola Pathcom, registros cronológicos, Pathrimonio Market y aprobaciones' },
   { id: 'implementationStatus', label: 'Estado de Solicitud & Diff', icon: 'fact_check', badge: 'SOL', desc: 'Seguimiento de revisión, pago, desarrollo y cambios post-envío' },
   { id: 'partnerPanel', label: 'Panel de Socio', icon: 'workspace_premium', badge: 'SOCIO', desc: 'Código de referido, Billetera de Créditos, proyectos, talleres y Pathway' },
   { id: 'presalesReview', label: 'Cotizaciones & Expedientes', icon: 'assignment_turned_in', badge: 'REV', desc: 'Cotizaciones entrantes, expedientes FORMALIA (JSON/.puml/web_blueprints) y revisiones' },
@@ -29,6 +30,7 @@ export const SYSTEM_ACTIONS = [
   { id: 'canUsePartnerPanel', label: 'Acceder al Panel de Socio, referidos y canje de créditos', module: 'partnerPanel' },
   { id: 'canReviewSubmissions', label: 'Revisar cotizaciones, expedientes y cambios post-envío', module: 'presalesReview' },
   { id: 'canManageProjects', label: 'Sincronizar catálogos SDD y administrar versiones de proyectos', module: 'projectsManager' },
+  { id: 'canApprovePathcomQueue', label: 'Aprobar o rechazar borradores CMS y acciones de Pathcom', module: 'pathcom' },
   { id: 'canManageArchitecture', label: 'Analizar y sincronizar arquitectura con archify', module: 'architecture' },
   { id: 'canManageDataModels', label: 'Modelar tablas y ejecutar scripts SQL', module: 'dataModel' },
   { id: 'canManageFiles', label: 'Acceder a Files y métodos abstractos AST', module: 'files' },
@@ -107,7 +109,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     badgeColor: 'bg-primary/20 text-primary border-primary/40',
     avatarBg: 'bg-primary',
     allowedTabs: [
-      'actors', 'stories', 'interfaces', 'formalia', 'implementationStatus',
+      'actors', 'stories', 'interfaces', 'formalia', 'pathcom', 'implementationStatus',
       'partnerPanel', 'presalesReview', 'projectsManager', 'architecture', 'dataModel', 'files',
       'backlog', 'sprints', 'docs', 'settings'
     ],
@@ -119,6 +121,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canUsePartnerPanel: true,
       canReviewSubmissions: true,
       canManageProjects: true,
+      canApprovePathcomQueue: true,
       canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,
@@ -138,7 +141,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
     avatarBg: 'bg-cyan-600',
     allowedTabs: [
-      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia',
+      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia', 'pathcom',
       'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs'
     ],
     actions: {
@@ -149,6 +152,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canUsePartnerPanel: false,
       canReviewSubmissions: true,
       canManageProjects: true,
+      canApprovePathcomQueue: true,
       canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,
@@ -167,7 +171,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-emerald-400',
     badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
     avatarBg: 'bg-emerald-600',
-    allowedTabs: ['actors', 'stories', 'interfaces', 'formalia', 'implementationStatus', 'partnerPanel'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'formalia', 'pathcom', 'implementationStatus', 'partnerPanel'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
@@ -193,7 +197,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     color: 'text-amber-400',
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
     avatarBg: 'bg-amber-600',
-    allowedTabs: ['actors', 'stories', 'interfaces', 'formalia', 'implementationStatus'],
+    allowedTabs: ['actors', 'stories', 'interfaces', 'formalia', 'pathcom', 'implementationStatus'],
     actions: {
       canCreateRoles: true,
       canCreateStories: true,
@@ -221,7 +225,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     avatarBg: 'bg-purple-500',
     allowedTabs: [
-      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia',
+      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia', 'pathcom',
       'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs'
     ],
     actions: {
@@ -232,6 +236,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canUsePartnerPanel: false,
       canReviewSubmissions: true,
       canManageProjects: true,
+      canApprovePathcomQueue: true,
       canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,
@@ -251,7 +256,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
     avatarBg: 'bg-blue-500',
     allowedTabs: [
-      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia',
+      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia', 'pathcom',
       'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs'
     ],
     actions: {
@@ -262,6 +267,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canUsePartnerPanel: false,
       canReviewSubmissions: true,
       canManageProjects: true,
+      canApprovePathcomQueue: true,
       canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,

@@ -1,7 +1,40 @@
+import { graphToPlantUML, mapProcessToQuoteConfig } from '../../../../../src/lib/formalia/compilers.js';
 import { getSession, saveArtifactVersion } from '../../../../_lib/store.js';
 
 export default async function handler(req, res) {
-  const { id } = req.query;
+  const { id, action, format = 'json' } = req.query;
+
+  // GET /api/v1/formalia/sessions/:id/export (rewritten to ?action=export)
+  if (action === 'export') {
+    if (req.method !== 'GET') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+    const session = await getSession(id);
+    if (!session || !session.process_graph) {
+      return res.status(404).json({ error: 'Sesión FORMALIA no encontrada' });
+    }
+    if (format === 'puml') {
+      const puml = graphToPlantUML(session.process_graph);
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${id}.puml"`);
+      return res.status(200).send(puml);
+    }
+    return res.status(200).json(session.process_graph);
+  }
+
+  // POST /api/v1/formalia/sessions/:id/to-quote (rewritten to ?action=to-quote)
+  if (action === 'to-quote') {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const session = await getSession(id);
+    const graph = body.process_graph || session?.process_graph;
+    if (!graph) {
+      return res.status(404).json({ error: 'No se encontró grafo de proceso para precargar la cotización.' });
+    }
+    return res.status(200).json(mapProcessToQuoteConfig(graph));
+  }
 
   if (req.method === 'GET') {
     const session = await getSession(id);

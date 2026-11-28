@@ -10,7 +10,12 @@ import {
   ExternalLink
 } from 'lucide-react';
 
-export default function PartnershipSection({ pricingConfig = null, communityImpact = null }) {
+export default function PartnershipSection({
+  pricingConfig = null,
+  communityImpact = null,
+  publishedProjects = [],
+  onNavigate
+}) {
   const [referralsCount, setReferralsCount] = useState(2);
 
   const unitRolePrice = Number(pricingConfig?.admin_role_monthly_usd ?? 30);
@@ -296,6 +301,57 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
             </div>
           </div>
         </div>
+
+        {/* 4. Proyectos activos publicados desde Pathcom (site_projects aprobados) */}
+        {Array.isArray(publishedProjects) && publishedProjects.length > 0 && (
+          <div className="mt-8 bg-[var(--hsl-dark-card)] text-[var(--hsl-dark-text)] border border-[var(--hsl-dark-border)] rounded-[12px] p-5 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-4 border-b border-[var(--hsl-dark-border)]">
+              <div>
+                <span className="text-[11px] font-mono font-semibold text-[var(--accent-primary)] uppercase tracking-wider block">
+                  ECOSISTEMA EN VIVO · PATHCOM CMS
+                </span>
+                <h3 className="text-sm sm:text-base font-bold text-[var(--hsl-dark-text)]">
+                  Proyectos actuales gestionados en pathrimonio.site
+                </h3>
+              </div>
+              <a
+                href="/pathcom"
+                onClick={(e) => {
+                  if (onNavigate) {
+                    e.preventDefault();
+                    onNavigate('/pathcom');
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-primary)] hover:underline"
+              >
+                <span>Explorar Pathcom &amp; Market</span>
+                <ArrowRight size={12} />
+              </a>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {publishedProjects.map((proj) => (
+                <div
+                  key={proj.id}
+                  className="p-4 rounded-[8px] bg-[var(--hsl-dark-page)] border border-[var(--hsl-dark-border)] flex flex-col justify-between gap-2"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent-primary)] border border-[var(--accent-border)]">
+                        {proj.status}
+                      </span>
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-bold text-[var(--hsl-dark-text)] mb-1">
+                      {proj.name}
+                    </h4>
+                    <p className="text-[11px] text-[var(--hsl-dark-text-secondary)] leading-relaxed">
+                      {proj.public_summary}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

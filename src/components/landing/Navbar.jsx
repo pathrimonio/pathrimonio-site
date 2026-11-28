@@ -14,6 +14,7 @@ export default function Navbar({
   const navLinks = [
     { name: 'Roles', href: isSubpage ? '/#roles' : '#roles' },
     { name: 'Formalia', href: isSubpage ? '/formalia' : '#formalia-demo' },
+    { name: 'Pathcom', href: '/pathcom' },
     { name: 'Socios', href: isSubpage ? '/#socios' : '#socios' },
     { name: 'Cotizador', href: isSubpage ? '/#cotizador' : '#cotizador' },
     { name: 'FAQ', href: isSubpage ? '/#faq' : '#faq' },
@@ -64,7 +65,7 @@ export default function Navbar({
         </a>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden md:flex items-center gap-5 lg:gap-6">
           {navLinks.map((link) => (
             <a
               key={link.name}

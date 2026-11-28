@@ -6,6 +6,8 @@ const BUILD_LASTMOD = '2026-11-25';
 
 const INDEXABLE_ROUTES = [
   { path: '/', changefreq: 'weekly', priority: '1.0' },
+  { path: '/formalia', changefreq: 'weekly', priority: '0.8' },
+  { path: '/pathcom', changefreq: 'weekly', priority: '0.8' },
   { path: '/legal/aviso-legal', changefreq: 'monthly', priority: '0.5' },
   { path: '/legal/privacidad', changefreq: 'monthly', priority: '0.5' },
   { path: '/legal/cookies', changefreq: 'monthly', priority: '0.5' },
