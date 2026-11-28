@@ -32,7 +32,7 @@ export default function FAQSection() {
               <div className="flex flex-wrap items-center gap-2.5">
                 <a
                   href="#cotizador"
-                  className="group inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer"
+                  className="btn-accent group inline-flex items-center gap-1.5 px-3.5 py-2 text-xs cursor-pointer"
                 >
                   <span>Cotizar mi sistema</span>
                   <ArrowRight
@@ -43,7 +43,7 @@ export default function FAQSection() {
                 </a>
                 <a
                   href="/formalia"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[6px] bg-[var(--bg-page)] border border-[var(--border-strong)] hover:border-[#FFC000] text-[var(--text-primary)] text-xs font-semibold transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[6px] bg-[var(--bg-page)] border border-[var(--border-strong)] hover:border-[var(--accent-primary)] text-[var(--text-primary)] text-xs font-semibold transition-colors cursor-pointer"
                 >
                   <span>Probar FormalIA</span>
                 </a>
@@ -79,7 +79,7 @@ export default function FAQSection() {
                     <div
                       className={`t-acc-chevron w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
                         isOpen
-                          ? 'bg-[#FFC93C] text-[#2B2D31]'
+                          ? 'bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)]'
                           : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)] group-hover:bg-[var(--bg-surface)]'
                       }`}
                     >

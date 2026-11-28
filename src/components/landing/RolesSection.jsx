@@ -91,7 +91,7 @@ export default function RolesSection({ onNavigate }) {
         {/* Encabezado limpio + explicación lógica de $1/día por rol */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-14">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#2B2D31] text-[#D9DADC] text-xs font-mono mb-3">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[var(--hsl-dark-card)] text-[var(--hsl-dark-text)] border border-[var(--hsl-dark-border)] text-xs font-mono mb-3">
               <span className="font-semibold">CONTROL POR ROLES</span>
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-[var(--text-on-silver)] tracking-[-0.025em] leading-[1.1] mb-4">
@@ -104,7 +104,7 @@ export default function RolesSection({ onNavigate }) {
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-[8px] bg-[#2B2D31]/10 border border-[var(--border-silver)] text-xs font-medium text-[var(--text-on-silver)] shrink-0 self-start lg:self-end">
+          <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-[8px] bg-[var(--bg-silver-subtle)] border border-[var(--border-silver)] text-xs font-medium text-[var(--text-on-silver)] shrink-0 self-start lg:self-end">
             <Lock size={14} strokeWidth={2} className="shrink-0" />
             <span>Cero contraseñas compartidas entre colaboradores</span>
           </div>
@@ -122,41 +122,41 @@ export default function RolesSection({ onNavigate }) {
                 <div>
                   {/* Cabecera */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-[6px] bg-[#363940] border border-[#FFC000]/45 flex items-center justify-center text-[#FFC000]">
+                    <div className="w-10 h-10 rounded-[6px] bg-[var(--hsl-dark-subtle)] border border-[var(--accent-border)] flex items-center justify-center text-[var(--accent-primary)]">
                       <Icon size={20} strokeWidth={1.7} />
                     </div>
-                    <span className="text-[11px] font-mono font-medium text-[#D9DADC] bg-[#363940] border border-[#D9DADC]/15 px-2.5 py-1 rounded-[4px]">
+                    <span className="text-[11px] font-mono font-medium text-[var(--hsl-dark-text)] bg-[var(--hsl-dark-subtle)] border border-[var(--hsl-dark-border)] px-2.5 py-1 rounded-[4px]">
                       {role.badge}
                     </span>
                   </div>
 
-                  <h3 className="text-xl font-bold text-[#D9DADC] mb-2 tracking-tight">
+                  <h3 className="text-xl font-bold text-[var(--hsl-dark-text)] mb-2 tracking-tight">
                     {role.title}
                   </h3>
 
-                  <p className="text-sm text-[#B8BAC0] leading-relaxed mb-5">
+                  <p className="text-sm text-[var(--hsl-dark-text-secondary)] leading-relaxed mb-5">
                     {role.description}
                   </p>
 
-                  {/* Miniatura viva de lo que ve ese rol (Cards.md: datos reales, sin cajas redundantes) */}
-                  <div className="rounded-[8px] bg-[#232529] border border-[#D9DADC]/12 p-3.5 mb-5">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-[#9699A1] mb-2">
+                  {/* Miniatura viva de lo que ve ese rol (HSL Dark 8% dentro de Card 12%) */}
+                  <div className="rounded-[8px] bg-[var(--hsl-dark-page)] border border-[var(--hsl-dark-border)] p-3.5 mb-5">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-[var(--hsl-dark-text-muted)] mb-2">
                       <span>{role.screenPreview.header}</span>
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#FFC000]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)]" />
                     </div>
-                    <div className="flex items-baseline gap-2 mb-3 pb-2.5 border-b border-[#D9DADC]/10">
-                      <span className="text-lg font-bold font-mono tabular-nums text-[#FFC000]">
+                    <div className="flex items-baseline gap-2 mb-3 pb-2.5 border-b border-[var(--hsl-dark-border)]">
+                      <span className="text-lg font-bold font-mono tabular-nums text-[var(--accent-primary)]">
                         {role.screenPreview.metric}
                       </span>
-                      <span className="text-[11px] text-[#B8BAC0]">
+                      <span className="text-[11px] text-[var(--hsl-dark-text-secondary)]">
                         {role.screenPreview.metricLabel}
                       </span>
                     </div>
                     <div className="flex flex-col gap-1.5">
                       {role.screenPreview.rows.map((r, rIdx) => (
                         <div key={rIdx} className="flex items-center justify-between text-[11px] gap-2">
-                          <span className="text-[#B8BAC0] truncate">{r.label}</span>
-                          <span className="font-mono text-[#D9DADC] font-medium shrink-0">{r.status}</span>
+                          <span className="text-[var(--hsl-dark-text-secondary)] truncate">{r.label}</span>
+                          <span className="font-mono text-[var(--hsl-dark-text)] font-medium shrink-0">{r.status}</span>
                         </div>
                       ))}
                     </div>
@@ -164,10 +164,10 @@ export default function RolesSection({ onNavigate }) {
                 </div>
 
                 {/* Permisos clave */}
-                <div className="pt-3.5 border-t border-[#D9DADC]/15 flex flex-col gap-2">
+                <div className="pt-3.5 border-t border-[var(--hsl-dark-border)] flex flex-col gap-2">
                   {role.permissions.map((perm, idx) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs text-[#D9DADC]/90">
-                      <CheckCircle2 size={13} strokeWidth={2} className="text-[#FFC000] shrink-0" />
+                    <div key={idx} className="flex items-center gap-2 text-xs text-[var(--hsl-dark-text)]/90">
+                      <CheckCircle2 size={13} strokeWidth={2} className="text-[var(--accent-primary)] shrink-0" />
                       <span>{perm}</span>
                     </div>
                   ))}
@@ -191,14 +191,14 @@ export default function RolesSection({ onNavigate }) {
                   onNavigate('/formalia');
                 }
               }}
-              className="group inline-flex items-center gap-2 px-4 py-2 rounded-[6px] bg-[#2B2D31] hover:bg-[#363940] text-[#D9DADC] text-xs font-semibold transition-colors cursor-pointer"
+              className="group inline-flex items-center gap-2 px-4 py-2 rounded-[6px] bg-[var(--hsl-dark-card)] hover:bg-[var(--hsl-dark-subtle)] border border-[var(--hsl-dark-border)] text-[var(--hsl-dark-text)] text-xs font-semibold transition-colors cursor-pointer"
             >
-              <Sparkles size={13} className="text-[#FFC000]" />
+              <Sparkles size={13} className="text-[var(--accent-primary)]" />
               <span>Ordenar roles en FormalIA</span>
             </a>
             <a
               href="#cotizador"
-              className="group inline-flex items-center gap-1.5 px-4 py-2 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] text-[#2B2D31] text-xs font-bold transition-colors cursor-pointer"
+              className="btn-accent group inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold cursor-pointer"
             >
               <span>Cotizar mis roles</span>
               <ArrowRight size={13} strokeWidth={2} className="transition-transform duration-150 group-hover:translate-x-[3px]" />

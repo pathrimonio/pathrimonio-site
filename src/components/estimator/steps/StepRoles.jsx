@@ -87,7 +87,7 @@ export default function StepRoles({
                   type="button"
                   onClick={() => onRoleCountChange(role.id, 1)}
                   aria-label={`Agregar usuario a ${role.name}`}
-                  className="w-8 h-8 rounded-[6px] border border-[#FFC000] bg-[#FFC000] hover:bg-[#FFD038] flex items-center justify-center text-[#09090B] transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-[6px] border border-[var(--accent-primary)] bg-[var(--accent-primary)] hover:bg-[var(--accent-primary-hover)] flex items-center justify-center text-[var(--accent-text-on-solid)] transition-colors cursor-pointer"
                 >
                   <Plus size={13} strokeWidth={2} />
                 </button>
@@ -99,7 +99,7 @@ export default function StepRoles({
 
       {totalAdminUsers === 0 && (
         <div className="p-3 rounded-[8px] bg-amber-500/10 border border-amber-500/35 text-xs text-[var(--text-primary)] flex items-center gap-2">
-          <AlertTriangle size={14} className="text-[#FFC000] shrink-0" />
+          <AlertTriangle size={14} className="text-[var(--accent-text)] shrink-0" />
           <span>Activa al menos 1 rol operativo para continuar al siguiente paso.</span>
         </div>
       )}
@@ -117,7 +117,7 @@ export default function StepRoles({
         <button
           type="button"
           onClick={onNext}
-          className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] active:scale-[0.985] text-[#09090B] text-xs font-bold transition-all cursor-pointer"
+          className="btn-accent group inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold cursor-pointer"
         >
           <span>Continuar a Canales</span>
           <ArrowRight

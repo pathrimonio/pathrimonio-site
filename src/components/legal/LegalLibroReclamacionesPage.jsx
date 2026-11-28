@@ -170,7 +170,7 @@ export default function LegalLibroReclamacionesPage({
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold cursor-pointer"
+              className="btn-accent inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold cursor-pointer"
             >
               <Printer size={14} />
               <span>Imprimir / Guardar PDF</span>
@@ -451,7 +451,7 @@ export default function LegalLibroReclamacionesPage({
               <button
                 type="submit"
                 disabled={submitting || !privacyAccepted}
-                className="px-5 py-2.5 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] disabled:opacity-45 disabled:cursor-not-allowed text-[#2B2D31] text-xs font-semibold transition-colors cursor-pointer"
+                className="btn-accent px-5 py-2.5 disabled:opacity-45 disabled:cursor-not-allowed text-xs font-semibold cursor-pointer"
               >
                 {submitting ? 'Registrando hoja...' : 'Enviar Hoja de Reclamación'}
               </button>

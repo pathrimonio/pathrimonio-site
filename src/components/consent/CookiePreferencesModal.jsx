@@ -113,9 +113,9 @@ export default function CookiePreferencesModal({ onNavigate }) {
             </div>
             <div
               aria-label="Cookies necesarias activadas siempre"
-              className="w-10 h-5 rounded-full bg-[#FFC93C]/80 border border-[#FFC93C] flex items-center justify-end px-0.5 shrink-0 opacity-85 cursor-not-allowed"
+              className="w-10 h-5 rounded-full bg-[var(--accent-primary)]/80 border border-[var(--accent-primary)] flex items-center justify-end px-0.5 shrink-0 opacity-85 cursor-not-allowed"
             >
-              <span className="w-4 h-4 rounded-full bg-[#2B2D31]" />
+              <span className="w-4 h-4 rounded-full bg-[var(--accent-text-on-solid)]" />
             </div>
           </div>
 
@@ -140,13 +140,13 @@ export default function CookiePreferencesModal({ onNavigate }) {
               onClick={() => setAnalyticsEnabled((prev) => !prev)}
               className={`w-10 h-5 rounded-full border transition-colors flex items-center px-0.5 shrink-0 cursor-pointer ${
                 analyticsEnabled
-                  ? 'bg-[#FFC93C] border-[#FFC93C] justify-end'
+                  ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] justify-end'
                   : 'bg-[var(--bg-subtle)] border-[var(--border-strong)] justify-start'
               }`}
             >
               <span
                 className={`w-4 h-4 rounded-full transition-colors ${
-                  analyticsEnabled ? 'bg-[#2B2D31]' : 'bg-[var(--text-secondary)]'
+                  analyticsEnabled ? 'bg-[var(--accent-text-on-solid)]' : 'bg-[var(--text-secondary)]'
                 }`}
               />
             </button>
@@ -173,13 +173,13 @@ export default function CookiePreferencesModal({ onNavigate }) {
               onClick={() => setMarketingEnabled((prev) => !prev)}
               className={`w-10 h-5 rounded-full border transition-colors flex items-center px-0.5 shrink-0 cursor-pointer ${
                 marketingEnabled
-                  ? 'bg-[#FFC93C] border-[#FFC93C] justify-end'
+                  ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] justify-end'
                   : 'bg-[var(--bg-subtle)] border-[var(--border-strong)] justify-start'
               }`}
             >
               <span
                 className={`w-4 h-4 rounded-full transition-colors ${
-                  marketingEnabled ? 'bg-[#2B2D31]' : 'bg-[var(--text-secondary)]'
+                  marketingEnabled ? 'bg-[var(--accent-text-on-solid)]' : 'bg-[var(--text-secondary)]'
                 }`}
               />
             </button>
@@ -216,7 +216,7 @@ export default function CookiePreferencesModal({ onNavigate }) {
           <button
             type="button"
             onClick={acceptAll}
-            className="px-4 py-2 rounded-[6px] bg-[#FFC93C] hover:bg-[#FFD561] text-[#2B2D31] text-xs font-semibold transition-colors cursor-pointer"
+            className="btn-accent px-4 py-2 text-xs font-semibold cursor-pointer"
           >
             Aceptar todas
           </button>

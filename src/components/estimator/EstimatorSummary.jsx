@@ -89,8 +89,8 @@ export default function EstimatorSummary({
               onClick={handleResetClick}
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[5px] text-[11px] font-medium transition-colors cursor-pointer ${
                 confirmReset
-                  ? 'bg-red-500/15 text-red-700 dark:text-red-300 border border-red-500/40 font-semibold'
-                  : 'text-[var(--text-secondary-on-silver)] hover:text-[var(--text-on-silver)] hover:bg-[#2B2D31]/10'
+                  ? 'bg-red-500/15 text-red-500 border border-red-500/40 font-semibold'
+                  : 'text-[var(--text-secondary-on-silver)] hover:text-[var(--text-on-silver)] hover:bg-[var(--bg-silver-subtle)]'
               }`}
             >
               <RotateCcw size={12} strokeWidth={1.75} />
@@ -111,7 +111,7 @@ export default function EstimatorSummary({
         </div>
 
         {/* Switch Tarifa Socio Protagónico (pista 44x24px) */}
-        <div className="p-3 rounded-[8px] bg-[#2B2D31]/10 border border-[var(--border-silver)] flex items-center justify-between gap-3">
+        <div className="p-3 rounded-[8px] bg-[var(--bg-silver-subtle)] border border-[var(--border-silver)] flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-[var(--text-on-silver)]">
@@ -133,12 +133,12 @@ export default function EstimatorSummary({
             onClick={() => onToggleTarifaSocio(!tarifaSocio)}
             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition-colors duration-200 cursor-pointer ${
               tarifaSocio
-                ? 'bg-[#FFC000] border-[#09090B]/20'
-                : 'bg-[#2B2D31]/30 border-[var(--border-silver)]'
+                ? 'bg-[var(--accent-primary)] border-[var(--accent-text-on-solid)]/25'
+                : 'bg-[var(--hsl-dark-subtle)]/40 border-[var(--border-silver)]'
             }`}
           >
             <span
-              className={`inline-block h-4 w-4 rounded-full bg-[#09090B] shadow-xs transition-transform duration-200 ${
+              className={`inline-block h-4 w-4 rounded-full bg-[var(--accent-text-on-solid)] shadow-xs transition-transform duration-200 ${
                 tarifaSocio ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
@@ -166,19 +166,19 @@ export default function EstimatorSummary({
           <span className="text-xs text-[var(--text-secondary-on-silver)]">/ mes</span>
         </div>
 
-        <div className="inline-flex items-center px-2.5 py-0.5 rounded-[5px] bg-[#2B2D31] text-[#FFC000] text-xs font-mono tabular-nums font-semibold">
+        <div className="inline-flex items-center px-2.5 py-0.5 rounded-[5px] bg-[var(--hsl-dark-card)] text-[var(--accent-primary)] border border-[var(--hsl-dark-border)] text-xs font-mono tabular-nums font-semibold">
           ≈ ${pricing.dailyEquivalent} USD al día
         </div>
       </div>
 
       {/* Implementación (Setup) */}
-      <div className="p-3 rounded-[8px] bg-[#2B2D31] text-[#D9DADC] border border-[#2B2D31]/20 flex items-center justify-between text-xs">
-        <span className="text-[#B8BAC0]">Implementación inicial:</span>
+      <div className="p-3 rounded-[8px] bg-[var(--hsl-dark-card)] text-[var(--hsl-dark-text)] border border-[var(--hsl-dark-border)] flex items-center justify-between text-xs">
+        <span className="text-[var(--hsl-dark-text-secondary)]">Implementación inicial:</span>
         <div className="flex items-center gap-2 font-mono tabular-nums">
           {pricing.setupFeeSavings > 0 && (
-            <span className="text-[#9699A1] line-through">${tradSetupFee} USD</span>
+            <span className="text-[var(--hsl-dark-text-muted)] line-through">${tradSetupFee} USD</span>
           )}
-          <span className={`font-bold ${pricing.setupFee === 0 ? 'text-[#FFC000]' : 'text-[#D9DADC]'}`}>
+          <span className={`font-bold ${pricing.setupFee === 0 ? 'text-[var(--accent-primary)]' : 'text-[var(--hsl-dark-text)]'}`}>
             ${pricing.setupFee} USD
           </span>
         </div>
@@ -215,7 +215,7 @@ export default function EstimatorSummary({
                 onClick={onResetCustomerTier}
                 aria-label="Volver al tramo base de clientes"
                 title="Volver a hasta 100 clientes (incluido)"
-                className="w-4 h-4 rounded flex items-center justify-center text-[var(--text-secondary-on-silver)] hover:text-red-600 hover:bg-[#2B2D31]/10 transition-colors cursor-pointer"
+                className="w-4 h-4 rounded flex items-center justify-center text-[var(--text-secondary-on-silver)] hover:text-red-500 hover:bg-[var(--bg-silver-subtle)] transition-colors cursor-pointer"
               >
                 <X size={12} />
               </button>
@@ -237,7 +237,7 @@ export default function EstimatorSummary({
                   onClick={() => onRemoveInterface(item.id)}
                   aria-label={`Quitar ${item.name}`}
                   title={`Quitar ${item.name}`}
-                  className="w-4 h-4 rounded flex items-center justify-center text-[var(--text-secondary-on-silver)] hover:text-red-600 hover:bg-[#2B2D31]/10 transition-colors cursor-pointer"
+                  className="w-4 h-4 rounded flex items-center justify-center text-[var(--text-secondary-on-silver)] hover:text-red-500 hover:bg-[var(--bg-silver-subtle)] transition-colors cursor-pointer"
                 >
                   <X size={12} />
                 </button>
@@ -259,7 +259,7 @@ export default function EstimatorSummary({
                 onClick={() => onRemoveDataPackage(pkg.id)}
                 aria-label={`Quitar ${pkg.name}`}
                 title={`Quitar ${pkg.name}`}
-                className="w-4 h-4 rounded flex items-center justify-center text-[var(--text-secondary-on-silver)] hover:text-red-600 hover:bg-[#2B2D31]/10 transition-colors cursor-pointer"
+                className="w-4 h-4 rounded flex items-center justify-center text-[var(--text-secondary-on-silver)] hover:text-red-500 hover:bg-[var(--bg-silver-subtle)] transition-colors cursor-pointer"
               >
                 <X size={12} />
               </button>
@@ -274,19 +274,19 @@ export default function EstimatorSummary({
           Garantías de la Alianza
         </span>
         <div className="flex items-center gap-2 text-xs text-[var(--text-secondary-on-silver)]">
-          <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC000] flex items-center justify-center shrink-0">
+          <span className="w-4 h-4 rounded-full bg-[var(--hsl-dark-card)] text-[var(--accent-primary)] flex items-center justify-center shrink-0">
             <Check size={10} strokeWidth={2.5} />
           </span>
           <span>Propiedad total sobre tu sistema y tus datos</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-[var(--text-secondary-on-silver)]">
-          <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC000] flex items-center justify-center shrink-0">
+          <span className="w-4 h-4 rounded-full bg-[var(--hsl-dark-card)] text-[var(--accent-primary)] flex items-center justify-center shrink-0">
             <Check size={10} strokeWidth={2.5} />
           </span>
           <span>Operación continua sin bloqueos por volumen</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-[var(--text-secondary-on-silver)]">
-          <span className="w-4 h-4 rounded-full bg-[#2B2D31] text-[#FFC000] flex items-center justify-center shrink-0">
+          <span className="w-4 h-4 rounded-full bg-[var(--hsl-dark-card)] text-[var(--accent-primary)] flex items-center justify-center shrink-0">
             <Check size={10} strokeWidth={2.5} />
           </span>
           <span>Soporte humano y mejoras sin costo por hora</span>
@@ -298,7 +298,7 @@ export default function EstimatorSummary({
         <button
           type="button"
           onClick={onGoToStep4}
-          className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] active:scale-[0.985] border border-[#09090B]/15 text-[#09090B] text-xs font-bold transition-all cursor-pointer text-center shadow-xs"
+          className="btn-accent w-full py-2.5 text-xs font-bold cursor-pointer text-center shadow-xs"
         >
           Completar y Enviar Cotización
         </button>
@@ -307,7 +307,7 @@ export default function EstimatorSummary({
           type="button"
           onClick={onSubmit}
           disabled={!privacyAccepted}
-          className="w-full py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] disabled:opacity-45 disabled:cursor-not-allowed active:scale-[0.985] border border-[#09090B]/15 text-[#09090B] text-xs font-bold transition-all cursor-pointer text-center shadow-xs"
+          className="btn-accent w-full py-2.5 disabled:opacity-45 disabled:cursor-not-allowed text-xs font-bold cursor-pointer text-center shadow-xs"
         >
           Enviar a WhatsApp Ahora
         </button>

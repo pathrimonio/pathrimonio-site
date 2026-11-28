@@ -2230,7 +2230,7 @@ function AppContent({ initialPath = '/' }) {
           VIEW: LANDING PAGE (Paleta 60-30-10: Gray #2B2D31 / Silver #D9DADC / Yellow #FFC93C)
       ══════════════════════════════════════════ */}
       {currentView === 'landing' && (
-        <div className="flex flex-col w-full bg-[var(--bg-page)] text-[var(--text-primary)] min-h-screen selection:bg-[#FFC93C]/30 selection:text-[#D9DADC] transition-colors duration-200">
+        <div className="flex flex-col w-full bg-[var(--bg-page)] text-[var(--text-primary)] min-h-screen selection:bg-[var(--accent-soft)] selection:text-[var(--text-primary)] transition-colors duration-200">
           <Navbar 
             theme={theme}
             onToggleTheme={toggleTheme}
@@ -2279,7 +2279,7 @@ function AppContent({ initialPath = '/' }) {
           VIEW: FORMALIA (/formalia — SSG + SPA)
       ══════════════════════════════════════════ */}
       {currentView === 'formalia' && (
-        <div className="flex flex-col w-full bg-[var(--bg-page)] text-[var(--text-primary)] min-h-screen selection:bg-[#FFC93C]/30 selection:text-[#D9DADC] transition-colors duration-200">
+        <div className="flex flex-col w-full bg-[var(--bg-page)] text-[var(--text-primary)] min-h-screen selection:bg-[var(--accent-soft)] selection:text-[var(--text-primary)] transition-colors duration-200">
           <Navbar
             isSubpage
             theme={theme}

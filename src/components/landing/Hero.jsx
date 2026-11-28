@@ -47,7 +47,7 @@ export default function Hero({ onOpenPortal, onNavigate, theme = 'dark' }) {
               className="hero-enter inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-primary)] text-xs font-medium mb-6"
               style={{ '--stagger-idx': 0 }}
             >
-              <span className="w-2 h-2 rounded-full bg-[#FFC000]" />
+              <span className="w-2 h-2 rounded-full bg-[var(--accent-primary)]" />
               <span>Programa de Socios · Desde <strong className="font-semibold">$1 USD/día por rol</strong></span>
             </div>
 
@@ -76,7 +76,7 @@ export default function Hero({ onOpenPortal, onNavigate, theme = 'dark' }) {
             >
               <a
                 href="#cotizador"
-                className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] active:scale-[0.985] text-[#2B2D31] text-sm font-semibold transition-all shadow-sm cursor-pointer"
+                className="btn-accent group w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm shadow-sm cursor-pointer"
               >
                 <span>Cotizar mi sistema</span>
                 <ArrowRight
@@ -95,7 +95,7 @@ export default function Hero({ onOpenPortal, onNavigate, theme = 'dark' }) {
                 }}
                 className="btn-secondary-ghost group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 !bg-[var(--bg-silver)] hover:!bg-[var(--bg-silver-hover)] !border-[var(--border-silver)] !text-[var(--text-on-silver)] text-sm font-semibold cursor-pointer"
               >
-                <span className="w-5 h-5 rounded-full bg-[#2B2D31] text-[#FFC000] flex items-center justify-center shrink-0 transition-transform duration-150 group-hover:scale-105">
+                <span className="w-5 h-5 rounded-full bg-[var(--hsl-dark-card)] text-[var(--accent-primary)] flex items-center justify-center shrink-0 transition-transform duration-150 group-hover:scale-105">
                   <Sparkles size={11} strokeWidth={2} />
                 </span>
                 <span>Mapear mi negocio gratis con FormalIA</span>
@@ -171,19 +171,19 @@ export default function Hero({ onOpenPortal, onNavigate, theme = 'dark' }) {
               <div
                 aria-hidden="true"
                 className={`pointer-events-none absolute top-[11%] left-1/2 -translate-x-1/2 w-px h-3 ${
-                  isDarkTheme ? 'bg-[#FFC000]/50' : 'bg-[#2B2D31]/35'
+                  isDarkTheme ? 'bg-[var(--accent-primary)]/50' : 'bg-[var(--text-primary)]/35'
                 }`}
               />
               <div
                 aria-hidden="true"
                 className={`pointer-events-none absolute bottom-[11%] left-1/2 -translate-x-1/2 w-px h-3 ${
-                  isDarkTheme ? 'bg-[#FFC000]/40' : 'bg-[#2B2D31]/30'
+                  isDarkTheme ? 'bg-[var(--accent-primary)]/40' : 'bg-[var(--text-primary)]/30'
                 }`}
               />
 
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute top-[14%] right-[14%] w-52 h-52 rounded-full bg-[#FFC000]/20 blur-3xl transition-transform duration-300"
+                className="pointer-events-none absolute top-[14%] right-[14%] w-52 h-52 rounded-full bg-[var(--accent-primary)]/20 blur-3xl transition-transform duration-300"
                 style={{
                   transform: `translate3d(${tilt.rotateY * 0.6}px, ${tilt.rotateX * -0.6}px, 0)`,
                 }}

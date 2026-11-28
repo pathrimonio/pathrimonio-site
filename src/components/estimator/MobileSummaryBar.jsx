@@ -35,7 +35,7 @@ export default function MobileSummaryBar({
                 ${pricing.monthlyTotal} USD/mes
               </span>
               {tarifaSocio && (
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#FFC000] text-[#09090B]">
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)]">
                   Socio
                 </span>
               )}
@@ -50,7 +50,7 @@ export default function MobileSummaryBar({
             type="button"
             onClick={onToggleOpen}
             aria-expanded={isOpen}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] text-[#09090B] text-xs font-bold transition-colors shrink-0 cursor-pointer"
+            className="btn-accent inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold shrink-0 cursor-pointer"
           >
             <span>{isOpen ? 'Ocultar' : 'Ver desglose'}</span>
             {isOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}

@@ -56,7 +56,7 @@ export default function StepBusiness({ discovery, onUpdateDiscovery, onNext }) {
           value={discovery.company_name}
           onChange={(e) => onUpdateDiscovery('company_name', e.target.value)}
           placeholder="Ej. Distribuidora Santa María SAC"
-          className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+          className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[var(--accent-primary)] focus:outline-hidden rounded-[6px] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
         />
       </div>
 
@@ -76,14 +76,14 @@ export default function StepBusiness({ discovery, onUpdateDiscovery, onNext }) {
                 onClick={() => onUpdateDiscovery('industry', ind.id)}
                 className={`p-3 rounded-[8px] border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
                   isSelected
-                    ? 'bg-[var(--bg-subtle)] border-[#FFC000] ring-1 ring-[#FFC000]/40'
+                    ? 'bg-[var(--bg-subtle)] border-[var(--accent-primary)] ring-1 ring-[var(--accent-border)]'
                     : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                 }`}
               >
                 <div
                   className={`w-7 h-7 rounded-[6px] flex items-center justify-center shrink-0 ${
                     isSelected
-                      ? 'bg-[#FFC000] text-[#09090B]'
+                      ? 'bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)]'
                       : 'bg-[var(--bg-surface)] text-[var(--text-secondary)]'
                   }`}
                 >
@@ -114,7 +114,7 @@ export default function StepBusiness({ discovery, onUpdateDiscovery, onNext }) {
                 title={method.desc}
                 className={`h-9 sm:h-10 px-3.5 rounded-[8px] border text-xs font-medium transition-all cursor-pointer inline-flex items-center gap-2 ${
                   isSelected
-                    ? 'bg-[#FFC000] border-[#FFC000] text-[#09090B] font-semibold shadow-xs'
+                    ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] text-[var(--accent-text-on-solid)] font-semibold shadow-xs'
                     : 'bg-[var(--bg-page)] border-[var(--border-subtle)] text-[var(--text-primary)] hover:border-[var(--border-strong)]'
                 }`}
               >
@@ -131,7 +131,7 @@ export default function StepBusiness({ discovery, onUpdateDiscovery, onNext }) {
               value={discovery.custom_method_detail}
               onChange={(e) => onUpdateDiscovery('custom_method_detail', e.target.value)}
               placeholder="Especifica tu herramienta o método actual..."
-              className="w-full bg-[var(--bg-page)] border border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+              className="w-full bg-[var(--bg-page)] border border-[var(--accent-primary)] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             />
           </div>
         )}
@@ -153,7 +153,7 @@ export default function StepBusiness({ discovery, onUpdateDiscovery, onNext }) {
                 title={pain.desc}
                 className={`h-9 sm:h-10 px-3.5 rounded-[8px] border text-xs font-medium transition-all cursor-pointer inline-flex items-center gap-2 ${
                   isSelected
-                    ? 'bg-[#FFC000] border-[#FFC000] text-[#09090B] font-semibold shadow-xs'
+                    ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] text-[var(--accent-text-on-solid)] font-semibold shadow-xs'
                     : 'bg-[var(--bg-page)] border-[var(--border-subtle)] text-[var(--text-primary)] hover:border-[var(--border-strong)]'
                 }`}
               >
@@ -170,7 +170,7 @@ export default function StepBusiness({ discovery, onUpdateDiscovery, onNext }) {
               value={discovery.custom_pain_detail}
               onChange={(e) => onUpdateDiscovery('custom_pain_detail', e.target.value)}
               placeholder="Describe el desafío principal de tu operación..."
-              className="w-full bg-[var(--bg-page)] border border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+              className="w-full bg-[var(--bg-page)] border border-[var(--accent-primary)] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             />
           </div>
         )}
@@ -181,7 +181,7 @@ export default function StepBusiness({ discovery, onUpdateDiscovery, onNext }) {
         <button
           type="button"
           onClick={onNext}
-          className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] active:scale-[0.985] text-[#09090B] text-xs font-bold transition-all cursor-pointer"
+          className="btn-accent group inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold cursor-pointer"
         >
           <span>Continuar a Roles</span>
           <ArrowRight

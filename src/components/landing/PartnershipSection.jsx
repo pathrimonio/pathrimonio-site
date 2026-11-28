@@ -34,9 +34,9 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
       className="w-full py-20 lg:py-28 bg-[var(--bg-silver)] text-[var(--text-on-silver)] border-b border-[var(--border-silver)] transition-colors"
     >
       <div className="site-container">
-        {/* Encabezado: Por qué $1/día no es "software barato", sino un beneficio exclusivo */}
+        {/* Encabezado */}
         <div className="max-w-3xl mb-14">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[#2B2D31] text-[#FFC000] text-xs font-mono mb-3">
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[var(--hsl-dark-card)] border border-[var(--hsl-dark-border)] text-[var(--accent-primary)] text-xs font-mono mb-3">
             <span className="font-semibold">PROGRAMA DE SOCIOS & PROPÓSITO</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-[var(--text-on-silver)] tracking-[-0.025em] leading-[1.1] mb-4">
@@ -51,91 +51,91 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
 
         {/* 1. Comparativa limpia: Tarifa Estándar vs Tarifa Socio */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-8 items-stretch mb-8">
-          {/* Columna Tarifa Estándar / Tradicional */}
-          <div className="bg-[#232529] border border-[#2B2D31]/20 rounded-[12px] p-7 sm:p-8 flex flex-col justify-between text-[#D9DADC]">
+          {/* Columna Tarifa Estándar (HSL oscuro 10-12%) */}
+          <div className="bg-[var(--hsl-dark-card)] border border-[var(--hsl-dark-border)] rounded-[12px] p-7 sm:p-8 flex flex-col justify-between text-[var(--hsl-dark-text)]">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-[#D9DADC]/15 mb-6">
+              <div className="flex items-center justify-between pb-4 border-b border-[var(--hsl-dark-border)] mb-6">
                 <div>
-                  <span className="text-xs font-mono text-[#9699A1] uppercase tracking-wider block mb-1">
+                  <span className="text-xs font-mono text-[var(--hsl-dark-text-muted)] uppercase tracking-wider block mb-1">
                     Modelo Tradicional
                   </span>
-                  <h3 className="text-xl font-bold text-[#D9DADC]">Tarifa Estándar</h3>
+                  <h3 className="text-xl font-bold text-[var(--hsl-dark-text)]">Tarifa Estándar</h3>
                 </div>
-                <span className="text-xs font-mono px-2.5 py-1 bg-[#2B2D31] text-[#B8BAC0] border border-[#D9DADC]/15 rounded-[4px]">
+                <span className="text-xs font-mono px-2.5 py-1 bg-[var(--hsl-dark-subtle)] text-[var(--hsl-dark-text-secondary)] border border-[var(--hsl-dark-border)] rounded-[4px]">
                   Mercado Habitual
                 </span>
               </div>
 
               <div className="mb-6">
-                <div className="text-3xl font-bold text-[#D9DADC] font-mono tabular-nums mb-1">
+                <div className="text-3xl font-bold text-[var(--hsl-dark-text)] font-mono tabular-nums mb-1">
                   $2,500 – $5,000+
                 </div>
-                <p className="text-xs text-[#B8BAC0]">
+                <p className="text-xs text-[var(--hsl-dark-text-secondary)]">
                   Inversión inicial elevada antes de poder usar tu sistema
                 </p>
               </div>
 
-              <ul className="flex flex-col gap-3.5 text-sm text-[#B8BAC0]">
+              <ul className="flex flex-col gap-3.5 text-sm text-[var(--hsl-dark-text-secondary)]">
                 <li className="flex items-start gap-3">
-                  <X size={16} strokeWidth={1.6} className="text-[#9699A1] shrink-0 mt-0.5" />
+                  <X size={16} strokeWidth={1.6} className="text-[var(--hsl-dark-text-muted)] shrink-0 mt-0.5" />
                   <span>Descapitalizas tu caja al inicio sin saber si el equipo lo adoptará.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <X size={16} strokeWidth={1.6} className="text-[#9699A1] shrink-0 mt-0.5" />
+                  <X size={16} strokeWidth={1.6} className="text-[var(--hsl-dark-text-muted)] shrink-0 mt-0.5" />
                   <span>Cobros por hora cada vez que cambia una pantalla o tarifa.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <X size={16} strokeWidth={1.6} className="text-[#9699A1] shrink-0 mt-0.5" />
+                  <X size={16} strokeWidth={1.6} className="text-[var(--hsl-dark-text-muted)] shrink-0 mt-0.5" />
                   <span>Trabas contractuales y dependencia cuando quieres exportar tus datos.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <X size={16} strokeWidth={1.6} className="text-[#9699A1] shrink-0 mt-0.5" />
+                  <X size={16} strokeWidth={1.6} className="text-[var(--hsl-dark-text-muted)] shrink-0 mt-0.5" />
                   <span>Cero retorno comunitario ni acompañamiento en tu territorio.</span>
                 </li>
               </ul>
             </div>
 
-            <div className="pt-6 mt-8 border-t border-[#D9DADC]/15 text-xs text-[#9699A1] font-mono">
+            <div className="pt-6 mt-8 border-t border-[var(--hsl-dark-border)] text-xs text-[var(--hsl-dark-text-muted)] font-mono">
               Barrera financiera para negocios en crecimiento
             </div>
           </div>
 
-          {/* Columna Tarifa Socio ($1/día) */}
-          <div className="bg-[#2B2D31] border-2 border-[#FFC000] rounded-[12px] p-7 sm:p-8 flex flex-col justify-between shadow-lg relative text-[#D9DADC]">
-            <div className="absolute -top-3 right-6 bg-[#FFC000] text-[#2B2D31] text-[11px] font-mono font-bold px-3 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
+          {/* Columna Tarifa Socio ($1/día — HSL card elevado 12% + borde dorado) */}
+          <div className="bg-[var(--hsl-dark-card)] border-2 border-[var(--accent-primary)] rounded-[12px] p-7 sm:p-8 flex flex-col justify-between shadow-lg relative text-[var(--hsl-dark-text)]">
+            <div className="absolute -top-3 right-6 bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)] text-[11px] font-mono font-bold px-3 py-0.5 rounded-full uppercase tracking-wider shadow-xs">
               Tarifa Socio · Beneficio Activo
             </div>
 
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-[#D9DADC]/15 mb-6">
+              <div className="flex items-center justify-between pb-4 border-b border-[var(--hsl-dark-border)] mb-6">
                 <div>
-                  <span className="text-xs font-mono text-[#FFC000] font-medium uppercase tracking-wider block mb-1">
+                  <span className="text-xs font-mono text-[var(--accent-primary)] font-medium uppercase tracking-wider block mb-1">
                     Alianza Pathrimonio
                   </span>
-                  <h3 className="text-xl font-bold text-white">Tarifa Socio</h3>
+                  <h3 className="text-xl font-bold text-[var(--hsl-dark-text)]">Tarifa Socio</h3>
                 </div>
-                <span className="text-xs font-mono px-2.5 py-1 bg-[#FFC000] text-[#2B2D31] rounded-[4px] font-bold">
+                <span className="text-xs font-mono px-2.5 py-1 bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)] rounded-[4px] font-bold">
                   ${dailyRateLabel} USD / día
                 </span>
               </div>
 
               <div className="mb-6">
                 <div className="flex items-baseline gap-2 mb-1.5">
-                  <span className="text-3xl font-bold text-white font-mono tabular-nums">${unitRolePrice} USD</span>
-                  <span className="text-sm text-[#B8BAC0]">/ mes por rol activo</span>
+                  <span className="text-3xl font-bold text-[var(--hsl-dark-text)] font-mono tabular-nums">${unitRolePrice} USD</span>
+                  <span className="text-sm text-[var(--hsl-dark-text-secondary)]">/ mes por rol activo</span>
                 </div>
-                <p className="text-xs text-[#D9DADC] font-medium">
+                <p className="text-xs text-[var(--hsl-dark-text)] font-medium">
                   Implementación inicial:{' '}
-                  <span className="font-mono font-bold bg-[#FFC000] text-[#2B2D31] px-2 py-0.5 rounded-[4px]">
+                  <span className="font-mono font-bold bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)] px-2 py-0.5 rounded-[4px]">
                     $0 USD
                   </span>{' '}
                   con permanencia de 6 meses
                 </p>
               </div>
 
-              <ul className="flex flex-col gap-3.5 text-sm text-[#D9DADC]">
+              <ul className="flex flex-col gap-3.5 text-sm text-[var(--hsl-dark-text)]">
                 <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-[#FFC000] text-[#2B2D31] flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)] flex items-center justify-center shrink-0 mt-0.5">
                     <Check size={12} strokeWidth={2.5} />
                   </span>
                   <span>
@@ -143,7 +143,7 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-[#FFC000] text-[#2B2D31] flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)] flex items-center justify-center shrink-0 mt-0.5">
                     <Check size={12} strokeWidth={2.5} />
                   </span>
                   <span>
@@ -151,7 +151,7 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-[#FFC000] text-[#2B2D31] flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)] flex items-center justify-center shrink-0 mt-0.5">
                     <Check size={12} strokeWidth={2.5} />
                   </span>
                   <span>
@@ -159,7 +159,7 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="w-5 h-5 rounded-full bg-[#FFC000] text-[#2B2D31] flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-5 h-5 rounded-full bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)] flex items-center justify-center shrink-0 mt-0.5">
                     <Check size={12} strokeWidth={2.5} />
                   </span>
                   <span>
@@ -169,13 +169,13 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
               </ul>
             </div>
 
-            <div className="pt-6 mt-8 border-t border-[#D9DADC]/15 flex items-center justify-between gap-3">
-              <span className="text-xs text-[#B8BAC0] font-mono">
+            <div className="pt-6 mt-8 border-t border-[var(--hsl-dark-border)] flex items-center justify-between gap-3">
+              <span className="text-xs text-[var(--hsl-dark-text-secondary)] font-mono">
                 Sin comisiones por venta
               </span>
               <a
                 href="#cotizador"
-                className="group inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] active:scale-[0.985] text-xs font-bold text-[#2B2D31] transition-all shrink-0 cursor-pointer"
+                className="btn-accent group inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold shrink-0 cursor-pointer"
               >
                 <span>Cotizar mi sistema</span>
                 <ArrowRight size={13} strokeWidth={2} className="transition-transform duration-150 group-hover:translate-x-[3px]" />
@@ -184,24 +184,24 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
           </div>
         </div>
 
-        {/* 2. Bucle de crecimiento en una línea clara + cálculo interactivo */}
-        <div className="bg-[#232529] text-[#D9DADC] border border-[#D9DADC]/15 rounded-[12px] p-5 sm:p-6 mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+        {/* 2. Bucle de crecimiento en una línea clara */}
+        <div className="bg-[var(--hsl-dark-card)] text-[var(--hsl-dark-text)] border border-[var(--hsl-dark-border)] rounded-[12px] p-5 sm:p-6 mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-10 h-10 rounded-[8px] bg-[#2B2D31] border border-[#FFC000]/40 flex items-center justify-center text-[#FFC000] shrink-0">
+            <div className="w-10 h-10 rounded-[8px] bg-[var(--hsl-dark-subtle)] border border-[var(--accent-border)] flex items-center justify-center text-[var(--accent-primary)] shrink-0">
               <Gift size={18} strokeWidth={1.75} />
             </div>
             <div>
-              <span className="text-[11px] font-mono uppercase tracking-wider text-[#FFC000] block mb-0.5">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-[var(--accent-primary)] block mb-0.5">
                 Bucle de crecimiento compartido
               </span>
-              <p className="text-sm sm:text-base font-semibold text-white">
+              <p className="text-sm sm:text-base font-semibold text-[var(--hsl-dark-text)]">
                 Por cada negocio que refieras, ganas créditos para sumar roles o meses gratis.
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-4 shrink-0">
-            <div className="inline-flex items-center bg-[#2B2D31] p-1 rounded-[8px] border border-[#D9DADC]/15">
+            <div className="inline-flex items-center bg-[var(--hsl-dark-page)] p-1 rounded-[8px] border border-[var(--hsl-dark-border)]">
               {[1, 2, 4, 6].map((num) => (
                 <button
                   key={num}
@@ -209,8 +209,8 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
                   onClick={() => setReferralsCount(num)}
                   className={`px-3 py-1.5 text-xs font-mono font-semibold rounded-[6px] transition-all cursor-pointer ${
                     referralsCount === num
-                      ? 'bg-[#FFC000] text-[#2B2D31]'
-                      : 'text-[#B8BAC0] hover:text-white'
+                      ? 'bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)]'
+                      : 'text-[var(--hsl-dark-text-secondary)] hover:text-[var(--hsl-dark-text)]'
                   }`}
                 >
                   {num} {num === 1 ? 'ref.' : 'refs.'}
@@ -218,11 +218,11 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
               ))}
             </div>
 
-            <div className="px-3.5 py-2 rounded-[8px] bg-[#2B2D31] border border-[#FFC000]/35 flex items-baseline gap-2.5">
-              <span className="text-lg font-bold font-mono tabular-nums text-[#FFC000]">
+            <div className="px-3.5 py-2 rounded-[8px] bg-[var(--hsl-dark-subtle)] border border-[var(--accent-border)] flex items-baseline gap-2.5">
+              <span className="text-lg font-bold font-mono tabular-nums text-[var(--accent-primary)]">
                 ${creditValue} USD
               </span>
-              <span className="text-xs text-[#B8BAC0] font-mono tabular-nums">
+              <span className="text-xs text-[var(--hsl-dark-text-secondary)] font-mono tabular-nums">
                 {monthsBonifiedSingleRole > 0
                   ? `(${monthsBonifiedSingleRole} meses o ${monthsBonifiedSingleRole} roles)`
                   : '(en acumulación)'}
@@ -231,69 +231,66 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
           </div>
         </div>
 
-        {/* 3. Impacto real y ecosistema: Talleres en vivo, Deporte y Pathway */}
+        {/* 3. Impacto real y ecosistema */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* Talleres de Educación y Valores */}
           <div className="card-on-silver p-6 flex flex-col justify-between gap-4">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-9 h-9 rounded-[6px] bg-[#363940] border border-[#D9DADC]/15 flex items-center justify-center text-[#FFC000]">
+                <div className="w-9 h-9 rounded-[6px] bg-[var(--hsl-dark-subtle)] border border-[var(--hsl-dark-border)] flex items-center justify-center text-[var(--accent-primary)]">
                   <GraduationCap size={18} strokeWidth={1.7} />
                 </div>
-                <span className="text-xs font-mono font-bold text-[#FFC000] tabular-nums">
+                <span className="text-xs font-mono font-bold text-[var(--accent-primary)] tabular-nums">
                   {eduMetric} · {eduLabel}
                 </span>
               </div>
-              <h3 className="text-base font-bold text-[#D9DADC] mb-1.5">
+              <h3 className="text-base font-bold text-[var(--hsl-dark-text)] mb-1.5">
                 Talleres en vivo de educación y valores
               </h3>
-              <p className="text-xs text-[#B8BAC0] leading-relaxed">
+              <p className="text-xs text-[var(--hsl-dark-text-secondary)] leading-relaxed">
                 Cada suscripción financia capacitaciones presenciales y en vivo para equipos operativos, jóvenes y emprendedores locales.
               </p>
             </div>
           </div>
 
-          {/* Deporte Comunitario */}
           <div className="card-on-silver p-6 flex flex-col justify-between gap-4">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-9 h-9 rounded-[6px] bg-[#363940] border border-[#D9DADC]/15 flex items-center justify-center text-[#FFC000]">
+                <div className="w-9 h-9 rounded-[6px] bg-[var(--hsl-dark-subtle)] border border-[var(--hsl-dark-border)] flex items-center justify-center text-[var(--accent-primary)]">
                   <Trophy size={18} strokeWidth={1.7} />
                 </div>
-                <span className="text-xs font-mono font-bold text-[#FFC000] tabular-nums">
+                <span className="text-xs font-mono font-bold text-[var(--accent-primary)] tabular-nums">
                   {sportsMetric} · {sportsLabel}
                 </span>
               </div>
-              <h3 className="text-base font-bold text-[#D9DADC] mb-1.5">
+              <h3 className="text-base font-bold text-[var(--hsl-dark-text)] mb-1.5">
                 Iniciativas deportivas comunitarias
               </h3>
-              <p className="text-xs text-[#B8BAC0] leading-relaxed">
+              <p className="text-xs text-[var(--hsl-dark-text-secondary)] leading-relaxed">
                 Respaldamos campeonatos escolares, ligas de barrio y actividades deportivas impulsadas por organizaciones vecinales.
               </p>
             </div>
           </div>
 
-          {/* Ecosistema Pathway */}
           <div className="card-on-silver p-6 flex flex-col justify-between gap-4">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-9 h-9 rounded-[6px] bg-[#363940] border border-[#FFC000]/40 flex items-center justify-center text-[#FFC000]">
+                <div className="w-9 h-9 rounded-[6px] bg-[var(--hsl-dark-subtle)] border border-[var(--accent-border)] flex items-center justify-center text-[var(--accent-primary)]">
                   <Route size={18} strokeWidth={1.7} />
                 </div>
                 <a
                   href="https://play.google.com/store/apps/details?id=com.pathrimonio.pathway"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-[#FFC000] hover:underline"
+                  className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold text-[var(--accent-primary)] hover:underline"
                 >
                   <span>App Pathway</span>
                   <ExternalLink size={11} />
                 </a>
               </div>
-              <h3 className="text-base font-bold text-[#D9DADC] mb-1.5">
+              <h3 className="text-base font-bold text-[var(--hsl-dark-text)] mb-1.5">
                 Beneficios exclusivos en Pathway
               </h3>
-              <p className="text-xs text-[#B8BAC0] leading-relaxed">
+              <p className="text-xs text-[var(--hsl-dark-text-secondary)] leading-relaxed">
                 Vincula tu cooperativa, tienda o proyecto a nuestra app comunitaria para compartir hitos públicos y metas transparentes.
               </p>
             </div>

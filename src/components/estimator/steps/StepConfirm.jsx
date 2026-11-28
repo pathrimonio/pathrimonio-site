@@ -41,12 +41,12 @@ export default function StepConfirm({
                 onClick={() => onSelectCommitment(mode.id)}
                 className={`p-4 rounded-[8px] border text-left transition-all cursor-pointer relative ${
                   isSelected
-                    ? 'bg-[var(--bg-subtle)] border-2 border-[#FFC000]'
+                    ? 'bg-[var(--bg-subtle)] border-2 border-[var(--accent-primary)]'
                     : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                 }`}
               >
                 {isRecommended && (
-                  <span className="absolute -top-2.5 right-3 bg-[#FFC000] text-[#09090B] text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full shadow-xs">
+                  <span className="absolute -top-2.5 right-3 bg-[var(--accent-primary)] text-[var(--accent-text-on-solid)] text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full shadow-xs">
                     $0 Implementación
                   </span>
                 )}
@@ -85,7 +85,7 @@ export default function StepConfirm({
               value={leadContact.name}
               onChange={(e) => onUpdateContact('name', e.target.value)}
               placeholder="Ej. Juan Pérez"
-              className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+              className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[var(--accent-primary)] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             />
           </div>
 
@@ -100,7 +100,7 @@ export default function StepConfirm({
               value={leadContact.whatsapp}
               onChange={(e) => onUpdateContact('whatsapp', e.target.value)}
               placeholder="Ej. +51 987 654 321"
-              className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+              className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[var(--accent-primary)] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
             />
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function StepConfirm({
             value={leadContact.email}
             onChange={(e) => onUpdateContact('email', e.target.value)}
             placeholder="nombre@empresa.com"
-            className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[#FFC000] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+            className="w-full bg-[var(--bg-page)] border border-[var(--border-strong)] focus:border-[var(--accent-primary)] focus:outline-hidden rounded-[6px] px-3.5 py-2 text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
           />
         </div>
 
@@ -128,7 +128,7 @@ export default function StepConfirm({
               checked={privacyAccepted}
               onChange={(e) => onTogglePrivacy(e.target.checked)}
               required
-              className="w-4 h-4 mt-0.5 rounded border-[var(--border-strong)] accent-[#FFC000] shrink-0 cursor-pointer"
+              className="w-4 h-4 mt-0.5 rounded border-[var(--border-strong)] accent-[var(--accent-primary)] shrink-0 cursor-pointer"
             />
             <span className="leading-relaxed">
               He leído y acepto la{' '}
@@ -140,7 +140,7 @@ export default function StepConfirm({
                     onNavigate('/legal/privacidad');
                   }
                 }}
-                className="text-[var(--accent-text)] font-semibold underline decoration-[#FFC000] underline-offset-2"
+                className="text-[var(--accent-text)] font-semibold underline decoration-[var(--accent-primary)] underline-offset-2"
               >
                 Política de Privacidad
               </a>{' '}
@@ -178,7 +178,7 @@ export default function StepConfirm({
         <button
           type="submit"
           disabled={!privacyAccepted}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] disabled:opacity-45 disabled:cursor-not-allowed text-[#09090B] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-xs"
+          className="btn-accent inline-flex items-center gap-2 px-6 py-3 disabled:opacity-45 disabled:cursor-not-allowed text-xs font-bold uppercase tracking-wider cursor-pointer shadow-xs"
         >
           <MessageSquare size={14} strokeWidth={2} />
           <span>Enviar Cotización por WhatsApp</span>

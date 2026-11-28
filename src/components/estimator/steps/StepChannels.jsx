@@ -64,7 +64,7 @@ export default function StepChannels({
                 title={tier.desc}
                 className={`p-3 rounded-[8px] border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                   isSelected
-                    ? 'bg-[var(--bg-subtle)] border-[#FFC000] ring-1 ring-[#FFC000]/40'
+                    ? 'bg-[var(--bg-subtle)] border-[var(--accent-primary)] ring-1 ring-[var(--accent-border)]'
                     : 'bg-[var(--bg-page)] border-[var(--border-subtle)] hover:border-[var(--border-strong)]'
                 }`}
               >
@@ -126,7 +126,7 @@ export default function StepChannels({
                   <div
                     className={`w-4 h-4 rounded-[4px] border flex items-center justify-center ${
                       isChecked
-                        ? 'bg-[#FFC000] border-[#FFC000] text-[#09090B]'
+                        ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] text-[var(--accent-text-on-solid)]'
                         : 'border-[var(--border-strong)] bg-[var(--bg-page)]'
                     }`}
                   >
@@ -171,14 +171,14 @@ export default function StepChannels({
                       title={pkg.desc}
                       className={`h-9 sm:h-10 px-3.5 rounded-[8px] border text-xs transition-all cursor-pointer inline-flex items-center gap-2 ${
                         isChecked
-                          ? 'bg-[#FFC000] border-[#FFC000] text-[#09090B] font-semibold shadow-xs'
+                          ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] text-[var(--accent-text-on-solid)] font-semibold shadow-xs'
                           : 'bg-[var(--bg-surface)] border-[var(--border-subtle)] text-[var(--text-primary)] hover:border-[var(--border-strong)]'
                       }`}
                     >
                       <span>{pkg.name}</span>
                       <span
                         className={`text-[11px] font-mono tabular-nums ${
-                          isChecked ? 'text-[#09090B]/80 font-bold' : 'text-[var(--accent-text)]'
+                          isChecked ? 'text-[var(--accent-text-on-solid)]/80 font-bold' : 'text-[var(--accent-text)]'
                         }`}
                       >
                         {pkg.monthlyPrice === 0 ? 'A medida' : `+$${pkg.monthlyPrice}`}
@@ -218,7 +218,7 @@ export default function StepChannels({
         <button
           type="button"
           onClick={onNext}
-          className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] active:scale-[0.985] text-[#09090B] text-xs font-bold transition-all cursor-pointer"
+          className="btn-accent group inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold cursor-pointer"
         >
           <span>Continuar a Modalidad</span>
           <ArrowRight

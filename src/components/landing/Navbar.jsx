@@ -31,10 +31,10 @@ export default function Navbar({
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full border-b transition-colors ${
+      className={`sticky top-0 z-50 w-full border-b text-[var(--text-primary)] transition-colors ${
         isDarkTheme
-          ? 'bg-black border-white/10 text-[#D9DADC]'
-          : 'bg-white border-black/10 text-[#2B2D31]'
+          ? 'bg-black border-[var(--border-subtle)]'
+          : 'bg-white border-[var(--border-subtle)]'
       }`}
     >
       <div className="site-container h-16 flex items-center justify-between gap-4">
@@ -87,16 +87,16 @@ export default function Navbar({
 
         {/* Desktop Actions */}
         <div className="hidden sm:flex items-center gap-3">
-          {/* Theme Toggle Button (Gray #2B2D31 <-> Silver #D9DADC) */}
+          {/* Theme Toggle Button */}
           <button
             type="button"
             onClick={onToggleTheme}
-            aria-label={theme === 'dark' ? 'Cambiar a contraste Silver' : 'Cambiar a primario Gray'}
-            title={theme === 'dark' ? 'Alternar contraste Silver' : 'Activar base Gray #2B2D31'}
+            aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+            title={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
             className="btn-secondary-ghost p-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
           >
             {theme === 'dark' ? (
-              <Sun size={15} strokeWidth={1.75} className="text-[#FFC93C]" />
+              <Sun size={15} strokeWidth={1.75} className="text-[var(--accent-primary)]" />
             ) : (
               <Moon size={15} strokeWidth={1.75} />
             )}
@@ -111,7 +111,7 @@ export default function Navbar({
           <a
             href={isSubpage ? '/#cotizador' : '#cotizador'}
             onClick={handleNavClick(isSubpage ? '/#cotizador' : '#cotizador')}
-            className="group inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[6px] bg-[#FFC000] hover:bg-[#FFD038] active:scale-[0.985] text-[#2B2D31] text-xs font-semibold transition-all shadow-sm cursor-pointer"
+            className="btn-accent group inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs shadow-sm cursor-pointer"
           >
             <span>Cotizar mi sistema</span>
             <ArrowRight size={13} strokeWidth={1.75} className="transition-transform duration-150 group-hover:translate-x-[3px]" />
@@ -123,11 +123,11 @@ export default function Navbar({
           <button
             type="button"
             onClick={onToggleTheme}
-            aria-label={theme === 'dark' ? 'Cambiar a contraste Silver' : 'Cambiar a primario Gray'}
+            aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
             className="p-2 rounded-[6px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] transition-colors cursor-pointer"
           >
             {theme === 'dark' ? (
-              <Sun size={18} strokeWidth={1.75} className="text-[#FFC93C]" />
+              <Sun size={18} strokeWidth={1.75} className="text-[var(--accent-primary)]" />
             ) : (
               <Moon size={18} strokeWidth={1.75} />
             )}
@@ -169,13 +169,13 @@ export default function Navbar({
               >
                 {theme === 'dark' ? (
                   <>
-                    <Sun size={13} className="text-[#FFC93C]" />
-                    <span>Silver</span>
+                    <Sun size={13} className="text-[var(--accent-primary)]" />
+                    <span>Claro (96%)</span>
                   </>
                 ) : (
                   <>
                     <Moon size={13} />
-                    <span>Gray Base</span>
+                    <span>Oscuro (8%)</span>
                   </>
                 )}
               </button>
@@ -195,7 +195,7 @@ export default function Navbar({
             <a
               href={isSubpage ? '/#cotizador' : '#cotizador'}
               onClick={handleNavClick(isSubpage ? '/#cotizador' : '#cotizador')}
-              className="w-full text-center py-2.5 text-xs font-semibold text-[#2B2D31] bg-[#FFC000] hover:bg-[#FFD038] rounded-[6px]"
+              className="btn-accent w-full text-center py-2.5 text-xs"
             >
               Cotizar mi sistema
             </a>

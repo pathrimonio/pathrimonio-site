@@ -198,7 +198,7 @@ export default function InteractiveEstimator({
           </p>
         </div>
 
-        <div className={`mb-6 p-3.5 rounded-[10px] border flex flex-wrap items-center justify-between gap-3 ${isPreloadedFromFormalia ? 'bg-[var(--accent-soft)] border-[#FFC000]' : 'bg-[var(--bg-surface)] border-[var(--border-subtle)]'}`}>
+        <div className={`mb-6 p-3.5 rounded-[10px] border flex flex-wrap items-center justify-between gap-3 ${isPreloadedFromFormalia ? 'bg-[var(--accent-soft)] border-[var(--accent-primary)]' : 'bg-[var(--bg-surface)] border-[var(--border-subtle)]'}`}>
           <div className="flex items-center gap-2.5 text-xs text-[var(--text-primary)]">
             <Sparkles size={15} className="text-[var(--accent-text)] shrink-0" />
             <span>

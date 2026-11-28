@@ -85,7 +85,7 @@ export default function LegalLayout({
                     aria-current={isActive ? 'page' : undefined}
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] text-xs font-medium border transition-colors ${
                       isActive
-                        ? 'bg-[#FFC93C] border-[#FFC93C] text-[#2B2D31] font-semibold'
+                        ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)] text-[var(--accent-text-on-solid)] font-semibold'
                         : 'bg-[var(--bg-page)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-strong)]'
                     }`}
                   >
