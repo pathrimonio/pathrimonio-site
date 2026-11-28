@@ -95,6 +95,7 @@ import AdminUsersView from './components/portal/AdminUsersView';
 import ImplementationTrackerView from './components/portal/ImplementationTrackerView';
 import PartnerDashboardView from './components/portal/PartnerDashboardView';
 import CollaboratorPresalesView from './components/portal/CollaboratorPresalesView';
+import ProjectsManagementView from './components/portal/ProjectsManagementView';
 import { compileProcessToPortalBundle } from './lib/formalia/compilers';
 import {
   clearLocalFormaliaSession,
@@ -111,8 +112,15 @@ import {
   createOrUpdateImplementationRequest,
   computeLiveDiffsAgainstBaseline,
   advanceImplementationStatus,
-  reviewLiveModification
+  reviewLiveModification,
+  recordSystemAudit
 } from './services/platformService';
+import {
+  PLATFORM_IMPLEMENTED_VERSION,
+  buildProjectSyncReports,
+  syncProjectFromCodeCatalog,
+  autoSyncExistingCatalogProjects
+} from './services/projectSyncService';
 import { 
   loadRoleDefinitions, 
   saveRoleDefinitions, 
@@ -216,6 +224,7 @@ function AppContent({ initialPath = '/' }) {
   const [showLogin, setShowLogin] = useState(false);
   const [loginMode, setLoginMode] = useState('login');
   const claimedAnonSessionsRef = useRef(new Set());
+  const autoSyncedCatalogRef = useRef('');
 
   // ── Portal nav
   const [activePortalTab, setActivePortalTab] = useState('actors');
@@ -1171,6 +1180,56 @@ function AppContent({ initialPath = '/' }) {
     autoClaimPendingFormaliaForUser(currentUser);
   }, [authReady, workspaceReady, currentUser?.email]);
 
+  const applyProjectSyncState = (nextState) => {
+    if (!nextState) return;
+    if (Array.isArray(nextState.projects)) setProjects(nextState.projects);
+    if (Array.isArray(nextState.actors)) setActors(nextState.actors);
+    if (Array.isArray(nextState.stories)) setStories(nextState.stories);
+    if (Array.isArray(nextState.dataModels)) setDataModels(nextState.dataModels);
+    if (Array.isArray(nextState.interfaces)) setInterfaces(nextState.interfaces);
+    if (Array.isArray(nextState.files)) setFiles(nextState.files);
+  };
+
+  useEffect(() => {
+    if (!authReady || !workspaceReady || !isInternalStaffRole(currentUser?.role) || projects.length === 0) {
+      return undefined;
+    }
+    const staffEmail = String(currentUser?.email || '').trim().toLowerCase() || 'staff';
+    if (autoSyncedCatalogRef.current === staffEmail) return undefined;
+    autoSyncedCatalogRef.current = staffEmail;
+
+    let cancelled = false;
+    autoSyncExistingCatalogProjects(
+      {
+        projects,
+        actors,
+        stories,
+        interfaces,
+        dataModels,
+        files,
+        implementationRequests
+      },
+      currentUser
+    )
+      .then((res) => {
+        if (cancelled) return;
+        if (res?.syncedIds?.length > 0) {
+          applyProjectSyncState(res.nextState);
+          notify(
+            `Catálogo actualizado automáticamente (${res.syncedIds.join(', ')}) a ${PLATFORM_IMPLEMENTED_VERSION}.`
+          );
+        }
+      })
+      .catch((error) => {
+        autoSyncedCatalogRef.current = '';
+        console.warn('[ProjectAutoSync]', error?.message || error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, workspaceReady, currentUser?.email, currentUser?.role, projects.length]);
+
   const handleLoginSuccess = (user) => {
     const cleanEmail = String(user?.email || '').trim().toLowerCase();
     const existingDbUser = (portalUsers || []).find(
@@ -1267,6 +1326,7 @@ function AppContent({ initialPath = '/' }) {
   };
 
   const handleLogout = async () => {
+    autoSyncedCatalogRef.current = '';
     clearLocalFormaliaSession();
     if (supabase) {
       try {
@@ -1570,6 +1630,115 @@ function AppContent({ initialPath = '/' }) {
     setActiveProjectId(ownedProj.id);
     persist(saveProject(ownedProj), 'proyecto');
     notify(`Software "${ownedProj.name}" creado y activado.`);
+  };
+
+  const outdatedProjectsCount = useMemo(() => {
+    if (!isStaffUser) return 0;
+    const reports = buildProjectSyncReports({
+      dbProjects: projects,
+      dbActors: actors,
+      dbStories: stories,
+      dbInterfaces: interfaces,
+      dbDataModels: dataModels,
+      dbFiles: files,
+      implementationRequests
+    });
+    return reports.filter(
+      (r) => r.statusCode === 'outdated' || r.statusCode === 'uninitialized' || r.statusCode === 'client_diffs'
+    ).length;
+  }, [isStaffUser, projects, actors, stories, interfaces, dataModels, files, implementationRequests]);
+
+  const handleSyncCatalogProject = async (projectId) => {
+    try {
+      const res = await syncProjectFromCodeCatalog(
+        projectId,
+        {
+          projects,
+          actors,
+          stories,
+          interfaces,
+          dataModels,
+          files,
+          implementationRequests
+        },
+        currentUser
+      );
+      applyProjectSyncState(res.nextState);
+      notify(
+        `Proyecto "${projectId}" sincronizado a ${res.version} (+${res.syncedEntities} especificación(es) actualizadas).`
+      );
+      return res;
+    } catch (error) {
+      console.error('[ProjectSync] single', error);
+      notify(`No se pudo sincronizar "${projectId}": ${error.message}`);
+      return null;
+    }
+  };
+
+  const handleSyncAllCatalogProjects = async () => {
+    const reports = buildProjectSyncReports({
+      dbProjects: projects,
+      dbActors: actors,
+      dbStories: stories,
+      dbInterfaces: interfaces,
+      dbDataModels: dataModels,
+      dbFiles: files,
+      implementationRequests
+    });
+    const pending = reports.filter((r) => r.isCatalogProject && r.needsSync);
+    if (pending.length === 0) {
+      notify('Todos los proyectos del catálogo ya están actualizados en Supabase.');
+      return;
+    }
+
+    let rollingState = {
+      projects,
+      actors,
+      stories,
+      interfaces,
+      dataModels,
+      files,
+      implementationRequests
+    };
+    const syncedNames = [];
+    for (const rep of pending) {
+      try {
+        const res = await syncProjectFromCodeCatalog(rep.id, rollingState, currentUser);
+        rollingState = { ...rollingState, ...res.nextState };
+        syncedNames.push(`${rep.id} (${res.version})`);
+      } catch (error) {
+        console.warn(`[ProjectSync] ${rep.id}:`, error?.message || error);
+      }
+    }
+    applyProjectSyncState(rollingState);
+    if (syncedNames.length > 0) {
+      notify(`Sincronizados ${syncedNames.length} proyecto(s): ${syncedNames.join(', ')}.`);
+    } else {
+      notify('No se pudo completar la sincronización de catálogos.');
+    }
+  };
+
+  const handleUpdateProjectMeta = async (updatedProj) => {
+    if (!updatedProj?.id) return;
+    setProjects((prev) =>
+      prev.some((p) => p.id === updatedProj.id)
+        ? prev.map((p) => (p.id === updatedProj.id ? updatedProj : p))
+        : [...prev, updatedProj]
+    );
+    try {
+      await saveProject(updatedProj);
+      await recordSystemAudit({
+        actorEmail: currentUser?.email,
+        actorRole: currentUser?.role,
+        actionType: 'update_project_meta',
+        targetId: updatedProj.id,
+        summary: `Actualizó versión/estado de "${updatedProj.id}" a ${updatedProj.version || 'N/A'} (${updatedProj.status || 'Sin estado'}).`
+      });
+      notify(`Versión de "${updatedProj.shortName || updatedProj.name}" guardada (${updatedProj.version}).`);
+    } catch (error) {
+      console.error('[ProjectMeta]', error);
+      notify(`Error guardando metadatos del proyecto: ${error.message}`);
+    }
   };
 
   const activeProject = (activeProjectId === 'all' && isStaffUser)
@@ -2367,6 +2536,7 @@ function AppContent({ initialPath = '/' }) {
             onOpenNewProjectModal={() => setIsNewProjectModalOpen(true)}
             currentUser={currentUser}
             roleDefinitions={roleDefinitions}
+            outdatedProjectsCount={outdatedProjectsCount}
           />
 
           <div className="lg:pl-64 flex flex-col flex-1 min-w-0 w-full">
@@ -2748,6 +2918,43 @@ function AppContent({ initialPath = '/' }) {
                         interfaces={interfaces}
                         onAdvanceImplementationStatus={handleAdvanceRequestStatus}
                         onReviewModification={handleReviewRequestDiff}
+                        onSelectProject={setActiveProjectId}
+                        onNavigateTab={(tabId) => {
+                          setActivePortalTab(tabId);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        onNotify={notify}
+                      />
+                    </div>
+                  )}
+                  {activePortalTab === 'projectsManager' && (
+                    <div className="w-full px-3 sm:px-4 lg:px-5 py-4 sm:py-5">
+                      <ProjectsManagementView
+                        currentUser={currentUser}
+                        isAdmin={isActionAllowedForRole(currentUser?.role, 'canManageProjects', roleDefinitions)}
+                        projects={visibleProjects}
+                        actors={actors}
+                        stories={stories}
+                        interfaces={interfaces}
+                        dataModels={dataModels}
+                        files={files}
+                        implementationRequests={implementationRequests}
+                        onSyncCatalogProject={
+                          isActionAllowedForRole(currentUser?.role, 'canManageProjects', roleDefinitions)
+                            ? handleSyncCatalogProject
+                            : undefined
+                        }
+                        onSyncAllCatalogProjects={
+                          isActionAllowedForRole(currentUser?.role, 'canManageProjects', roleDefinitions)
+                            ? handleSyncAllCatalogProjects
+                            : undefined
+                        }
+                        onUpdateProjectMeta={
+                          isActionAllowedForRole(currentUser?.role, 'canManageProjects', roleDefinitions)
+                            ? handleUpdateProjectMeta
+                            : undefined
+                        }
+                        onOpenNewProjectModal={() => setIsNewProjectModalOpen(true)}
                         onSelectProject={setActiveProjectId}
                         onNavigateTab={(tabId) => {
                           setActivePortalTab(tabId);

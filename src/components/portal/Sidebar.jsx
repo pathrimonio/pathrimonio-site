@@ -13,7 +13,8 @@ export default function Sidebar({
   onSelectProject,
   onOpenNewProjectModal,
   currentUser,
-  roleDefinitions
+  roleDefinitions,
+  outdatedProjectsCount = 0
 }) {
   const allNavItems = [
     { id: 'actors', label: 'Actores & Roles', icon: 'badge', badge: 'ROL' },
@@ -23,6 +24,12 @@ export default function Sidebar({
     { id: 'implementationStatus', label: 'Estado & Diffs Web', icon: 'rocket_launch', badge: 'DIFF' },
     { id: 'partnerPanel', label: 'Panel de Socio', icon: 'workspace_premium', badge: 'SOCIO' },
     { id: 'presalesReview', label: 'Preventa & Cotizaciones', icon: 'assignment_turned_in', badge: 'TECH' },
+    {
+      id: 'projectsManager',
+      label: 'Manejo de Proyectos',
+      icon: 'deployed_code_update',
+      badge: outdatedProjectsCount > 0 ? `${outdatedProjectsCount}` : 'SYNC'
+    },
     { id: 'architecture', label: 'Arquitectura de Software', icon: 'account_tree', badge: 'ARCH' },
     { id: 'dataModel', label: 'Arquitectura de Datos', icon: 'database', badge: 'DB' },
     { id: 'files', label: 'Archivos & Manifiestos', icon: 'folder_open', badge: 'FILES' },
@@ -66,7 +73,7 @@ export default function Sidebar({
               <img
                 src="/assets/images/Banner_PATHRIMONIO_COMPANY.png"
                 alt="Pathrimonio Company"
-                className="h-9 w-auto max-w-[138px] object-contain rounded-[6px] bg-black px-1 border border-outline-variant/60 shrink-0"
+                className="h-7 w-auto max-w-[138px] object-contain shrink-0"
               />
             </div>
 

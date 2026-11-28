@@ -1,6 +1,6 @@
 // Configuración centralizada de Roles (5 Perfiles) y Matriz RBAC de Pathrimonio
 
-export const ROLE_PERMISSIONS_STORAGE_KEY = 'pathrimonio_role_permissions_v2';
+export const ROLE_PERMISSIONS_STORAGE_KEY = 'pathrimonio_role_permissions_v3';
 export const PORTAL_USERS_STORAGE_KEY = 'pathrimonio_portal_users_v2';
 
 export const SYSTEM_MODULES = [
@@ -11,6 +11,7 @@ export const SYSTEM_MODULES = [
   { id: 'implementationStatus', label: 'Estado de Solicitud & Diff', icon: 'fact_check', badge: 'SOL', desc: 'Seguimiento de revisión, pago, desarrollo y cambios post-envío' },
   { id: 'partnerPanel', label: 'Panel de Socio', icon: 'workspace_premium', badge: 'SOCIO', desc: 'Código de referido, Billetera de Créditos, proyectos, talleres y Pathway' },
   { id: 'presalesReview', label: 'Cotizaciones & Expedientes', icon: 'assignment_turned_in', badge: 'REV', desc: 'Cotizaciones entrantes, expedientes FORMALIA (JSON/.puml/web_blueprints) y revisiones' },
+  { id: 'projectsManager', label: 'Manejo de Proyectos', icon: 'deployed_code_update', badge: 'SYNC', desc: 'Control de versiones implementadas vs Supabase, sincronización automática SDD y estado de proyectos' },
   { id: 'architecture', label: 'Arquitectura de Software', icon: 'account_tree', badge: 'ARCH', desc: 'Capas Clean/Hexagonal, contratos abstractos y síntesis con archify' },
   { id: 'dataModel', label: 'Arquitectura de Datos', icon: 'database', badge: 'DB', desc: 'Tablas relacionales, DER y esquemas de arquitectura' },
   { id: 'files', label: 'Archivos & Manifiestos', icon: 'folder_open', badge: 'FILES', desc: 'Entregables, árboles AST y métodos abstractos' },
@@ -27,6 +28,7 @@ export const SYSTEM_ACTIONS = [
   { id: 'canImplementWeb', label: 'Usar "Implementar en solución web" desde FORMALIA', module: 'formalia' },
   { id: 'canUsePartnerPanel', label: 'Acceder al Panel de Socio, referidos y canje de créditos', module: 'partnerPanel' },
   { id: 'canReviewSubmissions', label: 'Revisar cotizaciones, expedientes y cambios post-envío', module: 'presalesReview' },
+  { id: 'canManageProjects', label: 'Sincronizar catálogos SDD y administrar versiones de proyectos', module: 'projectsManager' },
   { id: 'canManageArchitecture', label: 'Analizar y sincronizar arquitectura con archify', module: 'architecture' },
   { id: 'canManageDataModels', label: 'Modelar tablas y ejecutar scripts SQL', module: 'dataModel' },
   { id: 'canManageFiles', label: 'Acceder a Files y métodos abstractos AST', module: 'files' },
@@ -106,7 +108,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     avatarBg: 'bg-primary',
     allowedTabs: [
       'actors', 'stories', 'interfaces', 'formalia', 'implementationStatus',
-      'partnerPanel', 'presalesReview', 'architecture', 'dataModel', 'files',
+      'partnerPanel', 'presalesReview', 'projectsManager', 'architecture', 'dataModel', 'files',
       'backlog', 'sprints', 'docs', 'settings'
     ],
     actions: {
@@ -116,6 +118,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canImplementWeb: true,
       canUsePartnerPanel: true,
       canReviewSubmissions: true,
+      canManageProjects: true,
       canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,
@@ -135,7 +138,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
     avatarBg: 'bg-cyan-600',
     allowedTabs: [
-      'presalesReview', 'actors', 'stories', 'interfaces', 'formalia',
+      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia',
       'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs'
     ],
     actions: {
@@ -145,6 +148,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canImplementWeb: true,
       canUsePartnerPanel: false,
       canReviewSubmissions: true,
+      canManageProjects: true,
       canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,
@@ -217,7 +221,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
     avatarBg: 'bg-purple-500',
     allowedTabs: [
-      'presalesReview', 'actors', 'stories', 'interfaces', 'formalia',
+      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia',
       'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs'
     ],
     actions: {
@@ -227,6 +231,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canImplementWeb: true,
       canUsePartnerPanel: false,
       canReviewSubmissions: true,
+      canManageProjects: true,
       canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,
@@ -246,7 +251,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
     avatarBg: 'bg-blue-500',
     allowedTabs: [
-      'presalesReview', 'actors', 'stories', 'interfaces', 'formalia',
+      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia',
       'architecture', 'dataModel', 'files', 'backlog', 'sprints', 'docs'
     ],
     actions: {
@@ -256,6 +261,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canImplementWeb: true,
       canUsePartnerPanel: false,
       canReviewSubmissions: true,
+      canManageProjects: true,
       canManageArchitecture: true,
       canManageDataModels: true,
       canManageFiles: true,
@@ -275,7 +281,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
     badgeColor: 'bg-teal-500/20 text-teal-300 border-teal-500/40',
     avatarBg: 'bg-teal-500',
     allowedTabs: [
-      'presalesReview', 'actors', 'stories', 'interfaces', 'formalia',
+      'presalesReview', 'projectsManager', 'actors', 'stories', 'interfaces', 'formalia',
       'architecture', 'files', 'docs'
     ],
     actions: {
@@ -285,6 +291,7 @@ export const DEFAULT_ROLE_DEFINITIONS = {
       canImplementWeb: false,
       canUsePartnerPanel: false,
       canReviewSubmissions: true,
+      canManageProjects: false,
       canManageArchitecture: true,
       canManageDataModels: false,
       canManageFiles: true,
