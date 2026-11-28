@@ -37,7 +37,7 @@ export default function PartnershipSection({ pricingConfig = null, communityImpa
         {/* Encabezado */}
         <div className="max-w-3xl mb-14">
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-[4px] bg-[var(--hsl-dark-card)] border border-[var(--hsl-dark-border)] text-[var(--accent-primary)] text-xs font-mono mb-3">
-            <span className="font-semibold">PROGRAMA DE SOCIOS & PROPÓSITO</span>
+            <span className="font-semibold">PROGRAMA DE SOCIOS</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-[var(--text-on-silver)] tracking-[-0.025em] leading-[1.1] mb-4">
             Una alianza justa para PYMEs, con retorno directo en tu comunidad.

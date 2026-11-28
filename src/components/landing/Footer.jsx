@@ -1,6 +1,7 @@
 import React from 'react';
 import { ExternalLink, SlidersHorizontal, BookOpenCheck, MessageSquare } from 'lucide-react';
 import { useConsent } from '../../context/ConsentContext';
+import { LEGAL_ENTITY } from '../../config/siteConfig';
 
 export default function Footer({ onNavigate }) {
   const { openPreferencesModal } = useConsent();
@@ -103,8 +104,8 @@ export default function Footer({ onNavigate }) {
         {/* Pie inferior */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--hsl-dark-text-muted)]">
           <span>© 2026 Pathrimonio Company. Todos los derechos reservados.</span>
-          <a href="mailto:soporte@pathrimonio.site" className="hover:text-[var(--hsl-dark-text)] transition-colors">
-            soporte@pathrimonio.site
+          <a href={`mailto:${LEGAL_ENTITY.email}`} className="hover:text-[var(--hsl-dark-text)] transition-colors">
+            {LEGAL_ENTITY.email}
           </a>
         </div>
       </div>

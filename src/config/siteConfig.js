@@ -21,8 +21,8 @@ export const LEGAL_ENTITY = {
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_LEGAL_ADDRESS) ||
     'Operación remota y territorio nacional, Perú',
   country: 'Perú',
-  email: 'soporte@pathrimonio.site',
-  privacyEmail: 'soporte@pathrimonio.site',
+  email: 'pathrimonio.contacto@gmail.com',
+  privacyEmail: 'pathrimonio.contacto@gmail.com',
   whatsappDisplay: '+51 950 293 223',
   whatsappDigits: '51950293223',
   website: SITE_URL,
